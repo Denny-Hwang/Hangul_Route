@@ -108,6 +108,14 @@
   --size-title: 1.75rem;
   --size-display: 2.25rem;
   --size-hero: 3rem;
+  --size-dp-caption: 14px;
+  --size-dp-bodySm: 16px;
+  --size-dp-body: 18px;
+  --size-dp-bodyLg: 20px;
+  --size-dp-prompt: 22px;
+  --size-dp-title: 28px;
+  --size-dp-display: 36px;
+  --size-dp-hero: 48px;
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;

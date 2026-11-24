@@ -23,6 +23,8 @@
   --disabled-opacity: 0.6;        /* BuildLetterGame.tsx Undo, nothing to take back (unchanged) */
   --fold: 740px;                  /* design board only: set per window by the capture tool (740, 568, 768) */
   --spec-cell: 160px;             /* design board only: one specimen column */
+  --text-f: 1;                    /* design board only: the text size factor, set to 2 by the capture tool for 200 % */
+  --lg-f: calc(1 + (var(--text-f) - 1) / 2); /* large type (title, display, hero) grows by half as much (DisplaySheet spec) */
   --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-ko: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
@@ -84,46 +86,63 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 /* ------------------------------------------------------------------------------------------ KoreanText */
 .kt { display: inline-flex; flex-direction: column; gap: var(--spacing-xxs); min-width: 0; }
 .kt .ko { font-weight: var(--weight-bold); color: var(--colors-text-primary); }
-.kt .rom, .kt .gloss { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+/* Romanization and gloss break at spaces; a word breaks inside only when it cannot fit a line (break-word, never anywhere). */
+.kt .rom, .kt .gloss { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: break-word; }
 .kt .rom { font-style: italic; }
 .kt-sm .ko { font-size: var(--size-bodyLg); }
 .kt-md .ko { font-size: var(--size-prompt); }
 .kt-title { align-items: center; }
-.kt-title .ko { font-size: var(--size-title); }
+.kt-title .ko { font-size: calc(var(--size-dp-title) * var(--lg-f)); }
 .kt-title .rom { font-size: var(--size-body); font-style: normal; color: var(--colors-text-muted); }
 .kt-inline { display: inline; }
 .kt-inline .ko { font-size: inherit; }
 .kt-inline .rom, .kt-inline .gloss { font-size: inherit; margin-left: var(--spacing-xs); }
+/* Tap & Respond's Card (TapRespondGame.tsx:141-158): the line, and Hear it inside it. */
+.card { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-md); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
+.card .focus-node { gap: var(--spacing-xxs); }
+.npc-ko { font-size: calc(var(--size-dp-title) * var(--lg-f)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.npc-rom { color: var(--colors-text-muted); }
+.npc-gloss { color: var(--colors-text-secondary); }
+.hear-start { display: flex; }
 .npc { background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-xl); padding: var(--spacing-md) var(--spacing-lg); align-self: flex-start; }
 
 /* ------------------------------------------------------------------------------------------ the marks */
-/* Decorative (aria-hidden): the accessible name carries the state. Out of the flow on a corner (20), or in the flow at
-   the end of a row (24, ChoiceCard). Their colour is set on the glyph: feedback.success (check) or text.primary. */
+/* Decorative (aria-hidden): the accessible name carries the state. On a corner, out of the flow (20), with its box
+   inside the rounded corner (inset spacing.xs on radii.lg and smaller, spacing.sm on radii.xl); in the flow at the end
+   of a row (24) in a column kept in every state; or on a 26 disc. Colour is set on the glyph. */
 .mark { display: block; flex: none; pointer-events: none; line-height: 0; }
-.mark-corner { position: absolute; top: var(--spacing-xxs); right: var(--spacing-xxs); }
+.mark-corner { position: absolute; top: var(--spacing-xs); right: var(--spacing-xs); }
 .mark-inset { top: var(--spacing-sm); right: var(--spacing-sm); }
-/* On scene art: a disc of the state's own light fill and a text.primary casing, centred on the ring's corner. */
+.mark-slot { display: block; flex: none; width: var(--spacing-xl); align-self: stretch; }
+/* The disc: 20 + 2 x spacing.xxs + 2 x borderWidth.thin = 26, the state's light fill, a text.primary casing. */
 .mark-disc { padding: var(--spacing-xxs); border-radius: var(--radii-circle); border: var(--border-width-thin) solid var(--colors-text-primary); }
 .mark-disc-correct { background: var(--colors-feedback-successLight); }
-.mark-disc-wrong { background: var(--colors-feedback-nudgeLight); }
+.mark-disc-wrong, .mark-disc-tried { background: var(--colors-feedback-nudgeLight); }
+.mark-static { position: static; }
+/* Look-here, one shape everywhere: a dashed ring spacing.xs outside the answer (Hidden Heritage keeps its dashed ring
+   inside the spot). A pick is a solid ring; the focus ring is solid at spacing.xxs. */
+.cc-hint, .zone-ring, .key-ring, .word-ring, .reply-ring { outline: var(--border-width-thick) dashed var(--colors-border-focus); outline-offset: var(--spacing-xs); }
 
 /* ------------------------------------------------------------------------------------------ ChoiceCard, row layout */
-.cc { display: flex; align-items: center; gap: var(--spacing-sm); width: 100%; min-height: var(--touch-child); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); text-align: left; }
+.cc { position: relative; display: flex; align-items: center; gap: var(--spacing-sm); width: 100%; min-height: var(--touch-child); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); text-align: left; }
 .cc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.cc-label { font-size: var(--size-body); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.cc-label { font-size: var(--size-body); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
+.cc-pic .cc-body { align-items: center; text-align: center; }
+.cc-art { display: flex; justify-content: center; }
+/* Pic-Word Match's selection ring (RING_SELECTED, PicWordMatchGame.tsx:82-83): spacing.xs out, borderWidth.thick. */
+.cc-picked { box-shadow: 0 0 0 var(--spacing-xs) var(--colors-surface-canvas), 0 0 0 calc(var(--spacing-xs) + var(--border-width-thick)) var(--colors-brand-primary); }
+.pw-badge { position: absolute; top: var(--spacing-sm); left: var(--spacing-sm); padding: var(--spacing-none) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-size: var(--size-caption); font-weight: var(--weight-bold); }
 .cc-correct { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); cursor: default; }
 .cc-wrong { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); cursor: default; }
-.cc-hint { border-width: var(--border-width-thick); border-color: var(--colors-border-focus); padding: calc(var(--spacing-md) - var(--border-width-thin)) calc(var(--spacing-lg) - var(--border-width-thin)); }
 
 /* ------------------------------------------------------------------------------------------ Tile */
 .tile { position: relative; display: flex; align-items: center; justify-content: center; min-width: var(--touch-hero); min-height: var(--touch-hero); padding: var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
 .tile-md { min-width: var(--touch-child); min-height: var(--touch-child); }
 .tile-in { display: flex; flex-direction: column; align-items: center; padding: var(--spacing-none) var(--spacing-sm); min-width: 0; }
-.tile-glyph { font-size: var(--size-hero); font-weight: var(--weight-bold); line-height: 1.05; }
-.tile-md .tile-glyph { font-size: var(--size-display); }
+.tile-glyph { font-size: calc(var(--size-dp-hero) * var(--lg-f)); font-weight: var(--weight-bold); line-height: 1.05; }
+.tile-md .tile-glyph { font-size: calc(var(--size-dp-display) * var(--lg-f)); }
 .tile-rom { margin-top: var(--spacing-xxs); font-size: var(--size-bodySm); color: var(--colors-text-muted); font-weight: var(--weight-medium); overflow-wrap: anywhere; text-align: center; }
-/* TILE_MARK (AF-1): 20, inset spacing.none, so it ends where the glyph column (padding md + sm = 20) starts. */
-.tile .mark-corner { top: var(--spacing-none); right: var(--spacing-none); }
+/* TILE_MARK (AF-1): 20 on a 26 disc straddling the top-end corner (.mark-straddle), so a tile shrunk to its jamo at large text is never covered. */
 .tile-correct { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); cursor: default; }
 .tile-correct .tile-glyph { color: var(--colors-feedback-success); }
 .tile-wrong { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); cursor: default; }
@@ -131,27 +150,33 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .tile-disabled .tile-glyph { color: var(--colors-text-muted); }
 .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
 .tray { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-sm); }
-.speaker { display: flex; align-items: center; justify-content: center; width: var(--touch-hero); height: var(--touch-hero); border-radius: var(--radii-circle); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); }
+/* MatchSoundGame.tsx:178-190: the 48 speaker in spacing.md padding, its caption beside it. */
+.speaker-row { display: flex; align-items: center; justify-content: center; gap: var(--spacing-md); }
+.speaker { display: flex; align-items: center; justify-content: center; padding: var(--spacing-md); border-radius: var(--radii-lg); }
 
 /* ------------------------------------------------------------------------------------------ Card Match (cardMatchStyle, AF-3) */
 .cm-board { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
 .cm-col { display: flex; flex-direction: column; gap: var(--spacing-sm); min-width: 0; }
-/* A top band (padding-top spacing.xl) is kept in every state: the text never moves when a mark appears, the 20 mark at
-   inset xxs (2 + 20 = 22) never reaches it, and the text keeps the card's whole width (the columns are 138 wide at
-   320, so an end gutter would break "kimchi" at the Largest text size). */
-.cm { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: var(--touch-min); padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); text-align: left; }
+/* A top band, paddingTop max(spacing.xl, cardPadding) (cardPadding scales to 17 at most), kept in every state: the
+   text never moves when a mark appears and the 20 mark at inset xs (4 + 20 = 24) never reaches it. Idle border as
+   shipped (border.subtle). */
+.cm { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: var(--touch-min); padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); text-align: left; }
 .cm-ko { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
 .cm-rom { font-size: var(--size-caption); color: var(--colors-text-secondary); font-style: italic; overflow-wrap: anywhere; }
-.cm-en { font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-/* Picked: the Pic-Word Match selection ring (RING_SELECTED): borderWidth.thick in brand.primary, spacing.xs out. Drawn
-   outside the card, inside the column gap (12) and the row gap (8), so nothing moves. */
-.cm-picked { background: var(--colors-brand-primaryLight); border-color: var(--colors-brand-primary); box-shadow: 0 0 0 var(--spacing-xs) var(--colors-surface-canvas), 0 0 0 calc(var(--spacing-xs) + var(--border-width-thick)) var(--colors-brand-primary); }
+.cm-en { font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
+/* Picked: a solid ring, borderWidth.thick in brand.primary, spacing.xxs out (5 in all), drawn by a negative-margin
+   wrapper around the target (as Role Play's look-here ring): no layout cost, not part of the hit area, and 3 dp clear
+   of the next card in the 8 row gap. */
+.cm-picked { background: var(--colors-brand-primaryLight); border-color: var(--colors-brand-primary); box-shadow: 0 0 0 var(--spacing-xxs) var(--colors-surface-canvas), 0 0 0 calc(var(--spacing-xxs) + var(--border-width-thick)) var(--colors-brand-primary); }
 .cm-wrong { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); cursor: default; }
 .cm-matched { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); cursor: default; }
 
 /* ------------------------------------------------------------------------------------------ HoyaBubble */
 .bubble { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); box-shadow: var(--shadow-card); }
-.bubble p { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bubble-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xs); overflow-wrap: break-word; }
+.bubble-ko { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.bubble-rom { font-size: var(--size-bodySm); font-weight: var(--weight-regular); color: var(--colors-text-secondary); font-style: italic; }
+.bubble-cta { margin-top: var(--spacing-xs); }
 .bubble-hoya { width: var(--hoya-bubble); height: var(--hoya-bubble); flex: none; }
 .bubble-thinking { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
 
@@ -166,16 +191,17 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .btn-block { width: 100%; }
 
 /* ------------------------------------------------------------------------------------------ Build a Letter */
-.target { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: var(--target); height: var(--target); border-radius: var(--radii-xl); border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-surface-paper); }
+.target { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: var(--target); height: var(--target); border-radius: var(--radii-xl); border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-surface-paper); }
 .target-correct { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
 .target-glyph { font-size: var(--target-glyph); font-weight: var(--weight-bold); line-height: 1.05; }
 .target-rom { font-size: var(--size-caption); color: var(--colors-text-secondary); }
 .target .mark svg { width: var(--spacing-xl); height: var(--spacing-xl); }
 .slots { display: flex; justify-content: center; gap: var(--spacing-sm); }
-.slot { display: flex; align-items: center; justify-content: center; width: var(--slot); height: var(--slot); border-radius: var(--radii-lg); border: var(--border-width-base) dashed var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-title); font-weight: var(--weight-bold); }
+.slot { display: flex; align-items: center; justify-content: center; width: var(--slot); height: var(--slot); border-radius: var(--radii-lg); border: var(--border-width-base) dashed var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: calc(var(--size-dp-title) * var(--lg-f)); font-weight: var(--weight-bold); }
 .slot-filled { border-style: solid; border-color: var(--colors-brand-primary); background: var(--colors-brand-primaryLight); }
 .slot-miss { border-style: solid; border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
-.shape-hint { flex-direction: row; justify-content: center; gap: var(--spacing-xs); }
+/* The shape picture's place, kept under the slots in every state (owner Q2): its appearance is the miss cue. */
+.shape-place { display: flex; justify-content: center; gap: var(--spacing-xs); min-height: var(--hint-cell); }
 .hint-cell { display: flex; align-items: center; justify-content: center; width: var(--hint-cell); height: var(--hint-cell); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-brand-primary); background: var(--colors-brand-primaryLight); font-size: var(--size-caption); color: var(--colors-text-secondary); }
 
 /* ------------------------------------------------------------------------------------------ Story Sequence, Story Order */
@@ -186,17 +212,20 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .seq-line { background: var(--colors-surface-paper); border-color: var(--colors-border-shape); }
 
 /* ------------------------------------------------------------------------------------------ Hidden Heritage */
-.scene { position: relative; height: var(--scene-h); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-sunken); }
+.scene { position: relative; overflow: hidden; height: var(--scene-h); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-sunken); }
+.scene-spec { width: 100%; height: calc(var(--touch-min) + 2 * var(--spacing-xl)); }
 .spot { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; justify-content: center; width: var(--touch-min); height: var(--touch-min); }
-.hh-spec { display: flex; justify-content: center; padding: var(--spacing-lg); }
-.hh-spec .spot { position: relative; left: auto; top: auto; background: var(--colors-surface-sunken); border-radius: var(--radii-md); }
 /* Ring: borderWidth.thick with a text.primary casing on both sides, so it reads on any fill (HiddenHeritageGame Ring). */
 .ring { position: absolute; inset: var(--spacing-none); border-radius: var(--radii-md); border: var(--border-width-thick) solid transparent; }
 .ring-found { border-color: var(--colors-feedback-success); box-shadow: 0 0 0 var(--border-width-thin) var(--colors-text-primary), inset 0 0 0 var(--border-width-thin) var(--colors-text-primary); }
 .ring-miss { border-color: var(--colors-feedback-nudge); box-shadow: 0 0 0 var(--border-width-thin) var(--colors-text-primary), inset 0 0 0 var(--border-width-thin) var(--colors-text-primary); }
 .ring-hint { inset: var(--spacing-xs); border-style: dashed; border-color: var(--colors-feedback-info); box-shadow: 0 0 0 var(--border-width-thin) var(--colors-text-primary), inset 0 0 0 var(--border-width-thin) var(--colors-text-primary); }
-/* The disc (20 + 2 x xxs + 2 x thin = 26) is centred on the ring's top-end corner: 13 = spacing.md + borderWidth.thin. */
+/* The disc (26) is centred on the ring's top-end corner (13 = spacing.md + borderWidth.thin, from the ring's border box). */
 .ring .mark-disc { position: absolute; top: calc(-1 * (var(--spacing-md) + var(--border-width-thin) + var(--border-width-thick))); right: calc(-1 * (var(--spacing-md) + var(--border-width-thin) + var(--border-width-thick))); }
+/* Near the scene's edge the disc moves in along that axis just far enough to stay whole (the spot here is spacing.xs
+   from the edge, so the disc's edge meets the scene's). AF-4c computes it from the spot and scene rectangles. */
+.ring .mark-disc.clamp-top { top: calc(-1 * (var(--spacing-xs) + var(--border-width-thick))); }
+.ring .mark-disc.clamp-end { right: calc(-1 * (var(--spacing-xs) + var(--border-width-thick))); }
 .found-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
 .found-slot { display: inline-flex; align-items: center; min-height: var(--touch-min); min-width: calc(var(--touch-min) * 2 + var(--spacing-sm)); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-feedback-success); background: var(--colors-feedback-successLight); font-size: var(--size-bodySm); }
 .found-slot.empty { border-style: dashed; border-color: var(--colors-border-shape); background: var(--colors-surface-paper); min-width: var(--touch-min); }
@@ -208,21 +237,21 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .zone-in { font-size: calc(var(--touch-hero) / 2); line-height: 1; font-weight: var(--weight-bold); }
 .zone-filled { border-style: solid; border-color: var(--colors-brand-secondary); background: var(--colors-brand-secondaryLight); }
 .zone-marked { border-style: solid; border-width: var(--border-width-thick); border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
+.zone-ring { border-style: solid; }
 .zone-right { border-style: solid; border-width: var(--border-width-thick); border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
-.zone-ring { border-style: solid; border-width: var(--border-width-thick); border-color: var(--colors-border-focus); }
 .keys { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
-.key { position: relative; display: flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-title); font-weight: var(--weight-bold); }
+.key { position: relative; display: flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: calc(var(--size-dp-title) * var(--lg-f)); font-weight: var(--weight-bold); }
 .key-marked { border-width: var(--border-width-thick); border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
 .rom-line { font-size: var(--size-bodyLg); color: var(--colors-text-secondary); font-style: italic; }
-.tile-grid.four { grid-template-columns: 1fr 1fr; }
 
 /* ------------------------------------------------------------------------------------------ Role Play */
 .chat { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .chat-npc { align-self: flex-start; max-width: 100%; background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-xl); padding: var(--spacing-md) var(--spacing-lg); }
-/* A reply keeps a spacing.xl end gutter in every state: the 20 mark at inset xs (4 + 20 = 24) never reaches the text. */
-.reply { position: relative; display: flex; flex-direction: column; justify-content: center; width: 100%; min-height: var(--touch-child); padding: var(--spacing-xs) var(--spacing-xl) var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); text-align: left; }
-.reply .mark-corner { top: var(--spacing-xs); right: var(--spacing-xs); }
-.reply-wrong { border-width: var(--border-width-thick); border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); cursor: default; padding: calc(var(--spacing-xs) - var(--border-width-thin)) calc(var(--spacing-xl) - var(--border-width-thin)) calc(var(--spacing-xs) - var(--border-width-thin)) calc(var(--spacing-lg) - var(--border-width-thin)); }
+/* A reply keeps a 28 end gutter (spacing.xl + spacing.xs) in every state: the 20 mark at inset sm (8 + 20 = 28), inside
+   the radii.xl corner, never reaches the text. */
+.reply { position: relative; display: flex; flex-direction: column; justify-content: center; width: 100%; min-height: var(--touch-child); padding: var(--spacing-xs) calc(var(--spacing-xl) + var(--spacing-xs)) var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); text-align: left; }
+.reply .mark-corner { top: var(--spacing-sm); right: var(--spacing-sm); }
+.reply-wrong { border-width: var(--border-width-thick); border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); cursor: default; padding: calc(var(--spacing-xs) - var(--border-width-thin)) calc(var(--spacing-xl) + var(--spacing-xs) - var(--border-width-thin)) calc(var(--spacing-xs) - var(--border-width-thin)) calc(var(--spacing-lg) - var(--border-width-thin)); }
 
 /* ------------------------------------------------------------------------------------------ Sentence Builder */
 .line { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); padding: var(--spacing-sm); border-radius: var(--radii-lg); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); }
@@ -230,9 +259,9 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .words { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
 .word { position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: var(--touch-child); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); }
 .word .kt { align-items: center; }
-.word .mark-corner { top: var(--spacing-xs); right: var(--spacing-xs); }
+/* Tile and Sentence Builder: the disc straddles the top-end corner, 8 (spacing.sm) outside the border. */
+.mark-straddle { top: calc(-1 * (var(--spacing-sm) + var(--border-width-base))); right: calc(-1 * (var(--spacing-sm) + var(--border-width-base))); z-index: 1; }
 .word-tried { padding-right: var(--spacing-xl); border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
-.word-ring { box-shadow: 0 0 0 var(--spacing-xs) var(--colors-surface-canvas), 0 0 0 calc(var(--spacing-xs) + var(--border-width-thick)) var(--colors-border-focus); }
 .word-placed { background: var(--colors-brand-secondaryLight); border-color: var(--colors-brand-secondary); }
 
 /* ------------------------------------------------------------------------------------------ the states board */
@@ -240,7 +269,7 @@ code { font-family: var(--family-mono, Menlo, monospace); font-size: 0.9em; over
 .spec-row > .note { padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-none); }
 .spec-cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--spec-cell), 1fr)); gap: var(--spacing-sm); padding: var(--spacing-md) var(--spacing-lg); background: var(--colors-surface-canvas); border-block: var(--border-width-thin) solid var(--colors-border-strong); }
 .spec-cell { display: flex; flex-direction: column; gap: var(--spacing-sm); min-width: 0; }
-.spec-specimen { display: flex; align-items: flex-start; justify-content: flex-start; padding: var(--spacing-sm); min-width: 0; }
+.spec-specimen { display: flex; align-items: flex-start; justify-content: flex-start; padding: var(--spacing-md); min-width: 0; }
 .spec-cell figcaption { display: flex; flex-direction: column; font-size: var(--size-caption); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
 .spec-cell figcaption b { color: var(--colors-text-primary); }
 .spec-name { font-style: italic; }
@@ -269,12 +298,13 @@ legend { font-size: var(--size-body); font-weight: var(--weight-semibold); margi
 .opt.on { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-weight: var(--weight-semibold); }
 .aa { font-weight: var(--weight-bold); font-size: var(--size-body); }
 .preview { margin-top: var(--spacing-sm); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); font-size: var(--size-bodyLg); }
-/* The new row: as the level check's (OptionsScreen.tsx:189-198): label and help on the left, the Switch on the right. */
-.sr-row { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+/* The new row (web only): the whole row is the switch. Label and help on the left (help in Body secondary, 18), the
+   track on the right. Off, the track is border.shape (4.55:1 on paper), not border.strong (1.95:1). */
+.sr-row { display: flex; align-items: center; gap: var(--spacing-md); width: 100%; min-height: var(--touch-min); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); text-align: left; }
 .sr-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
 .sr-text b { font-size: var(--size-body); font-weight: var(--weight-semibold); }
-.switch { flex: none; display: flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); }
-.track { position: relative; width: var(--switch-w); height: var(--switch-h); border-radius: var(--radii-pill); background: var(--colors-border-strong); }
+.sr-help { font-size: var(--size-body); color: var(--colors-text-secondary); }
+.track { position: relative; flex: none; width: var(--switch-w); height: var(--switch-h); border-radius: var(--radii-pill); background: var(--colors-border-shape); }
 .thumb { position: absolute; top: calc((var(--switch-h) - var(--switch-thumb)) / 2); left: calc((var(--switch-h) - var(--switch-thumb)) / 2); width: var(--switch-thumb); height: var(--switch-thumb); border-radius: var(--radii-circle); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
 .sr-on .track { background: var(--colors-brand-primary); }
 .sr-on .thumb { left: auto; right: calc((var(--switch-h) - var(--switch-thumb)) / 2); }

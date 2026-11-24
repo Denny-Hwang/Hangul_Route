@@ -37,6 +37,8 @@ function tokensCss() {
   for (const [k, v] of Object.entries(T.touchTarget)) out.push(`  --touch-${k}: ${v}px;`);
   // Type sizes in rem (token / 16), so the board's 200 % text setting enlarges every line, as the OS text size does.
   for (const [k, v] of Object.entries(T.typography.size)) out.push(`  --size-${k}: ${v / 16}rem;`);
+  // The same sizes in dp, for large type (title, display, hero), which grows by 1 + (f - 1) / 2 (DisplaySheet spec).
+  for (const [k, v] of Object.entries(T.typography.size)) out.push(`  --size-dp-${k}: ${v}px;`);
   for (const [k, v] of Object.entries(T.typography.weight)) out.push(`  --weight-${k}: ${v};`);
   for (const [k, v] of Object.entries(T.typography.leading)) out.push(`  --leading-${k}: ${v};`);
   out.push(`  --max-width-reading: ${T.layout.maxWidth.reading}px;`);
@@ -74,17 +76,23 @@ const MARK = T.spacing.xl; // 24: a mark in the flow at the end of a row (Choice
 
 const MARK_OF = {
   correct: { name: 'check', color: 'var(--colors-feedback-success)' },
-  correctOnFill: { name: 'check', color: 'var(--colors-text-inverse)' },
   wrong: { name: 'replay', color: 'var(--colors-text-primary)' },
   tried: { name: 'dash', color: 'var(--colors-text-primary)' },
 };
 
-/** A decorative status mark (aria-hidden: the name carries the state). `where`: end (in the flow) or corner. */
+/**
+ * A decorative status mark (aria-hidden: the name carries the state). `where`: `end` (in the flow, 24), `corner`
+ * (out of the flow, 20, inside the rounded corner), or `disc` (20 on a 26 disc of the state's light fill with a
+ * text.primary casing: Hidden Heritage's rings and Sentence Builder's tried tile).
+ */
 function mark(kind, where = 'corner', extra = '') {
   const m = MARK_OF[kind];
   const size = where === 'end' ? MARK : MARK_MIN;
-  return `<span class="mark mark-${where} ${extra}" aria-hidden="true">${icon(m.name, size, m.color)}</span>`;
+  const cls = where === 'disc' ? `mark-corner mark-disc mark-disc-${kind}` : `mark-${where}`;
+  return `<span class="mark ${cls} ${extra}" aria-hidden="true">${icon(m.name, size, m.color)}</span>`;
 }
+/** The empty mark column a ChoiceCard row keeps in every state (charter M6), so nothing reflows on answering. */
+const markSlot = () => '<span class="mark-slot" aria-hidden="true"></span>';
 
 const STATE_MARK = { correct: 'correct', wrong: 'wrong', tried: 'tried' };
 
@@ -102,18 +110,19 @@ const NAME = {
   picked: (b) => b,
 };
 
-/** ChoiceCard, row layout (design/components/ChoiceCard/spec.md). */
-function choiceCard({ label, korean, state = 'idle', base }) {
-  const name = NAME[state](base ?? label ?? korean.rom);
-  const body = `${korean ? kt(korean) : ''}${label ? `<span class="cc-label">${esc(label)}</span>` : ''}`;
-  const m = STATE_MARK[state] ? mark(STATE_MARK[state], 'end') : '';
-  return `<button type="button" class="cc cc-${state} mk-host" data-state="${state}" aria-label="${esc(name)}"${state === 'correct' ? ' aria-selected="true"' : ''}><span class="cc-body">${body}</span>${m}</button>`;
+/** ChoiceCard, row layout (design/components/ChoiceCard/spec.md). `art`: a picture option (Pic-Word Match). */
+function choiceCard({ label, korean, state = 'idle', base, art, picked = false, badge }) {
+  const name = (picked ? (b) => `Selected: ${b}` : NAME[state])(base ?? label ?? korean.rom);
+  const body = `${art ? `<span class="cc-art">${art}</span>` : ''}${korean ? kt(korean) : ''}${label ? `<span class="cc-label">${esc(label)}</span>` : ''}`;
+  const m = STATE_MARK[state] ? mark(STATE_MARK[state], 'end') : markSlot();
+  const badgeHtml = badge ? `<span class="pw-badge" aria-hidden="true">${badge}</span>` : '';
+  return `<button type="button" class="cc cc-${state}${picked ? ' cc-picked' : ''}${art ? ' cc-pic' : ''} mk-host" data-state="${picked ? 'picked' : state}" aria-label="${esc(name)}"${state === 'correct' || picked ? ' aria-selected="true"' : ''}><span class="cc-body">${body}</span>${m}${badgeHtml}</button>`;
 }
 
 /** Tile (Match Sound, Odd One Out, Build a Letter tray). `locked` (AF-1): a wrong tile is inactive, never disabled. */
 function tile({ ch, rom, sound, state = 'idle', size = 'lg' }) {
   const name = state === 'disabled' ? sound : NAME[state](sound);
-  const m = STATE_MARK[state] ? mark(STATE_MARK[state]) : '';
+  const m = STATE_MARK[state] ? mark(STATE_MARK[state], 'disc', 'mark-straddle') : '';
   return `<button type="button" class="tile tile-${size} tile-${state} mk-host" data-state="${state}" aria-label="${esc(name)}"${state === 'disabled' ? ' disabled' : ''}><span class="tile-in"><span class="tile-glyph" lang="ko">${esc(ch)}</span><span class="tile-rom">${esc(rom)}</span></span>${m}</button>`;
 }
 
@@ -129,6 +138,19 @@ function cmCard({ ko, rom, en, state = 'idle' }) {
   return `<button type="button" class="cm cm-${state} mk-host" data-state="${look}" aria-label="${esc(name)}"${state === 'picked' ? ' aria-selected="true"' : ''}>${body}${m}</button>`;
 }
 
+/** Syllable Build and Match Shape zone. */
+const zone = (state, ch, name) =>
+  `<button type="button" class="zone zone-${state} mk-host" data-state="${state === 'marked' ? 'wrong' : state === 'right' ? 'correct' : state === 'ring' ? 'hint' : state}" aria-label="${esc(name)}"><span class="zone-in" lang="ko">${ch}</span>${state === 'marked' ? mark('wrong') : state === 'right' ? mark('correct') : ''}</button>`;
+/** Role Play reply. */
+const reply = (state, w, name) =>
+  `<button type="button" class="reply reply-${state} mk-host" data-state="${state === 'ring' ? 'hint' : state}" aria-label="${esc(name)}">${kt(w)}${state === 'wrong' ? mark('wrong') : ''}</button>`;
+/** Sentence Builder word tile: the tried tile's dash on a disc straddling its top-end corner (owner Q5). */
+const word = (state, w, name) =>
+  `<button type="button" class="word word-${state} mk-host" data-state="${state === 'ring' ? 'hint' : state}" aria-label="${esc(name)}">${kt(w)}${state === 'tried' ? mark('tried', 'disc', 'mark-straddle') : ''}</button>`;
+/** Build a Letter target box (the speaker). */
+const target = (state) =>
+  `<button type="button" class="target target-${state} mk-host" data-state="${state}" aria-label="Hear ga"><span class="target-glyph" lang="ko">가</span><span class="target-rom">ga</span>${state === 'correct' ? mark('correct', 'corner', 'mark-inset') : ''}</button>`;
+
 /** Hoya, drawn as the other mocks draw him. */
 const HOYA_DEFS = `<svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
 <symbol id="hoya-thinking" viewBox="0 0 128 128"><ellipse cx="64" cy="116" rx="38" ry="5" style="fill: var(--colors-hoya-furDark); opacity: 0.18"/><circle cx="64" cy="64" r="44" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="98" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><circle cx="98" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><path d="M26 54 Q30 58 26 62 M24 70 Q29 73 25 78 M28 84 Q33 86 30 90 M102 54 Q98 58 102 62 M104 70 Q99 73 103 78 M100 84 Q95 86 98 90 M64 24 Q66 30 64 36" style="fill: none; stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round"/><ellipse cx="64" cy="84" rx="26" ry="16" style="fill: var(--colors-hoya-belly)"/><ellipse cx="52" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><ellipse cx="80" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><path d="M54 94 H72" style="stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round; fill: none"/><circle cx="110" cy="18" r="7" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><circle cx="100" cy="32" r="3" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><path d="M58 84 H70 L64 90 Z" style="fill: var(--colors-hoya-nose)"/></symbol>
@@ -137,9 +159,9 @@ const HOYA_DEFS = `<svg width="0" height="0" class="defs" aria-hidden="true" foc
 const hoya = (pose, cls) => `<svg class="${cls}" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-${pose}"/></svg>`;
 
 /** HoyaBubble. `live` (AF-1): false on a result bubble (the announcer says the result), true (default) elsewhere. */
-function bubble(tone, html, live = true) {
+function bubble(tone, html, live = true, cta = '') {
   const liveAttr = live ? ' aria-live="polite"' : '';
-  return `<div class="bubble bubble-${tone}" data-live="${live}"${liveAttr}>${hoya(tone === 'thinking' ? 'thinking' : 'idle', 'bubble-hoya')}<p>${html}</p></div>`;
+  return `<div class="bubble bubble-${tone}" data-live="${live}"${liveAttr}>${hoya(tone === 'thinking' ? 'thinking' : 'idle', 'bubble-hoya')}<div class="bubble-text"><p>${html}</p>${cta}</div></div>`;
 }
 
 const btn = (label, { tone = 'secondary', size = 'md', lead = '', focused = false, cls = '' } = {}) =>
@@ -148,7 +170,6 @@ const btn = (label, { tone = 'secondary', size = 'md', lead = '', focused = fals
 const hearIt = () => btn('Hear it', { lead: icon('speaker', 20, 'var(--colors-text-onSecondary)') }); // learner.audio.hearIt.cta
 /** learner.minigame.trace.next.cta "Next": Story Check's Next (primary, hero, full width), with the focus on it. */
 const nextBtn = () => `<div class="next-row">${btn('Next', { tone: 'primary', size: 'hero', focused: true, cls: 'next-btn' })}</div>`;
-const skip = () => `<div class="skip-row">${btn('Skip', { tone: 'ghost', size: 'md', cls: 'btn-block' })}</div>`; // learner.minigame.skip.cta
 
 const topbar = (n, total) =>
   `<div class="topbar"><span class="progress" style="--p: ${(n / total) * 100}%"><span></span></span><span class="pill">${n} / ${total}</span></div>`;
@@ -157,7 +178,7 @@ const topbar = (n, total) =>
 const focusNode = (n, total, prompt, inner) =>
   `<div class="focus-node" role="heading" aria-level="2" aria-label="${esc(`Question ${n} of ${total}. ${prompt}`)}">${inner}</div>`;
 
-/** A drawn frame of the board. `cols`: [prompt, answers, feedback] for GameColumns, or a single body. */
+/** A drawn frame of the board. */
 function frame({ id, title, body, said = [], notes = [] }) {
   const saidHtml = said.map((s) => `<p class="said"><span class="said-k">Said once</span> <q>${esc(s)}</q></p>`).join('');
   const notesHtml = notes.map((n) => `<p class="note">${n}</p>`).join('');
@@ -195,6 +216,9 @@ ${sections.join('\n')}
   writeFileSync(join(MOCK, file), html);
 }
 
+const PAGE_INTRO =
+  'The dashed line is where the first screen ends at this window size. "Said once" is the hidden announcer: it is not drawn. With a screen reader on, every right answer that ends a round shows Next as B4 does, the last round and the last pair included (owner decision Q1).';
+
 // ------------------------------------------------------------------------------------------------ content (samples)
 const W = {
   sagwa: { ko: '사과', rom: 'sagwa', gloss: 'apple' },
@@ -216,12 +240,36 @@ const J = {
   t: { ch: 'ㅌ', rom: 't', sound: 't' },
 };
 
+/** Hidden Heritage spot. `pos`: CSS for left and top inside the scene; `clamp`: the disc moved into the scene (D5). */
+function spot(glyph, pos, state, name, clamp = '') {
+  const m = state === 'found' ? mark('correct', 'disc', clamp) : state === 'miss' ? mark('wrong', 'disc', clamp) : '';
+  const ds = state === 'found' ? 'correct' : state === 'miss' ? 'wrong' : 'hint';
+  return `<button type="button" class="spot" style="${pos}" aria-label="${esc(name)}">${icon(glyph, 56, 'var(--colors-text-secondary)', 'spot-art')}${state !== 'none' ? `<span class="ring ring-${state} mk-host" data-state="${ds}">${m}</span>` : ''}</button>`;
+}
+const at = (x, y) => `--x: ${x}%; --y: ${y}%`;
+/** four-seasons.ts:241-250: a real spot sits 12 of 400 from the top and ends at the scene's right edge. */
+const EDGE = 'left: auto; right: var(--spacing-xs); top: var(--spacing-xs)';
+
+/** The shape picture's place under Build a Letter's slots, kept in every state (owner Q2). */
+const shapePlace = (shown) =>
+  shown
+    ? `<div class="shape-place" role="img" aria-label="Block shape: The vowel goes beside the first letter."><span class="hint-cell">1</span><span class="hint-cell">2</span></div>`
+    : `<div class="shape-place" aria-hidden="true"></div>`;
+
 // ================================================================================================= page 1: states
 function statesPage() {
   const cell = (label, specimen, name) =>
     `<figure class="spec-cell"><div class="spec-specimen">${specimen}</div><figcaption><b>${esc(label)}</b>${name ? `<span class="spec-name">name: “${esc(name)}”</span>` : ''}</figcaption></figure>`;
   const row = (id, title, cells, note = '') =>
     `<section class="spec-row" aria-labelledby="${id}-t"><h2 class="frame-label" id="${id}-t"><b>${id}</b> ${esc(title)}</h2><div class="spec-cells">${cells.join('')}</div>${note ? `<p class="note">${note}</p>` : ''}</section>`;
+
+  const sizes = `<section class="spec-row" aria-labelledby="S1-t"><h2 class="frame-label" id="S1-t"><b>S1</b> Mark size and place (spec 3.1 "Size")</h2>
+<div class="sizes">
+  <figure class="size-fig"><div class="size-box">${icon('check', MARK_MIN, 'var(--colors-feedback-success)')}${icon('replay', MARK_MIN, 'var(--colors-text-primary)')}${icon('dash', MARK_MIN, 'var(--colors-text-primary)')}</div><figcaption><b>20 minimum</b> on a corner, out of the flow (<code>spacing.lg + spacing.xs</code>), inside the rounded corner: Tile, Card Match, zones, Role Play, Story Sequence slot</figcaption></figure>
+  <figure class="size-fig"><div class="size-box">${icon('check', MARK, 'var(--colors-feedback-success)')}${icon('replay', MARK, 'var(--colors-text-primary)')}</div><figcaption><b>24</b> in the flow at the end of a row (<code>spacing.xl</code>), in a column kept in every state: ChoiceCard; 24 on the Build a Letter target box</figcaption></figure>
+  <figure class="size-fig"><div class="size-box">${mark('correct', 'disc', 'mark-static')}${mark('tried', 'disc', 'mark-static')}</div><figcaption><b>20 on a 26 disc</b> (the state's light fill, a <code>borderWidth.thin</code> <code>text.primary</code> casing): Hidden Heritage rings, Sentence Builder's tried tile</figcaption></figure>
+  <figure class="size-fig"><div class="size-box size-old">${icon('check', 16, 'var(--colors-feedback-success)')}${icon('replay', 16, 'var(--colors-text-primary)')}</div><figcaption><b>16 today</b> (Tile miss, Role Play, Sentence Builder, Syllable Build check, Story Sequence slot): raised to 20. The 2.2 to 2.6 stroke of the 24 grid drew under 1.8 px at 16.</figcaption></figure>
+</div></section>`;
 
   const ccRow = row(
     'A1',
@@ -230,9 +278,22 @@ function statesPage() {
       cell('Not answered', choiceCard({ label: 'pear' }), 'pear'),
       cell('Right', choiceCard({ label: 'apple', state: 'correct' }), NAME.correct('apple')),
       cell('Miss, try another', choiceCard({ label: 'pear', state: 'wrong' }), NAME.wrong('pear')),
-      cell('Look here', choiceCard({ label: 'apple', state: 'hint' }), NAME.hint('apple')),
+      cell('Look here (dashed ring, new)', choiceCard({ label: 'apple', state: 'hint' }), NAME.hint('apple')),
     ],
-    'Unchanged look (the marks already follow the rule, <code>ChoiceCard/style.ts:53-70</code>): the mark sits in the flow at the end of the row at 24 (<code>spacing.xl</code>). AF-1 changes one flag: <code>wrong</code> is no longer <code>selected</code>.',
+    'The 24 mark column is kept in every state (an empty 24 slot when not answered), so a card never grows on answering. Look-here becomes the one look-here shape of every game: a dashed <code>borderWidth.thick</code> <code>border.focus</code> ring <code>spacing.xs</code> outside the card (was the card\'s own thick border, 1.06:1 against <code>border.shape</code>). AF-1: <code>wrong</code> is no longer <code>selected</code>.',
+  );
+  const pw = (state, picked = false, badge) =>
+    choiceCard({ label: 'rice bowl', art: icon('rice-bowl', 56, 'var(--colors-text-secondary)'), state, picked, badge, base: 'rice bowl' });
+  const pwRow = row(
+    'A9',
+    'Pic-Word Match picture card (ChoiceCard row with art, as shipped)',
+    [
+      cell('Not answered', pw('idle'), 'rice bowl'),
+      cell('Picked', pw('idle', true), 'Selected: rice bowl'),
+      cell('Miss', pw('wrong'), NAME.wrong('rice bowl')),
+      cell('Matched, number 1', pw('correct', false, '1'), 'Matched, number 1: rice bowl'),
+    ],
+    'Unchanged: the selection ring (solid, <code>brand.primary</code>), the check and the match number already carry each state. The miss look now stays until the next tap that changes the board (OD-AF7).',
   );
   const tileRow = row(
     'A2',
@@ -243,7 +304,7 @@ function statesPage() {
       cell('Miss, locked', tile({ ...J.d, state: 'wrong' }), NAME.wrong(J.d.sound)),
       cell('Used (Build a Letter tray)', tile({ ...J.a, state: 'disabled', size: 'md' }), J.a.sound),
     ],
-    'The corner mark grows from 16 to 20 (<code>TILE_MARK</code> size <code>spacing.lg + spacing.xs</code>, inset <code>spacing.none</code>), so it ends where the glyph column starts and never covers it. <code>correct</code> gains <code>check</code>. A locked miss is <code>inactive</code>, never <code>disabled</code>; only Build a Letter\'s used tray tile is disabled.',
+    'The mark grows from 16 to 20 and moves onto a 26 disc that straddles the tile\'s top-end corner (8 outside), as Sentence Builder\'s: at large text a tile shrinks to its jamo, and a mark inside the corner then covered it (the <code>mark-clear</code> check at 320 with 200 % text). <code>correct</code> gains <code>check</code>. A locked miss is <code>inactive</code>, never <code>disabled</code>; only Build a Letter\'s used tray tile is disabled.',
   );
   const cmRow = row(
     'A3',
@@ -254,88 +315,72 @@ function statesPage() {
       cell('Meaning tried', cmCard({ en: 'rice', state: 'wrong' }), NAME.wrong('English meaning rice')),
       cell('Pair matched', cmCard({ en: 'kimchi', state: 'matched' }), NAME.correct('English meaning kimchi')),
     ],
-    'Picked: the Pic-Word Match selection ring (a <code>borderWidth.thick</code> ring in <code>brand.primary</code>, <code>spacing.xs</code> out), so the pick is a second outline, not only a fill. A matched card is drawn at full strength: the 0.5 fade goes.',
+    'Picked: a solid <code>borderWidth.thick</code> ring in <code>brand.primary</code>, <code>spacing.xxs</code> outside the card (a solid second outline; look-here is dashed). A matched card is drawn at full strength: the 0.5 fade goes. The idle border stays <code>border.subtle</code> as shipped (follow-up F1).',
   );
-  const zone = (state, inner, name) =>
-    `<button type="button" class="zone zone-${state} mk-host" data-state="${state === 'marked' ? 'wrong' : state === 'right' ? 'correct' : state}" aria-label="${esc(name)}"><span class="zone-in" lang="ko">${inner}</span>${state === 'marked' ? mark('wrong') : state === 'right' ? mark('correct') : ''}</button>`;
   const zoneRow = row(
     'A4',
     'Syllable Build and Match Shape: zones and tiles (OD-AF8 (c))',
     [
       cell('Empty zone', zone('empty', '', 'Vowel, empty'), 'Vowel, empty'),
       cell('Miss: the dot becomes replay', zone('marked', 'ㅗ', 'Not this one: o'), 'Not this one: o'),
-      cell('Look here', zone('ring', 'ㅏ', 'Look here: a'), 'Look here: a'),
+      cell('Look here (dashed ring)', zone('ring', 'ㅏ', 'Look here: a'), 'Look here: a'),
       cell('Right', zone('right', 'ㅏ', 'Right answer: a'), 'Right answer: a'),
     ],
-    'The 12 dp amber dot (<code>SyllableBuildBoard.tsx:94-112</code>) becomes <code>replay</code> in <code>text.primary</code> at 20, on the same corner; the right check grows from 16 to 20.',
+    'The 12 dp amber dot (<code>SyllableBuildBoard.tsx:94-112</code>) becomes <code>replay</code> in <code>text.primary</code> at 20; the right check grows from 16 to 20; both at inset <code>spacing.xs</code>. The look-here ring becomes the dashed outer ring.',
   );
-  const reply = (state, w, name) =>
-    `<button type="button" class="reply reply-${state} mk-host" data-state="${state}" aria-label="${esc(name)}">${kt(w)}${state === 'wrong' ? mark('wrong') : ''}</button>`;
   const replyRow = row(
     'A5',
     'Role Play reply (OD-AF8 (c))',
     [
       cell('Not answered', reply('idle', W.hello, 'annyeonghaseyo, hello'), 'annyeonghaseyo, hello'),
       cell('Less natural, locked', reply('wrong', W.ne, NAME.wrong('ne, yes')), NAME.wrong('ne, yes')),
+      cell('Look here (dashed ring)', reply('ring', W.thanks, NAME.hint('gomawoyo, thanks')), NAME.hint('gomawoyo, thanks')),
     ],
-    'The locked reply\'s <code>dash</code> in <code>text.secondary</code> at 16 becomes <code>replay</code> in <code>text.primary</code> at 20; the reply keeps a 24 end gutter (<code>spacing.xl</code>) in every state, so the text never runs under the mark.',
+    'The locked reply\'s <code>dash</code> in <code>text.secondary</code> at 16 becomes <code>replay</code> in <code>text.primary</code> at 20, inset <code>spacing.sm</code> (inside the <code>radii.xl</code> curve); the reply keeps a 28 end gutter (<code>spacing.xl + spacing.xs</code>) in every state. AF-4c passes <code>inactive</code>, not <code>disabled</code>, to the locked reply\'s target (<code>RolePlayGame.tsx:630</code>).',
   );
-  const word = (state, w, name) =>
-    `<button type="button" class="word word-${state} mk-host" data-state="${state}" aria-label="${esc(name)}">${kt(w)}${state === 'tried' ? mark('tried') : ''}</button>`;
   const wordRow = row(
     'A6',
-    'Sentence Builder word tile (OD-AF8 (c): keeps dash)',
+    'Sentence Builder word tile (OD-AF8 (c), owner Q5)',
     [
       cell('Not answered', word('idle', { ko: '학생', rom: 'haksaeng' }, 'haksaeng'), 'haksaeng'),
       cell('Tried here, still tappable', word('tried', { ko: '이에요', rom: 'ieyo' }, 'ieyo, tried'), 'ieyo, tried'),
-      cell('Look here', word('ring', { ko: '저는', rom: 'jeoneun' }, 'Look here: jeoneun'), 'Look here: jeoneun'),
+      cell('Look here (dashed ring)', word('ring', { ko: '저는', rom: 'jeoneun' }, 'Look here: jeoneun'), 'Look here: jeoneun'),
     ],
-    '<code>dash</code> ("tried here") stays, because the tile is not locked: it may fit a later place. Its colour goes from <code>text.secondary</code> to <code>text.primary</code> and its size from 16 to 20.',
+    '<code>dash</code> stays (the tile is not locked: it may fit a later place), now on a 26 <code>nudgeLight</code> disc with a <code>text.primary</code> casing that straddles the tile\'s top-end corner (8 outside), so it reads as a badge, not as a dash or ㅡ after the word (owner Q5).',
   );
-  const target = (state) =>
-    `<button type="button" class="target target-${state} mk-host" data-state="${state}" aria-label="Hear ga"><span class="target-glyph" lang="ko">가</span><span class="target-rom">ga</span>${state === 'correct' ? mark('correct', 'corner', 'mark-inset') : ''}</button>`;
   const targetRow = row(
     'A7',
     'Build a Letter target box (AF-4a)',
     [cell('Waiting', target('idle'), 'Hear ga'), cell('Right block', target('correct'), 'Hear ga')],
-    'The target stays the speaker button and keeps its name; the announcer says "Right answer: ga." The check sits <code>spacing.sm</code> in from the corner, inside the <code>radii.xl</code> curve.',
+    'The target stays the speaker button and keeps its name; the announcer says "Right answer: ga." The check (24) sits <code>spacing.sm</code> in from the corner, inside the <code>radii.xl</code> curve.',
   );
-  const ring = (state, glyph, name) => {
-    const m = state === 'found' ? mark('correct', 'corner', 'mark-disc mark-disc-correct') : state === 'miss' ? mark('wrong', 'corner', 'mark-disc mark-disc-wrong') : '';
-    return `<span class="hh-spec"><button type="button" class="spot" aria-label="${esc(name)}">${icon(glyph, 56, 'var(--colors-text-secondary)', 'spot-art')}<span class="ring ring-${state} mk-host" data-state="${state === 'found' ? 'correct' : state === 'miss' ? 'wrong' : state === 'hint' ? 'hint' : 'idle'}">${m}</span></button></span>`;
-  };
+  const ringCell = (state, glyph, name) =>
+    `<div class="scene scene-spec">${spot(glyph, 'left: var(--spacing-xl); top: var(--spacing-xl)', state, name)}</div>`;
   const ringRow = row(
     'A8',
     'Hidden Heritage rings (AF-4c)',
     [
-      cell('Not tapped', ring('none', 'leaf', 'leaf'), ''),
-      cell('Found', ring('found', 'rice-bowl', 'Right answer: bapgeureut, rice bowl'), 'Right answer: bapgeureut, rice bowl'),
-      cell('Miss, look again', ring('miss', 'leaf', 'Not this one: leaf'), 'Not this one: leaf'),
-      cell('Look here (dashed, as today)', ring('hint', 'lantern', 'Look here: deung'), 'Look here: deung'),
+      cell('Not tapped', ringCell('none', 'leaf', 'leaf'), 'leaf'),
+      cell('Found', ringCell('found', 'rice-bowl', 'Right answer: bapgeureut, rice bowl'), 'Right answer: bapgeureut, rice bowl'),
+      cell('Miss, look again', ringCell('miss', 'leaf', 'Not this one: leaf'), 'Not this one: leaf'),
+      cell('Look here (dashed, as today)', ringCell('hint', 'lantern', 'Look here: deung'), 'Look here: deung'),
     ],
-    'Found and miss were the same solid ring in two colours. Now each carries its mark on a 24 disc of its own light fill with a <code>text.primary</code> casing, centred on the ring\'s top-end corner, so it reads on any scene art and never covers the thing.',
+    'Found and miss were the same solid ring in two colours. Each now carries its mark on a 26 disc of its own light fill with a <code>text.primary</code> casing, centred on the ring\'s top-end corner, and moved into the scene when that corner is near the scene\'s edge (H1). While the miss disc shows, the thing tapped is inactive: a tap on it is not a second miss.',
   );
-
-  const sizes = `<section class="spec-row" aria-labelledby="S1-t"><h2 class="frame-label" id="S1-t"><b>S1</b> Mark size and place (spec 3.1 "Size")</h2>
-<div class="sizes">
-  <figure class="size-fig"><div class="size-box">${icon('check', MARK_MIN, 'var(--colors-feedback-success)')}${icon('replay', MARK_MIN, 'var(--colors-text-primary)')}${icon('dash', MARK_MIN, 'var(--colors-text-primary)')}</div><figcaption><b>20 minimum</b> on a corner, out of the flow (<code>spacing.lg + spacing.xs</code>): Tile, Card Match, zones, Role Play, Sentence Builder, Story Sequence slot, Hidden Heritage disc</figcaption></figure>
-  <figure class="size-fig"><div class="size-box">${icon('check', MARK, 'var(--colors-feedback-success)')}${icon('replay', MARK, 'var(--colors-text-primary)')}</div><figcaption><b>24</b> in the flow at the end of a row (<code>spacing.xl</code>): ChoiceCard (unchanged); 24 on the Build a Letter target box</figcaption></figure>
-  <figure class="size-fig"><div class="size-box size-old">${icon('check', 16, 'var(--colors-feedback-success)')}${icon('replay', 16, 'var(--colors-text-primary)')}</div><figcaption><b>16 today</b> (Tile miss, Role Play, Sentence Builder, Syllable Build check, Story Sequence slot): raised to 20. The 2.2 to 2.6 stroke of the 24 grid drew under 1.8 px at 16.</figcaption></figure>
-</div></section>`;
 
   const notButton = `<section class="spec-row" aria-labelledby="S2-t"><h2 class="frame-label" id="S2-t"><b>S2</b> A <code>replay</code> mark is not a replay button</h2>
 <div class="spec-cells">
   ${cell('Mark: inside the answer, no frame of its own', choiceCard({ label: 'pear', state: 'wrong' }), NAME.wrong('pear'))}
   ${cell('Action: a pill with a word', `<div class="stackfig">${btn('Try again', { tone: 'primary', size: 'hero', lead: icon('replay', 24, 'var(--colors-text-inverse)') })}${hearIt()}</div>`, 'Try again / Hear it')}
 </div>
-<p class="note">How they differ: a mark has no fill, outline or label of its own, is 20 or 24 inside an answer that is 64 or more, and is hidden from screen readers; the answer around it is inactive, so a tap on it does nothing. Every action that shows <code>replay</code> (<code>SoundNeededScreen.tsx:38</code>) is a filled pill at least 64 high with a word beside the glyph. Nothing on a game screen pairs <code>replay</code> with "play again": Hear it uses <code>speaker</code>. The beta notes record how learners read it (spec 3.1).</p>
+<p class="note">How they differ: a mark has no fill, outline or label of its own, is 20 or 24 inside an answer that is 64 or more, and is hidden from screen readers; the answer around it is inactive, so a tap on it does nothing. Every action that shows <code>replay</code> (<code>SoundNeededScreen.tsx:38</code>) is a filled pill at least 64 high with a word beside the glyph. Nothing on a game screen pairs <code>replay</code> with "play again": Hear it uses <code>speaker</code>. The beta notes record how learners read it, beside the sound buttons of Match Sound and Syllable Build in particular (spec 3.1).</p>
 </section>`;
 
   page(
     'answer-feedback-states.html',
     'Answer feedback: the states and the marks',
-    'F-A11Y-001 §3.1. Every answer surface, every state, drawn from the design system\'s tokens and glyphs. Right is <code>check</code>, a miss you try again is <code>replay</code>, "tried here" is <code>dash</code> (Sentence Builder only), look-here is a ring. Never <code>feedback.danger</code>, never an X. Open the <code>-grey</code> shots to see each state without colour.',
-    [sizes, ccRow, tileRow, cmRow, zoneRow, replyRow, wordRow, targetRow, ringRow, notButton],
+    'F-A11Y-001 §3.1, revision 2. Every answer surface, every state, drawn from the design system\'s tokens and glyphs. Right is <code>check</code>, a miss you try again is <code>replay</code>, "tried here" is <code>dash</code> on a disc (Sentence Builder only), look-here is one dashed ring everywhere, a pick is a solid ring. Never <code>feedback.danger</code>, never an X. Open the <code>-grey</code> shots to see each state without colour.',
+    [sizes, ccRow, pwRow, tileRow, cmRow, zoneRow, replyRow, wordRow, targetRow, ringRow, notButton],
   );
 }
 
@@ -356,16 +401,14 @@ function quizPage() {
     id: 'B1',
     title: 'Culture Quiz, a question',
     body: topbar(2, 4) + columns(cqPrompt(2), cqOptions(['idle', 'idle', 'idle'])),
-    notes: ['OD-AF1 (B): the answers are ChoiceCards in row layout (were blue pills). Each one is 80 or more high (<code>touchTarget.child</code>).'],
+    notes: ['OD-AF1 (B): the answers are ChoiceCards in row layout (were blue pills, and a locked miss was a <code>disabled</code> Button). Each one is 80 or more high (<code>touchTarget.child</code>).'],
   });
   const b2 = frame({
     id: 'B2',
     title: 'Culture Quiz, after a miss',
     body: topbar(2, 4) + columns(cqPrompt(2), cqOptions(['wrong', 'idle', 'idle']), cqMiss),
     said: ['Not this one: pear. Try another.'],
-    notes: [
-      'The miss stays: amber, <code>replay</code>, locked (inactive, still focusable, never "dimmed"). Hoya\'s bubble is <code>live={false}</code>: the hidden announcer says the result.',
-    ],
+    notes: ['The miss stays: amber, <code>replay</code>, locked (inactive, still focusable, never "dimmed"). Hoya\'s bubble is <code>live={false}</code>: the hidden announcer says the result.'],
   });
   const b3 = frame({
     id: 'B3',
@@ -380,16 +423,18 @@ function quizPage() {
     body: topbar(2, 4) + columns(cqPrompt(2), cqOptions(['wrong', 'correct', 'idle']) + nextBtn()),
     said: ['Right answer: sagwa, apple.'],
     notes: [
-      'Next appears under the answers, in the answers column, and takes focus; the line is queued after the focus move. Nothing moves on until Next. Then focus goes to the new question\'s heading node ("Question 3 of 4. What does this mean? …").',
+      'Next appears under the answers, in the answers column, and takes focus; the line is queued after the focus move. Nothing moves on until Next. Then focus goes to the new question\'s heading node ("Question 3 of 4. What does this mean? …"). On the last question Next keeps its label and the step moves on when it is pressed. Every game whose right answer ends a round does the same.',
     ],
   });
 
-  const trPrompt = focusNode(
-    2,
-    3,
-    'Someone says annyeonghaseyo, hello',
-    `<h3 class="t-prompt">Choose your reply</h3><p class="t-caption">Someone says</p><div class="npc">${kt(W.hello, 'md')}</div>`,
-  ) + `<div class="end hear">${hearIt()}</div>`;
+  // Tap & Respond as shipped (TapRespondGame.tsx:136-158): stacked at every width; a Card holds the line and Hear it.
+  const trHead = (n) =>
+    `${topbar(n, 3)}<h3 class="t-prompt">Choose your reply</h3><div class="card">${focusNode(
+      n,
+      3,
+      'Someone says annyeonghaseyo, hello',
+      `<p class="t-caption">Someone says</p><span class="ko npc-ko" lang="ko">${esc(W.hello.ko)}</span><span class="npc-rom">${esc(W.hello.rom)}</span><span class="npc-gloss">${esc(W.hello.gloss)}</span>`,
+    )}<div class="hear-start">${hearIt()}</div></div>`;
   const trOptions = (states) =>
     `<div class="answers">${[
       choiceCard({ korean: W.ne, state: states[0], base: 'ne, yes' }),
@@ -399,51 +444,42 @@ function quizPage() {
   const c1 = frame({
     id: 'C1',
     title: 'Tap & Respond, after a miss',
-    body: topbar(2, 3) + columns(trPrompt, trOptions(['wrong', 'idle', 'idle']), bubble('thinking', esc("Hmm, that doesn't fit. Try another!"), false)),
+    body: trHead(2) + trOptions(['wrong', 'idle', 'idle']) + bubble('thinking', esc("Hmm, that doesn't fit. Try another!"), false),
     said: ['Not this one: ne, yes. Try another.'],
-    notes: ['Each reply is a ChoiceCard with KoreanText (Hangul, romanization, gloss), so WO-40\'s voice fix reaches it. The announcement names the reply by romanization and gloss, never Hangul (OD-AF5 (a)).'],
+    notes: [
+      'As shipped: one column at every width, the line in a Card with Hear it inside. The round\'s focus node wraps the Card\'s text only (caption, Korean, romanization, meaning); Hear it stays a sibling inside the Card, so AF-2 does not move it.',
+      'Each reply is a ChoiceCard with KoreanText (Hangul, romanization, gloss), so WO-40\'s voice fix reaches it. The announcement names the reply by romanization and gloss, never Hangul (OD-AF5 (a)).',
+    ],
   });
   const c2 = frame({
     id: 'C2',
     title: 'Tap & Respond, right, screen reader on',
-    body: topbar(2, 3) + columns(trPrompt, trOptions(['wrong', 'correct', 'idle']) + nextBtn()),
+    body: trHead(2) + trOptions(['wrong', 'correct', 'idle']) + nextBtn(),
     said: ['Right answer: annyeonghaseyo, hello.'],
     notes: ['The reply\'s own sound plays once the line has been said (iOS waits for it; Android and the web wait a length-scaled time). Then Next.'],
   });
-  page(
-    'answer-feedback-quiz.html',
-    'Answer feedback: Culture Quiz and Tap & Respond',
-    'F-A11Y-001 §3.1, §3.4, §3.6; OD-AF1 (B) ChoiceCard rows, OD-AF9 (b) Next. The dashed line is where the first screen ends at this window size. "Said once" is the hidden announcer: it is not drawn.',
-    [b1, b2, b3, b4, c1, c2],
-  );
+  page('answer-feedback-quiz.html', 'Answer feedback: Culture Quiz and Tap & Respond', `F-A11Y-001 §3.1, §3.4, §3.6; OD-AF1 (B), OD-AF9 (b). ${PAGE_INTRO}`, [b1, b2, b3, b4, c1, c2]);
 }
 
 // ================================================================================================= page 3: pairs and tiles
 function pairsPage() {
-  const cmBoard = (ko, en) =>
-    `<div class="cm-board"><div class="cm-col">${ko.join('')}</div><div class="cm-col">${en.join('')}</div></div>`;
+  const cmBoard = (ko, en) => `<div class="cm-board"><div class="cm-col">${ko.join('')}</div><div class="cm-col">${en.join('')}</div></div>`;
   const cmHead = (n = 1) => `${topbar(n, 3)}<h3 class="t-prompt">Match the meaning</h3><p class="t-caption">Tap a Korean word, then its English meaning.</p>`;
   const d1 = frame({
     id: 'D1',
     title: 'Card Match, a Korean word picked',
     body:
       cmHead() +
-      cmBoard(
-        [cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })],
-        [cmCard({ en: 'rice' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi' })],
-      ) +
+      cmBoard([cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })], [cmCard({ en: 'rice' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi' })]) +
       bubble('idle', esc('Now tap its meaning on the right.'), true),
-    notes: ['The picked card has the Pic-Word Match ring around it: a second outline, so the pick reads without colour. The pick prompt bubble stays live (a status, not a result).'],
+    notes: ['The picked card has a solid second outline, so the pick reads without colour. The pick prompt bubble stays live (a status, not a result).'],
   });
   const d2 = frame({
     id: 'D2',
     title: 'Card Match, a meaning that does not match (OD-AF6 (a))',
     body:
       cmHead() +
-      cmBoard(
-        [cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })],
-        [cmCard({ en: 'rice', state: 'wrong' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi' })],
-      ) +
+      cmBoard([cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })], [cmCard({ en: 'rice', state: 'wrong' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi' })]) +
       bubble('thinking', esc('Not a match. Try another meaning.'), false), // learner.minigame.cardMatch.tryAnother (new, spec 3.7)
     said: ['Not a match: gimchi and rice. Try another.'],
     notes: ['No timer: the meaning tried keeps amber and <code>replay</code>, and the Korean word stays picked, so the next meaning is one tap. Hoya turns <code>thinking</code> with the new line; that bubble is not live.'],
@@ -453,51 +489,53 @@ function pairsPage() {
     title: 'Card Match, a second meaning tried for the same word',
     body:
       cmHead() +
-      cmBoard(
-        [cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })],
-        [cmCard({ en: 'rice', state: 'wrong' }), cmCard({ en: 'water', state: 'wrong' }), cmCard({ en: 'kimchi' })],
-      ) +
+      cmBoard([cmCard({ ...W.gimchi, state: 'picked' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })], [cmCard({ en: 'rice', state: 'wrong' }), cmCard({ en: 'water', state: 'wrong' }), cmCard({ en: 'kimchi' })]) +
       bubble('thinking', esc('Not a match. Try another meaning.'), false),
     said: ['Not a match: gimchi and water. Try another.'],
-    notes: ['Both tried meanings stay marked while 김치 is picked. Picking another Korean word clears the marks and brings back the idle prompt.'],
+    notes: ['Both tried meanings stay marked while 김치 (gimchi) is picked. Picking another Korean word clears the marks and brings back the idle prompt.'],
   });
   const d4 = frame({
     id: 'D4',
-    title: 'Card Match, the pair matched',
-    body:
-      cmHead(2) +
-      cmBoard(
-        [cmCard({ ...W.gimchi, state: 'matched' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })],
-        [cmCard({ en: 'rice' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi', state: 'matched' })],
-      ),
+    title: 'Card Match, a pair matched',
+    body: cmHead(2) + cmBoard([cmCard({ ...W.gimchi, state: 'matched' }), cmCard({ ...W.bap }), cmCard({ ...W.mul })], [cmCard({ en: 'rice' }), cmCard({ en: 'water' }), cmCard({ en: 'kimchi', state: 'matched' })]),
     said: ['Right answer: gimchi, kimchi.'],
     notes: ['Both cards: <code>check</code>, the success fill, full strength (the 0.5 fade went: its text was 2.94:1), inactive and still focusable. The marks on rice and water cleared with the match.'],
   });
+  const d5 = frame({
+    id: 'D5',
+    title: 'Card Match, the last pair, screen reader on (owner Q1)',
+    body:
+      cmHead(3) +
+      cmBoard([cmCard({ ...W.gimchi, state: 'matched' }), cmCard({ ...W.bap, state: 'matched' }), cmCard({ ...W.mul, state: 'matched' })], [cmCard({ en: 'rice', state: 'matched' }), cmCard({ en: 'water', state: 'matched' }), cmCard({ en: 'kimchi', state: 'matched' })]) +
+      nextBtn(),
+    said: ['Right answer: mul, water.'],
+    notes: ['With a screen reader on, the last pair shows Next and the step moves on when it is pressed, so the step change never cuts the line off. With the reader off, the last pair\'s 800 ms and the 1000 ms floor apply as before. Pic-Word Match\'s last pair does the same.'],
+  });
 
+  // Match Sound as shipped (MatchSoundGame.tsx:170-252): a 48 speaker with its caption beside it; Hear it inside Hoya's bubble.
   const msPrompt = (n) =>
     focusNode(n, 4, 'Tap the letter you hear', `<h3 class="t-prompt">Tap the letter you hear</h3>`) +
-    `<div class="center hear"><button type="button" class="speaker" aria-label="Play the sound again">${icon('speaker', 48, 'var(--colors-text-primary)')}</button></div>`;
-  const tiles = (states) =>
-    `<div class="tile-grid">${[J.g, J.n, J.d, J.r].map((j, i) => tile({ ...j, state: states[i] })).join('')}</div>`;
+    `<div class="speaker-row"><button type="button" class="speaker" aria-label="Play the sound again">${icon('speaker', 48, 'var(--colors-text-primary)')}</button><span class="t-caption">Tap to replay</span></div>`;
+  const tiles = (states) => `<div class="tile-grid">${[J.g, J.n, J.d, J.r].map((j, i) => tile({ ...j, state: states[i] })).join('')}</div>`;
+  const msBubble = bubble(
+    'thinking',
+    esc('Listen again. This letter is'),
+    false,
+    `<span class="ko bubble-ko" lang="ko">기역</span><span class="bubble-rom">giyeok</span><div class="bubble-cta">${btn('Hear it')}</div>`,
+  );
   const e1 = frame({
     id: 'E1',
     title: 'Match Sound, a miss',
-    body:
-      topbar(1, 4) +
-      columns(
-        msPrompt(1),
-        tiles(['idle', 'idle', 'wrong', 'idle']),
-        bubble('thinking', `Listen again. This one says ${kt({ ko: '그', rom: 'geu' }, 'inline')}`, false) + `<div class="center hear">${hearIt()}</div>`,
-      ),
+    body: topbar(1, 4) + columns(msPrompt(1), tiles(['idle', 'idle', 'wrong', 'idle']), msBubble),
     said: ['Not this one: d or t. Listen again.'],
-    notes: ['The tile is <code>locked</code>, not disabled: no "dimmed". With a screen reader on, the sound does not replay by itself after the miss; the learner taps Hear it.'],
+    notes: ['As shipped: the bubble carries the letter (Hangul and romanization on their own lines) and its own Hear it. The tile is <code>locked</code>, not disabled: no "dimmed". With a screen reader on, the sound does not replay by itself after the miss; the learner taps Hear it.'],
   });
   const e2 = frame({
     id: 'E2',
     title: 'Match Sound, right, screen reader on',
     body: topbar(1, 4) + columns(msPrompt(1), tiles(['correct', 'idle', 'wrong', 'idle']) + nextBtn()),
     said: ['Right answer: g or k.'],
-    notes: ['The right tile gains <code>check</code> (20, top corner). Reader off: the next round after the sound and the 1000 ms floor, focus stays.'],
+    notes: ['The right tile gains <code>check</code> on its corner disc. Reader off: the next round after the sound and the 1000 ms floor, focus stays.'],
   });
   const e3 = frame({
     id: 'E3',
@@ -517,41 +555,34 @@ function pairsPage() {
   const tray = (used) =>
     `<p class="t-caption center">Tiles</p><div class="tray">${[J.g, J.a, J.n, J.o].map((j) => tile({ ...j, size: 'md', state: used.includes(j.ch) ? 'disabled' : 'idle' })).join('')}</div>`;
   const undo = (on) => `<div class="center">${btn('Undo', { lead: icon('backspace', 24, on ? 'var(--colors-text-primary)' : 'var(--colors-text-muted)'), tone: on ? 'outline' : 'off' })}</div>`;
-  const blHead = (state) =>
-    `${topbar(2, 4)}<h3 class="t-prompt">Build this letter</h3><div class="center"><button type="button" class="target target-${state} mk-host" data-state="${state}" aria-label="Hear ga"><span class="target-glyph" lang="ko">가</span><span class="target-rom">ga</span>${state === 'correct' ? mark('correct', 'corner', 'mark-inset') : ''}</button></div><p class="t-caption center">Slots:</p>`;
+  const blHead = (state) => `${topbar(2, 4)}<h3 class="t-prompt">Build this letter</h3><div class="center">${target(state)}</div><p class="t-caption center">Slots:</p>`;
   const f1 = frame({
     id: 'F1',
     title: 'Build a Letter, the right block',
-    body: blHead('correct') + `<div class="slots">${slot(J.g, 'filled')}${slot(J.a, 'filled')}</div>` + undo(false) + tray(['ㄱ', 'ㅏ']),
+    body: blHead('correct') + `<div class="slots">${slot(J.g, 'filled')}${slot(J.a, 'filled')}</div>` + shapePlace(false) + undo(false) + tray(['ㄱ', 'ㅏ']),
     said: ['Right answer: ga.'],
-    notes: ['<code>check</code> at 24 on the target box beside its success fill (was the fill alone).'],
+    notes: ['<code>check</code> at 24 on the target box beside its success fill (was the fill alone). The shape picture\'s place under the slots is kept empty (owner Q2), so nothing moves when it appears.'],
   });
   const f2 = frame({
     id: 'F2',
-    title: 'Build a Letter, a miss that stays (OD-AF7 (i))',
+    title: 'Build a Letter, a miss that stays (OD-AF7 (i), owner Q2)',
     body:
       blHead('idle') +
       `<div class="slots">${slot(J.n, 'miss')}${slot(J.a, 'miss')}</div>` +
+      shapePlace(true) +
       undo(true) +
       tray(['ㄴ', 'ㅏ']) +
-      bubble('thinking', esc('Not quite. Try again. The vowel goes beside the first letter.'), false) +
-      `<div class="center shape-hint" role="img" aria-label="Block shape: The vowel goes beside the first letter."><span class="hint-cell">1</span><span class="hint-cell">2</span></div>`,
+      bubble('thinking', esc('Not quite. Try again. The vowel goes beside the first letter.'), false),
     said: ['Not quite. Try again. The vowel goes beside the first letter.'],
     notes: [
-      'No timer: the wrong build, Hoya\'s line and the shape picture stay until a slot tap (take back), Undo, or a tray tap (which starts a new build). The slots get the amber look but <strong>no mark</strong>: they stay tappable, and <code>replay</code> means "locked". Without colour, the miss is Hoya\'s <code>thinking</code> line and the shape picture.',
+      'No timer: the wrong build, the shape picture and Hoya\'s line stay until a slot tap (take back), Undo, or a tray tap (which starts a new build). The slots get the amber look and no mark: they stay tappable. Without colour, the miss is the shape picture appearing in its kept place right under the slots, in the first screen, then Hoya\'s <code>thinking</code> line.',
     ],
   });
-  page(
-    'answer-feedback-pairs.html',
-    'Answer feedback: Card Match, the letter tiles and Build a Letter',
-    'F-A11Y-001 §3.1, §3.5, §3.6; OD-AF6 (a), OD-AF7 (i). The dashed line is where the first screen ends at this window size. "Said once" is the hidden announcer: it is not drawn.',
-    [d1, d2, d3, d4, e1, e2, e3, f1, f2],
-  );
+  page('answer-feedback-pairs.html', 'Answer feedback: Card Match, the letter tiles and Build a Letter', `F-A11Y-001 §3.1, §3.5, §3.6; OD-AF6 (a), OD-AF7 (i). ${PAGE_INTRO}`, [d1, d2, d3, d4, d5, e1, e2, e3, f1, f2]);
 }
 
 // ================================================================================================= page 4: the board games
 function boardsPage() {
-  // Story Sequence (text-only steps, F-STORY-003): the filled slot has its check; a card that did not fit stays marked.
   const seqSlot = (n, cap) =>
     `<span class="seq-slot ${cap ? 'seq-filled' : ''}" aria-label="${esc(cap ? `Place ${n} of 3: ${cap}` : `Place ${n} of 3, empty`)}"><b>${n}</b>${cap ? `${icon('check', MARK_MIN, 'var(--colors-feedback-success)', 'icon seq-check')}<span>${esc(cap)}</span>` : ''}</span>`;
   const g1 = frame({
@@ -564,7 +595,7 @@ function boardsPage() {
       `<div class="answers">${choiceCard({ label: 'The rabbit eats a carrot.' })}${choiceCard({ label: 'The rabbit goes to sleep.', state: 'wrong' })}</div>` +
       bubble('thinking', esc('Try another'), false),
     said: ['Not this one: The rabbit goes to sleep. Try another.'],
-    notes: ['The card keeps amber and <code>replay</code> until the next card is placed (was a 600 ms flash). The slot\'s check grows from 16 to 20.'],
+    notes: ['The card keeps amber and <code>replay</code> until the next card is placed (was a 600 ms flash). The slot\'s check grows from 16 to 20. When the last card is placed, the story\'s own replay and Done are the button that ends the round (no Next is added).'],
   });
   const g2 = frame({
     id: 'G2',
@@ -579,52 +610,49 @@ function boardsPage() {
     notes: ['The placed slot fills with the line itself (as is). The placement line moves onto the hook and loses its Hangul: romanization and gloss, with the position kept.'],
   });
 
-  const spot = (glyph, x, y, state, name) => {
-    const m = state === 'found' ? mark('correct', 'corner', 'mark-disc mark-disc-correct') : state === 'miss' ? mark('wrong', 'corner', 'mark-disc mark-disc-wrong') : '';
-    return `<button type="button" class="spot" style="--x: ${x}%; --y: ${y}%" aria-label="${esc(name)}">${icon(glyph, 56, 'var(--colors-text-secondary)', 'spot-art')}${state !== 'none' ? `<span class="ring ring-${state} mk-host" data-state="${state === 'found' ? 'correct' : state === 'miss' ? 'wrong' : 'hint'}">${m}</span>` : ''}</button>`;
-  };
   const hhHead = `${topbar(2, 3)}${focusNode(2, 3, 'Find this deung, lantern', `<p class="t-caption">Find this</p>${kt({ ko: '등', rom: 'deung', gloss: 'lantern' }, 'md')}`)}`;
   const found = `<p class="t-caption">Found</p><div class="found-row"><span class="found-slot">${kt({ ko: '밥그릇', rom: 'bapgeureut' }, 'inline')}</span><span class="found-slot empty"></span><span class="found-slot empty"></span></div>`;
   const h1 = frame({
     id: 'H1',
-    title: 'Hidden Heritage, a tap on another thing (OD-AF7)',
+    title: 'Hidden Heritage, a tap on a thing at the scene\'s edge (OD-AF7)',
     body:
       hhHead +
-      `<div class="scene">${spot('rice-bowl', 18, 58, 'found', 'Right answer: bapgeureut, rice bowl')}${spot('leaf', 70, 22, 'miss', 'Not this one: leaf')}${spot('lantern', 62, 64, 'none', 'lantern')}</div>` +
+      `<div class="scene">${spot('rice-bowl', at(18, 58), 'found', 'Right answer: bapgeureut, rice bowl')}${spot('leaf', EDGE, 'miss', 'Not this one: leaf', 'clamp-top clamp-end')}${spot('lantern', at(52, 52), 'none', 'lantern')}</div>` +
       found +
       bubble('thinking', esc('Look again'), false),
     said: ['Not this one: leaf. Look again.'],
-    notes: ['The miss ring keeps its <code>replay</code> disc until the next tap on the scene (was 600 ms). The visible caption stays; the live caption moves onto the announcer.'],
+    notes: [
+      'The scene clips at its edge (<code>overflow: hidden</code>, as <code>HiddenHeritageGame.tsx:385</code>). The leaf sits at the top-end corner of the scene, as real spots do (<code>four-seasons.ts:241-250</code>), so its disc is moved in along each axis just far enough to stay whole (D5); elsewhere the disc is centred on the ring\'s corner.',
+      'The miss disc stays until the next tap on the scene (was 600 ms); while it shows, the leaf is inactive (a tap on it is not a second miss). The visible caption stays; the live caption moves onto the announcer.',
+    ],
   });
   const h2 = frame({
     id: 'H2',
     title: 'Hidden Heritage, the second miss turns on look-here',
     body:
       hhHead +
-      `<div class="scene">${spot('rice-bowl', 18, 58, 'found', 'Right answer: bapgeureut, rice bowl')}${spot('leaf', 70, 22, 'miss', 'Not this one: leaf')}${spot('lantern', 62, 64, 'hint', 'Look here: deung')}</div>` +
+      `<div class="scene">${spot('rice-bowl', at(18, 58), 'found', 'Right answer: bapgeureut, rice bowl')}${spot('leaf', EDGE, 'miss', 'Not this one: leaf', 'clamp-top clamp-end')}${spot('lantern', at(52, 52), 'hint', 'Look here: deung')}</div>` +
       found +
       bubble('thinking', esc('Look again'), false),
-    said: ['Not this one: leaf. Look again.'],
-    notes: ['Look-here keeps today\'s dashed ring with no mark, so the three states differ by mark and dash, not by hue.'],
+    said: ['Not this one: leaf. Look here: deung.'],
+    notes: ['Look-here keeps today\'s dashed ring with no mark: the three states differ by <code>check</code>, <code>replay</code> and the dash, not by hue. The miss that turns it on ends with the look-here line (spec 3.2).'],
   });
 
-  const zone = (state, ch, name) =>
-    `<button type="button" class="zone zone-${state} mk-host" data-state="${state === 'marked' ? 'wrong' : state === 'right' ? 'correct' : state}" aria-label="${esc(name)}"><span class="zone-in" lang="ko">${ch}</span>${state === 'marked' ? mark('wrong') : state === 'right' ? mark('correct') : ''}</button>`;
   const keyTile = (j, state) =>
-    `<button type="button" class="key key-${state} mk-host" data-state="${state === 'marked' ? 'wrong' : state}" aria-label="${esc(state === 'marked' ? NAME.wrong(j.sound) : state === 'ring' ? NAME.hint(j.sound) : j.sound)}" lang="ko">${esc(j.ch)}${state === 'marked' ? mark('wrong') : ''}</button>`;
+    `<button type="button" class="key key-${state} mk-host" data-state="${state === 'marked' ? 'wrong' : state === 'ring' ? 'hint' : state}" aria-label="${esc(state === 'marked' ? NAME.wrong(j.sound) : state === 'ring' ? NAME.hint(j.sound) : j.sound)}" lang="ko">${esc(j.ch)}${state === 'marked' ? mark('wrong') : ''}</button>`;
   const sbHead = (n) =>
-    `${topbar(n, 4)}${focusNode(n, 4, 'Build the block you hear', `<h3 class="t-prompt">Build the block you hear</h3>`)}<div class="center hear"><button type="button" class="speaker" aria-label="Play the sound again">${icon('speaker', 48, 'var(--colors-text-primary)')}</button></div>`;
+    `${topbar(n, 4)}${focusNode(n, 4, 'Build the block you hear', `<h3 class="t-prompt">Build the block you hear</h3>`)}<div class="speaker-row"><button type="button" class="speaker" aria-label="Play the sound again">${icon('speaker', 48, 'var(--colors-text-primary)')}</button></div>`;
   const i1 = frame({
     id: 'I1',
-    title: 'Syllable Build, a miss on the vowel (OD-AF8)',
+    title: 'Syllable Build, a second miss on the vowel (OD-AF8)',
     body:
       sbHead(2) +
       `<div class="block">${zone('filled', 'ㄴ', 'First letter: n')}${zone('marked', 'ㅗ', 'Not this one: o')}</div>` +
       `<p class="t-caption">First letter</p><div class="keys">${[J.g, J.n, J.m].map((j) => keyTile(j, 'idle')).join('')}</div>` +
-      `<p class="t-caption">Vowel</p><div class="keys">${keyTile(J.a, 'idle')}${keyTile(J.o, 'marked')}</div>` +
-      bubble('thinking', esc('Listen to the middle sound.'), false),
-    said: ['Not this one: o. Listen again.'],
-    notes: ['The drawn dot becomes <code>replay</code> on the zone and on the tile tried. With a screen reader on, the block\'s sound does not replay by itself.'],
+      `<p class="t-caption">Vowel</p><div class="keys">${keyTile(J.a, 'ring')}${keyTile(J.o, 'marked')}</div>` +
+      bubble('thinking', esc('This one goes here.'), false),
+    said: ['Not this one: o. This one goes here.'],
+    notes: ['The drawn dot becomes <code>replay</code> on the zone and on the tile tried; the second miss rings the right tile with the dashed look-here ring. With a screen reader on, the block\'s sound does not replay by itself.'],
   });
   const i2 = frame({
     id: 'I2',
@@ -639,14 +667,12 @@ function boardsPage() {
     body:
       topbar(3, 4) +
       focusNode(3, 4, 'Tap every copy of this letter. r or l', `<h3 class="t-prompt">Tap every copy of this letter</h3><div class="center">${tile({ ...J.r, size: 'md' }).replace('<button type="button"', '<span').replace('</button>', '</span>')}</div>`) +
-      `<div class="tile-grid four">${tile({ ...J.r, state: 'correct' })}${tile({ ...J.d, state: 'wrong' })}${tile({ ...J.r })}${tile({ ...J.t })}</div>` +
+      `<div class="tile-grid">${tile({ ...J.r, state: 'correct' })}${tile({ ...J.d, state: 'wrong' })}${tile({ ...J.r })}${tile({ ...J.t })}</div>` +
       bubble('thinking', esc('Look at the strokes again.'), false),
     said: ['Not this one: d or t. Look at the strokes again.'],
-    notes: ["Drawn with Tile's look for short; MatchShapeBoard's own tile (its <code>Mark</code>, <code>MatchShapeBoard.tsx:82</code>) takes the same marks: <code>check</code> grows from 16 to 20, the amber dot becomes <code>replay</code> at 20."],
+    notes: ["Drawn with Tile's look for short; MatchShapeBoard's own tile (its <code>Mark</code>, <code>MatchShapeBoard.tsx:82</code>) takes the same marks: <code>check</code> grows from 16 to 20, the amber dot becomes <code>replay</code> at 20, both at inset <code>spacing.xs</code>."],
   });
 
-  const reply = (state, w, name) =>
-    `<button type="button" class="reply reply-${state} mk-host" data-state="${state}" aria-label="${esc(name)}">${kt(w)}${state === 'wrong' ? mark('wrong') : ''}</button>`;
   const j1 = frame({
     id: 'J1',
     title: 'Role Play, a less natural reply',
@@ -657,14 +683,12 @@ function boardsPage() {
       `<div class="answers">${reply('wrong', { ko: '잘 가', rom: 'jal ga', gloss: 'bye' }, NAME.wrong('jal ga, bye'))}${reply('idle', { ko: '반갑습니다', rom: 'bangapseumnida', gloss: 'nice to meet you' }, 'bangapseumnida, nice to meet you')}</div>` +
       bubble('thinking', `We say ${kt({ ko: '잘 가', rom: 'jal ga' }, 'inline')} when someone leaves.`, false),
     said: ['Not this one: jal ga, bye. We say jal ga when someone leaves.'],
-    notes: ['The locked reply: <code>replay</code> (was <code>dash</code>), <code>text.primary</code>, 20; the turn stays. The why line is said with its Korean as romanization (<code>spokenParts</code>). The Role Play line here is sample content.'],
+    notes: ['The locked reply: <code>replay</code> (was <code>dash</code>), <code>text.primary</code>, 20, inactive (not <code>disabled</code>); the turn stays. The why line is said with its Korean as romanization (<code>spokenParts</code>). The Role Play line here is sample content.'],
   });
 
-  const word = (state, w, name) =>
-    `<button type="button" class="word word-${state} mk-host" data-state="${state}" aria-label="${esc(name)}">${kt(w)}${state === 'tried' ? mark('tried') : ''}</button>`;
   const k1 = frame({
     id: 'K1',
-    title: 'Sentence Builder, a word tried here (OD-AF8 (c))',
+    title: 'Sentence Builder, a word tried here (OD-AF8 (c), owner Q5)',
     body:
       topbar(1, 3) +
       `<h3 class="t-prompt">Build the sentence</h3><p class="t-caption">Tap the words in order.</p>` +
@@ -673,14 +697,9 @@ function boardsPage() {
       `<div class="words">${word('tried', { ko: '이에요', rom: 'ieyo' }, 'ieyo, tried')}${word('idle', { ko: '학생', rom: 'haksaeng' }, 'haksaeng')}</div>` +
       bubble('thinking', esc('In Korean, the doing or describing word comes last.'), false),
     said: ['Not this one: ieyo. In Korean, the doing or describing word comes last.'],
-    notes: ['The tried tile keeps <code>dash</code>, now <code>text.primary</code> at 20: it stays tappable, because it fits a later place.'],
+    notes: ['The tried tile keeps <code>dash</code>, now on its corner disc (a badge, not a dash after the word): it stays tappable, because it fits a later place. When the sentence is built, Next shows with a screen reader on (owner Q1).'],
   });
-  page(
-    'answer-feedback-boards.html',
-    'Answer feedback: story order, scenes, blocks and replies',
-    'F-A11Y-001 §3.1, §3.5, §3.6; OD-AF7, OD-AF8 (c). The dashed line is where the first screen ends at this window size. "Said once" is the hidden announcer: it is not drawn.',
-    [g1, g2, h1, h2, i1, i2, i3, j1, k1],
-  );
+  page('answer-feedback-boards.html', 'Answer feedback: story order, scenes, blocks and replies', `F-A11Y-001 §3.1, §3.5, §3.6; OD-AF7, OD-AF8 (c). ${PAGE_INTRO}`, [g1, g2, h1, h2, i1, i2, i3, j1, k1]);
 }
 
 // ================================================================================================= page 5: Display sheet
@@ -691,7 +710,7 @@ function displayPage() {
   <h3 class="t-prompt" id="ds-t-${on}">Display</h3>
   <fieldset><legend>Language</legend><div class="opts"><label class="opt on" lang="en"><input type="radio" name="l${on}" checked>English</label><label class="opt" lang="es"><input type="radio" name="l${on}">Español</label><label class="opt" lang="ko"><input type="radio" name="l${on}">한국어</label></div></fieldset>
   <fieldset><legend>Text size</legend><div class="opts four"><label class="opt on"><input type="radio" name="s${on}" checked><span aria-hidden="true" class="aa">Aa</span>Standard</label><label class="opt"><input type="radio" name="s${on}"><span aria-hidden="true" class="aa">Aa</span>Large</label><label class="opt"><input type="radio" name="s${on}"><span aria-hidden="true" class="aa">Aa</span>Larger</label><label class="opt"><input type="radio" name="s${on}"><span aria-hidden="true" class="aa">Aa</span>Largest</label></div><p class="preview">This is how text looks.</p></fieldset>
-  <div class="sr-row${on ? ' sr-on' : ''}"><span class="sr-text" id="sr-l-${on}"><b>I use a screen reader</b><span class="t-caption" id="sr-h-${on}">Questions play when you tap them, with no time limits.</span></span><button type="button" role="switch" class="switch" aria-checked="${on}" aria-labelledby="sr-l-${on}" aria-describedby="sr-h-${on}"><span class="track"><span class="thumb"></span></span></button></div>
+  <button type="button" role="switch" class="sr-row${on ? ' sr-on' : ''}" aria-checked="${on}" aria-labelledby="sr-l-${on}" aria-describedby="sr-h-${on}"><span class="sr-text"><b id="sr-l-${on}">I use a screen reader</b><span class="sr-help" id="sr-h-${on}">Tap Next to go on. Sounds play when you tap them.</span></span><span class="track" aria-hidden="true"><span class="thumb"></span></span></button>
   <p class="note-line">For everyone on this device. Change it any time.</p>
   ${btn('Done', { tone: 'primary', size: 'md', cls: 'btn-block' })}
 </div></div>`;
@@ -700,21 +719,17 @@ function displayPage() {
     title: 'Display sheet, the screen reader row (OD-AF3 (d)), off',
     body: sheet(false),
     notes: [
-      'One new row, after Text size and before the note, in the level check\'s own words (<code>learner.placement.options.screenReader</code>, already translated). It writes the same device flag the level check sets (<code>device:settings</code>). On native the app reads the platform reader instead; the row is shown on the web only (open question Q4).',
+      'One new row, after Text size and before the note: the level check\'s label (<code>learner.placement.options.screenReader.label</code>) and a help line of its own, <code>common.display.screenReaderHelp</code> (new, owner Q3), in Body secondary (18). The whole row is the switch. It writes the device flag the level check sets (<code>device:settings</code>); it lifts no other clock (the Daily Test, Challenge mode).',
+      'Web only (owner Q4: <code>Platform.OS === \'web\'</code>, the installed PWA included). Native reads the platform screen reader. The grown-up pages\' DOM twin and the presenter do not show it: they run no answer rounds.',
     ],
   });
   const l2 = frame({
     id: 'L2',
     title: 'Display sheet, the screen reader row, on',
     body: sheet(true),
-    notes: ['On: the switch\'s thumb moves to the end and the track fills (<code>brand.primary</code>), as the level check\'s switch. The web then takes the reader-on path: Next after a right answer, no sound by itself after a miss.'],
+    notes: ['On: the thumb moves to the end and the track fills (<code>brand.primary</code>). Off, the track is <code>border.shape</code> (4.55:1 on paper; the level check\'s <code>border.strong</code> track is 1.95:1, follow-up F3). The web then takes the reader-on path: Next after a right answer, no sound by itself after a miss.'],
   });
-  page(
-    'answer-feedback-display.html',
-    'Answer feedback: the Display sheet row',
-    'F-A11Y-001 OD-AF3 (d). A bottom sheet on a phone, a centred dialog from 600. The rest of the sheet is as shipped (<code>design/components/DisplaySheet/spec.md</code>).',
-    [l1, l2],
-  );
+  page('answer-feedback-display.html', 'Answer feedback: the Display sheet row', 'F-A11Y-001 OD-AF3 (d), owner Q3 and Q4. A bottom sheet on a phone, a centred dialog from 600. The rest of the sheet is as shipped (<code>design/components/DisplaySheet/spec.md</code>).', [l1, l2]);
 }
 
 writeFileSync(join(MOCK, 'tokens.css'), tokensCss());
