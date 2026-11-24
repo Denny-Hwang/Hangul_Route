@@ -29,6 +29,7 @@ import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
@@ -308,7 +309,9 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
   const heard = round.mode === 'hear';
   const speech = useMemo(() => koSpeech({ ko: round.ko }, round.instruction === 'hearPick' && round.itemId.startsWith('syl:') ? 'sound' : promptKindOf(round.ko), AUDIO_SOURCE), [round]);
   // [FU] FU-3: the round's word has a say clip (review pack), so a device with no Korean voice hears it, not the text.
-  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor(speech) });
+  // `cantHear`: a heard round offers "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b); a read round has no sound to miss.
+  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor(speech), cantHear: heard });
+  const speakerRef = useRef<View | null>(null);
   const { play: slotPlay } = slot;
   const pacing = useSoundPacing();
   const heardOnce = useRef(false);
@@ -381,6 +384,7 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
         {heard ? (
           <>
             <GuardedPressable
+              ref={speakerRef}
               setsLock={false}
               testID="quest-review-speaker"
               onPress={hear}
@@ -401,6 +405,22 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
               <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
             </GuardedPressable>
             <Button label={m.learner.minigame.listenPick.hearAgain.cta} tone="secondary" size="md" onPress={hear} testID="quest-review-hear-again" />
+            {slot.cantHear ? (
+              round.cue !== undefined ? (
+                // The cue (a picture or a meaning) settles the round, and the prompt's Korean is the right option: guidance only.
+                <CantHear guidanceOnly round={round.itemId} active={slot.cantHearActive} onHear={hear} />
+              ) : (
+                <CantHear
+                  round={round.itemId}
+                  active={slot.cantHearActive}
+                  onHear={hear}
+                  onShowLetters={slot.showLetters}
+                  focusAfter={speakerRef}
+                  lettersText={m.a11y.koreanItem({ ko: round.ko, romanization: round.romanization })}
+                 
+                />
+              )
+            ) : null}
             {round.cue?.pictureRef !== undefined ? <PictureArt pictureRef={round.cue.pictureRef} gloss={round.cue.gloss} size={pictureSize} /> : round.cue ? <Body weight="semibold">{round.cue.gloss}</Body> : null}
             {/* The fallback text when the sound is off, missing or failed (F-AUDIO-004 W2-W4), and the answer once it is over. */}
             <View accessibilityLiveRegion="polite" style={{ alignItems: 'center' }}>

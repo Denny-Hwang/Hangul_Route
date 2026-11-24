@@ -86,6 +86,7 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
         {...(round.fixedZone !== undefined ? { fixed: round.fixedZone } : {})}
         // Round 1 never autoplays (the first sound needs a tap), as Listen & Pick.
         autoplay={index > 0}
+        cantHear
         source="syllable-build"
         // Hinted with a right answer only: the quest host records a hinted answer as right (row CM-31), so a miss stays a miss.
         onFirst={(correct, hinted) => host.answer(round.id, correct, { itemId: round.id, ...(hinted && correct ? { hinted: true } : {}) })}

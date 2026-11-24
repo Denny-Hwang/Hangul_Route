@@ -21,9 +21,11 @@ export interface BuildRoundViewProps {
   round: BuildRound;
   onFirst: (answer: RoundAnswer) => void;
   onSolved: () => void;
+  /** Offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): not in the Stage and Cell Check until CH-1e. */
+  cantHear?: boolean;
 }
 
-export function BuildRoundView({ round, onFirst, onSolved }: BuildRoundViewProps): ReactElement | null {
+export function BuildRoundView({ round, onFirst, onSolved, cantHear = false }: BuildRoundViewProps): ReactElement | null {
   const copy = useMessages().learner.minigame.syllableBuild;
   const parts = useMemo(() => partsOf(round.target.ko), [round.target.ko]);
   const tiles = useMemo(() => (parts ? tilesFor(parts, fnv1a32(`${round.question.itemId}|${round.target.ko}`)) : null), [parts, round.question.itemId, round.target.ko]);
@@ -37,6 +39,7 @@ export function BuildRoundView({ round, onFirst, onSolved }: BuildRoundViewProps
         tiles={tiles}
         {...(round.fixed !== undefined ? { fixed: round.fixed } : {})}
         autoplay
+        cantHear={cantHear}
         source="daily-review"
         testID="daily-review-build-board"
         onFirst={(correct, hinted) => onFirst({ correct, ...(hinted ? { hinted: true } : {}) })}

@@ -21,6 +21,7 @@ import {
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
@@ -94,6 +95,11 @@ export interface VocabQuestionViewProps {
   ring?: boolean;
   /** Hoya's line under the options, chosen by the host (`nudgeFor` in the Speed Round). */
   hoya?: VocabQuestionHoya | null;
+  /**
+   * A sound question offers "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): the Speed round in Relaxed mode, which has
+   * no clock. Challenge mode and the quick check leave it off (OD-CH4).
+   */
+  cantHear?: boolean;
   testID?: string;
 }
 
@@ -124,6 +130,7 @@ export function VocabQuestionView({
   onAdvance,
   ring = false,
   hoya = null,
+  cantHear = false,
   testID = 'vocab-question',
 }: VocabQuestionViewProps): ReactElement {
   const m = useMessages();
@@ -155,6 +162,7 @@ export function VocabQuestionView({
     hasClip: question.prompt.ko !== undefined && hasClipFor({ text: question.prompt.spokenKo ?? question.prompt.ko, audioRef: question.prompt.audioRef }),
     textOnScreen: promptKind === 'word',
     reportFallback: promptKind !== 'image',
+    cantHear: cantHear && promptKind === 'audio',
   });
 
   const latest = useRef({ question, mode, host, onAnswer, onAdvance, canPlay });
@@ -420,6 +428,17 @@ export function VocabQuestionView({
         {prompt.kind === 'audio' ? (
           <View style={{ alignItems: 'center', gap: spacing.md }}>
             {prompt.speaker === 'large' ? speakerButton('large') : null}
+            {/* Only while the word is not on screen (it is, once the voice cannot be used, the play failed or the answer shows). */}
+            {slot.cantHear && prompt.speaker === 'large' && prompt.word === null ? (
+              <CantHear
+                round={key}
+                active={slot.cantHearActive}
+                onHear={() => playPromptWord(key)}
+                onShowLetters={slot.showLetters}
+                focusAfter={promptRef}
+                lettersText={m.a11y.koreanItem({ ko: question.prompt.ko ?? '', romanization: question.prompt.romanization ?? '' })}
+              />
+            ) : null}
             {/* Stays mounted, so the arrival of the text is announced to a learner resting on the speaker. With no
                 speaker (no voice this session) it is the prompt focus moves to. */}
             <View

@@ -28,6 +28,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCapMs } from '../../logic/audio/sound-pacing';
@@ -59,7 +60,7 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
-import type { MinigameHost } from './host';
+import type { HostMode, MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
 /**
@@ -118,6 +119,9 @@ interface Focusable {
   focus?: () => void;
 }
 
+/** The hosts whose Listen & Pick offers "Can't hear it?" (CH-1b); `check` and `review` follow with CH-1e. */
+const PRACTICE_HOSTS: readonly HostMode[] = ['quest', 'vocab', 'preview'];
+
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
@@ -147,6 +151,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const pacing = useSoundPacing();
   const lastCap = useRef(soundCapMs(undefined));
   const speakerRef = useRef<Focusable | null>(null);
+  // The same speaker as a view, for "Can't hear it?" to move screen-reader focus to it after Show the letters.
+  const speakerNodeRef = useRef<View | null>(null);
   const hostRef = useRef(host);
   hostRef.current = host;
   const roundsRef = useRef(rounds);
@@ -188,6 +194,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
     hasClip: current !== undefined && hasClipFor(listenPickSpeech(current)),
     textOnScreen: spellingNow || textMode,
+    // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): on the practice hosts only (the Checks wait for CH-1e), never
+    // on a text prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
+    cantHear: !textMode && PRACTICE_HOSTS.includes(host.mode),
   });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
@@ -384,6 +393,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                   setsLock={false}
                   ref={(node) => {
                     speakerRef.current = node as unknown as Focusable | null;
+                    speakerNodeRef.current = node as unknown as View | null;
                   }}
                   testID="listen-pick-speaker"
                   onPress={hear}
@@ -414,6 +424,21 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                     testID="listen-pick-hear-again"
                   />
                 </View>
+              ) : null}
+              {slot.cantHear ? (
+                spellingKit !== null ? (
+                  // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
+                  <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
+                ) : (
+                  <CantHear
+                    round={roundIdx}
+                    active={slot.cantHearActive}
+                    onHear={hear}
+                    onShowLetters={slot.showLetters}
+                    focusAfter={speakerNodeRef}
+                    lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
+                  />
+                )
               ) : null}
 
               <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
