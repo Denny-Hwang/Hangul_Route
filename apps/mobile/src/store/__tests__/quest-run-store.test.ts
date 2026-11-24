@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { gameFinishIsReported as finishIsReported } from '../../logic/minigame-finished';
+import { savedRunOf } from '../../logic/quest-flow/saved-run';
 import { answerAside, setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../quest-run-store';
 
 const gameFinishIsReported = (questId: string, stepIndex: number): boolean => finishIsReported(useQuestRunStore.getState(), questId, stepIndex);
@@ -735,6 +736,54 @@ describe('[QB] going back changes no score (AMENDMENTS-QUEST-SOUND-BACK QB-3)', 
       expect(gameFinishIsReported('other', 0)).toBe(true);
       expect(gameFinishIsReported('other', 0)).toBe(true);
       expect(useQuestRunStore.getState().reported).toEqual([]);
+    });
+  });
+
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-1 (section 3.1): the counter a game's back guard reads. Never saved, scored or sent.
+  describe('answersGiven', () => {
+    it('rises on a first try, a retry and a hinted answer', () => {
+      const { beginQuest, answerRound } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      expect(useQuestRunStore.getState().answersGiven).toBe(0);
+      answerRound('a', false);
+      expect(useQuestRunStore.getState().answersGiven).toBe(1);
+      answerRound('a', true);
+      expect(useQuestRunStore.getState().answersGiven).toBe(2);
+      answerRound('b', true, undefined, true);
+      expect(useQuestRunStore.getState().answersGiven).toBe(3);
+    });
+
+    it('rises on an answer given on a revisit, which scores nothing', () => {
+      const { beginQuest, answerRound, goNextStep, goPrevStep } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      answerRound('a', true);
+      goNextStep();
+      goPrevStep();
+      const before = useQuestRunStore.getState();
+      answerRound('a', false);
+      const after = useQuestRunStore.getState();
+      expect(after.answersGiven).toBe(before.answersGiven + 1);
+      expect(after.totalCount).toBe(before.totalCount);
+    });
+
+    it('beginQuest and reset set it to 0', () => {
+      const { beginQuest, answerRound, reset } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      answerRound('a', true);
+      beginQuest('q2', 'e');
+      expect(useQuestRunStore.getState().answersGiven).toBe(0);
+      answerRound('a', true);
+      reset();
+      expect(useQuestRunStore.getState().answersGiven).toBe(0);
+    });
+
+    it('is never saved with the run', () => {
+      const { beginQuest, answerRound } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      answerRound('a', true);
+      const saved = savedRunOf(useQuestRunStore.getState(), [{ id: 's0', kind: 'discover' }]);
+      expect(saved).not.toBeNull();
+      expect(JSON.stringify(saved)).not.toContain('answersGiven');
     });
   });
 });
