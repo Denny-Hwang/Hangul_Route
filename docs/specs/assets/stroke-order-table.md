@@ -46,6 +46,7 @@ How to read it:
 
 - **Strokes** are given in writing order, each as start → end in words. "Codes" uses the same leg names as `STANDARD` in `jamo-stroke-order.test.ts` (`right`, `down`, `downLeft`, `downRight`, `loop`; `>` joins legs drawn without a lift), so SO-2 can compare the two directly.
 - **Codes of a row with more than one form**: one line per form (`<br>`), as `<label> (<where>): <codes>`, where `<where>` is `` `strokes` `` (the form the data shows: ghost, Show me, presenter; AU-14's form), `` `altStrokes` `` (another accepted form, OD-SO11; the data holds it in this order) or `not accepted`. A row with one form gives its codes only (`strokes`). `jamo-stroke-order.test.ts` parses this column: the data's `strokes` must equal the `strokes` line and its `altStrokes` the `altStrokes` lines.
+- **The labels follow the sources, not the data.** "Order A" / "Variant B" name the forms as the sources rank them, so they do not map to `strokes` / `altStrokes` the same way in every row: in rows 9 (ㅈ) and 12 (ㅌ) the data shows A (`strokes`) and accepts B (`altStrokes`); in rows 10 (ㅊ) and 14 (ㅎ) it shows B, AU-14's vertical tick (`strokes`), and accepts A (`altStrokes`). Read the `(<where>)` of each line.
 - **Sources** use the ids of §5. "p." is the page number printed on the PDF page.
 - **AU-14** describes `jamo-strokes.ts` as it is on `8a6e36543` (coordinates in the 200 × 200 viewBox).
 - **Compare**: `agree`, `disagree` (with what), or `partly`.
