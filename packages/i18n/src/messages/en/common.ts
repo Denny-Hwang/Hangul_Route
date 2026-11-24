@@ -90,6 +90,11 @@ export const common = {
     /** The live preview line, drawn at the chosen size. */
     preview: 'This is how text looks.',
     note: 'For everyone on this device. Change it any time.',
+    /**
+     * F-A11Y-001 OD-AF3 (d): the help line of the screen-reader row (web only), under the level check's "I use a screen
+     * reader" label (`learner.placement.options.screenReader.label`). "Next" is `learner.minigame.trace.next.cta`.
+     */
+    screenReaderHelp: 'Tap Next to go on. Sounds play when you tap them.',
     /** Choosing another language: the confirm step, drawn in the language chosen (F-I18N-001 §3.3 safety rule). */
     confirm: {
       question: (endonym: string) => `Use ${endonym} on this device?`,

@@ -7,7 +7,7 @@ import { Icon } from '../Icon';
 import { KoreanText } from '../KoreanText';
 import { TapTarget, usePressLook } from '../TapBoard';
 import { useTypeScale } from '../TextSize';
-import { choiceCardStyle } from './style';
+import { choiceCardRingStyle, choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -69,6 +69,18 @@ export function ChoiceCard({
         transform: pressTransform(pressed),
       }}
     >
+      {look.ring ? (
+        // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here, a dashed ring `spacing.xs` outside the card. An absolute child,
+        // so it takes no room, nothing moves when it shows, and it is no part of the hit area; decorative (the name says
+        // "Look here").
+        <View
+          aria-hidden
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+          style={choiceCardRingStyle(look.ring, look.borderRadius, pressed?.borderWidth ?? look.borderWidth)}
+        />
+      ) : null}
       <View style={{ flex: 1, gap: spacing.sm }}>
         {hasArt ? (
           <View style={{ alignSelf: 'center', minHeight: touchTarget.hero, justifyContent: 'center' }}>{art}</View>
@@ -99,7 +111,13 @@ export function ChoiceCard({
           </Text>
         ) : null}
       </View>
-      {look.mark && !tile ? <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} /> : null}
+      {tile ? null : look.mark ? (
+        <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
+      ) : (
+        // F-A11Y-001 AF-1 (AnswerFeedback D3): the 24 mark column is kept in every state, so answering never rewraps the
+        // text or grows the card.
+        <View style={{ width: spacing.xl }} />
+      )}
       {look.mark && tile ? (
         // On the corner, on a disc of the state's fill, so it reads over the art (same contrast pairs as the row mark).
         <View

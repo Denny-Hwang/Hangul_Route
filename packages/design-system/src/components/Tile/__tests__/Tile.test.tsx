@@ -1,7 +1,8 @@
 import { Children, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { borderWidth, colors, shadows, spacing } from '../../../tokens';
+import { MARK_DISC, MARK_MIN } from '../../../answer-mark';
+import { borderWidth, colors, radii, shadows, spacing } from '../../../tokens';
 import { TILE_MARK, TILE_STATES, tileStyle } from '../style';
 import { Tile } from '../Tile';
 import type { TileProps } from '../types';
@@ -106,28 +107,34 @@ describe('Tile (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
  * (the old literal amber was 2.85:1 on the nudge tint) and the tile carries ChoiceCard's "try another" mark on its top
  * corner, out of the flow, clear of the glyph and the romanization line.
  */
-describe('Tile wrong state (AU-17a)', () => {
+describe('Tile result marks (AU-17a; F-A11Y-001 AF-1)', () => {
   const kids = (el: El): El[] => (Children.toArray(el.props.children as ReactNode) as El[]).filter((k) => isValidElement(k));
   const all = (el: El): El[] => [el, ...kids(el).flatMap((k) => all(k))];
   const icons = (el: El): El[] => all(el).filter((e) => e.type === 'Icon');
   const texts = (el: El): El[] => all(el).filter((e) => e.type === 'Text');
 
-  it('the pure look: the wrong label is text.primary on the amber tint, with the try-another mark; no other state has a mark', () => {
+  it('the pure look: a miss is text.primary on the amber tint with the try-another mark on its light disc', () => {
     expect(tileStyle('wrong')).toEqual({
       backgroundColor: colors.feedback.nudgeLight,
       borderColor: colors.feedback.nudge,
       labelColor: colors.text.primary,
       romanizationColor: colors.text.muted,
-      mark: { icon: 'replay', color: colors.text.primary },
+      mark: { icon: 'replay', color: colors.text.primary, disc: colors.feedback.nudgeLight },
     });
-    for (const state of TILE_STATES.filter((s) => s !== 'wrong')) expect(tileStyle(state).mark, state).toBeNull();
   });
 
-  it('never red: no state uses a danger colour', () => {
+  it('the pure look: a right answer has the check in the success colour on its light disc (F-A11Y-001 §3.1)', () => {
+    expect(tileStyle('correct').mark).toEqual({ icon: 'check', color: colors.feedback.success, disc: colors.feedback.successLight });
+    expect(tileStyle('idle').mark).toBeNull();
+    expect(tileStyle('disabled').mark).toBeNull();
+  });
+
+  it('never red and never an X: no state uses a danger colour or the close icon', () => {
     for (const state of TILE_STATES) {
       const values = JSON.stringify(tileStyle(state));
       expect(values).not.toContain(colors.feedback.danger);
       expect(values).not.toContain(colors.feedback.dangerLight);
+      expect(tileStyle(state).mark?.icon).not.toBe('close');
     }
   });
 
@@ -137,43 +144,88 @@ describe('Tile wrong state (AU-17a)', () => {
     expect((romanization!.props.style as Props).color).toBe(colors.text.muted);
   });
 
-  it('a wrong tile draws the same mark ChoiceCard draws on a miss, hidden from assistive tech', () => {
-    const drawn = box({ state: 'wrong', disabled: true }, false);
+  it.each([
+    ['wrong', 'replay', colors.text.primary, colors.feedback.nudgeLight],
+    ['correct', 'check', colors.feedback.success, colors.feedback.successLight],
+  ] as const)('a %s tile draws its mark at MARK_MIN on a cased disc, hidden from assistive tech', (state, icon, color, disc) => {
+    const drawn = box({ state, locked: true }, false);
     const [mark, ...rest] = icons(drawn);
     expect(rest).toEqual([]);
-    expect(mark!.props).toMatchObject({ name: 'replay', color: colors.text.primary, size: TILE_MARK.size });
+    expect(mark!.props).toMatchObject({ name: icon, color, size: MARK_MIN });
     const corner = kids(drawn).at(-1)!;
     expect(icons(corner)).toEqual([mark]);
     expect(corner.props['aria-hidden']).toBe(true);
+    expect(corner.props.accessibilityElementsHidden).toBe(true);
     expect(corner.props.pointerEvents).toBe('none');
+    expect(corner.props.style).toMatchObject({
+      padding: spacing.xxs,
+      borderRadius: radii.circle,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.text.primary,
+      backgroundColor: disc,
+    });
   });
 
-  it('the mark is out of the flow on the top corner, so the tile keeps its size', () => {
+  it('the disc is 26 (MARK_MIN + 2 x spacing.xxs + 2 x borderWidth.thin) and MARK_MIN is 20 (AnswerFeedback D1)', () => {
+    expect(MARK_MIN).toBe(20);
+    expect(MARK_MIN).toBe(spacing.lg + spacing.xs);
+    expect(MARK_DISC.size).toBe(26);
+    expect(TILE_MARK.disc).toBe(TILE_MARK.size + 2 * TILE_MARK.padding + 2 * TILE_MARK.casing);
+    expect(TILE_MARK.size).toBe(MARK_MIN);
+  });
+
+  it('the disc straddles the top-end corner, 4 outside the border, out of the flow, so the tile keeps its size (D2)', () => {
     const wrong = box({ state: 'wrong', size: 'lg' }, false);
     const idle = box({ state: 'idle', size: 'lg' }, false);
-    expect(kids(wrong).at(-1)!.props.style).toEqual({ position: 'absolute', top: TILE_MARK.inset, right: TILE_MARK.inset });
+    const style = kids(wrong).at(-1)!.props.style as Props;
+    expect(style).toMatchObject({ position: 'absolute', top: TILE_MARK.offset, right: TILE_MARK.offset });
+    // The offset is from the tile's inner edge: the border, then spacing.xs beyond it.
+    expect(-TILE_MARK.offset - borderWidth.base).toBe(spacing.xs);
     const { backgroundColor: _b, borderColor: _c, ...wrongBox } = wrong.props.style as Props;
     const { backgroundColor: _d, borderColor: _e, ...idleBox } = idle.props.style as Props;
     expect(wrongBox).toEqual(idleBox);
   });
 
-  it('the mark ends inside the padding around the glyph and the romanization line, so it covers neither', () => {
-    // Tile padding (spacing.md) plus the text block's own side padding (spacing.sm) keep both lines this far from the edge.
-    expect(TILE_MARK.inset + TILE_MARK.size).toBeLessThanOrEqual(spacing.md + spacing.sm);
+  it('inside the border the disc reaches no further than the glyph column starts (tile padding + its side padding)', () => {
+    const inside = TILE_MARK.disc - MARK_DISC.outside - borderWidth.base;
+    expect(inside).toBeLessThanOrEqual(spacing.md + spacing.sm);
     const drawn = box({ state: 'wrong', romanization: 'g' }, false);
     expect((drawn.props.style as Props).padding).toBe(spacing.md);
     expect((kids(drawn)[0]!.props.style as Props).paddingHorizontal).toBe(spacing.sm);
   });
 
-  it('a wrong tile with no handler (a plain View) carries the mark too', () => {
-    const el = tile({ state: 'wrong', onPress: undefined });
-    expect(el.type).toBe('View');
-    expect(icons(el).map((i) => i.props.name)).toEqual(['replay']);
+  it('a marked tile with no handler (a plain View) carries the mark too', () => {
+    expect(icons(tile({ state: 'wrong', onPress: undefined })).map((i) => i.props.name)).toEqual(['replay']);
+    expect(icons(tile({ state: 'correct', onPress: undefined })).map((i) => i.props.name)).toEqual(['check']);
   });
 
-  it('idle, correct and disabled tiles draw no mark', () => {
+  it('idle and disabled tiles draw no mark', () => {
     expect(icons(box({ state: 'idle' }, false))).toEqual([]);
-    expect(icons(box({ state: 'correct' }, false))).toEqual([]);
     expect(icons(tile({ state: 'disabled' }))).toEqual([]);
+  });
+});
+
+/**
+ * F-A11Y-001 §3.1 "Locked is not disabled" (row AF-1): an answered tile takes no tap but is never announced as dimmed or
+ * disabled. It reaches TapTarget as `inactive`, as ChoiceCard passes a locked card.
+ */
+describe('Tile locked (F-A11Y-001 AF-1)', () => {
+  it('reaches TapTarget as inactive, not disabled, so it stays a focusable button', () => {
+    const el = tile({ state: 'wrong', locked: true });
+    expect(el.type).toBe('TapTarget');
+    expect(el.props.inactive).toBe(true);
+    expect(el.props.disabled).toBe(false);
+    expect((el.props.accessibilityState as Props | undefined)?.disabled).not.toBe(true);
+  });
+
+  it('a locked tile never shows the press look', () => {
+    const pressed = box({ state: 'correct', locked: true, size: 'lg' }, true);
+    const rest = box({ state: 'correct', locked: true, size: 'lg' }, false);
+    expect(pressed.props.style).toEqual(rest.props.style);
+  });
+
+  it('an unlocked tile is not inactive; disabled stays for a tile out of play', () => {
+    expect(tile({}).props.inactive).toBe(false);
+    expect(tile({ disabled: true }).props).toMatchObject({ disabled: true, inactive: false });
   });
 });

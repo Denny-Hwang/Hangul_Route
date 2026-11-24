@@ -906,6 +906,8 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
 
       <Spacer size="md" />
       <View
+        accessible
+        accessibilityRole="image"
         accessibilityLabel={messages.a11y.pinDots(entry.length, PIN_LENGTH)}
         style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}
       >

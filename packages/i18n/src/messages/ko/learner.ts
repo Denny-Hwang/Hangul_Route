@@ -652,6 +652,7 @@ export const learner = {
       heading: '뜻을 짝지어요',
       instruction: '한국어 낱말을 누르고, 그다음 그 뜻을 눌러요.',
       nowMeaning: '이제 오른쪽에서 그 뜻을 눌러요.',
+      tryAnother: '짝이 아니에요. 다른 뜻을 골라 봐요.',
     },
     sentenceBuilder: {
       heading: '문장을 만들어 봐요',

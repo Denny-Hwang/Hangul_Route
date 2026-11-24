@@ -15,7 +15,7 @@ import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType, ReactElement } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesWithVolumes, questsAll } from '../../content';
 import { useLocale, useLocalePacks } from '../../i18n/use-messages';
@@ -51,6 +51,8 @@ import type { PlacementStackParamList, RootStackParamList } from '../../navigati
 import { isBackAction } from '../../logic/navigation/back-action';
 import { getCapability, hasPackClips, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
 import { isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
+import { readerPath } from '../../logic/answer-feedback';
+import { useLocaleStore } from '../../store/locale-store';
 import { CONTENT_VERSION } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
@@ -220,7 +222,9 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
     let alive = true;
     void (async () => {
       await useProgressStore.getState().hydrate(profile.id);
-      const reader = await isScreenReaderEnabled();
+      // F-A11Y-001 OD-AF3 (d): the web cannot tell, so the device's "I use a screen reader" (the Display sheet's row)
+      // seeds the switch there; native reads the platform screen reader as before.
+      const reader = readerPath({ platform: Platform.OS, nativeReader: await isScreenReaderEnabled(), webFlag: useLocaleStore.getState().screenReader }) === 'reader';
       const resume = await usePlacementRunStore.getState().resume(profile.id, Date.now(), PLACEMENT_BANK_VERSION);
       if (!alive) return;
       const placements = useProgressStore.getState().byProfile[profile.id]?.placements ?? [];

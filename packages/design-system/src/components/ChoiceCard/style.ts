@@ -27,15 +27,32 @@ export interface ChoiceCardStyle {
   minHeight: number;
   textColor: string;
   mark: ChoiceCardMark | null;
+  /**
+   * The look-here ring (`hint`, F-A11Y-001 AF-1; AnswerFeedback D4): a dashed ring outside the card, the one look-here
+   * shape of every game. `null` in every other state.
+   */
+  ring: ChoiceCardRing | null;
   /** Whether a tap does anything (`idle`, `hint`). */
   interactive: boolean;
-  /** `accessibilityState.selected`: the learner chose this card (`correct`, `wrong`). */
+  /**
+   * `accessibilityState.selected`: the right answer (`correct`). A miss is not `selected` (F-A11Y-001 §3.1): a reader
+   * would say "Not this one: pear, selected", and "selected" sounds like the answer.
+   */
   selected: boolean;
   /** `accessibilityState.disabled`. */
   disabled: boolean;
 }
 
-type StateLook = Pick<ChoiceCardStyle, 'backgroundColor' | 'borderColor' | 'borderWidth' | 'mark' | 'interactive' | 'selected' | 'disabled'>;
+/** The dashed look-here ring: `width` thick in `color`, `gap` outside the card's border. */
+export interface ChoiceCardRing {
+  color: string;
+  width: number;
+  gap: number;
+}
+
+const LOOK_HERE: ChoiceCardRing = { color: colors.border.focus, width: borderWidth.thick, gap: spacing.xs };
+
+type StateLook = Pick<ChoiceCardStyle, 'backgroundColor' | 'borderColor' | 'borderWidth' | 'mark' | 'ring' | 'interactive' | 'selected' | 'disabled'>;
 
 const LOOKS: Record<ChoiceCardState, StateLook> = {
   idle: {
@@ -46,6 +63,7 @@ const LOOKS: Record<ChoiceCardState, StateLook> = {
     borderColor: colors.border.shape,
     borderWidth: borderWidth.base,
     mark: null,
+    ring: null,
     interactive: true,
     selected: false,
     disabled: false,
@@ -55,6 +73,7 @@ const LOOKS: Record<ChoiceCardState, StateLook> = {
     borderColor: colors.feedback.success,
     borderWidth: borderWidth.base,
     mark: { icon: 'check', color: colors.feedback.success },
+    ring: null,
     interactive: false,
     selected: true,
     disabled: false,
@@ -64,15 +83,19 @@ const LOOKS: Record<ChoiceCardState, StateLook> = {
     borderColor: colors.feedback.nudge,
     borderWidth: borderWidth.base,
     mark: { icon: 'replay', color: colors.text.primary },
+    ring: null,
     interactive: false,
-    selected: true,
+    selected: false,
     disabled: false,
   },
+  // F-A11Y-001 AF-1 (AnswerFeedback D4): the card keeps idle's border; look-here is the dashed ring outside it (the old
+  // thick border.focus border was 1.06:1 against border.shape, so it read by width alone).
   hint: {
     backgroundColor: colors.surface.paper,
-    borderColor: colors.border.focus,
-    borderWidth: borderWidth.thick,
+    borderColor: colors.border.shape,
+    borderWidth: borderWidth.base,
     mark: null,
+    ring: LOOK_HERE,
     interactive: true,
     selected: false,
     disabled: false,
@@ -82,6 +105,7 @@ const LOOKS: Record<ChoiceCardState, StateLook> = {
     borderColor: colors.border.subtle,
     borderWidth: borderWidth.base,
     mark: null,
+    ring: null,
     interactive: false,
     selected: false,
     disabled: true,
@@ -100,6 +124,7 @@ export function choiceCardStyle(state: ChoiceCardState, options: ChoiceCardStyle
   return {
     ...look,
     mark: look.mark === null ? null : { ...look.mark, ...(dash ? { icon: 'dash' as const } : null) },
+    ring: look.ring === null ? null : { ...look.ring },
     borderRadius: radii.lg,
     minHeight: touchTarget.child,
     textColor: colors.text.primary,
@@ -113,4 +138,39 @@ export function choiceCardStyle(state: ChoiceCardState, options: ChoiceCardStyle
  */
 export function choiceCardTileWidth(artSize: number): number {
   return artSize + 2 * spacing.lg + 2 * borderWidth.thick;
+}
+
+/**
+ * The look-here ring's own style (F-A11Y-001 AF-1; AnswerFeedback D4): an overlay drawn inside the card as an absolute
+ * child, reaching `gap` past the card's border, so it takes no room and nothing moves when it shows, and the drawn card
+ * stays the target's first child. `cardBorderWidth` is the border the card draws now (an absolute child is placed from
+ * the inside of that border). Pure, for ChoiceCard and for a board that paints the card's looks by hand (Cloze Pick).
+ */
+export function choiceCardRingStyle(
+  ring: ChoiceCardRing,
+  borderRadius: number,
+  cardBorderWidth: number,
+): {
+  position: 'absolute';
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+  borderRadius: number;
+  borderWidth: number;
+  borderStyle: 'dashed';
+  borderColor: string;
+} {
+  const out = -(ring.gap + ring.width + cardBorderWidth);
+  return {
+    position: 'absolute',
+    top: out,
+    right: out,
+    bottom: out,
+    left: out,
+    borderRadius: borderRadius + ring.gap + ring.width,
+    borderWidth: ring.width,
+    borderStyle: 'dashed',
+    borderColor: ring.color,
+  };
 }

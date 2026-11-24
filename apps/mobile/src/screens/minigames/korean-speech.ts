@@ -11,8 +11,8 @@ import { focusForScreenReader } from '../../platform/screen-reader';
 /** Typed Korean is read with the Korean voice; react-native-web forwards `lang` (spread: native Text props lack it). */
 export const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
-/** Visually hidden, still read (the field's polite live line). */
-export const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
+/** Visually hidden, still read (the field's polite live line). In a neutral module of its own (F-A11Y-001 §3.3). */
+export { srOnly } from './sr-only';
 
 /** Focus target for assistive tech when the result panel opens: `focus()` on the web, the native view elsewhere. */
 export interface Focusable {

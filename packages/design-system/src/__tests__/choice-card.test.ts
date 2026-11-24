@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHOICE_CARD_STATES, choiceCardStyle, choiceCardTileWidth } from '../components/ChoiceCard/style';
+import { CHOICE_CARD_STATES, choiceCardRingStyle, choiceCardStyle, choiceCardTileWidth } from '../components/ChoiceCard/style';
 import type { ChoiceCardState } from '../components/ChoiceCard/types';
 import { borderWidth, colors, radii, spacing, touchTarget } from '../tokens';
 
@@ -41,13 +41,14 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     expect(s.interactive).toBe(false);
   });
 
-  it('wrong: amber nudge tint and border (never red), try-another mark, selected, locked', () => {
+  // F-A11Y-001 §3.1 (row AF-1): a miss is not `selected`, or a reader says "Not this one: pear, selected".
+  it('wrong: amber nudge tint and border (never red), try-another mark, not selected, locked', () => {
     const s = choiceCardStyle('wrong');
     expect(s.backgroundColor).toBe(colors.feedback.nudgeLight);
     expect(s.borderColor).toBe(colors.feedback.nudge);
     expect(s.borderWidth).toBe(borderWidth.base);
     expect(s.mark).toEqual({ icon: 'replay', color: colors.text.primary });
-    expect(s.selected).toBe(true);
+    expect(s.selected).toBe(false);
     expect(s.disabled).toBe(false);
     expect(s.interactive).toBe(false);
     // Anti-shame (CLAUDE.md s1): nothing on a miss uses the danger colour or an X.
@@ -55,11 +56,13 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     expect(s.mark?.icon).not.toBe('close');
   });
 
-  it('hint: paper fill with a thick focus ring, still tappable, not selected', () => {
+  // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is one dashed ring outside the card, not the card's own border.
+  it('hint: paper fill and idle border, with the dashed look-here ring outside it, still tappable, not selected', () => {
     const s = choiceCardStyle('hint');
     expect(s.backgroundColor).toBe(colors.surface.paper);
-    expect(s.borderColor).toBe(colors.border.focus);
-    expect(s.borderWidth).toBe(borderWidth.thick);
+    expect(s.borderColor).toBe(colors.border.shape);
+    expect(s.borderWidth).toBe(borderWidth.base);
+    expect(s.ring).toEqual({ color: colors.border.focus, width: borderWidth.thick, gap: spacing.xs });
     expect(s.interactive).toBe(true);
     expect(s.selected).toBe(false);
     expect(s.disabled).toBe(false);
@@ -83,11 +86,32 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     expect(disabled).toEqual(['disabled']);
   });
 
-  it('every state reads differently without colour: fill, border width or mark differ from idle', () => {
-    const idle = choiceCardStyle('idle');
+  it('choiceCardRingStyle: an absolute overlay spacing.xs past the card\'s border, dashed, in border.focus', () => {
+    const ring = choiceCardStyle('hint').ring!;
+    const out = -(spacing.xs + borderWidth.thick + borderWidth.base);
+    expect(choiceCardRingStyle(ring, radii.lg, borderWidth.base)).toEqual({
+      position: 'absolute',
+      top: out,
+      right: out,
+      bottom: out,
+      left: out,
+      borderRadius: radii.lg + spacing.xs + borderWidth.thick,
+      borderWidth: borderWidth.thick,
+      borderStyle: 'dashed',
+      borderColor: colors.border.focus,
+    });
+    expect(choiceCardRingStyle(ring, radii.lg, borderWidth.thick).top).toBe(-(spacing.xs + 2 * borderWidth.thick));
+  });
+
+  it('only hint has a ring; only correct is selected', () => {
+    expect(CHOICE_CARD_STATES.filter((st) => choiceCardStyle(st).ring !== null)).toEqual(['hint']);
+    expect(CHOICE_CARD_STATES.filter((st) => choiceCardStyle(st).selected)).toEqual(['correct']);
+  });
+
+  it('every state reads differently without colour: a mark, the look-here ring, or disabled', () => {
     for (const state of CHOICE_CARD_STATES.filter((st) => st !== 'idle')) {
       const s = choiceCardStyle(state);
-      const cue = s.mark !== null || s.borderWidth !== idle.borderWidth || s.disabled;
+      const cue = s.mark !== null || s.ring !== null || s.disabled;
       expect(cue, state).toBe(true);
     }
   });

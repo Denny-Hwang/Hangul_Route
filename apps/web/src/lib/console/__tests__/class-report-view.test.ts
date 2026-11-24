@@ -1,4 +1,4 @@
-import type { ClassReport, StageKey } from '@hangul-route/content-schema';
+import { CATALOG, classReport, type ClassReport, type ClassReportLearner, type StageKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { ClassReportBody, SpaceListItem } from '../api';
@@ -107,6 +107,27 @@ describe('the week class report (behaviour 5 words)', () => {
     expect(v.wentWell?.quests).toEqual({ text: 'New quests: 14', up: 'More than last week' });
     expect(v.wentWell?.cards).toBe('New cards: 9');
     expect(v.wentWell?.milestones).toEqual({ heading: 'Stage milestones this week', lines: ['Stage 1: Hangul, finished by 2 learners'] });
+  });
+
+  describe('the revisit chips need 3 learners, end to end through the shared builder (AMENDMENTS-CLASS-CODE-OVERLAY CO-2e)', () => {
+    const learner = (needsPractice: string[]): ClassReportLearner => ({ joinedAt: null, lastSyncedAt: '2026-10-15T11:00:00.000Z', summary: { lastActiveAt: '2026-10-15T09:00:00.000Z', needsPractice, planProgress: {} } });
+    const built = (learners: ClassReportLearner[]): ClassReportViewInput['data'] => body(classReport({ learners, plans: [], period: 'week', now: NOW, catalog: CATALOG }));
+
+    it('a 2-learner class: no chips, no Practice together without lecture mode', () => {
+      const v2 = view({ data: built([learner(['ㅂ']), learner(['ㅂ', 'ㅅ'])]) });
+      expect(v2.practiceTogether).toBeNull();
+    });
+
+    it('a 2-learner class with lecture mode: the Plan a lesson link stays, the chips stay absent', () => {
+      const v2 = view({ lecture: true, data: built([learner(['ㅂ']), learner(['ㅂ', 'ㅅ'])]) });
+      expect(v2.practiceTogether?.revisit).toBeNull();
+      expect(v2.practiceTogether?.planLesson).toEqual({ href: '/teach/space/lecture?id=space%3Asunflower&from=revisit', text: 'Plan a lesson' });
+    });
+
+    it('3 learners with letters: the chips are drawn', () => {
+      const v3 = view({ data: built([learner(['ㅂ']), learner(['ㅂ', 'ㅅ']), learner(['ㅅ'])]) });
+      expect(v3.practiceTogether?.revisit?.chips.map((c) => c.text)).toEqual([countedLetter('ㅂ', 2, 'en').text, countedLetter('ㅅ', 2, 'en').text]);
+    });
   });
 
   it('practice together: revisit chips; Plan a lesson only with lecture mode and plan.write on a live class', () => {

@@ -77,6 +77,7 @@ export const common = {
     size: { standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' },
     preview: '글자는 이렇게 보여요.',
     note: '이 기기를 쓰는 모두에게 적용돼요. 언제든 바꿀 수 있어요.',
+    screenReaderHelp: '‘다음’을 누르면 넘어가요. 소리는 눌러야 나와요.',
     confirm: {
       question: (endonym: string) => `이 기기의 언어를 바꿀까요? (${endonym})`,
       use: (endonym: string) => `${endonym} 쓰기`,

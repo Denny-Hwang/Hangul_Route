@@ -102,7 +102,7 @@ const reset = (): void => {
   platform.handoff = null;
   showAll(true);
   track.mockClear();
-  useLocaleStore.setState({ detected: 'en', device: null, deviceAt: null, textSize: 'standard', byProfile: {}, hydrated: false });
+  useLocaleStore.setState({ detected: 'en', device: null, deviceAt: null, textSize: 'standard', screenReader: false, byProfile: {}, hydrated: false });
 };
 
 /** The device record writes read the stored record first, so they land a few ticks later. */
@@ -496,6 +496,33 @@ describe('locale-store: device record setters', () => {
     await settle();
     expect(posted).toHaveLength(1);
     expect(track).not.toHaveBeenCalled();
+  });
+
+  // F-A11Y-001 OD-AF3 (d): "I use a screen reader", kept for the device.
+  it('setScreenReader stores the flag, keeps the rest, tells the other tabs, sends no event, and ignores a repeat', async () => {
+    mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    useLocaleStore.getState().setScreenReader(true);
+    expect(useLocaleStore.getState().screenReader).toBe(true);
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large', screenReader: true });
+    expect(posted).toHaveLength(1);
+    useLocaleStore.getState().setScreenReader(true);
+    await settle();
+    expect(posted).toHaveLength(1);
+    useLocaleStore.getState().setScreenReader(false);
+    await settle();
+    expect(mem.get('device:settings')).toMatchObject({ screenReader: false });
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('the flag is read at hydrate and from another tab\'s record; absent reads as off', async () => {
+    mem.set('device:settings', { textSize: 'large', screenReader: true });
+    await useLocaleStore.getState().hydrate([]);
+    expect(useLocaleStore.getState().screenReader).toBe(true);
+    useLocaleStore.getState().applyDeviceRecord({ textSize: 'large' });
+    expect(useLocaleStore.getState().screenReader).toBe(false);
+    useLocaleStore.getState().applyDeviceRecord({ screenReader: true });
+    expect(useLocaleStore.getState().screenReader).toBe(true);
   });
 
   it('a record that cannot be read is never written: the change holds in this tab only', async () => {

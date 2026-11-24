@@ -20,6 +20,7 @@ import { Pressable, Switch, View } from 'react-native';
 import { canProceed, controlsFor, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
 import { MOTIVATION_CHOICES, modeTiles, modeTilesSideBySide } from '../../logic/placement/options-view';
 import { usePlacement } from './context';
+import { useLocaleStore } from '../../store/locale-store';
 import { LinkButton } from '../../components/LinkButton';
 import { Note, RadioTile } from './parts';
 
@@ -193,7 +194,11 @@ export function OptionsScreen(): ReactElement {
         <Switch
           testID="placement-screen-reader"
           value={flow.screenReader}
-          onValueChange={(on) => dispatch({ type: 'setScreenReader', on })}
+          onValueChange={(on) => {
+            dispatch({ type: 'setScreenReader', on });
+            // F-A11Y-001 OD-AF3 (d): the answer is kept for the device (the Display sheet's row shows the same flag).
+            useLocaleStore.getState().setScreenReader(on);
+          }}
           accessibilityLabel={copy.screenReader.label}
           accessibilityHint={copy.screenReader.help}
           trackColor={{ true: colors.brand.primary, false: colors.border.strong }}

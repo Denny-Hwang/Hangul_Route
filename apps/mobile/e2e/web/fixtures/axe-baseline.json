@@ -10,11 +10,9 @@
       { "rule": "region", "nodes": 3, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
     ],
     "culture-quiz-correct": [
-      { "rule": "label-content-name-mismatch", "nodes": 1, "impact": "serious", "expectedFix": "none" },
       { "rule": "region", "nodes": 4, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
     ],
     "pin-entry": [
-      { "rule": "aria-prohibited-attr", "nodes": 1, "impact": "serious", "expectedFix": "none" },
       { "rule": "region", "nodes": 3, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
     ]
   }

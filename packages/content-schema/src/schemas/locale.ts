@@ -98,6 +98,12 @@ export const DeviceSettingsSchema = z.object({
   uiLocaleAt: z.string().datetime({ offset: true }).optional().catch(undefined),
   /** Absent = `DEFAULT_TEXT_SIZE`. A step this version does not know reads as absent, never resetting the record. */
   textSize: TextSizeSchema.optional().catch(undefined),
+  /**
+   * "I use a screen reader" (F-A11Y-001 OD-AF3 (d)): the level check's answer kept for the device, settable in the
+   * Display sheet. The web cannot tell whether a screen reader is on, so with it on a game takes the screen-reader path
+   * (Next after a right answer). Absent, or anything but a boolean, = off.
+   */
+  screenReader: z.boolean().optional().catch(undefined),
 });
 export type DeviceSettings = z.infer<typeof DeviceSettingsSchema>;
 
@@ -117,6 +123,7 @@ export interface DeviceSettingsPatch {
   uiLocale?: UiLocale;
   uiLocaleAt?: string;
   textSize?: TextSize;
+  screenReader?: boolean;
   clearLocale?: true;
 }
 
@@ -140,6 +147,7 @@ export function mergeDeviceSettings(raw: unknown, patch: DeviceSettingsPatch): R
   if (patch.uiLocale !== undefined) next.uiLocale = patch.uiLocale;
   if (patch.uiLocaleAt !== undefined) next.uiLocaleAt = patch.uiLocaleAt;
   if (patch.textSize !== undefined) next.textSize = patch.textSize;
+  if (patch.screenReader !== undefined) next.screenReader = patch.screenReader;
   return next;
 }
 

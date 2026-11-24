@@ -296,6 +296,26 @@ export const a11y = {
     },
   },
   /**
+   * F-A11Y-001 §3.2, §3.7: a game's result, said once to a screen reader (the hidden polite announcer, and one queued
+   * VoiceOver call on iOS). Read aloud, never drawn. No taught-Korean Hangul in any of them (OD-AF5): `item` names a
+   * Korean answer by romanization and gloss (`item`), a jamo by its sound value, an option in the UI language by its
+   * text. `hint` is a game's whole hint line. Each template adds at most 12 words of its own.
+   */
+  answer: {
+    /** A Korean answer: "{romanization}, {gloss}", or the romanization alone when there is no gloss. */
+    item: (romanization: string, gloss?: string) => (gloss === undefined || gloss === '' ? romanization : `${romanization}, ${gloss}`),
+    right: (item: string) => `Right answer: ${item}.`,
+    miss: (item: string) => `Not this one: ${item}. Try another.`,
+    /** A miss in a game whose prompt is a sound (Match Sound, Listen & Pick, Syllable Build). */
+    missListen: (item: string) => `Not this one: ${item}. Listen again.`,
+    /** A miss with the game's hint line (Hoya's real hint, or the look-here line when the hint turns on). */
+    missHint: (item: string, hint: string) => `Not this one: ${item}. ${hint}`,
+    /** Card Match: a pair that does not match. */
+    notMatched: (word: string, meaning: string) => `Not a match: ${word} and ${meaning}. Try another.`,
+    /** The new round's heading node, where focus goes with a screen reader on; `prompt` names Korean by romanization. */
+    round: (n: number, total: number, prompt: string) => `Question ${n} of ${total}. ${prompt}`,
+  },
+  /**
    * [SO] AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10: the word read between two romanizations of one letter (ㅇ "silent/ng"
    * is read "silent or ng", never "slash"; `a11yRomanization` in content-schema). Read aloud, never drawn.
    */

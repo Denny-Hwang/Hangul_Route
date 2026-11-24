@@ -30,7 +30,15 @@ export function announceForScreenReader(_text: string): void {
 /** The same constant as native; the web never waits on an announcement. */
 export const ANNOUNCE_TIMEOUT_MS = 3000;
 
+/**
+ * The web reads the answer announcer's polite live region (F-A11Y-001 §3.3); react-native-web 0.19 has no
+ * `announceForAccessibilityWithOptions`, so nothing is called.
+ */
+export function announceQueued(_text: string): void {
+  return undefined;
+}
+
 /** The web cannot tell a screen reader is on (above), so the audio that follows starts at once. */
-export function announceAndWait(_text: string, _gapMs: number): Promise<void> {
+export function announceAndWait(_text: string, _gapMs: number, _options: { queue?: boolean } = {}): Promise<void> {
   return Promise.resolve();
 }

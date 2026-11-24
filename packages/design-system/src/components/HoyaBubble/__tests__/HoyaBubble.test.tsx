@@ -49,3 +49,23 @@ describe('HoyaBubble dismiss (AMENDMENTS-TOUCH 6.9, row KT-9)', () => {
     expect(dismissOf()).toBeUndefined();
   });
 });
+
+/**
+ * F-A11Y-001 §3.3 (row AF-1; design/components/AnswerFeedback/spec.md, "HoyaBubble live"): a game that says its result
+ * through the answer announcer passes `live={false}` on its result bubble, so the result is not read twice. Every other
+ * caller keeps today's polite region.
+ */
+describe('HoyaBubble live (F-A11Y-001 AF-1)', () => {
+  it('is a polite live region by default', () => {
+    const root = HoyaBubble({ message: 'Hi' }) as El;
+    expect(root.props.accessibilityLiveRegion).toBe('polite');
+  });
+
+  it('live={false}: drawn the same, but no live region', () => {
+    const live = HoyaBubble({ message: 'Hi', tone: 'thinking' }) as El;
+    const quiet = HoyaBubble({ message: 'Hi', tone: 'thinking', live: false }) as El;
+    expect(quiet.props.accessibilityLiveRegion).toBe('none');
+    expect(quiet.props.style).toEqual(live.props.style);
+    expect(JSON.stringify(quiet.props)).not.toContain('assertive');
+  });
+});

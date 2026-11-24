@@ -74,6 +74,11 @@ interface State {
   deviceAt: string | null;
   /** The device record's text size. */
   textSize: TextSize;
+  /**
+   * "I use a screen reader" kept for the device (F-A11Y-001 OD-AF3 (d)): set by the level check's switch and the
+   * Display sheet's row. The web cannot tell whether a screen reader is on, so a game reads this there.
+   */
+  screenReader: boolean;
   byProfile: Record<string, ProfileSettings>;
   hydrated: boolean;
 }
@@ -100,6 +105,8 @@ interface Actions {
    */
   seedDeviceLocale: (locale: UiLocale) => void;
   setTextSize: (size: TextSize) => void;
+  /** The device's "I use a screen reader" (F-A11Y-001 OD-AF3 (d)); stored and told to the other tabs. No telemetry. */
+  setScreenReader: (on: boolean) => void;
   /** A record another tab wrote (BroadcastChannel) or a re-read found: applied in memory, never written back. */
   applyDeviceRecord: (record: DeviceSettings) => void;
   /** Re-reads the device record (a page back in front); a failed read keeps what is in memory. */
@@ -152,8 +159,13 @@ export function deviceChose(state: Pick<State, 'device'>): boolean {
 }
 
 /** The store's fields for a record. */
-function fieldsOf(record: DeviceSettings): Pick<State, 'device' | 'deviceAt' | 'textSize'> {
-  return { device: record.uiLocale ?? null, deviceAt: record.uiLocale !== undefined ? (record.uiLocaleAt ?? null) : null, textSize: record.textSize ?? DEFAULT_TEXT_SIZE };
+function fieldsOf(record: DeviceSettings): Pick<State, 'device' | 'deviceAt' | 'textSize' | 'screenReader'> {
+  return {
+    device: record.uiLocale ?? null,
+    deviceAt: record.uiLocale !== undefined ? (record.uiLocaleAt ?? null) : null,
+    textSize: record.textSize ?? DEFAULT_TEXT_SIZE,
+    screenReader: record.screenReader === true,
+  };
 }
 
 /** A stored value as a record: a field this version does not know reads as absent. */
@@ -239,6 +251,7 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
   device: null,
   deviceAt: null,
   textSize: DEFAULT_TEXT_SIZE,
+  screenReader: false,
   byProfile: {},
   hydrated: false,
 
@@ -316,6 +329,12 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     if (get().textSize === size) return;
     set({ textSize: size });
     persist(writeRecord(() => ({ textSize: size })));
+  },
+
+  setScreenReader: (on) => {
+    if (get().screenReader === on) return;
+    set({ screenReader: on });
+    persist(writeRecord(() => ({ screenReader: on })));
   },
 
   applyDeviceRecord: (record) => {

@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const rn = vi.hoisted(() => ({
   enabled: vi.fn<() => Promise<boolean>>(),
-  listeners: [] as Array<(on: boolean) => void>,
+  listeners: [] as Array<(event: never) => void>,
   removed: 0,
   focused: [] as number[],
   handles: new Map<object, number | null>(),
   os: 'ios' as string,
   announced: [] as string[],
+  queued: [] as Array<{ text: string; options: unknown }>,
+  queueThrows: false,
 }));
 vi.mock('react-native', () => ({
   findNodeHandle: (node: object | null) => (node === null ? null : (rn.handles.get(node) ?? null)),
@@ -20,11 +22,15 @@ vi.mock('react-native', () => ({
     announceForAccessibility: (text: string) => {
       rn.announced.push(text);
     },
+    announceForAccessibilityWithOptions: (text: string, options: unknown) => {
+      if (rn.queueThrows) throw new Error('missing');
+      rn.queued.push({ text, options });
+    },
     setAccessibilityFocus: (tag: number) => {
       rn.focused.push(tag);
     },
     isScreenReaderEnabled: rn.enabled,
-    addEventListener: (_type: string, fn: (on: boolean) => void) => {
+    addEventListener: (_type: string, fn: (event: never) => void) => {
       rn.listeners.push(fn);
       return {
         remove: () => {
@@ -38,6 +44,7 @@ vi.mock('react-native', () => ({
 import {
   ANNOUNCE_TIMEOUT_MS,
   announceAndWait,
+  announceQueued,
   announceForScreenReader,
   focusForScreenReader,
   isScreenReaderEnabled,
@@ -52,6 +59,7 @@ beforeEach(() => {
   rn.handles.clear();
   rn.os = 'ios';
   rn.announced.length = 0;
+  rn.queued.length = 0;
 });
 
 describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', () => {
@@ -74,7 +82,7 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
   it('forwards changes until unsubscribed', () => {
     const seen: boolean[] = [];
     const off = subscribeScreenReader((on) => seen.push(on));
-    rn.listeners[0]?.(true);
+    rn.listeners[0]?.(true as never);
     expect(seen).toEqual([true]);
     off();
     expect(rn.removed).toBe(1);
@@ -116,7 +124,7 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
       });
       await vi.waitFor(() => expect(rn.announced).toEqual(['Line 1 of 2, Hoya']));
       expect(resolved).toBe(false);
-      rn.listeners[0]?.(true);
+      rn.listeners[0]?.({ announcement: 'something else', success: true } as never);
       await p;
       expect(resolved).toBe(true);
       expect(rn.removed).toBe(1);
@@ -153,6 +161,82 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe('the queued answer line (F-A11Y-001 §3.3, test 5)', () => {
+    const finished = (announcement: string): void => {
+      for (const fn of [...rn.listeners]) fn({ announcement, success: true } as never);
+    };
+
+    it('iOS: one queued call, so it neither cuts off nor is cut off by the control just read', () => {
+      announceQueued('Right answer: sagwa, apple.');
+      expect(rn.queued).toEqual([{ text: 'Right answer: sagwa, apple.', options: { queue: true } }]);
+      expect(rn.announced).toEqual([]);
+    });
+
+    it('Android and the web read the live region: no call', () => {
+      rn.os = 'android';
+      announceQueued('Right answer: sagwa, apple.');
+      rn.os = 'web';
+      announceQueued('Right answer: sagwa, apple.');
+      expect(rn.queued).toEqual([]);
+      expect(rn.announced).toEqual([]);
+    });
+
+    it('never throws when the platform cannot say it', () => {
+      rn.queueThrows = true;
+      try {
+        expect(() => announceQueued('x')).not.toThrow();
+      } finally {
+        rn.queueThrows = false;
+      }
+    });
+
+    it('announceAndWait with queue: one queued call, settled only by the finish event that carries its own text', async () => {
+      rn.enabled.mockResolvedValue(true);
+      let resolved = false;
+      const p = announceAndWait('Not this one: pear. Try another.', 0, { queue: true }).then(() => {
+        resolved = true;
+      });
+      await vi.waitFor(() => expect(rn.queued).toEqual([{ text: 'Not this one: pear. Try another.', options: { queue: true } }]));
+      expect(rn.announced).toEqual([]);
+      finished('Tap & Respond, button');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(resolved).toBe(false);
+      finished('Not this one: pear. Try another.');
+      await p;
+      expect(resolved).toBe(true);
+      expect(rn.removed).toBe(1);
+    });
+
+    it('announceAndWait with queue: a lost event is guarded by a timeout of at least 8 s', async () => {
+      vi.useFakeTimers();
+      try {
+        rn.enabled.mockResolvedValue(true);
+        let resolved = false;
+        const p = announceAndWait('Right answer: n.', 0, { queue: true }).then(() => {
+          resolved = true;
+        });
+        await vi.advanceTimersByTimeAsync(ANNOUNCE_TIMEOUT_MS);
+        expect(resolved).toBe(false);
+        // Still waiting just short of 8 s, then the guard ends it.
+        await vi.advanceTimersByTimeAsync(8000 - ANNOUNCE_TIMEOUT_MS - 1);
+        expect(resolved).toBe(false);
+        await vi.advanceTimersByTimeAsync(1);
+        await p;
+        expect(resolved).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('announceAndWait with queue and no reader settles at once, with no call', async () => {
+      rn.enabled.mockResolvedValue(false);
+      await announceAndWait('Right answer: n.', 0, { queue: true });
+      expect(rn.queued).toEqual([]);
+      expect(rn.announced).toEqual([]);
     });
   });
 });
