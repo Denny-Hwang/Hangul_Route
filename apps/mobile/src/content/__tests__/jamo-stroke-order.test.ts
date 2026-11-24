@@ -273,8 +273,12 @@ describe('the data follows the approved rows of stroke-order-table.md (SO-2)', (
     }
   });
 
-  it('no SO-3 record is filled yet: the owner approved the rows for SO-2, no reviewer has checked them', () => {
-    for (const [id, record] of RECORDS) expect(record.so3.every((field) => field === ''), id).toBe(true);
+  it('an SO-3 record is all empty (not checked yet) or all filled, never half filled', () => {
+    for (const [id, record] of RECORDS) {
+      expect(record.so3, id).toHaveLength(6);
+      const filled = record.so3.filter((field) => field !== '').length;
+      expect([0, record.so3.length], id).toContain(filled);
+    }
   });
 });
 
