@@ -1,0 +1,131 @@
+/*
+ * AMENDMENTS-AUDIO-CANT-HEAR row CH-0b: design mock of the "Can't hear it?" link and sheet, the one-section
+ * "Add a Korean voice" sheet and the "Always show the letters" switch. Design mock, not shipped code.
+ *
+ * Loaded after ../../app-shell/mock/app-shell.css (whose first :root block holds the token custom properties) and
+ * ../../app-shell/mock/display-nav.css (text size scale, z.modal). The first block below copies, once, the tokens of
+ * packages/design-system/src/tokens.ts those two sheets do not carry, named after them. The second block names the
+ * numbers that are not tokens; ../README.md "Constants" says what each derives from. Nothing here redefines a token,
+ * and no rule uses colors.feedback.danger or colors.feedback.nudge (the link and the sheet are not a miss).
+ */
+:root {
+  --radii-xl: 24px;                       /* radii.xl: the bottom sheet's top corners (VoiceHelpSheet.tsx) */
+  --colors-feedback-successDark: #2C5E3F; /* colors.feedback.successDark: the On pill's label in this mock (see README, Constants) */
+}
+:root {
+  --speaker-glyph: 48px;                  /* MatchSoundGame.tsx: <Icon name="speaker" size={48} /> (unchanged) */
+  --close-glyph: 22px;                    /* VoiceHelpSheet.tsx: <Icon name="close" size={22} /> (unchanged) */
+  --row-glyph: 24px;                      /* ProfileScreen.tsx: the Sound row's glyph, 24 (unchanged) */
+  --sheet-max-h: 85%;                     /* VoiceHelpSheet.tsx: maxHeight '85%' (unchanged) */
+  --frame-phone: 360px;                   /* design board only, not UI: a 360 x 740 phone */
+  --frame-phone-h: 740px;
+  --frame-tablet: 1024px;                 /* design board only, not UI: a 1024 x 768 tablet, landscape */
+  --frame-tablet-h: 768px;
+  --frame-small: 320px;                   /* design board only, not UI: the narrowest phone, 320 x 568 */
+  --frame-small-h: 568px;
+}
+/* OS text at 200 % (iOS Larger Text / Android font scale): every line doubles, headings too (RN allowFontScaling). */
+html.t200 { --hr-text-scale: 2; --hr-head-ratio: 1; }
+[lang="ko"] { word-break: keep-all; }
+
+/* ---------------------------------------------------------------- Frames */
+.ch-frame { position: relative; overflow: hidden; height: var(--frame-phone-h); width: 100%; background: var(--colors-surface-canvas); }
+.ch-frame.tablet { height: var(--frame-tablet-h); }
+.ch-frame > .scroll { height: 100%; overflow-y: auto; }
+body.fp { min-height: 100vh; }
+body.fp .ch-frame { height: 100vh; }
+html.full body.fp .ch-frame { height: auto; min-height: 100vh; overflow: visible; }
+html.full body.fp .ch-frame > .scroll { height: auto; overflow: visible; }
+
+/* ---------------------------------------------------------------- Match Sound (MatchSoundGame.tsx), drawn as HTML */
+.ms { padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xl); max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; } /* Screen: the reading column */
+.ms-top { display: flex; align-items: center; gap: var(--spacing-md); }
+.bar { flex: 1; height: var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--colors-brand-primary); border-radius: var(--radii-pill); }
+.pill { flex: none; display: inline-block; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); color: var(--colors-text-secondary); font-size: var(--size-caption); font-weight: var(--weight-semibold); }
+.pill.on { background: var(--colors-feedback-successLight); color: var(--colors-feedback-successDark); }
+.ms-cols { margin-top: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.ms.side .ms-cols { flex-direction: row; align-items: flex-start; gap: var(--spacing-xxl); }
+.ms.side .ms-prompt, .ms.side .ms-answers { flex: 1; min-width: 0; }
+.ms-heading { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+/* The speaker row wraps (spec 3.11): the link sits after the caption, and drops under it when the row is too narrow. */
+.speaker-row { margin-top: var(--spacing-md); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--spacing-md); }
+.speaker { display: inline-flex; align-items: center; justify-content: center; padding: var(--spacing-md); min-width: var(--touch-min); min-height: var(--touch-min); border: none; background: transparent; color: var(--colors-text-primary); cursor: pointer; border-radius: var(--radii-md); }
+.speaker svg { width: var(--speaker-glyph); height: var(--speaker-glyph); }
+.caption { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.focus-ring { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* Buttons as packages/design-system Button: pill, 64 high (sm and md), ghost has a 2 px brand.primary border. */
+.btn-sm { font-size: var(--size-bodySm); padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.rn-btn { min-width: var(--touch-min); overflow-wrap: anywhere; }
+.rn-btn svg { width: var(--spacing-xl); height: var(--spacing-xl); flex: none; }
+.rn-btn.soft { background: var(--colors-surface-sunken); color: var(--colors-text-muted); opacity: var(--disabled-opacity); cursor: default; }
+.rn-btn.full { width: 100%; }
+
+/* PromptPanel (text variant): Card paper, padding lg, flat; KoreanText md and the read line, centred. */
+.panel { margin-top: var(--spacing-md); background: var(--colors-surface-paper); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); text-align: center; }
+.kt { display: flex; flex-direction: column; align-items: center; }
+.kt .ko { font-size: calc(var(--size-title) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.kt .rom { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.read-line { color: var(--colors-text-muted); }
+.detail { font-size: var(--size-caption); color: var(--colors-text-muted); }
+
+/* Tiles (Tile size lg, idle): paper, border.shape, radii.lg, the jamo and its romanization. */
+.tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-md); max-width: calc(2 * var(--touch-hero) + var(--spacing-md)); margin: 0 auto; } /* 2 x 2, as on device */
+.ms.side .tiles { max-width: calc(3 * var(--touch-hero) + var(--spacing-md)); } /* tileGridWidth: two tiles and one gap */
+.tiles.held { display: none; } /* TapBoard held: the answers are not drawn until the slot settles */
+.tile { width: var(--touch-hero); min-height: var(--touch-hero); padding: var(--spacing-md); display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-lg); color: var(--colors-text-primary); cursor: pointer; }
+.ms.side .tile { width: calc(var(--touch-hero) * 1.5); min-height: calc(var(--touch-hero) * 1.5); }
+.tile .ko { font-size: var(--size-display); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.tile .rom { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.held-note { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); text-align: center; }
+
+/* Discover card (C6): the letter printed, Hear it, Letter name, then the guidance-only link. */
+.dc-card { margin-top: var(--spacing-lg); background: var(--colors-surface-paper); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); box-shadow: var(--shadow-card); }
+.dc-card .ko { font-size: var(--size-hero); }
+.dc-foot { margin-top: var(--spacing-lg); }
+
+/* ---------------------------------------------------------------- The sheets (VoiceHelpSheet.tsx construction) */
+.scrim { position: absolute; inset: 0; z-index: var(--z-modal); background: var(--colors-surface-overlay); }
+.bs { position: absolute; left: 0; right: 0; bottom: 0; z-index: var(--z-modal); margin: 0 auto; max-height: var(--sheet-max-h); display: flex; flex-direction: column; background: var(--colors-surface-paper); border-radius: var(--radii-xl) var(--radii-xl) var(--spacing-none) var(--spacing-none); padding: var(--spacing-lg); }
+/* From window class regular (600) the sheet keeps to the reading width, centred at the bottom (README MD6: proposed, owner question Q2). */
+.ch-frame.tablet .bs, .bs.capped { max-width: var(--max-width-reading); }
+.bs-title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.bs-title { flex: 1; min-width: 0; font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.bs-close { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); border: none; background: transparent; color: var(--colors-text-muted); border-radius: var(--radii-pill); cursor: pointer; }
+.bs-close svg { width: var(--close-glyph); height: var(--close-glyph); }
+.bs-body { flex-shrink: 1; min-height: 0; overflow-y: auto; } /* the title row, the line (the help sheet's note and steps) scroll together */
+/* The scroll cue (README MD11): when the body scrolls, a rule over the buttons says there is more above them. */
+.bs.scrolls .bs-actions { border-top: var(--border-width-thin) solid var(--colors-border-strong); padding-top: var(--spacing-sm); }
+.bs-line { margin-top: var(--spacing-sm); font-size: var(--size-body); color: var(--colors-text-primary); overflow-wrap: anywhere; }
+.bs-actions { flex: none; margin-top: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.bs-note { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.bs-section { margin-top: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.bs-section h3 { font-size: var(--size-body); font-weight: var(--weight-semibold); }
+.bs-footer { margin-top: var(--spacing-md); color: var(--colors-text-secondary); }
+
+/* ---------------------------------------------------------------- Profile, My settings, the Sound card (CH-2) */
+.pf { padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xl); max-width: var(--max-width-reading); margin: 0 auto; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.pf-group { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.card-md { background: var(--colors-surface-paper); border-radius: var(--radii-lg); padding: var(--spacing-md); box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.sw { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); min-height: var(--touch-min); width: 100%; border: none; background: transparent; padding: 0; text-align: left; cursor: pointer; }
+.sw-lead { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--spacing-sm); }
+.sw-lead svg { width: var(--row-glyph); height: var(--row-glyph); flex: none; }
+.sw-lead .on { color: var(--colors-brand-primary); }
+.sw-text { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.sw-label { font-weight: var(--weight-semibold); }
+/* The new row lines its label up with "Sound" (glyph width + spacing.sm), so the two read as one card (README MD9). */
+.sw.indent .sw-lead { padding-left: calc(var(--row-glyph) + var(--spacing-sm)); }
+.divider { height: var(--border-width-thin); background: var(--colors-border-subtle); }
+.unchanged { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); padding: var(--spacing-sm); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); }
+
+/* ---------------------------------------------------------------- Boards */
+.ch-frame.len { width: var(--frame-small); height: var(--frame-small-h); }
+/* A frame page holds a phone and a tablet drawing; from layout.breakpoint.wide (900) the tablet one shows. */
+.only-tablet { display: none; }
+@media (min-width: 900px) { .only-phone { display: none; } .only-tablet { display: block; } }
+.phone { width: 100%; max-width: var(--frame-phone); }
+.tablet-wrap { width: 100%; max-width: var(--frame-tablet); }
+.board-grid.wide-cols { grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--frame-phone)), 1fr)); }
+.grey { filter: grayscale(1); }
+.variant-row { display: flex; flex-wrap: wrap; gap: var(--spacing-md); align-items: center; padding: var(--spacing-lg); background: var(--colors-surface-canvas); }

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add a Korean voice (one device) and Always show the letters (CH-0b) - design mock</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="cant-hear.css">
+</head>
+<body>
+<!-- Design mock (docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md row CH-0b), not shipped code. Written by ../tools/build-mocks.mjs: edit the tool, not this file. -->
+
+<div class="board">
+<h1 class="page-title">One-section help sheet and the CH-2 switch</h1>
+<p class="annot">Spec 3.9 (P2-22, NB-7): "Add a Korean voice" shows this device's section only; title, note and footer unchanged; the scrim leaves the accessibility tree and focus starts on the title. Row CH-2 (OD-CH1 approved): "Always show the letters", a device switch on Profile's Sound card under the Sound switch; it uses the Sound row's pill (On / Off) and adds no caption (the spec adds one string).</p>
+<div class="board-grid wide-cols">
+<div class="board-item"><p class="board-label">H1. iPhone or iPad</p><p class="board-title">Only the Apple steps</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen" inert>
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. No Korean voice on this device"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">No Korean voice on this device</span></span></span><span class="pill on">On</span></button>
+<div><button class="rn-btn rn-ghost" type="button">How to add a voice</button></div>
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="false" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill" aria-hidden="true">Off</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="vh-title-16" data-ch="sheet" data-family="apple" data-kind="voice-help">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="vh-title-16" tabindex="-1" data-ch="first-focus">Add a Korean voice</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-note">Menu names can differ on your device.</p><div class="bs-section" data-ch="section" data-section="apple"><h3>iPhone or iPad</h3><p>1. Open Settings, then Accessibility.</p><p>2. Tap Spoken Content, then Voices, then Korean.</p><p>3. Download a voice, such as Yuna. Enhanced or Premium sounds best.</p><p>4. Come back and reopen Hangul Route.</p></div><p class="bs-footer">You can still play: the sound is written on screen.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button">OK</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">H2. Android</p><p class="board-title">Only the Android steps</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen" inert>
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. No Korean voice on this device"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">No Korean voice on this device</span></span></span><span class="pill on">On</span></button>
+<div><button class="rn-btn rn-ghost" type="button">How to add a voice</button></div>
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="false" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill" aria-hidden="true">Off</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="vh-title-17" data-ch="sheet" data-family="android" data-kind="voice-help">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="vh-title-17" tabindex="-1" data-ch="first-focus">Add a Korean voice</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-note">Menu names can differ on your device.</p><div class="bs-section" data-ch="section" data-section="android"><h3>Android</h3><p>1. Open Settings, then search for Text-to-speech output.</p><p>2. Choose Speech Services by Google and tap the gear.</p><p>3. Tap Install voice data, then Korean.</p><p>4. Come back and reopen Hangul Route.</p></div><p class="bs-footer">You can still play: the sound is written on screen.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button">OK</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">H3. computer</p><p class="board-title">Only the computer steps</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen" inert>
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. No Korean voice on this device"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">No Korean voice on this device</span></span></span><span class="pill on">On</span></button>
+<div><button class="rn-btn rn-ghost" type="button">How to add a voice</button></div>
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="false" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill" aria-hidden="true">Off</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="vh-title-18" data-ch="sheet" data-family="computer" data-kind="voice-help">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="vh-title-18" tabindex="-1" data-ch="first-focus">Add a Korean voice</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-note">Menu names can differ on your device.</p><div class="bs-section" data-ch="section" data-section="computer"><h3>Computer</h3><p>1. Mac: System Settings, Accessibility, Spoken Content, System Voice, Manage Voices, then Korean.</p><p>2. Windows: Settings, Time &amp; language, Speech, Manage voices, then Add voices and Korean.</p><p>3. Chrome and Edge: some Korean voices need the internet, so check you are online.</p><p>4. Reload this page.</p></div><p class="bs-footer">You can still play: the sound is written on screen.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button">OK</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">P1. Sound card, voice ready, switch off (the default)</p><p class="board-title">Always show the letters: Off</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen">
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. Korean voice: ready"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">Korean voice: ready</span></span></span><span class="pill on">On</span></button>
+
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="false" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill" aria-hidden="true">Off</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div></div></div></div>
+<div class="board-item"><p class="board-label">P2. switch on</p><p class="board-title">Every opted-in round opens with its text; the sound still plays</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen">
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. Korean voice: ready"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">Korean voice: ready</span></span></span><span class="pill on">On</span></button>
+
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="true" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill on" aria-hidden="true">On</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div></div></div></div>
+<div class="board-item"><p class="board-label">P3. no Korean voice, switch on</p><p class="board-title">How to add a voice stays with the voice line, above the divider</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="pf" data-ch="screen">
+<p class="unchanged">ScreenHeader, the learner's name, stats: unchanged</p>
+<h2 class="pf-group">My settings</h2>
+<div class="card-md" data-ch="sound-card">
+<button class="sw" type="button" role="switch" aria-checked="true" aria-label="Sound, On. No Korean voice on this device"><span class="sw-lead"><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></span><span class="sw-text"><span class="sw-label">Sound</span><span class="caption">No Korean voice on this device</span></span></span><span class="pill on">On</span></button>
+<div><button class="rn-btn rn-ghost" type="button">How to add a voice</button></div>
+<div class="divider" aria-hidden="true"></div>
+<button class="sw indent" type="button" role="switch" aria-checked="true" data-ch="always-letters"><span class="sw-lead"><span class="sw-text"><span class="sw-label">Always show the letters</span></span></span><span class="pill on" aria-hidden="true">On</span></button>
+</div>
+<p class="unchanged">Display card (language, text size) and For grown-ups: unchanged</p>
+</div></div></div></div></div>
+</div>
+</div>
+<script>
+function cue() { document.querySelectorAll('.bs-body').forEach((b) => b.closest('.bs').classList.toggle('scrolls', b.scrollHeight > b.clientHeight + 1)); }
+cue(); window.addEventListener('resize', cue); new MutationObserver(cue).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+document.documentElement.dataset.ready = 'yes';
+</script>
+</body>
+</html>
