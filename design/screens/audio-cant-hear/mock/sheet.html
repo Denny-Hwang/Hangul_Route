@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can't hear it? sheet (CH-0b) - design mock</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="cant-hear.css">
+</head>
+<body>
+<!-- Design mock (docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md row CH-0b), not shipped code. Written by ../tools/build-mocks.mjs: edit the tool, not this file. -->
+
+<div class="board">
+<h1 class="page-title">The "Can't hear it?" sheet</h1>
+<p class="annot">Spec 3.3, 3.4, 3.7, 3.10. Built like VoiceHelpSheet: a bottom sheet (paper, radii.xl top corners, padding spacing.lg) over colors.surface.overlay. Title (a heading, first focus), Close at the end of the title row, exactly one line for this device, then Show the letters (primary) and Hear it (secondary, the speaker glyph). The scrim is not an accessibility element; the round behind is inert. Neutral: no Hoya, no amber, no red.</p>
+<div class="board-grid wide-cols">
+<div class="board-item"><p class="board-label">S1. iPhone or iPad (app or browser)</p><p class="board-title">The Apple line only</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="ms" data-ch="screen" inert>
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="ch-title-11" data-ch="sheet" data-family="apple">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="ch-title-11" tabindex="-1" data-ch="first-focus">Can't hear it?</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-line" data-ch="line">Turn off silent mode. Then turn the volume up.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button" data-ch="show">Show the letters</button><button class="rn-btn rn-secondary full" type="button" data-ch="hear"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">S2. Android (app or browser)</p><p class="board-title">The Android line only</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="ms" data-ch="screen" inert>
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="ch-title-12" data-ch="sheet" data-family="android">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="ch-title-12" tabindex="-1" data-ch="first-focus">Can't hear it?</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-line" data-ch="line">Turn up the media volume with the volume buttons.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button" data-ch="show">Show the letters</button><button class="rn-btn rn-secondary full" type="button" data-ch="hear"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">S3. computer (and anything else)</p><p class="board-title">The computer line only (&quot;this page&quot;: an installed PWA has no tab)</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="ms" data-ch="screen" inert>
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="ch-title-13" data-ch="sheet" data-family="computer">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="ch-title-13" tabindex="-1" data-ch="first-focus">Can't hear it?</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-line" data-ch="line">Turn the volume up. Check that this page is not muted.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button" data-ch="show">Show the letters</button><button class="rn-btn rn-secondary full" type="button" data-ch="hear"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">S4. guidance only (Discover; cue rounds)</p><p class="board-title">No Show the letters; Hear it is the primary action</p><div class="sample phone"><div class="ch-frame"><div class="scroll"><div class="ms" data-ch="screen" inert>
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="2" aria-valuenow="1" aria-label="Page 1 of 2"><i style="width: 50%"></i></div><span class="pill">1 / 2</span></div>
+<div class="dc-card"><span class="kt"><span class="ko" lang="ko">ㄱ</span><span class="rom">g/k</span></span>
+<button class="rn-btn rn-secondary full" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button><button class="rn-btn rn-ghost full" type="button">Letter name</button><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="dc-foot"><button class="rn-btn rn-hero" type="button">Continue</button></div>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="ch-title-14" data-ch="sheet" data-family="apple" data-guidance="yes">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="ch-title-14" tabindex="-1" data-ch="first-focus">Can't hear it?</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-line" data-ch="line">Turn off silent mode. Then turn the volume up.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button" data-ch="hear"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button></div>
+</div></div></div></div>
+</div>
+<div class="board-wide">
+<div class="board-item"><p class="board-label">S5. tablet landscape, 1024 x 768</p><p class="board-title">A bottom sheet kept to layout.maxWidth.reading (720), centred (proposed, README MD6 and Q2, pending the owner); the two buttons stay full width of the sheet</p><div class="sample tablet-wrap"><div class="ch-frame tablet"><div class="scroll"><div class="ms side" data-ch="screen" inert>
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div><div class="scrim" aria-hidden="true" data-ch="scrim"></div>
+<div class="bs" role="dialog" aria-modal="true" aria-labelledby="ch-title-15" data-ch="sheet" data-family="apple">
+<div class="bs-body"><div class="bs-title-row"><h2 class="bs-title" id="ch-title-15" tabindex="-1" data-ch="first-focus">Can't hear it?</h2><button class="bs-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round"/></svg></button></div>
+<p class="bs-line" data-ch="line">Turn off silent mode. Then turn the volume up.</p></div>
+<div class="bs-actions"><button class="rn-btn rn-primary full" type="button" data-ch="show">Show the letters</button><button class="rn-btn rn-secondary full" type="button" data-ch="hear"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg>Hear it</button></div>
+</div></div></div></div>
+</div>
+</div>
+<script>
+function cue() { document.querySelectorAll('.bs-body').forEach((b) => b.closest('.bs').classList.toggle('scrolls', b.scrollHeight > b.clientHeight + 1)); }
+cue(); window.addEventListener('resize', cue); new MutationObserver(cue).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+document.documentElement.dataset.ready = 'yes';
+</script>
+</body>
+</html>

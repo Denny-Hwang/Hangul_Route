@@ -87,8 +87,8 @@ export function ClassCodeOverlay({ view, onClose, returnTo }: { view: CodeOverla
     close.current?.focus?.();
   };
 
-  // The same keys for the whole document while it is open (focus can leave the dialog on a click on its words); a key the
-  // dialog's own handler already answered is not answered twice.
+  // The keys are caught on the document while it is open, wherever focus is (it can leave the dialog on a click on its
+  // words), so the dialog element carries no key handler of its own (the accessibility lint gate allows none here).
   const keyRef = useRef(keyAction);
   keyRef.current = keyAction;
   useEffect(() => {
@@ -111,7 +111,6 @@ export function ClassCodeOverlay({ view, onClose, returnTo }: { view: CodeOverla
         aria-modal="true"
         aria-labelledby={nameId}
         aria-describedby={`${captionId} ${spokenId} ${expiryId}`}
-        onKeyDown={keyAction}
         data-testid="class-code-overlay"
       >
         <div className="hr-co-body">

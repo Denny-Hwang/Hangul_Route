@@ -237,7 +237,7 @@ describe('ClassCodeOverlay: opening (3.3)', () => {
 });
 
 describe('ClassCodeOverlay: keys (3.3)', () => {
-  it('Escape on the document and Close each call onClose once; a key the overlay answered is not answered twice', () => {
+  it('Escape on the document and Close each call onClose once; a key already answered (defaultPrevented) is not answered twice', () => {
     const s = mount();
     const preventDefault = vi.fn();
     act(() => s.keydown()!({ key: 'Escape', shiftKey: false, preventDefault }));
@@ -245,10 +245,10 @@ describe('ClassCodeOverlay: keys (3.3)', () => {
     expect(preventDefault).toHaveBeenCalledTimes(1);
     act(() => s.keydown()!({ key: 'Escape', shiftKey: false, defaultPrevented: true, preventDefault }));
     expect(s.closed).toBe(1);
-    act(() => one(s.root, 'class-code-overlay').props.onKeyDown({ key: 'Escape', shiftKey: false, preventDefault }));
-    expect(s.closed).toBe(2);
+    // The dialog element carries no key handler: the document listener is the one path.
+    expect(one(s.root, 'class-code-overlay').props.onKeyDown).toBeUndefined();
     act(() => one(s.root, 'class-code-close').props.onClick());
-    expect(s.closed).toBe(3);
+    expect(s.closed).toBe(2);
   });
 
   it('other keys do nothing; there is no backdrop to click', () => {

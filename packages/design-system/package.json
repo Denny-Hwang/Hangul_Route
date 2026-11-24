@@ -39,10 +39,11 @@
     "./src/components/RealiaSheet/RealiaKindSheet": "./src/components/RealiaSheet/RealiaKindSheet.tsx",
     "./src/components/RealiaSheet/kinds-style": "./src/components/RealiaSheet/kinds-style.ts",
     "./src/scene-art/realia-kinds-registry": "./src/scene-art/realia-kinds-registry.ts",
+    "./eslint/touchable-has-name": "./eslint/touchable-has-name.mjs",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {
-    "lint": "echo '(no lint yet — @hangul-route/design-system)'",
+    "lint": "eslint --no-inline-config --max-warnings=0 \"src/**/*.tsx\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
@@ -72,7 +73,10 @@
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
     "@types/react": "^18.3.12",
+    "@typescript-eslint/parser": "8.74.0",
     "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-native-a11y": "3.5.1",
     "react": "18.3.1",
     "react-native": "0.76.5",
     "react-native-reanimated": "~3.16.1",
