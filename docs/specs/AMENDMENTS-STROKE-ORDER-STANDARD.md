@@ -1,6 +1,6 @@
 # AMENDMENTS-STROKE-ORDER-STANDARD — stop teaching a stroke order nobody has checked; then source and check the data
 
-Status: ready for rows SO-0b, SO-0c, SO-1, SO-1b and SO-1d (owner decisions 2026-11-23: OD-SO6 to OD-SO10 as recommended, §10; owner decision 2026-11-22: OD-SO1 to OD-SO4 accepted as recommended; OD-SO5 — the Korean teacher of WO-27 reviews the table and does SO-3; the revision-3 review of 2026-11-22 is adjudicated, §11). SO-2 still waits for table rows the reviewer approves; SO-3 is the reviewer's. Revision 3 (2026-11-21, re-based on `d5ba0217c`; revision 2 was written for work order WO-03 of `docs/roadmap/review-2026-11/phase-1-safety.md`, row SO-0, on `5573e1072`). The multi-agent review of 2026-11-21 (§11) is adjudicated in revision 2; revision 3 builds on AU-14, which rewrote the stroke data upstream (§1, §11).
+Status: ready for rows SO-0b, SO-0c, SO-1, SO-1b, SO-1d and SO-2 (owner decision 2026-11-23, in session: OD-SO11 approves the SO-0b table rows for SO-2, every sourced form accepted, §10; owner decisions 2026-11-23: OD-SO6 to OD-SO10 as recommended, §10; owner decision 2026-11-22: OD-SO1 to OD-SO4 accepted as recommended; OD-SO5 — the Korean teacher of WO-27 reviews the table and does SO-3; the revision-3 review of 2026-11-22 is adjudicated, §11). SO-3 is still the reviewer's: the Korean teacher's textbook check is still the gate for a letter being taught. Revision 3 (2026-11-21, re-based on `d5ba0217c`; revision 2 was written for work order WO-03 of `docs/roadmap/review-2026-11/phase-1-safety.md`, row SO-0, on `5573e1072`). The multi-agent review of 2026-11-21 (§11) is adjudicated in revision 2; revision 3 builds on AU-14, which rewrote the stroke data upstream (§1, §11).
 
 **Amends**: F-004 (Trace Stroke) · F-005 (stroke order) · F-006 (stroke direction: the nudge for unreviewed letters) · F-007 (the animated hint: shape reveal, caption) · F-008 (strict mode: unreviewed letters pass on coverage) · F-TCH-004 §3.6 (the reviewed-stroke list; the presenter's stroke panel) · F-CURR-001 §3.7 (Trace Word's coaching) · tag **[SO]**
 **Scope**: `apps/mobile/src/content/jamo-strokes.ts`, `apps/mobile/src/logic/stroke-order-taught.ts` (new), `apps/mobile/src/screens/minigames/TraceStrokeGame.tsx`, `apps/mobile/src/screens/minigames/TraceWordGame.tsx`, `apps/mobile/src/logic/trace-word/evaluate.ts`, `apps/mobile/src/components/StrokeHint.tsx`, `apps/mobile/src/screens/presenter/slides/LetterSlide.tsx`, `apps/mobile/src/logic/trace-copy.ts`, `packages/i18n` (en, es, ko), `docs/specs/assets/stroke-order-table.md` (new), `.github/CODEOWNERS` (two lines)
@@ -182,6 +182,16 @@ Branches: `fix/stroke-order-interim` (SO-1, SO-1d), `design/stroke-shape-guide` 
 - **OD-SO8 — the presenter caption.** For an untaught letter the presenter panel's caption becomes "Letter shape"; a taught letter shows **no** caption (corrected 2026-11-23 to match §8 and F-TCH-004 §3.6: the first wording, "a taught letter keeps 'Simplified stroke guide' (OD-SO2 still holds for taught letters)", contradicted both, and before SO-1b a taught letter showed no caption; SO-1b built the first wording, row SO-1d aligns the code). New string, en + es + ko (row SO-1b).
 - **OD-SO9 — contrast of the reveal on the retry canvas.** When the canvas is in its retry look, the shape-guide reveal draws at full group opacity instead of 0.6 (row SO-1b).
 - **OD-SO10 — romanization alternatives in accessible labels.** `a11yRomanization` joins alternatives (a slash in the romanization, e.g. ㅇ "silent / ng") with the UI locale's word for "or" instead of the English word in every locale; the word comes from `packages/i18n` (row SO-1b).
+
+### Owner decision 2026-11-23 (owner, in session): the table rows for SO-2
+
+- **OD-SO11 — the SO-0b rows are approved for SO-2 by the owner.** Asked whether SO-2 should wait for the Korean teacher, the owner answered "오너 승인으로 지금 진행" (go ahead now on the owner's approval). The owner approves the rows of `docs/specs/assets/stroke-order-table.md` for row SO-2 now, as owner, without waiting for the teacher, with the OD-SO4 default: **every sourced form is accepted**.
+  - ㅊ and ㅎ, the top stroke: both the horizontal left-to-right stroke (Order A, X1's diagram) and the vertical tick (Variant B, AU-14).
+  - ㅈ: both 2 strokes (Order A) and 3 strokes (Variant B).
+  - ㅌ: Order A and Variant B (the 1989 handwriting form). Variant C (historical, descriptive only) is **not** accepted.
+  - ㅇ's direction (and the direction of ㅎ's ring and of final ㅇ) stays unsourced: AU-14's data stays there; the loop check already scores winding only.
+  - The Korean teacher's review (row SO-3) still follows and is still the gate for a letter being taught. SO-2 does not touch `reviewedStrokeIds` (§3.5).
+  - In the table: status and every row's review record read "approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3)" (§4 of the table).
 
 ## 11. Review log
 

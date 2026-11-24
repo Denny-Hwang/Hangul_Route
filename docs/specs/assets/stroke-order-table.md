@@ -1,6 +1,6 @@
 # Stroke-order table — for review (AMENDMENTS-STROKE-ORDER-STANDARD row SO-0b)
 
-Status: **draft for review. No row is approved.** Approval is a person's job: the Korean teacher of WO-27 (row HR-3s; OD-SO5, 2026-11-22) checks each row and fills its review record (§3.5 of the spec). Where sources differ, the owner decides (OD-SO4: by default every order with a credible source is accepted).
+Status: **approved by the owner for SO-2, 2026-11-23 (OD-SO11, spec §10); textbook check by the reviewer pending (SO-3).** The owner approved every row for row SO-2 as owner, without waiting for the reviewer, with the OD-SO4 default: every sourced form is accepted (ㅈ A and B; ㅊ and ㅎ A and B; ㅌ A and B; ㅌ C is not accepted). The direction of ㅇ, of ㅎ's ring and of final ㅇ stays unsourced (AU-14's data stays). The reviewer's check is still a person's job and still the gate for a letter being taught: the Korean teacher of WO-27 (row HR-3s; OD-SO5, 2026-11-22) checks each row against the textbook and fills its review record (§4; §3.5 of the spec). Where sources differ, the owner decides (OD-SO4).
 
 Researched 2026-11-22 on `main` `8a6e36543`. Every source below was seen on 2026-11-22 unless the entry says otherwise. This file changes no code and does not touch `reviewedStrokeIds`.
 
@@ -35,35 +35,40 @@ So: the rows are sourced, but not from the textbook. Treat "agree" below as "agr
 | Letters with more than one sourced order or form (variants, OD-SO4) | 4 (ㅈ, ㅊ, ㅎ, ㅌ) |
 | Finals (6) | inherit their consonant's row; no source found that gives a final's order separately (§3.3) |
 | Rows with no source at all | 0 jamo; unsourced parts: the direction of ㅇ, of ㅎ's ring and of final ㅇ |
+| Rows approved for SO-2 by the owner (OD-SO11, 2026-11-23) | 30 (every row) |
+| Rows checked by the reviewer against the textbook (SO-3) | 0 |
+| Forms accepted besides AU-14's (OD-SO11; the data's `altStrokes`) | 4: ㅈ B, ㅊ A, ㅎ A, ㅌ B |
+| Forms not accepted | 1: ㅌ C |
 
 ## 3. The table
 
 How to read it:
 
 - **Strokes** are given in writing order, each as start → end in words. "Codes" uses the same leg names as `STANDARD` in `jamo-stroke-order.test.ts` (`right`, `down`, `downLeft`, `downRight`, `loop`; `>` joins legs drawn without a lift), so SO-2 can compare the two directly.
+- **Codes of a row with more than one form**: one line per form (`<br>`), as `<label> (<where>): <codes>`, where `<where>` is `` `strokes` `` (the form the data shows: ghost, Show me, presenter; AU-14's form), `` `altStrokes` `` (another accepted form, OD-SO11; the data holds it in this order) or `not accepted`. A row with one form gives its codes only (`strokes`). `jamo-stroke-order.test.ts` parses this column: the data's `strokes` must equal the `strokes` line and its `altStrokes` the `altStrokes` lines.
 - **Sources** use the ids of §5. "p." is the page number printed on the PDF page.
 - **AU-14** describes `jamo-strokes.ts` as it is on `8a6e36543` (coordinates in the 200 × 200 viewBox).
-- **Compare**: `agree`, `disagree` (with what), or `partly`. A row marked `agree` is still unapproved.
-- **Review**: every row starts `unapproved`. The review record is filled in §4, one line per row, by the reviewer.
+- **Compare**: `agree`, `disagree` (with what), or `partly`.
+- **Review**: every row started `unapproved`. Since OD-SO11 (2026-11-23) every row is approved by the owner for SO-2; the reviewer's textbook check (SO-3) is pending. The review records are in §4, one line per row.
 
 ### 3.1 Consonants (14)
 
 | # | Jamo | Id | Strokes | Stroke order (start → end) | Codes | Sources | AU-14 data | Compare | Review |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | ㄱ | `jamo:giyeok` | 1 | 1. top-left → right along the top, turning down the right side to the bottom-right | `right>down` | X1 p.4 [표 2] (1획); X1 p.6 [표 4] diagram; X2 ("가로로 긋다가 꺾어서 한 번에 내려요", 1획) | 1 stroke: (40,50) → (160,50) → (160,150) | agree | unapproved |
-| 2 | ㄴ | `jamo:nieun` | 1 | 1. top-left → down the left side, turning right along the bottom to the bottom-right | `down>right` | X1 p.4 [표 2] (1획); X1 p.6 diagram; X2 ("내리긋다가 꺾어서 한 번에 오른쪽으로", 1획) | 1 stroke: (50,40) → (50,150) → (160,150) | agree | unapproved |
-| 3 | ㄷ | `jamo:digeut` | 2 | 1. top bar, left → right; 2. from the top-left (left end of the bar) down, turning right along the bottom (ㄴ shape) | `right`, `down>right` | X1 p.4 [표 2] (2획); X1 p.6 diagram; X2 ("① 위 가로 ② ㄴ 모양", 2획) | 2 strokes: bar (40,50) → (160,50); ㄴ shape from (50,50) | agree | unapproved |
-| 4 | ㄹ | `jamo:rieul` | 3 | 1. ㄱ shape: top-left → top-right, down to the middle-right; 2. middle bar, left → right; 3. ㄴ shape: from the middle-left down, turning right along the bottom | `right>down`, `right`, `down>right` | X1 p.4 [표 2] (3획; "ㄹ – ㄱ을 쓰고 밑에 ㄷ을 씀"); X1 p.6 diagram; X2 ("① ㄱ 모양 ② 가운데 가로 ③ ㄴ 모양") | 3 strokes in this order; stroke 3 from (40,95) | agree | unapproved |
-| 5 | ㅁ | `jamo:mieum` | 3 | 1. left side, top → bottom; 2. top-left → top-right, turning down the right side (ㄱ shape); 3. bottom bar, left → right | `down`, `right>down`, `right` | X1 p.4 [표 2] (3획); X1 p.6 diagram; X2 ("① 왼쪽 세로 ② ㄱ 모양 ③ 아래 가로로 닫기") | 3 strokes in this order | agree. No source found for the 1- or 2-stroke ㅁ named as a hypothesis in spec §1 | unapproved |
-| 6 | ㅂ | `jamo:bieup` | 4 | 1. left side, top → bottom; 2. right side, top → bottom; 3. middle bar, left → right; 4. bottom bar, left → right | `down`, `down`, `right`, `right` | X1 p.4 [표 2] (4획; "ㅂ, ㅍ - 쌍으로 나타나는 요소는 앞→뒤 순서로 씀"); X1 p.6 diagram; X2 ("① 왼쪽 세로 ② 오른쪽 세로 ③ 가운데 가로 ④ 아래 가로") | 4 strokes in this order | agree | unapproved |
-| 7 | ㅅ | `jamo:siot` | 2 | 1. from the top-centre down-left to the bottom-left; 2. from about the middle of stroke 1 down-right to the bottom-right | `downLeft`, `downRight` | X1 p.4 [표 2] (2획); X1 p.6 diagram (stroke 2 leaves from the middle of stroke 1); X2 ("① 왼쪽 삐침 ② 오른쪽 파임") | 2 strokes; stroke 2 from (110,80), on stroke 1 | agree | unapproved |
-| 8 | ㅇ | `jamo:ieung` | 1 | 1. one closed round stroke, **starting at the top**. Direction round the circle: **no source found** | `loop` | X1 p.4 [표 2] (1획; "ㅇ - 왼쪽에서 시작하여 1획으로 끝냄" — wording ambiguous: it may mean the pen moves left first, i.e. counter-clockwise, but does not say so); X1 p.7 diagram (① at the top; the arrow is not legible at the scan's resolution); X2 ("위에서 시작해 한 번에 둥글게", no direction) | 1 stroke from the top, counter-clockwise | partly: count and start point agree; the counter-clockwise direction is not sourced (focus row F-3) | unapproved |
-| 9 | ㅈ | `jamo:jieut` | 2 (variant 3) | **Order A (2 strokes):** 1. top bar, left → right, turning at the right end down-left to the bottom-left without a lift; 2. from about the middle of the slant down-right to the bottom-right. **Variant B (3 strokes):** top bar, then the two strokes of ㅅ joined at the middle of the bar (S2c; the order of the three is not stated there) | A: `right>downLeft`, `downRight` | A: X1 p.4 [표 2] (2획; "ㅈ - 윗 선을 긋고 ㅅ을 쓰면 3획이 되어 안 됨"); X1 p.7 diagram; X2 (2획; "가로를 긋고 ㅅ을 따로 쓰는 3획은 표준 획순이 아니에요"). B: S2c (proposes the 3-stroke shape as the standard letterform: "2획이 아닌 3획으로 써야 한다"; notes that the 2-stroke shape is the one used in 명조체 "특히 국정 교과서") | Order A: (40,50) → (160,50) → (50,150); (116,90) → (160,150) | agree with A. Variant B sourced (S2c, 1989, a letter-shape proposal) and rejected by X1 and X2. Owner decides (focus row F-2) | unapproved |
-| 10 | ㅊ | `jamo:chieut` | 3 | **Order A (sourced diagram):** 1. short top stroke, **left → right** (horizontal, slightly slanting down to the right); 2. as ㅈ stroke 1; 3. as ㅈ stroke 2. **Variant B (AU-14):** stroke 1 a short vertical tick, top → bottom; strokes 2–3 as A | A: `right`, `right>downLeft`, `downRight`. B: `down`, … | Count and order: X1 p.4 [표 2] (3획; "ㅊ - 위 획을 긋고 ㅈ을 씀"); X2 ("① 꼭지 ② 가로에서 꺾어 왼쪽 삐침 ③ 오른쪽 파임"; direction of 꼭지 not stated). Stroke 1 as left → right: X1 p.7 diagram; S2c ("꼭지점을 가로로 긋는 편이 더 합리성을 지닐 것이다", a 1989 proposal). Vertical form exists: S2b ("가로점, 세로점, 사선점 등 다양한 형태"; "명확히 규정되어 있는 바는 따로 없습니다"); S2c (the top stroke was originally drawn vertically; historical) | 3 strokes; stroke 1 vertical (100,30) → (100,55) | **disagree** on stroke 1: X1's diagram draws it left → right; AU-14 draws it top → bottom. Count and strokes 2–3 agree. No source found that **teaches** the vertical tick; S2b and S2c only show it exists as a letterform (focus row F-1) | unapproved |
-| 11 | ㅋ | `jamo:kieuk` | 2 | 1. ㄱ shape: top-left → top-right, down the right side; 2. middle bar, left → right | `right>down`, `right` | X1 p.4 [표 2] (2획; "ㅋ - ㄱ을 먼저 쓰고 가획을 다음에 함"); X1 p.7 diagram; X2 ("① ㄱ 모양 ② 가운데 가로") | 2 strokes in this order | agree | unapproved |
-| 12 | ㅌ | `jamo:tieut` | 3 | **Order A:** 1. top bar, left → right; 2. middle bar, left → right; 3. from the top-left (left end of the top bar) down, turning right along the bottom (ㄴ shape). **Variant B (一 + ㄷ):** top bar, then ㄷ below it, i.e. the ㄴ shape starts at the middle bar, not at the top. **Variant C (historical):** ㄷ first (top bar, ㄴ shape), then the middle bar | A: `right`, `right`, `down>right` | A: X1 p.4 [표 2] (3획; "ㅌ - 위에 획을 긋고 아래에 ㄷ을 쓰면 안 됨"); X1 p.7 diagram (stroke 3 starts at the top-left); X2 ("① 위 가로 ② 가운데 가로 ③ ㄴ 모양"). B: S2c (1989: in handwriting, apart from primary-school pupils, most people wrote the other form; it proposes unifying on ㄷ plus a middle bar) and rejected by X1. C: S2c ("원래는 … 「ㄷ」을 쓰고 가운데에 한 획(덧줄기)을 가로 긋는 방식이었었다"; descriptive history, not a recommendation) | Order A: stroke 3 from (50,40) | agree with A. Variants B and C sourced only in S2c (1989). Owner decides | unapproved |
-| 13 | ㅍ | `jamo:pieup` | 4 | 1. top bar, left → right; 2. left short vertical, top → bottom; 3. right short vertical, top → bottom; 4. bottom bar, left → right | `right`, `down`, `down`, `right` | X1 p.4 [표 2] (4획; pairs "앞→뒤"); X1 p.7 diagram; X2 ("① 위 가로 ② 왼쪽 세로 ③ 오른쪽 세로 ④ 아래 가로") | 4 strokes in this order | agree | unapproved |
-| 14 | ㅎ | `jamo:hieut` | 3 | **Order A (sourced diagram):** 1. short top stroke, **left → right**; 2. bar, left → right; 3. circle under the bar, starting at the top (direction **not sourced**). **Variant B (AU-14):** stroke 1 a short vertical tick, top → bottom | A: `right`, `right`, `loop`. B: `down`, … | Count and order: X1 p.4 [표 2] (3획); X2 ("① 꼭지 ② 가로 ③ 동그라미"). Stroke 1 as left → right: X1 p.7 diagram; S2c (proposal, as for ㅊ). Vertical form exists: S2b; S2c (historical) | 3 strokes; stroke 1 vertical (100,30) → (100,50); ring from the top, counter-clockwise | **disagree** on stroke 1 (as ㅊ). Ring direction unsourced (as ㅇ). Count agrees (focus rows F-1, F-3) | unapproved |
+| 1 | ㄱ | `jamo:giyeok` | 1 | 1. top-left → right along the top, turning down the right side to the bottom-right | `right>down` | X1 p.4 [표 2] (1획); X1 p.6 [표 4] diagram; X2 ("가로로 긋다가 꺾어서 한 번에 내려요", 1획) | 1 stroke: (40,50) → (160,50) → (160,150) | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 2 | ㄴ | `jamo:nieun` | 1 | 1. top-left → down the left side, turning right along the bottom to the bottom-right | `down>right` | X1 p.4 [표 2] (1획); X1 p.6 diagram; X2 ("내리긋다가 꺾어서 한 번에 오른쪽으로", 1획) | 1 stroke: (50,40) → (50,150) → (160,150) | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 3 | ㄷ | `jamo:digeut` | 2 | 1. top bar, left → right; 2. from the top-left (left end of the bar) down, turning right along the bottom (ㄴ shape) | `right`, `down>right` | X1 p.4 [표 2] (2획); X1 p.6 diagram; X2 ("① 위 가로 ② ㄴ 모양", 2획) | 2 strokes: bar (40,50) → (160,50); ㄴ shape from (50,50) | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 4 | ㄹ | `jamo:rieul` | 3 | 1. ㄱ shape: top-left → top-right, down to the middle-right; 2. middle bar, left → right; 3. ㄴ shape: from the middle-left down, turning right along the bottom | `right>down`, `right`, `down>right` | X1 p.4 [표 2] (3획; "ㄹ – ㄱ을 쓰고 밑에 ㄷ을 씀"); X1 p.6 diagram; X2 ("① ㄱ 모양 ② 가운데 가로 ③ ㄴ 모양") | 3 strokes in this order; stroke 3 from (40,95) | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 5 | ㅁ | `jamo:mieum` | 3 | 1. left side, top → bottom; 2. top-left → top-right, turning down the right side (ㄱ shape); 3. bottom bar, left → right | `down`, `right>down`, `right` | X1 p.4 [표 2] (3획); X1 p.6 diagram; X2 ("① 왼쪽 세로 ② ㄱ 모양 ③ 아래 가로로 닫기") | 3 strokes in this order | agree. No source found for the 1- or 2-stroke ㅁ named as a hypothesis in spec §1 | SO-2 approved (OD-SO11); SO-3 pending |
+| 6 | ㅂ | `jamo:bieup` | 4 | 1. left side, top → bottom; 2. right side, top → bottom; 3. middle bar, left → right; 4. bottom bar, left → right | `down`, `down`, `right`, `right` | X1 p.4 [표 2] (4획; "ㅂ, ㅍ - 쌍으로 나타나는 요소는 앞→뒤 순서로 씀"); X1 p.6 diagram; X2 ("① 왼쪽 세로 ② 오른쪽 세로 ③ 가운데 가로 ④ 아래 가로") | 4 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 7 | ㅅ | `jamo:siot` | 2 | 1. from the top-centre down-left to the bottom-left; 2. from about the middle of stroke 1 down-right to the bottom-right | `downLeft`, `downRight` | X1 p.4 [표 2] (2획); X1 p.6 diagram (stroke 2 leaves from the middle of stroke 1); X2 ("① 왼쪽 삐침 ② 오른쪽 파임") | 2 strokes; stroke 2 from (110,80), on stroke 1 | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 8 | ㅇ | `jamo:ieung` | 1 | 1. one closed round stroke, **starting at the top**. Direction round the circle: **no source found** | `loop` | X1 p.4 [표 2] (1획; "ㅇ - 왼쪽에서 시작하여 1획으로 끝냄" — wording ambiguous: it may mean the pen moves left first, i.e. counter-clockwise, but does not say so); X1 p.7 diagram (① at the top; the arrow is not legible at the scan's resolution); X2 ("위에서 시작해 한 번에 둥글게", no direction) | 1 stroke from the top, counter-clockwise | partly: count and start point agree; the counter-clockwise direction is not sourced (focus row F-3) | SO-2 approved (OD-SO11); SO-3 pending |
+| 9 | ㅈ | `jamo:jieut` | 2 (variant 3) | **Order A (2 strokes):** 1. top bar, left → right, turning at the right end down-left to the bottom-left without a lift; 2. from about the middle of the slant down-right to the bottom-right. **Variant B (3 strokes):** top bar, then the two strokes of ㅅ joined at the middle of the bar (S2c; the order of the three is not stated there). B's codes are not a source's: they write the bar first, then ㅅ as row 7 does (left leg, then right leg from the middle of the left leg), by the general rule of S2d ("왼쪽에서 오른쪽으로, 위에서 아래로") and X1 p.4 ("모양은 위 - 가운데 - 아래 순서로 쓴다"); the reviewer confirms (SO-3) | A (`strokes`): `right>downLeft`, `downRight`<br>B (`altStrokes`): `right`, `downLeft`, `downRight` | A: X1 p.4 [표 2] (2획; "ㅈ - 윗 선을 긋고 ㅅ을 쓰면 3획이 되어 안 됨"); X1 p.7 diagram; X2 (2획; "가로를 긋고 ㅅ을 따로 쓰는 3획은 표준 획순이 아니에요"). B: S2c (proposes the 3-stroke shape as the standard letterform: "2획이 아닌 3획으로 써야 한다"; notes that the 2-stroke shape is the one used in 명조체 "특히 국정 교과서") | Order A: (40,50) → (160,50) → (50,150); (116,90) → (160,150) | agree with A. Variant B sourced (S2c, 1989, a letter-shape proposal) and rejected by X1 and X2. Owner decides (focus row F-2). **OD-SO11: A and B accepted** | SO-2 approved (OD-SO11); SO-3 pending |
+| 10 | ㅊ | `jamo:chieut` | 3 | **Order A (sourced diagram):** 1. short top stroke, **left → right** (horizontal, slightly slanting down to the right); 2. as ㅈ stroke 1; 3. as ㅈ stroke 2. **Variant B (AU-14):** stroke 1 a short vertical tick, top → bottom; strokes 2–3 as A | A (`altStrokes`): `right`, `right>downLeft`, `downRight`<br>B (`strokes`): `down`, `right>downLeft`, `downRight` | Count and order: X1 p.4 [표 2] (3획; "ㅊ - 위 획을 긋고 ㅈ을 씀"); X2 ("① 꼭지 ② 가로에서 꺾어 왼쪽 삐침 ③ 오른쪽 파임"; direction of 꼭지 not stated). Stroke 1 as left → right: X1 p.7 diagram; S2c ("꼭지점을 가로로 긋는 편이 더 합리성을 지닐 것이다", a 1989 proposal). Vertical form exists: S2b ("가로점, 세로점, 사선점 등 다양한 형태"; "명확히 규정되어 있는 바는 따로 없습니다"); S2c (the top stroke was originally drawn vertically; historical) | 3 strokes; stroke 1 vertical (100,30) → (100,55) | **disagree** on stroke 1: X1's diagram draws it left → right; AU-14 draws it top → bottom. Count and strokes 2–3 agree. No source found that **teaches** the vertical tick; S2b and S2c only show it exists as a letterform (focus row F-1). **OD-SO11: A and B accepted** | SO-2 approved (OD-SO11); SO-3 pending |
+| 11 | ㅋ | `jamo:kieuk` | 2 | 1. ㄱ shape: top-left → top-right, down the right side; 2. middle bar, left → right | `right>down`, `right` | X1 p.4 [표 2] (2획; "ㅋ - ㄱ을 먼저 쓰고 가획을 다음에 함"); X1 p.7 diagram; X2 ("① ㄱ 모양 ② 가운데 가로") | 2 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 12 | ㅌ | `jamo:tieut` | 3 | **Order A:** 1. top bar, left → right; 2. middle bar, left → right; 3. from the top-left (left end of the top bar) down, turning right along the bottom (ㄴ shape). **Variant B (一 + ㄷ):** top bar, then ㄷ below it, i.e. the ㄴ shape starts at the middle bar, not at the top. **Variant C (historical):** ㄷ first (top bar, ㄴ shape), then the middle bar | A (`strokes`): `right`, `right`, `down>right`<br>B (`altStrokes`): `right`, `right`, `down>right`<br>C (not accepted): `right`, `down>right`, `right` | A: X1 p.4 [표 2] (3획; "ㅌ - 위에 획을 긋고 아래에 ㄷ을 쓰면 안 됨"); X1 p.7 diagram (stroke 3 starts at the top-left); X2 ("① 위 가로 ② 가운데 가로 ③ ㄴ 모양"). B: S2c (1989: in handwriting, apart from primary-school pupils, most people wrote the other form; it proposes unifying on ㄷ plus a middle bar) and rejected by X1. C: S2c ("원래는 … 「ㄷ」을 쓰고 가운데에 한 획(덧줄기)을 가로 긋는 방식이었었다"; descriptive history, not a recommendation) | Order A: stroke 3 from (50,40) | agree with A. Variants B and C sourced only in S2c (1989). Owner decides. **OD-SO11: A and B accepted; C not accepted** (B has A's codes; the two differ in where stroke 3 starts) | SO-2 approved (OD-SO11); SO-3 pending |
+| 13 | ㅍ | `jamo:pieup` | 4 | 1. top bar, left → right; 2. left short vertical, top → bottom; 3. right short vertical, top → bottom; 4. bottom bar, left → right | `right`, `down`, `down`, `right` | X1 p.4 [표 2] (4획; pairs "앞→뒤"); X1 p.7 diagram; X2 ("① 위 가로 ② 왼쪽 세로 ③ 오른쪽 세로 ④ 아래 가로") | 4 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 14 | ㅎ | `jamo:hieut` | 3 | **Order A (sourced diagram):** 1. short top stroke, **left → right**; 2. bar, left → right; 3. circle under the bar, starting at the top (direction **not sourced**). **Variant B (AU-14):** stroke 1 a short vertical tick, top → bottom | A (`altStrokes`): `right`, `right`, `loop`<br>B (`strokes`): `down`, `right`, `loop` | Count and order: X1 p.4 [표 2] (3획); X2 ("① 꼭지 ② 가로 ③ 동그라미"). Stroke 1 as left → right: X1 p.7 diagram; S2c (proposal, as for ㅊ). Vertical form exists: S2b; S2c (historical) | 3 strokes; stroke 1 vertical (100,30) → (100,50); ring from the top, counter-clockwise | **disagree** on stroke 1 (as ㅊ). Ring direction unsourced (as ㅇ). Count agrees (focus rows F-1, F-3). **OD-SO11: A and B accepted**; the ring keeps AU-14's direction | SO-2 approved (OD-SO11); SO-3 pending |
 
 ### 3.2 Vowels (10)
 
@@ -71,16 +76,16 @@ Direction of short bars and ticks: where a source names the order but not the di
 
 | # | Jamo | Id | Strokes | Stroke order (start → end) | Codes | Sources | AU-14 data | Compare | Review |
 |---|---|---|---|---|---|---|---|---|---|
-| 15 | ㅏ | `jamo:a` | 2 | 1. long vertical, top → bottom; 2. short bar from the vertical, left → right | `down`, `right` | X1 p.6 [표 4] diagram; X2 ("① 세로 기둥 ② 오른쪽 곁줄기") | 2 strokes in this order | agree | unapproved |
-| 16 | ㅑ | `jamo:ya` | 3 | 1. long vertical, top → bottom; 2. upper short bar, left → right; 3. lower short bar, left → right | `down`, `right`, `right` | **Weak only:** X2 ("① 세로 기둥 ② ③ 곁줄기는 위부터"); X3 ("긴 세로선을 위에서 아래로 긋습니다. 오른쪽에 짧은 획을 하나 답니다. 그 아래에 짧은 획을 하나 더 답니다."). Bar direction: S2d principle | 3 strokes in this order | agree (weak sources only) | unapproved |
-| 17 | ㅓ | `jamo:eo` | 2 | 1. short bar, left → right (ending at the vertical); 2. long vertical, top → bottom | `right`, `down` | X1 p.6 diagram; X2 ("① 곁줄기 ② 세로 기둥 — 왼쪽 것 먼저!") | 2 strokes in this order | agree | unapproved |
-| 18 | ㅕ | `jamo:yeo` | 3 | 1. upper short bar, left → right; 2. lower short bar, left → right; 3. long vertical, top → bottom | `right`, `right`, `down` | **Weak only:** X2 ("① ② 곁줄기 위부터 ③ 세로 기둥"); X3 ("왼쪽에 짧은 획을 하나 긋습니다. 그 아래에 짧은 획을 하나 더 긋습니다. 오른쪽에 긴 세로선을 내립니다."). Bar direction: S2d principle | 3 strokes in this order | agree (weak sources only) | unapproved |
-| 19 | ㅗ | `jamo:o` | 2 | 1. short vertical, top → bottom (down to the bar); 2. long bar, left → right | `down`, `right` | X1 p.6 diagram; X2 ("① 짧은 세로 ② 아래 가로") | 2 strokes in this order | agree | unapproved |
-| 20 | ㅛ | `jamo:yo` | 3 | 1. left short vertical, top → bottom; 2. right short vertical, top → bottom; 3. long bar, left → right | `down`, `down`, `right` | **Weak only:** X2 ("① ② 짧은 세로 왼쪽부터 ③ 아래 가로"); X3 ("짧은 세로획을 왼쪽에 하나 긋습니다. 오른쪽에 하나 더 긋습니다. 그 아래에 긴 가로선을 긋습니다."). Tick direction: S2d principle | 3 strokes in this order | agree (weak sources only) | unapproved |
-| 21 | ㅜ | `jamo:u` | 2 | 1. long bar, left → right; 2. short vertical down from the bar, top → bottom | `right`, `down` | X1 p.6 diagram; X2 ("① 가로 ② 세로 내리긋기") | 2 strokes in this order | agree | unapproved |
-| 22 | ㅠ | `jamo:yu` | 3 | 1. long bar, left → right; 2. left short vertical, top → bottom; 3. right short vertical, top → bottom | `right`, `down`, `down` | **Weak only:** X2 ("① 가로 ② ③ 세로는 왼쪽부터"); X3 ("긴 가로선을 먼저 긋습니다. 그 아래 왼쪽에 짧은 세로획을 하나 긋습니다. 오른쪽에 하나 더 긋습니다.") | 3 strokes in this order | agree (weak sources only) | unapproved |
-| 23 | ㅡ | `jamo:eu` | 1 | 1. left → right | `right` | X1 p.6 diagram; X2 ("왼쪽에서 오른쪽으로 한 번에") | 1 stroke, left → right | agree | unapproved |
-| 24 | ㅣ | `jamo:i` | 1 | 1. top → bottom | `down` | X1 p.6 diagram; X2 ("위에서 아래로 한 번에") | 1 stroke, top → bottom | agree | unapproved |
+| 15 | ㅏ | `jamo:a` | 2 | 1. long vertical, top → bottom; 2. short bar from the vertical, left → right | `down`, `right` | X1 p.6 [표 4] diagram; X2 ("① 세로 기둥 ② 오른쪽 곁줄기") | 2 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 16 | ㅑ | `jamo:ya` | 3 | 1. long vertical, top → bottom; 2. upper short bar, left → right; 3. lower short bar, left → right | `down`, `right`, `right` | **Weak only:** X2 ("① 세로 기둥 ② ③ 곁줄기는 위부터"); X3 ("긴 세로선을 위에서 아래로 긋습니다. 오른쪽에 짧은 획을 하나 답니다. 그 아래에 짧은 획을 하나 더 답니다."). Bar direction: S2d principle | 3 strokes in this order | agree (weak sources only) | SO-2 approved (OD-SO11); SO-3 pending |
+| 17 | ㅓ | `jamo:eo` | 2 | 1. short bar, left → right (ending at the vertical); 2. long vertical, top → bottom | `right`, `down` | X1 p.6 diagram; X2 ("① 곁줄기 ② 세로 기둥 — 왼쪽 것 먼저!") | 2 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 18 | ㅕ | `jamo:yeo` | 3 | 1. upper short bar, left → right; 2. lower short bar, left → right; 3. long vertical, top → bottom | `right`, `right`, `down` | **Weak only:** X2 ("① ② 곁줄기 위부터 ③ 세로 기둥"); X3 ("왼쪽에 짧은 획을 하나 긋습니다. 그 아래에 짧은 획을 하나 더 긋습니다. 오른쪽에 긴 세로선을 내립니다."). Bar direction: S2d principle | 3 strokes in this order | agree (weak sources only) | SO-2 approved (OD-SO11); SO-3 pending |
+| 19 | ㅗ | `jamo:o` | 2 | 1. short vertical, top → bottom (down to the bar); 2. long bar, left → right | `down`, `right` | X1 p.6 diagram; X2 ("① 짧은 세로 ② 아래 가로") | 2 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 20 | ㅛ | `jamo:yo` | 3 | 1. left short vertical, top → bottom; 2. right short vertical, top → bottom; 3. long bar, left → right | `down`, `down`, `right` | **Weak only:** X2 ("① ② 짧은 세로 왼쪽부터 ③ 아래 가로"); X3 ("짧은 세로획을 왼쪽에 하나 긋습니다. 오른쪽에 하나 더 긋습니다. 그 아래에 긴 가로선을 긋습니다."). Tick direction: S2d principle | 3 strokes in this order | agree (weak sources only) | SO-2 approved (OD-SO11); SO-3 pending |
+| 21 | ㅜ | `jamo:u` | 2 | 1. long bar, left → right; 2. short vertical down from the bar, top → bottom | `right`, `down` | X1 p.6 diagram; X2 ("① 가로 ② 세로 내리긋기") | 2 strokes in this order | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 22 | ㅠ | `jamo:yu` | 3 | 1. long bar, left → right; 2. left short vertical, top → bottom; 3. right short vertical, top → bottom | `right`, `down`, `down` | **Weak only:** X2 ("① 가로 ② ③ 세로는 왼쪽부터"); X3 ("긴 가로선을 먼저 긋습니다. 그 아래 왼쪽에 짧은 세로획을 하나 긋습니다. 오른쪽에 하나 더 긋습니다.") | 3 strokes in this order | agree (weak sources only) | SO-2 approved (OD-SO11); SO-3 pending |
+| 23 | ㅡ | `jamo:eu` | 1 | 1. left → right | `right` | X1 p.6 diagram; X2 ("왼쪽에서 오른쪽으로 한 번에") | 1 stroke, left → right | agree | SO-2 approved (OD-SO11); SO-3 pending |
+| 24 | ㅣ | `jamo:i` | 1 | 1. top → bottom | `down` | X1 p.6 diagram; X2 ("위에서 아래로 한 번에") | 1 stroke, top → bottom | agree | SO-2 approved (OD-SO11); SO-3 pending |
 
 ### 3.3 Finals (6)
 
@@ -88,62 +93,62 @@ No source found gives the stroke order of a consonant **as a final** separately.
 
 | # | Jamo | Id | Inherits | Strokes | AU-14 data | Compare | Review |
 |---|---|---|---|---|---|---|---|
-| 25 | ㄱ (final) | `jamo:giyeok-batchim` | row 1 | 1 | `copy(GIYEOK)` | agree by inheritance; no final-specific source | unapproved |
-| 26 | ㄴ (final) | `jamo:nieun-batchim` | row 2 | 1 | `copy(NIEUN)` | agree by inheritance; no final-specific source | unapproved |
-| 27 | ㄹ (final) | `jamo:rieul-batchim` | row 4 | 3 | `copy(RIEUL)` | agree by inheritance; no final-specific source | unapproved |
-| 28 | ㅁ (final) | `jamo:mieum-batchim` | row 5 | 3 | `copy(MIEUM)` | agree by inheritance; no final-specific source | unapproved |
-| 29 | ㅂ (final) | `jamo:bieup-batchim` | row 6 | 4 | `copy(BIEUP)` | agree by inheritance; no final-specific source | unapproved |
-| 30 | ㅇ (final) | `jamo:ieung-batchim` | row 8 | 1 | `copy(IEUNG)` | partly, as row 8 (direction unsourced) | unapproved |
+| 25 | ㄱ (final) | `jamo:giyeok-batchim` | row 1 | 1 | `copy(GIYEOK)` | agree by inheritance; no final-specific source | SO-2 approved (OD-SO11); SO-3 pending |
+| 26 | ㄴ (final) | `jamo:nieun-batchim` | row 2 | 1 | `copy(NIEUN)` | agree by inheritance; no final-specific source | SO-2 approved (OD-SO11); SO-3 pending |
+| 27 | ㄹ (final) | `jamo:rieul-batchim` | row 4 | 3 | `copy(RIEUL)` | agree by inheritance; no final-specific source | SO-2 approved (OD-SO11); SO-3 pending |
+| 28 | ㅁ (final) | `jamo:mieum-batchim` | row 5 | 3 | `copy(MIEUM)` | agree by inheritance; no final-specific source | SO-2 approved (OD-SO11); SO-3 pending |
+| 29 | ㅂ (final) | `jamo:bieup-batchim` | row 6 | 4 | `copy(BIEUP)` | agree by inheritance; no final-specific source | SO-2 approved (OD-SO11); SO-3 pending |
+| 30 | ㅇ (final) | `jamo:ieung-batchim` | row 8 | 1 | `copy(IEUNG)` | partly, as row 8 (direction unsourced) | SO-2 approved (OD-SO11); SO-3 pending |
 
 ### 3.4 Focus rows (spec §3.4: listed as rows of their own)
 
 | Id | Question | What the sources say | AU-14 today | For the owner / reviewer |
 |---|---|---|---|---|
-| F-1 | ㅊ and ㅎ: the top stroke — vertical tick (top → bottom) or short horizontal stroke (left → right)? | **Horizontal, left → right:** X1 p.7 diagrams (both letters). S2c (1989) proposes the horizontal form as the more rational standard. **Several forms exist, none is regulated:** S2b (국립국어원 온라인가나다, answered 2026-01-27: "가로점, 세로점, 사선점 등 다양한 형태"; "명확히 규정되어 있는 바는 따로 없습니다"). **Vertical:** S2c says the top stroke was originally drawn vertically (history). No source found that teaches the vertical tick as the stroke to write. | vertical tick, top → bottom (`down`) | OD-SO4 default: accept both (`altStrokes`) — the horizontal form has the stronger source; the vertical form is attested only as a letterform. Check against the 국정 textbook diagram. |
-| F-2 | ㅈ: 2 strokes or 3? | **2:** X1 p.4 (and says 3 is wrong), X1 p.7 diagram, X2 (and says 3 is not standard). **3:** S2c (1989) proposes the 3-stroke shape as the standard letterform, while noting that 국정 textbook 명조 type used the 2-stroke shape. | 2 strokes | OD-SO4 default: accept both. The 3-stroke form has one, older, shape-not-order source. |
-| F-3 | ㅇ: start point and direction | **Start at the top:** X1 p.7 diagram (① at the top), X2. **Direction:** no source found. X1 p.4's "왼쪽에서 시작하여" is ambiguous. X1's arrow is not legible at 96 px. | from the top, counter-clockwise; the loop check scores winding only (spec §3.2) | Reviewer: confirm the direction from the textbook. Until then the direction of ㅇ, final ㅇ and ㅎ's ring is unsourced. |
-| F-4 | ㅌ: where stroke 3 starts (variants B, C of row 12) | See row 12. | stroke 3 from the top-left | OD-SO4: the owner decides whether the 1989 handwriting form (B) is accepted. |
+| F-1 | ㅊ and ㅎ: the top stroke — vertical tick (top → bottom) or short horizontal stroke (left → right)? | **Horizontal, left → right:** X1 p.7 diagrams (both letters). S2c (1989) proposes the horizontal form as the more rational standard. **Several forms exist, none is regulated:** S2b (국립국어원 온라인가나다, answered 2026-01-27: "가로점, 세로점, 사선점 등 다양한 형태"; "명확히 규정되어 있는 바는 따로 없습니다"). **Vertical:** S2c says the top stroke was originally drawn vertically (history). No source found that teaches the vertical tick as the stroke to write. | vertical tick, top → bottom (`down`) | OD-SO4 default: accept both (`altStrokes`) — the horizontal form has the stronger source; the vertical form is attested only as a letterform. Check against the 국정 textbook diagram. **Decided 2026-11-23 (OD-SO11): both accepted.** The data shows AU-14's vertical tick (`strokes`) and accepts the horizontal form (`altStrokes`); which form the data shows once a letter is taught is a question for the reviewer (SO-3). |
+| F-2 | ㅈ: 2 strokes or 3? | **2:** X1 p.4 (and says 3 is wrong), X1 p.7 diagram, X2 (and says 3 is not standard). **3:** S2c (1989) proposes the 3-stroke shape as the standard letterform, while noting that 국정 textbook 명조 type used the 2-stroke shape. | 2 strokes | OD-SO4 default: accept both. The 3-stroke form has one, older, shape-not-order source. **Decided 2026-11-23 (OD-SO11): both accepted** (2 strokes `strokes`, 3 strokes `altStrokes`). The order of the 3 strokes is derived, not sourced (row 9): the reviewer confirms it. |
+| F-3 | ㅇ: start point and direction | **Start at the top:** X1 p.7 diagram (① at the top), X2. **Direction:** no source found. X1 p.4's "왼쪽에서 시작하여" is ambiguous. X1's arrow is not legible at 96 px. | from the top, counter-clockwise; the loop check scores winding only (spec §3.2) | Reviewer: confirm the direction from the textbook. Until then the direction of ㅇ, final ㅇ and ㅎ's ring is unsourced. **2026-11-23 (OD-SO11): still open**; AU-14's data stays. |
+| F-4 | ㅌ: where stroke 3 starts (variants B, C of row 12) | See row 12. | stroke 3 from the top-left | OD-SO4: the owner decides whether the 1989 handwriting form (B) is accepted. **Decided 2026-11-23 (OD-SO11): B accepted (`altStrokes`); C not accepted.** |
 
 ### 3.5 Composition rule (spec §3.4)
 
 Double consonants (ㄲ ㄸ ㅃ ㅆ ㅉ), compound vowels (ㅐ ㅔ ㅘ ㅝ …) and double finals (ㄺ …) are **not** separate entries. A letter built from two jamo is written as the first jamo's strokes, then the second jamo's (ㅘ = ㅗ then ㅏ; ㄲ = ㄱ then ㄱ; ㄺ = ㄹ then ㄱ), as `logic/trace-word/block-strokes.ts` builds them. This rule is the spec's; no source above was checked for it. Any future entry starts untaught (not in `reviewedStrokeIds`).
 
-## 4. Review records (to be filled by the reviewer, spec §3.5)
+## 4. Review records (spec §3.5)
 
-One line per row. Fields: reviewer (name or initials), role (teacher / owner), sources checked (edition and page), what was seen (table row; Show me on a device; build), date, PR link. The commit that adds an id to `reviewedStrokeIds` carries a `Reviewed-by:` trailer. **All empty: nothing is approved.**
+One line per row. **Status** is the row's approval: since OD-SO11 (2026-11-23) every row is approved by the owner for SO-2, so the data may follow it; the textbook check by the reviewer (SO-3) is pending. The other fields are the reviewer's SO-3 record, filled after checking the row against the textbook and the letter's Show me on a device: reviewer (name or initials), role (teacher / owner), sources checked (edition and page), what was seen (table row; Show me on a device; build), date, PR link. The commit that adds an id to `reviewedStrokeIds` carries a `Reviewed-by:` trailer, and `jamo-stroke-order.test.ts` fails when an id in `reviewedStrokeIds` has an empty field here. **All SO-3 fields empty: no letter is taught.**
 
-| # | Id | Reviewer | Role | Sources checked | Seen | Date | PR |
-|---|---|---|---|---|---|---|---|
-| 1 | `jamo:giyeok` | | | | | | |
-| 2 | `jamo:nieun` | | | | | | |
-| 3 | `jamo:digeut` | | | | | | |
-| 4 | `jamo:rieul` | | | | | | |
-| 5 | `jamo:mieum` | | | | | | |
-| 6 | `jamo:bieup` | | | | | | |
-| 7 | `jamo:siot` | | | | | | |
-| 8 | `jamo:ieung` | | | | | | |
-| 9 | `jamo:jieut` | | | | | | |
-| 10 | `jamo:chieut` | | | | | | |
-| 11 | `jamo:kieuk` | | | | | | |
-| 12 | `jamo:tieut` | | | | | | |
-| 13 | `jamo:pieup` | | | | | | |
-| 14 | `jamo:hieut` | | | | | | |
-| 15 | `jamo:a` | | | | | | |
-| 16 | `jamo:ya` | | | | | | |
-| 17 | `jamo:eo` | | | | | | |
-| 18 | `jamo:yeo` | | | | | | |
-| 19 | `jamo:o` | | | | | | |
-| 20 | `jamo:yo` | | | | | | |
-| 21 | `jamo:u` | | | | | | |
-| 22 | `jamo:yu` | | | | | | |
-| 23 | `jamo:eu` | | | | | | |
-| 24 | `jamo:i` | | | | | | |
-| 25 | `jamo:giyeok-batchim` | | | | | | |
-| 26 | `jamo:nieun-batchim` | | | | | | |
-| 27 | `jamo:rieul-batchim` | | | | | | |
-| 28 | `jamo:mieum-batchim` | | | | | | |
-| 29 | `jamo:bieup-batchim` | | | | | | |
-| 30 | `jamo:ieung-batchim` | | | | | | |
+| # | Id | Status | Reviewer | Role | Sources checked | Seen | Date | PR |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `jamo:giyeok` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 2 | `jamo:nieun` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 3 | `jamo:digeut` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 4 | `jamo:rieul` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 5 | `jamo:mieum` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 6 | `jamo:bieup` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 7 | `jamo:siot` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 8 | `jamo:ieung` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 9 | `jamo:jieut` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 10 | `jamo:chieut` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 11 | `jamo:kieuk` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 12 | `jamo:tieut` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 13 | `jamo:pieup` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 14 | `jamo:hieut` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 15 | `jamo:a` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 16 | `jamo:ya` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 17 | `jamo:eo` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 18 | `jamo:yeo` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 19 | `jamo:o` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 20 | `jamo:yo` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 21 | `jamo:u` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 22 | `jamo:yu` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 23 | `jamo:eu` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 24 | `jamo:i` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 25 | `jamo:giyeok-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 26 | `jamo:nieun-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 27 | `jamo:rieul-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 28 | `jamo:mieum-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 29 | `jamo:bieup-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
+| 30 | `jamo:ieung-batchim` | approved by the owner for SO-2, 2026-11-23 (OD-SO11); textbook check by the reviewer pending (SO-3) | | | | | | |
 
 ## 5. Sources
 
