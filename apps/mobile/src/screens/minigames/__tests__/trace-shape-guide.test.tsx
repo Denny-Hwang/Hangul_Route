@@ -5,6 +5,7 @@ import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
+import { placeBlockStrokes } from '../../../logic/trace-word/block-strokes';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { useQuestRunStore } from '../../../store/quest-run-store';
@@ -283,7 +284,7 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
  * the order and direction checks accept the other form, so a taught letter written that way gets the praise, not the
  * "left-to-right" line. A form the table does not accept (ㅌ Variant C) still gets the order line once taught.
  */
-describe('Trace Stroke: another accepted form (SO-2)', () => {
+describe('Trace Stroke and Trace a Word: another accepted form (SO-2)', () => {
   const COPY = getMessages('en').learner.minigame.trace;
   const chieutLeftToRight = (): JamoStrokePoint[][] => {
     const [, bar, leg] = strokesForJamo('jamo:chieut')!;
@@ -312,6 +313,27 @@ describe('Trace Stroke: another accepted form (SO-2)', () => {
     await press(r.root, 'Show me');
     expect(hint.last).toMatchObject({ orderTaught: taught });
     expect(hint.last!.target).toBe(strokesForJamo('jamo:chieut'));
+  });
+
+  it.each([
+    ['untaught', [] as string[]],
+    ['taught', ['jamo:jieut', 'jamo:a']],
+  ])('Trace a Word, 자 with ㅈ in 3 lifts over the ghost, %s: the word is done, never the left-to-right line', async (_case, reviewed) => {
+    gate.reviewed = reviewed;
+    const scope: MinigameScope = {
+      kind: 'trace-word',
+      rounds: 1,
+      traceWord: { rounds: [{ id: 'ja', word: { ko: '자', romanization: 'ja', en: 'ruler' } }] },
+    };
+    const r = await render(<TraceWordGame scope={scope} host={{ mode: 'quest', answer: () => undefined, complete: () => undefined }} />);
+    mounted.push(r);
+    await layOut(r);
+    const [j, a] = placeBlockStrokes('자', strokesForJamo)!.letters;
+    const [barAndSlant, leg] = j!.strokes;
+    for (const s of [barAndSlant!.slice(0, 2), barAndSlant!.slice(1), leg!, ...a!.strokes]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(getMessages('en').learner.minigame.traceWord.wordDone);
+    expect(texts(r.root)).not.toContain(COPY.pass.open);
   });
 
   it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted), taught: the order line', async () => {

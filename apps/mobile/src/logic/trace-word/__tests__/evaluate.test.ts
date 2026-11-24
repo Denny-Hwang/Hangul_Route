@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { altStrokesForJamo, jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import { getMessages } from '@hangul-route/i18n';
 import { traceWordMessage } from '../view';
 import { TRACE_IDLE_MS } from '../../trace-evaluator';
@@ -418,6 +418,84 @@ describe('[SO] an untaught unit gets no order and no open-stroke coaching (AMEND
     const ringBack = scoreTraceUnit(lettersOf(o), trace(o.strokes).map((s, i) => (i === 0 ? [...s].reverse() : s)));
     expect(ringBack.directionNudge).toBe('loop');
     expect(scoreTraceUnit(lettersOf(gom), trace(gom.strokes)).directionNudge).toBe('none');
+  });
+});
+
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO11): a unit reads its order and direction on whichever accepted form
+ * of its letters the drawing follows (every combination of the letters' forms, the forms shown first). The pass does
+ * not change, and an untaught unit (every unit, until SO-3) coaches exactly as before.
+ */
+describe('[SO] SO-2: a unit reads order and direction on any accepted form of its letters', () => {
+  const placeAll = (s: string): PlacedBlock => placeBlockStrokes(s, strokesForJamo, altStrokesForJamo)!;
+  /** ㅈ's first stroke (the bar running into the slant) lifted at the corner: 3 lifts over the 2-stroke ghost. */
+  const liftAtCorner = ([barAndSlant, leg]: JamoStrokePoint[][]): JamoStrokePoint[][] => [
+    barAndSlant!.slice(0, 2),
+    barAndSlant!.slice(1),
+    leg!,
+  ];
+  /** The same letters with their other forms dropped: the unit as scored before SO-2. */
+  const shownOnly = (b: PlacedBlock): UnitLetter[] => b.letters.map((l) => ({ ...l, altStrokes: [] }));
+
+  it('지, ㅈ in 3 lifts over the ghost, taught: a pass with no direction line (before SO-2: the left-to-right line)', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const drawn = trace([...liftAtCorner(j!.strokes), ...i!.strokes]);
+    const taught = ['jamo:jieut', 'jamo:i'];
+    const r = scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, taught);
+    expect(r.passed).toBe(true);
+    expect(r.orderCorrect).toBe(true);
+    expect(r.directionNudge).toBe('none');
+    expect(scoreTraceUnit(shownOnly(block), drawn, BLOCK_TOLERANCE, taught).directionNudge).toBe('open');
+    // Letter mode: ㅈ alone.
+    expect(scoreTraceUnit([j!], trace(liftAtCorner(j!.strokes)), BLOCK_TOLERANCE, taught).directionNudge).toBe('none');
+  });
+
+  it('짜: either ㅈ of ㅉ in 3 lifts, the other as shown: no direction line (a double consonant has every pair of forms)', () => {
+    const block = placeAll('짜');
+    const [jj, a] = block.letters;
+    const half = jj!.strokes.length / 2;
+    const [left, right] = [jj!.strokes.slice(0, half), jj!.strokes.slice(half)];
+    for (const drawnJj of [[...liftAtCorner(left), ...right], [...left, ...liftAtCorner(right)], [...liftAtCorner(left), ...liftAtCorner(right)]]) {
+      const r = scoreTraceUnit(lettersOf(block), trace([...drawnJj, ...a!.strokes]), BLOCK_TOLERANCE, ALL_TAUGHT);
+      expect(r.passed).toBe(true);
+      expect(r.orderCorrect).toBe(true);
+      expect(r.directionNudge).toBe('none');
+    }
+  });
+
+  it('a form the drawing follows nowhere still coaches: 지 with ㅈ\'s slant drawn backwards, taught', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const [bar, slant, leg] = liftAtCorner(j!.strokes);
+    const r = scoreTraceUnit(lettersOf(block), trace([bar!, [...slant!].reverse(), leg!, ...i!.strokes]), BLOCK_TOLERANCE, ALL_TAUGHT);
+    expect(r.passed).toBe(true);
+    expect(r.directionNudge).toBe('open');
+  });
+
+  it('the other forms change no pass, and nothing at all while the unit is untaught', () => {
+    for (const syllable of ['지', '자', '차', '토', '호', '짜', '앉', '낮', '돼']) {
+      const all = placeAll(syllable);
+      const plain = placeBlockStrokes(syllable, strokesForJamo)!;
+      const otherForms = all.letters.flatMap((l, k) =>
+        l.altStrokes.map((alt) => all.letters.flatMap((m, n) => (n === k ? alt : m.strokes))),
+      );
+      const drawings = [
+        trace(all.strokes),
+        [...trace(all.strokes)].reverse(),
+        trace(all.strokes).map((s) => [...s].reverse()),
+        trace(all.strokes, 4, -3),
+        ...otherForms.map((form) => trace(form)),
+        ...otherForms.map((form) => trace(form).map((s) => [...s].reverse())),
+      ];
+      for (const drawn of drawings) {
+        expect(scoreTraceUnit(lettersOf(all), drawn), syllable).toEqual(scoreTraceUnit(lettersOf(plain), drawn));
+        const taught = scoreTraceUnit(lettersOf(all), drawn, BLOCK_TOLERANCE, ALL_TAUGHT);
+        const before = scoreTraceUnit(lettersOf(plain), drawn, BLOCK_TOLERANCE, ALL_TAUGHT);
+        expect(taught.passed, syllable).toBe(before.passed);
+        expect(taught.coverage, syllable).toBe(before.coverage);
+      }
+    }
   });
 });
 

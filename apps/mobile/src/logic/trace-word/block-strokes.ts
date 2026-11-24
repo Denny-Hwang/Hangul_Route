@@ -8,6 +8,11 @@ import type { JamoStrokePoint } from '../../content/jamo-strokes';
  * (the `SyllableBlock` arrangement): an initial beside or above the vowel, a final in its own
  * lower band. A compound vowel (ㅘ, ㅐ, ㅢ ...) and a double consonant (ㄲ, ㄳ ...) are drawn
  * from the letters the stroke data holds, each part in its own sub-zone. Pure.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO11): given the other accepted forms of the jamo
+ * (`altStrokesForJamo`), each placed letter also carries them (`altStrokes`), placed with the fit of the
+ * form shown, so the order and direction checks can read them. A final, a double consonant and a compound
+ * vowel inherit their parts' forms: every combination, in writing order.
  */
 
 /** The canvas is 200 x 200, like the skeletons. */
@@ -34,6 +39,11 @@ export interface PlacedLetter {
   zones: BlockRect[];
   /** The placed strokes of every part, in writing order. */
   strokes: JamoStrokePoint[][];
+  /**
+   * [SO] SO-2: the letter's other accepted forms, each a whole stroke list placed like `strokes`: every combination of
+   * its parts' forms (`combineForms`) but the one of `strokes`. Empty when each part has one form. Never drawn.
+   */
+  altStrokes: JamoStrokePoint[][][];
 }
 
 export interface PlacedBlock {
@@ -47,6 +57,9 @@ export interface PlacedBlock {
 }
 
 export type StrokeLookup = (jamoId: string) => JamoStrokePoint[][] | undefined;
+/** [SO] SO-2: a jamo's other accepted forms (`altStrokesForJamo`); none when not given. */
+export type AltStrokeLookup = (jamoId: string) => readonly JamoStrokePoint[][][] | undefined;
+const NO_ALTERNATES: AltStrokeLookup = () => undefined;
 
 /** Consonant letters by romanized name, as the stroke data ids them (`jamo:<name>`). */
 const CONSONANT_ID: Readonly<Record<string, string>> = {
@@ -213,6 +226,12 @@ const round1 = (n: number): number => Math.round(n * 10) / 10;
  * other, and centre the result in the zone.
  */
 export function fitStrokes(strokes: JamoStrokePoint[][], zone: BlockRect): JamoStrokePoint[][] {
+  const at = fitOf(strokes, zone);
+  return strokes.map((stroke) => stroke.map(at));
+}
+
+/** The fit of `fitStrokes` as a point map, so another form of the jamo lands where the form shown does. */
+function fitOf(strokes: JamoStrokePoint[][], zone: BlockRect): (p: JamoStrokePoint) => JamoStrokePoint {
   const b = boundsOf(strokes);
   const w = b.maxX - b.minX;
   const h = b.maxY - b.minY;
@@ -224,7 +243,27 @@ export function fitStrokes(strokes: JamoStrokePoint[][], zone: BlockRect): JamoS
   if (sx > sy * MAX_STRETCH) sx = sy * MAX_STRETCH;
   const ox = zone.x + (zone.width - w * sx) / 2;
   const oy = zone.y + (zone.height - h * sy) / 2;
-  return strokes.map((stroke) => stroke.map((p) => ({ x: round1(ox + (p.x - b.minX) * sx), y: round1(oy + (p.y - b.minY) * sy) })));
+  return (p) => ({ x: round1(ox + (p.x - b.minX) * sx), y: round1(oy + (p.y - b.minY) * sy) });
+}
+
+/** [SO] SO-2: one part's forms placed in its zone, the form shown first, every form with the fit of the form shown. */
+function placedForms(shown: JamoStrokePoint[][], others: readonly JamoStrokePoint[][][], zone: BlockRect): JamoStrokePoint[][][] {
+  const at = fitOf(shown, zone);
+  return [shown, ...others].map((form) => form.map((stroke) => stroke.map(at)));
+}
+
+/**
+ * [SO] SO-2: every combination of the parts' forms (each part's forms, the form shown first), each part's strokes in
+ * writing order: the first combination is every part as shown. No parts: one empty form.
+ */
+export function combineForms(parts: readonly (readonly JamoStrokePoint[][][])[]): JamoStrokePoint[][][] {
+  return parts.reduce<JamoStrokePoint[][][]>((combined, forms) => combined.flatMap((head) => forms.map((form) => [...head, ...form])), [[]]);
+}
+
+/** The placed letter's strokes (every part as shown) and its other forms. */
+function letterForms(parts: readonly JamoStrokePoint[][][][]): Pick<PlacedLetter, 'strokes' | 'altStrokes'> {
+  const [strokes, ...altStrokes] = combineForms(parts);
+  return { strokes: strokes!, altStrokes };
 }
 
 /** A consonant's stroke-data id: a final uses its `-batchim` skeleton when there is one. */
@@ -239,21 +278,27 @@ function consonantStrokes(char: string, final: boolean, lookup: StrokeLookup): {
   return strokes ? { id, strokes } : null;
 }
 
-function placeConsonant(char: string, role: 'initial' | 'final', zone: BlockRect, lookup: StrokeLookup): PlacedLetter | null {
+function placeConsonant(
+  char: string,
+  role: 'initial' | 'final',
+  zone: BlockRect,
+  lookup: StrokeLookup,
+  alternates: AltStrokeLookup,
+): PlacedLetter | null {
   const parts = DOUBLE_CONSONANT[char] ?? [char];
   const zones = columns(zone, parts.map(() => 1));
   const jamoIds: string[] = [];
-  const strokes: JamoStrokePoint[][] = [];
+  const forms: JamoStrokePoint[][][][] = [];
   for (const [i, part] of parts.entries()) {
     const found = consonantStrokes(part, role === 'final', lookup);
     if (!found) return null;
     jamoIds.push(found.id);
-    strokes.push(...fitStrokes(found.strokes, zones[i]!));
+    forms.push(placedForms(found.strokes, alternates(found.id) ?? [], zones[i]!));
   }
-  return { role, char, jamoIds, zones, strokes };
+  return { role, char, jamoIds, zones, ...letterForms(forms) };
 }
 
-function placeVowel(char: string, zones: BlockZones, lookup: StrokeLookup): PlacedLetter | null {
+function placeVowel(char: string, zones: BlockZones, lookup: StrokeLookup, alternates: AltStrokeLookup): PlacedLetter | null {
   const { under, beside } = vowelParts(char);
   const placed: Array<{ part: string; zone: BlockRect }> = [];
   if (under.length > 0 && zones.under) placed.push({ part: under[0]!, zone: zones.under });
@@ -262,15 +307,15 @@ function placeVowel(char: string, zones: BlockZones, lookup: StrokeLookup): Plac
     columns(zones.beside, weights).forEach((zone, i) => placed.push({ part: beside[i]!, zone }));
   }
   const jamoIds: string[] = [];
-  const strokes: JamoStrokePoint[][] = [];
+  const forms: JamoStrokePoint[][][][] = [];
   for (const { part, zone } of placed) {
     const id = vowelId(part);
     const own = SIMPLE_VOWELS.has(part) ? lookup(id) : undefined;
     if (!own) return null;
     jamoIds.push(id);
-    strokes.push(...fitStrokes(own, zone));
+    forms.push(placedForms(own, alternates(id) ?? [], zone));
   }
-  return { role: 'vowel', char, jamoIds, zones: placed.map((p) => p.zone), strokes };
+  return { role: 'vowel', char, jamoIds, zones: placed.map((p) => p.zone), ...letterForms(forms) };
 }
 
 /** The block shape of a vowel. */
@@ -284,8 +329,9 @@ export function shapeOf(vowel: string): BlockShape {
  * Every letter of one syllable block placed in its zone, in writing order; `null` when
  * `syllable` is not one Hangul block or the stroke data cannot draw one of its letters
  * (the round builder then drops the word: never a canvas with a missing letter).
+ * `alternates` gives the jamo's other accepted forms ([SO] SO-2); without it, no letter carries any.
  */
-export function placeBlockStrokes(syllable: string, lookup: StrokeLookup): PlacedBlock | null {
+export function placeBlockStrokes(syllable: string, lookup: StrokeLookup, alternates: AltStrokeLookup = NO_ALTERNATES): PlacedBlock | null {
   const parts = decomposeSyllable(syllable);
   if (parts === null) return null;
   const vowel = MEDIAL_CHARS[parts.medial]!;
@@ -294,12 +340,12 @@ export function placeBlockStrokes(syllable: string, lookup: StrokeLookup): Place
   const base = BLOCK_ZONES[`${shape}-${hasFinal ? 'final' : 'open'}`];
   const zones = vowelParts(vowel).beside.length > 1 ? widenForPair(base) : base;
   const letters: PlacedLetter[] = [];
-  const initial = placeConsonant(parts.initial, 'initial', zones.initial, lookup);
-  const medial = placeVowel(vowel, zones, lookup);
+  const initial = placeConsonant(parts.initial, 'initial', zones.initial, lookup, alternates);
+  const medial = placeVowel(vowel, zones, lookup, alternates);
   if (!initial || !medial) return null;
   letters.push(initial, medial);
   if (hasFinal) {
-    const final = placeConsonant(parts.final, 'final', zones.final!, lookup);
+    const final = placeConsonant(parts.final, 'final', zones.final!, lookup, alternates);
     if (!final) return null;
     letters.push(final);
   }
@@ -307,10 +353,10 @@ export function placeBlockStrokes(syllable: string, lookup: StrokeLookup): Place
 }
 
 /** Every block of a word placed, or `null` when any block cannot be drawn. */
-export function placeWordStrokes(word: string, lookup: StrokeLookup): PlacedBlock[] | null {
+export function placeWordStrokes(word: string, lookup: StrokeLookup, alternates: AltStrokeLookup = NO_ALTERNATES): PlacedBlock[] | null {
   const blocks: PlacedBlock[] = [];
   for (const syllable of word) {
-    const placed = placeBlockStrokes(syllable, lookup);
+    const placed = placeBlockStrokes(syllable, lookup, alternates);
     if (!placed) return null;
     blocks.push(placed);
   }

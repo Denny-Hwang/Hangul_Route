@@ -33,7 +33,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
-import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
+import { altStrokesForJamo, strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { describeStrokeOrder, inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
@@ -143,7 +143,11 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const a11y = m.a11y.minigame;
-  const rounds = useMemo<TraceWordPlayRound[]>(() => buildTraceWordRounds(scope.traceWord?.rounds ?? [], strokesForJamo), [scope]);
+  // [SO] SO-2: each letter carries its other accepted forms, for the order and direction checks (never drawn).
+  const rounds = useMemo<TraceWordPlayRound[]>(
+    () => buildTraceWordRounds(scope.traceWord?.rounds ?? [], strokesForJamo, altStrokesForJamo),
+    [scope],
+  );
   const shapes = useMemo<TraceWordRoundShape[]>(() => rounds.map((r) => ({ mode: r.mode, letterCounts: letterCounts(r) })), [rounds]);
 
   const [state, setState] = useState<TraceWordState>(() => initialTraceWordState(shapes));
