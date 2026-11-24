@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SAVED_RUN_MAX_AGE_MS, resumableRun, savedRunOf, stepsSignature, type RunToSave } from '../saved-run';
+import { SAVED_RUN_MAX_AGE_MS, resumableRun, resumeCandidate, savedRunOf, stepsSignature, type RunToSave } from '../saved-run';
 
 /** [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: a quest left by a reload continues where it stopped. */
 const steps = [
@@ -189,3 +189,42 @@ describe('[QB] the saved run follows the furthest step (AMENDMENTS-QUEST-SOUND-B
   });
 });
 
+
+/**
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-2 (section 3.2, test 12): Home's first look at a saved run, from the stored
+ * value alone, before any lesson chunk is asked for.
+ */
+describe('resumeCandidate', () => {
+  type Quest = { id: string; steps: readonly { id: string; kind: 'intro'; minigameKind?: string }[] };
+  const hero: Quest = { id: 'quest:q1', steps: [] };
+  const candidate = (value: unknown, q: Quest = hero): boolean => resumeCandidate(value, q, NOW);
+
+  it('is a run of the hero quest past its first step, begun within a day, before its steps are known', () => {
+    expect(candidate(saved)).toBe(true);
+    expect(candidate({ ...saved, stepIndex: 1 })).toBe(true);
+    expect(candidate(JSON.parse(JSON.stringify(saved)))).toBe(true);
+  });
+
+  it('is not one for another quest, a run still on its first step, a step that is not a whole number or a missing value', () => {
+    expect(candidate({ ...saved, questId: 'quest:other' })).toBe(false);
+    expect(candidate({ ...saved, stepIndex: 0 })).toBe(false);
+    for (const stepIndex of [-1, 1.5, '3', null, undefined, Number.NaN]) expect(candidate({ ...saved, stepIndex }), String(stepIndex)).toBe(false);
+    for (const value of [null, undefined, 'x', 3, [], {}]) expect(candidate(value), JSON.stringify(value)).toBe(false);
+    expect(candidate({ ...saved, v: 2 })).toBe(false);
+  });
+
+  it('is not one when the run began more than 24 hours ago, either way, or its start is not a time', () => {
+    const started = Date.parse(STARTED);
+    expect(resumeCandidate(saved, hero, started + SAVED_RUN_MAX_AGE_MS)).toBe(true);
+    expect(resumeCandidate(saved, hero, started + SAVED_RUN_MAX_AGE_MS + 1)).toBe(false);
+    expect(resumeCandidate(saved, hero, started - SAVED_RUN_MAX_AGE_MS)).toBe(true);
+    expect(resumeCandidate(saved, hero, started - SAVED_RUN_MAX_AGE_MS - 1)).toBe(false);
+    for (const startedAt of ['not a time', 5, null, undefined]) expect(candidate({ ...saved, startedAt }), String(startedAt)).toBe(false);
+  });
+
+  it('is not one for a story quest (it resumes only through Keep reading)', () => {
+    const story: Quest = { id: 'quest:q1', steps: [{ id: 's1', kind: 'intro' }, { id: 's2', kind: 'intro', minigameKind: 'story-read' }] };
+    expect(candidate(saved, story)).toBe(false);
+    expect(candidate(saved, { id: 'quest:q1', steps })).toBe(true);
+  });
+});

@@ -25,6 +25,8 @@ interface StepLike {
   id: string;
   kind: QuestStepKind;
   minigameRef?: string;
+  /** [LR] Only the `story-read` step is told apart (a story quest resumes through Keep reading, never from Home). */
+  minigameKind?: string;
 }
 
 /** The stored value (`hr:quest-run:<profileId>`). */
@@ -137,4 +139,22 @@ export function resumableRun(saved: unknown, quest: { id: string; steps: readonl
     startedAt: run.startedAt,
     ...(reported === undefined ? {} : { reported: [...new Set(reported as string[])] }),
   };
+}
+
+/**
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-2 (section 3.2): whether Home's hero may say that its lesson goes on, from the
+ * stored value alone, so a lesson's chunk is asked for only when the answer is yes. A run of this quest (`v` 1), begun
+ * at most 24 hours ago either way (the rule of `resumableRun`), whose `stepIndex` is a whole number of 1 or more (a run
+ * saved as it began has nothing to go on from), and a quest with no `story-read` step among the steps known so far
+ * (a story quest resumes only through Keep reading, `learnerQuestSession`). The rest of `resumableRun` (the step list,
+ * the tallies) is checked once the steps are in.
+ */
+export function resumeCandidate(saved: unknown, quest: { id: string; steps: readonly StepLike[] }, now: number): boolean {
+  if (typeof saved !== 'object' || saved === null) return false;
+  const run = saved as Partial<Record<keyof SavedQuestRun, unknown>>;
+  if (run.v !== 1 || run.questId !== quest.id || typeof run.startedAt !== 'string') return false;
+  const started = Date.parse(run.startedAt);
+  if (!Number.isFinite(started) || Math.abs(now - started) > SAVED_RUN_MAX_AGE_MS) return false;
+  if (!isCount(run.stepIndex) || run.stepIndex < 1) return false;
+  return !quest.steps.some((step) => step.minigameKind === 'story-read');
 }

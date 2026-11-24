@@ -1,8 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = new Map<string, unknown>();
-const fail = { write: false, read: false };
+/** `read`: every read throws; `readOnce`: the first (cached) read throws and the fresh retry works; `parse`: the bytes do not parse. */
+const fail = { write: false, read: false, readOnce: false, parse: false };
+const reads = { cached: 0, fresh: 0 };
 let stall: Promise<void> | null = null;
+const readExact = async (k: string): Promise<unknown> => {
+  if (stall) await stall;
+  if (fail.parse) throw new SyntaxError('Unexpected token');
+  return mem.get(k) ?? null;
+};
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async () => null),
   readJsonStrict: vi.fn(async (k: string) => {
@@ -10,7 +17,18 @@ vi.mock('../../platform/storage', () => ({
     if (fail.read) throw new Error('storage cannot be read');
     return mem.get(k) ?? null;
   }),
-  readJsonExact: vi.fn(async () => null),
+  // [LR] LR-2: the saved run is read through `durableRead` (`readJsonExact`, then one `readJsonExactFresh`).
+  readJsonExact: vi.fn(async (k: string) => {
+    reads.cached += 1;
+    if (fail.read || fail.readOnce) throw new Error('storage cannot be read');
+    return readExact(k);
+  }),
+  readJsonExactFresh: vi.fn(async (k: string) => {
+    reads.fresh += 1;
+    if (fail.read) throw new Error('storage cannot be read on a fresh connection');
+    return readExact(k);
+  }),
+  keepRawCopy: vi.fn(async () => true),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     if (fail.write) throw new Error('storage is full');
     mem.set(k, JSON.parse(JSON.stringify(v)));
@@ -21,9 +39,13 @@ vi.mock('../../platform/storage', () => ({
   }),
   listKeys: vi.fn(async () => [...mem.keys()]),
 }));
+vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => undefined) }));
 vi.mock('../../platform/profiles-channel', () => ({ postProfilesChanged: () => undefined, subscribeProfilesChanged: () => () => undefined }));
 
+import { readJsonExact, readJsonExactFresh, keepRawCopy } from '../../platform/storage';
+import { track } from '../../platform/telemetry';
 import { resumableRun, stepsSignature } from '../../logic/quest-flow/saved-run';
+import { useProgressStore } from '../progress-store';
 import { notifyProfileRemoved } from '../profile-removal';
 import { useProfileStore } from '../profile-store';
 import { QUEST_RUN_KEY, clearSavedRun, keepRunSaved, readSavedRun, saveRun, settleSavedRunsForTests } from '../quest-run-saved';
@@ -52,6 +74,10 @@ beforeEach(async () => {
   mem.clear();
   fail.write = false;
   fail.read = false;
+  fail.readOnce = false;
+  fail.parse = false;
+  reads.cached = 0;
+  reads.fresh = 0;
   stall = null;
   useQuestRunStore.getState().reset();
   useProfileStore.setState({ profiles: [], activeId: null });
@@ -251,9 +277,25 @@ describe('readSavedRun', () => {
     expect(await readSavedRun('p1')).toEqual({ v: 1, questId: 'quest:q1' });
   });
 
-  it('storage that cannot be read answers null', async () => {
+  it('[LR] a read that throws twice (the cached read and the fresh retry) answers null, and asked exactly twice', async () => {
     fail.read = true;
     expect(await readSavedRun('p1')).toBeNull();
+    expect(reads).toEqual({ cached: 1, fresh: 1 });
+  });
+
+  it('[LR] a read that throws once and works on the fresh connection answers the run', async () => {
+    mem.set(QUEST_RUN_KEY('p1'), { v: 1, questId: 'quest:q1' });
+    fail.readOnce = true;
+    expect(await readSavedRun('p1')).toEqual({ v: 1, questId: 'quest:q1' });
+    expect(reads).toEqual({ cached: 1, fresh: 1 });
+  });
+
+  it('[LR] bytes that do not parse answer null, are not read again and are not kept aside', async () => {
+    mem.set(QUEST_RUN_KEY('p1'), { v: 1 });
+    fail.parse = true;
+    expect(await readSavedRun('p1')).toBeNull();
+    expect(reads).toEqual({ cached: 1, fresh: 0 });
+    expect(vi.mocked(keepRawCopy)).not.toHaveBeenCalled();
   });
 
   it('a read that stalls answers null after the wait, so the quest is never held back', async () => {
@@ -264,6 +306,36 @@ describe('readSavedRun', () => {
     mem.set(QUEST_RUN_KEY('p1'), { v: 1 });
     expect(await readSavedRun('p1', 10)).toBeNull();
     release();
+  });
+
+  it('[LR] a fresh retry that outlasts the limit answers null: no resume, which is safe', async () => {
+    mem.set(QUEST_RUN_KEY('p1'), { v: 1 });
+    let release: () => void = () => undefined;
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.mocked(readJsonExact).mockImplementationOnce(async () => {
+      reads.cached += 1;
+      throw new Error('storage cannot be read');
+    });
+    vi.mocked(readJsonExactFresh).mockImplementationOnce(async () => {
+      reads.fresh += 1;
+      await slow;
+      return { v: 1 };
+    });
+    expect(await readSavedRun('p1', 10)).toBeNull();
+    release();
+  });
+
+  it('[LR] a failed read touches nothing else: no progress record, no telemetry', async () => {
+    const before = JSON.stringify(useProgressStore.getState());
+    fail.read = true;
+    await readSavedRun('p1');
+    fail.parse = true;
+    fail.read = false;
+    await readSavedRun('p1');
+    expect(JSON.stringify(useProgressStore.getState())).toBe(before);
+    expect(track).not.toHaveBeenCalled();
   });
 });
 
