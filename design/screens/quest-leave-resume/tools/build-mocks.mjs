@@ -50,8 +50,8 @@ const T = {
   dailyReview: 'Daily Review',
   failedTitle: 'We could not save this yet.',
   failedBody: 'Your answers are still here.',
-  failedLeaveBody: 'This is not saved yet.',
-  stillStuck: 'Still stuck? You can stop for now and try another time.',
+  failedLeaveBody: 'This is not saved yet. Your stars and cards stay.',
+  stillStuck: 'It still did not save. You can stop for now and try another time.',
   drStopTitle: 'Stop for now?',
   backToIt: 'Back to it',
   tryAgain: 'Try again',
@@ -86,11 +86,15 @@ const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><pat
 /** The route's learner header: Close (leading, touchTarget.min) and Display (Aa). */
 const routeHeader = () => `<header class="screen-header"><button class="sh-lead qlr-close" type="button" aria-label="${esc(T.close)}">${ICON_CLOSE}</button><div class="sh-trail"><button class="aa-btn" type="button" aria-label="${esc(T.displayA11y)}">Aa</button></div></header>`;
 
-/** ConfirmSheet (design/components/ConfirmSheet/spec.md): cancel first, paper, focused; confirm primary; no danger. */
-function confirmSheet(id, { title, message, cancel, confirm }) {
+/**
+ * ConfirmSheet (design/components/ConfirmSheet/spec.md): cancel first, paper, focused; confirm primary; no danger.
+ * `safeFilled` (Home's Start again sheet only, owner decision 2026-11-24, O4): the safe cancel is the filled button and
+ * the confirm is the plain outlined one; LR-2 adds the opt-in to the ConfirmSheet.
+ */
+function confirmSheet(id, { title, message, cancel, confirm, safeFilled = false }) {
   return `<div class="sheet-backdrop" data-qlr="backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="${id}-t" aria-describedby="${id}-m">
 <h2 id="${id}-t">${esc(title)}</h2><p class="msg" id="${id}-m">${esc(message)}</p>
-<div class="confirm-actions"><button class="btn focus-ring" type="button" data-safe>${esc(cancel)}</button><button class="btn btn-primary" type="button">${esc(confirm)}</button></div>
+<div class="confirm-actions"><button class="btn${safeFilled ? ' btn-primary' : ''} focus-ring" type="button" data-safe>${esc(cancel)}</button><button class="btn${safeFilled ? '' : ' btn-primary'}" type="button">${esc(confirm)}</button></div>
 </div></div>`;
 }
 
@@ -120,7 +124,7 @@ function home(variant) {
 </div>`;
 }
 
-const homeSheet = () => confirmSheet('home-sa', { title: T.sheetTitle, message: T.sheetMessage, cancel: T.keepPlace, confirm: T.startAgain });
+const homeSheet = () => confirmSheet('home-sa', { title: T.sheetTitle, message: T.sheetMessage, cancel: T.keepPlace, confirm: T.startAgain, safeFilled: true });
 
 // ------------------------------------------------------------------------------------------------ Checks (LR-3a, LR-3b)
 /** The check's opening column (StageReviewScreen.tsx :323-339; StageCheckScreen.tsx :279-300). */
@@ -233,7 +237,7 @@ pages['home-resume.html'] = `${head('Home: the hero says the lesson goes on (LR-
 ${item('A. resume variant (a saved run at step 3 of 5)', 'Continue; the caption under it is its accessibility hint; Start again is a quiet link (role button, 64 high)', home('resume'))}
 ${item('C. plain hero on a first day (no candidate; also while the read and the steps load)', 'Exactly as today: Start, no caption, no link', home('plain-start'))}
 ${item('A on a first day (no quest done, a saved run)', 'Continue, not Start, whatever questsDone is', home('resume'))}
-${item('B. Start again asks first (bottom sheet)', 'ConfirmSheet: Keep my place first and focused; Start again primary, never danger', behind(home('resume')) + homeSheet())}
+${item('B. Start again asks first (bottom sheet)', 'ConfirmSheet: Keep my place first, focused and filled (the safe choice); Start again plain, never danger', behind(home('resume')) + homeSheet())}
 </div>
 <div class="board-wide">
 ${item('B, wide (1024): centred dialog', 'ConfirmSheet from 600 px: cancel-first row', `${behind(home('resume'))}${homeSheet().replace('sheet-backdrop', 'sheet-backdrop dialog')}`, 'tablet')}
