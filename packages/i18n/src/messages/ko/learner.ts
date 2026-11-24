@@ -245,7 +245,7 @@ export const learner = {
         sheet: {
           title: '이 레슨을 처음부터 다시 할까요?',
           message: '첫 번째 활동으로 돌아가요. 별과 카드는 그대로예요.',
-          keep: { cta: '지금 자리 그대로 두기' },
+          keep: { cta: '하던 곳 그대로 두기' },
         },
       },
     },
