@@ -311,3 +311,47 @@ describe('[OA] ConfirmSheet for Remove from this device (OA-0b addendum; AMENDME
     expect(announce).not.toHaveBeenCalled();
   });
 });
+
+describe('[LR] safeFilled (AMENDMENTS-QUEST-LEAVE-RESUME LR-2, owner decision 2026-11-24, O4)', () => {
+  it('fills the safe cancel and draws the confirm plain; the order and the focus stay', () => {
+    const filled = actionStyle('cancel', false, { pressed: false }, 'primary', true);
+    expect(filled).toMatchObject({ backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, minHeight: touchTarget.min, width: '100%' });
+    const plain = actionStyle('confirm', false, { pressed: false }, 'primary', true);
+    expect(plain).toMatchObject({ backgroundColor: colors.surface.paper, borderColor: colors.border.strong, minHeight: touchTarget.min, width: '100%' });
+    // Pressed and focused states follow the look the button has.
+    expect(actionStyle('cancel', true, { pressed: true }, 'primary', true)).toMatchObject({ backgroundColor: colors.brand.primaryDark, flexGrow: 1 });
+    expect(actionStyle('confirm', true, { pressed: true }, 'primary', true)).toMatchObject({ backgroundColor: colors.surface.sunken });
+    expect(actionStyle('cancel', false, { pressed: false, focused: true }, 'primary', true)).toMatchObject({ borderColor: colors.border.focus, borderWidth: borderWidth.thick });
+    // Labels: onPrimary on the fill, primary on the plain button.
+    expect(actionTextStyle('cancel', typeScale(1), true)).toMatchObject({ color: colors.text.onPrimary });
+    expect(actionTextStyle('confirm', typeScale(1), true)).toMatchObject({ color: colors.text.primary });
+    // Never danger.
+    expect(JSON.stringify([filled, plain])).not.toContain(colors.feedback.danger);
+  });
+
+  it('is off by default: the shipped look is unchanged', () => {
+    expect(actionStyle('cancel', false, { pressed: false })).toMatchObject({ backgroundColor: colors.surface.paper, borderColor: colors.border.strong });
+    expect(actionStyle('confirm', false, { pressed: false })).toMatchObject({ backgroundColor: colors.brand.primary });
+    expect(actionTextStyle('cancel', typeScale(1))).toMatchObject({ color: colors.text.primary });
+    expect(actionTextStyle('confirm', typeScale(1))).toMatchObject({ color: colors.text.onPrimary });
+  });
+
+  it('the sheet draws the cancel first and filled, the confirm plain, and the cancel still takes focus', () => {
+    const tree = render(props({ title: 'Start this lesson again?', cancelLabel: 'Keep my place', confirmLabel: 'Start again', safeFilled: true }));
+    const buttons = tree.filter((e) => e.type === 'Pressable' && e.props.accessibilityRole === 'button').map((b) => [b.props.testID, textOf(b)]);
+    expect(buttons).toEqual([
+      ['confirm-sheet-cancel', 'Keep my place'],
+      ['confirm-sheet-confirm', 'Start again'],
+    ]);
+    const look = (id: string): Record<string, unknown> => (byTestId(tree, id)!.props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
+    expect(look('confirm-sheet-cancel').backgroundColor).toBe(colors.brand.primary);
+    expect(look('confirm-sheet-confirm').backgroundColor).toBe(colors.surface.paper);
+    const label = (id: string): Record<string, unknown> => (byTestId(tree, id)!.props.children as El).props.style as Record<string, unknown>;
+    expect(label('confirm-sheet-cancel').color).toBe(colors.text.onPrimary);
+    expect(label('confirm-sheet-confirm').color).toBe(colors.text.primary);
+    // The default sheet keeps its look.
+    const normal = render(props());
+    const normalLook = (byTestId(normal, 'confirm-sheet-confirm')!.props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
+    expect(normalLook.backgroundColor).toBe(colors.brand.primary);
+  });
+});

@@ -252,6 +252,15 @@ export const learner = {
       a11y: (cta: string, title: string) => `${cta}: ${title}`,
       where: (stage: number, episode: string, i: number, n: number) => `Etapa ${stage} · ${episode} · lección ${i} de ${n}`,
       route: { cta: 'Ver tu Ruta de aprendizaje' },
+      resume: {
+        line: (step: number, total: number) => `Puedes seguir desde el paso ${step} de ${total}.`,
+        startAgain: { cta: 'Empezar de nuevo' },
+        sheet: {
+          title: '¿Empezar esta lección de nuevo?',
+          message: 'Vuelves al primer paso. Tus estrellas y tarjetas se quedan.',
+          keep: { cta: 'Conservar mi lugar' },
+        },
+      },
     },
     mission: {
       heading: 'Hoy con Hoya',

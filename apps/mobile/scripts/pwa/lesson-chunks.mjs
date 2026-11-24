@@ -248,7 +248,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the start bundle. On top of TI-3b the release `build:web` (CI=1) of the DP-1e branch measures 4,598,325 B raw /
   // 1,265,202 B gzip; merged with DP-3 (storage telemetry) it measures 4,600,099 B raw / 1,265,787 B gzip, 1,499 B over
   // the line. The line is the measurement plus a 4,001 B margin (one measured raise, 5,500 B over the previous line).
-  startBundleRaw: 4_604_100,
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-2 (Home tells the learner where they stopped): the hero's resume parts (the
+  // saved-run read decision, the Start again link and sheet, the ConfirmSheet's safeFilled look) and their en strings are
+  // on the first screen, so they are in the start bundle. On origin/main (e30badbac) the release `build:web` measures
+  // 4,603,925 B raw / 1,267,076 B gzip; with LR-2 it measures 4,606,846 B raw / 1,268,066 B gzip, 2,746 B over the line
+  // (+2,921 B raw, +990 B gzip). The line is the measurement plus a 4,054 B margin (one measured raise, 6,800 B over the
+  // previous line).
+  startBundleRaw: 4_610_900,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
