@@ -445,6 +445,13 @@ export const consoleMsgs = {
       /** GX-7 (section 8 T4): the card's one activity line; the day words come from `relativeDay`. */
       practiced: (when: string, minutes: number) => `Practiced ${when} · ${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
+      /**
+       * AMENDMENTS-CLASS-CODE-OVERLAY CO-2: a class card keeps one learner's letters and words to revisit behind this
+       * disclosure, so a shared classroom screen never shows them beside a name; `revisitNothing` is its body when the card
+       * has neither (the words of `console.lecture.source.noRevisit`).
+       */
+      revisitToggle: 'What to revisit',
+      revisitNothing: 'Nothing to revisit yet.',
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `joined ${when}`,
       /** F-VOC-005 P-4 (section 3.8): counts only; the first-try rate stays off the roster. */

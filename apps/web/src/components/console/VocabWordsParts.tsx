@@ -55,24 +55,41 @@ function WordList({ words }: { words: readonly ConsoleWord[] }): JSX.Element {
   );
 }
 
-/** A roster card's word lines; nothing when the roster carries no `summary.vocab`. */
-export function StudentWordsLines({ words }: { words: StudentWords | null }): JSX.Element | null {
+/** A roster card's count line, "Words: N collected · M strong"; nothing when the roster carries no `summary.vocab`. */
+export function StudentWordsCount({ words }: { words: StudentWords | null }): JSX.Element | null {
   const { messages: m } = useConsoleLocale();
   if (!words) return null;
-  const s = m.console.space.learner;
-  const revisit = aroundSlot(s.wordsRevisit);
+  return (
+    <div data-testid="student-words" style={LINE_STYLE}>
+      {m.console.space.learner.words(words.collected, words.strong)}
+    </div>
+  );
+}
+
+/**
+ * A roster card's "Words to revisit: …" line; nothing when the learner has none. On a class card it sits behind the
+ * What to revisit button (AMENDMENTS-CLASS-CODE-OVERLAY CO-2), apart from the count line.
+ */
+export function StudentWordsRevisit({ words }: { words: StudentWords | null }): JSX.Element | null {
+  const { messages: m } = useConsoleLocale();
+  if (!words || words.revisit.length === 0) return null;
+  const revisit = aroundSlot(m.console.space.learner.wordsRevisit);
+  return (
+    <div data-testid="student-words-revisit" style={LINE_STYLE}>
+      {revisit.before}
+      <WordList words={words.revisit} />
+      {revisit.after}
+    </div>
+  );
+}
+
+/** A roster card's word lines, both together (a family card); nothing when the roster carries no `summary.vocab`. */
+export function StudentWordsLines({ words }: { words: StudentWords | null }): JSX.Element | null {
+  if (!words) return null;
   return (
     <>
-      <div data-testid="student-words" style={LINE_STYLE}>
-        {s.words(words.collected, words.strong)}
-      </div>
-      {words.revisit.length ? (
-        <div data-testid="student-words-revisit" style={LINE_STYLE}>
-          {revisit.before}
-          <WordList words={words.revisit} />
-          {revisit.after}
-        </div>
-      ) : null}
+      <StudentWordsCount words={words} />
+      <StudentWordsRevisit words={words} />
     </>
   );
 }

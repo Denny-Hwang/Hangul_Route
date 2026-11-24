@@ -316,6 +316,8 @@ export const consoleMsgs = {
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
       practiced: (when: string, minutes: number) => `Última práctica: ${when} · ${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
+      revisitToggle: 'Qué repasar',
+      revisitNothing: 'Aún no hay nada para repasar.',
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `se unió ${when}`,
       words: (collected: number, strong: number) => `Palabras: ${plural('es', collected, { one: `${collected} conseguida`, other: `${collected} conseguidas` })} · ${plural('es', strong, { one: `${strong} firme`, other: `${strong} firmes` })}`,

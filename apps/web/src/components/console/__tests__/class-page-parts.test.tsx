@@ -2,7 +2,9 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { colors, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { act, create, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
+import { ClassActionBar, FirstRunCard, InviteDisclosure, RevisitFold } from '@/components/console/ClassPageParts';
+import { isCaregiverSafe } from '@/lib/console/banned-text';
+import { studentWords } from '@/lib/console/vocab-words';
 import { headRem } from '@/lib/console/rem';
 
 /**
@@ -174,5 +176,101 @@ describe('FirstRunCard (T5)', () => {
   it('the heading is a section title, not a page title', () => {
     const h2 = create(<FirstRunCard />).root.findByType('h2');
     expect(h2.props.style.fontSize).not.toBe(headRem(typography.size.title));
+  });
+});
+
+/**
+ * AMENDMENTS-CLASS-CODE-OVERLAY CO-2 (section 3.7; tests section 6 item 5): the class card's What to revisit disclosure.
+ * Its state lives in the page (by learner id), so the part is controlled: closed it mounts no body, so no jamo and no
+ * word of it is in the tree; open it shows the card's "Revisit: ㅂ · ㅅ" line and its "Words to revisit" line, or
+ * "Nothing to revisit yet.".
+ */
+describe('RevisitFold (CO-2)', () => {
+  const WORDS = studentWords({ vocab: { collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, needsPractice: ['vocab:sagwa-apple', 'vocab:nun-eye'] } }, 'en');
+  const fold = (over: Partial<Parameters<typeof RevisitFold>[0]> = {}): JSX.Element => (
+    <RevisitFold open={false} onToggle={() => undefined} describedBy="roster-learner-0" jamo={['ㅂ', 'ㅅ']} words={WORDS} {...over} />
+  );
+  const bodyText = (root: ReactTestInstance): string => textOf(byTestId(root, 'revisit-body')[0] as ReactTestInstance);
+
+  it.each(LOCALES)('%s: closed, a button in the console language and no body: no jamo and no word in the tree', (locale) => {
+    view.locale = locale;
+    const root = create(fold()).root;
+    const toggle = byTestId(root, 'revisit-toggle')[0] as ReactTestInstance;
+    expect(toggle.type).toBe('button');
+    expect(toggle.props.type).toBe('button');
+    expect(textOf(toggle)).toBe(getMessages(locale).console.space.learner.revisitToggle);
+    expect(toggle.props['aria-expanded']).toBe(false);
+    expect(toggle.props['aria-controls']).toBeUndefined();
+    expect(byTestId(root, 'revisit-body')).toHaveLength(0);
+    const all = textOf(root);
+    expect(all).not.toContain('ㅂ');
+    expect(all).not.toContain('sagwa');
+    expect(root.findAll((n) => n.props.lang === 'ko')).toHaveLength(0);
+  });
+
+  it("open: aria-expanded true, aria-controls names the mounted body, the button is described by the learner's name", () => {
+    const root = create(fold({ open: true })).root;
+    const toggle = byTestId(root, 'revisit-toggle')[0] as ReactTestInstance;
+    const body = byTestId(root, 'revisit-body')[0] as ReactTestInstance;
+    expect(toggle.props['aria-expanded']).toBe(true);
+    expect(toggle.props['aria-controls']).toBe(body.props.id);
+    expect(toggle.props['aria-describedby']).toBe('roster-learner-0');
+  });
+
+  it('a press asks the page to toggle', () => {
+    const onToggle = vi.fn();
+    const root = create(fold({ onToggle })).root;
+    act(() => (byTestId(root, 'revisit-toggle')[0] as ReactTestInstance).props.onClick());
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('open, the body shows the jamo line (lang ko) and the words line with their romanization and gloss', () => {
+    const root = create(fold({ open: true })).root;
+    expect(bodyText(root)).toContain('Revisit: ㅂ · ㅅ');
+    expect(bodyText(root)).toContain('Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)');
+    const langs = (byTestId(root, 'revisit-body')[0] as ReactTestInstance).findAll((n) => n.props.lang === 'ko').map(textOf);
+    expect(langs).toEqual(['ㅂ · ㅅ', '사과', '눈']);
+    expect(byTestId(root, 'student-words-revisit')).toHaveLength(1);
+    // The count line stays outside the fold, with the card.
+    expect(byTestId(root, 'student-words')).toHaveLength(0);
+  });
+
+  it('open, only the letters or only the words: that line alone', () => {
+    expect(bodyText(create(fold({ open: true, words: null })).root)).toBe('Revisit: ㅂ · ㅅ');
+    const lettersGone = create(fold({ open: true, jamo: [] })).root;
+    expect(bodyText(lettersGone)).toBe('Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)');
+    expect(bodyText(lettersGone)).not.toContain('Revisit: ');
+  });
+
+  it.each(LOCALES)('%s: open with neither, "Nothing to revisit yet." in the console language', (locale) => {
+    view.locale = locale;
+    const none = studentWords({ vocab: { collected: 3, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, needsPractice: [] } }, locale);
+    for (const words of [null, none]) {
+      const root = create(fold({ open: true, jamo: [], words })).root;
+      expect(bodyText(root)).toBe(getMessages(locale).console.space.learner.revisitNothing);
+    }
+  });
+
+  it('is at least the touch target tall, as the console button size (one size, GX-6)', () => {
+    const toggle = byTestId(create(fold()).root, 'revisit-toggle')[0] as ReactTestInstance;
+    expect(toggle.props.style.minHeight).toBe(touchTarget.min);
+  });
+
+  it.each(LOCALES)('%s: the new strings are caregiver-safe and inside the length budgets (CO-2, 8)', (locale) => {
+    const words = getMessages(locale).console.space.learner;
+    const english = getMessages('en').console.space.learner;
+    for (const text of [words.revisitToggle, words.revisitNothing]) {
+      expect(isCaregiverSafe(text, locale), text).toBe(true);
+      expect(text.trim()).toBe(text);
+    }
+    // 28-character cta budget for the button; 1.5x the English for the line (packages/i18n length-budget.test.ts).
+    expect(words.revisitToggle.length).toBeLessThanOrEqual(28);
+    expect(words.revisitToggle.length).toBeLessThanOrEqual(Math.ceil(english.revisitToggle.length * 1.5));
+    expect(words.revisitNothing.length).toBeLessThanOrEqual(Math.ceil(english.revisitNothing.length * 1.5));
+  });
+
+  it('the copy: What to revisit, and the lecture source\'s own words for nothing', () => {
+    expect(getMessages('en').console.space.learner.revisitToggle).toBe('What to revisit');
+    expect(getMessages('en').console.space.learner.revisitNothing).toBe(getMessages('en').console.lecture.source.noRevisit);
   });
 });

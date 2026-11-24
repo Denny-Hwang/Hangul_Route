@@ -275,6 +275,8 @@ export const consoleMsgs = {
       minutesThisWeek: (minutes: number) => `이번 주 ${minutes}분`,
       practiced: (when: string, minutes: number) => `마지막 연습: ${when} · 이번 주 ${minutes}분`,
       revisit: (jamo: string) => `다시 볼 것: ${jamo}`,
+      revisitToggle: '다시 볼 것',
+      revisitNothing: '아직 다시 볼 것이 없어요.',
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `참여: ${when}`,
       words: (collected: number, strong: number) => `낱말: 모은 것 ${collected}개 · 탄탄한 것 ${strong}개`,

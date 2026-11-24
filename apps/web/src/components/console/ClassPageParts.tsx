@@ -4,7 +4,10 @@ import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@h
 import { useEffect, useId, useLayoutEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import { aroundSlot } from '@/lib/i18n/slot';
+import type { StudentWords } from '@/lib/console/vocab-words';
 import { buttonBase, panelStyle } from './ui';
+import { StudentWordsRevisit } from './VocabWordsParts';
 
 /**
  * The class page's order (AMENDMENTS-GROWNUP-UX GX-7, section 8 T3 to T5; wireframe `design/wireframes/console/roster.md`
@@ -168,5 +171,97 @@ export function FirstRunCard(): JSX.Element {
         ))}
       </ol>
     </section>
+  );
+}
+
+/**
+ * AMENDMENTS-CLASS-CODE-OVERLAY CO-2 (section 3.7; mock `design/screens/console/class-code-overlay.md` "What to revisit on
+ * a class card"): line 4 of a class card, a disclosure button that keeps one learner's letters and words to revisit off a
+ * shared classroom screen. Controlled: the page keeps the open cards by learner id (kept across re-reads, closed by Show
+ * the code, never stored). Closed, no body is mounted, so no jamo and no word of it is in the page for find-in-page or a
+ * screen reader. Open, the body is the card's "Revisit: ㅂ · ㅅ" line and its "Words to revisit" line, or "Nothing to
+ * revisit yet.". `aria-controls` is set only while the body is mounted; the button is described by the learner's name.
+ */
+export function RevisitFold({
+  open,
+  onToggle,
+  describedBy,
+  jamo,
+  words,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  describedBy: string;
+  jamo: readonly string[];
+  words: StudentWords | null;
+}): JSX.Element {
+  const { messages } = useConsoleLocale();
+  const learner = messages.console.space.learner;
+  const bodyId = useId();
+  const letters = aroundSlot(learner.revisit);
+  const rule = `${borderWidth.thin}px solid ${colors.border.subtle}`;
+  const nothing = jamo.length === 0 && (words === null || words.revisit.length === 0);
+  return (
+    <div style={{ margin: `${spacing.xs}px 0` }}>
+      <button
+        type="button"
+        data-testid="revisit-toggle"
+        aria-expanded={open}
+        aria-controls={open ? bodyId : undefined}
+        aria-describedby={describedBy}
+        onClick={onToggle}
+        style={{
+          width: '100%',
+          minHeight: touchTarget.min,
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.sm,
+          padding: `${spacing.xs}px ${spacing.sm}px`,
+          border: 'none',
+          borderTop: rule,
+          ...(open ? {} : { borderBottom: rule }),
+          borderRadius: radii.none,
+          backgroundColor: colors.surface.paper,
+          color: colors.text.primary,
+          font: 'inherit',
+          fontSize: rem(typography.size.bodySm),
+          fontWeight: typography.weight.semibold,
+          textAlign: 'start',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{learner.revisitToggle}</span>
+        <Chevron open={open} />
+      </button>
+      {open ? (
+        <div
+          id={bodyId}
+          data-testid="revisit-body"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing.xxs,
+            padding: `${spacing.xs}px ${spacing.sm}px ${spacing.sm}px`,
+            borderBottom: rule,
+            color: colors.text.secondary,
+            fontSize: rem(typography.size.bodySm),
+            lineHeight: typography.leading.relaxed,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {jamo.length ? (
+            <div data-testid="student-jamo-revisit">
+              {letters.before}
+              <span lang="ko">{jamo.join(' · ')}</span>
+              {letters.after}
+            </div>
+          ) : null}
+          <StudentWordsRevisit words={words} />
+          {nothing ? <div>{learner.revisitNothing}</div> : null}
+        </div>
+      ) : null}
+    </div>
   );
 }

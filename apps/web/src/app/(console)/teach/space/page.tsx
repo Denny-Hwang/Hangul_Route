@@ -14,7 +14,7 @@ import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot, SuggestStartLink } from '@/components/console/PlacementParts';
 import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
-import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
+import { ClassActionBar, FirstRunCard, InviteDisclosure, RevisitFold } from '@/components/console/ClassPageParts';
 import { ClassCodeOverlay } from '@/components/console/ClassCodeOverlay';
 import { classActions, practicedLine, type ClassAction } from '@/lib/console/class-page';
 import { addressNamesClassPage, codeOverlayFlagged, codeOverlayShown, codeOverlayView, forgetCodeOverlay, rememberCodeOverlay } from '@/lib/console/class-code-overlay';
@@ -24,7 +24,7 @@ import { journeyStrip } from '@/lib/console/journey-strip';
 import { startingSpotLine } from '@/lib/console/placement';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
-import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
+import { StudentWordsCount, StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { AskingToJoin, DecidedLine, ReasonLine, RelinkAnswer, StatusChip, actionCardStyle, useDecided } from '@/components/console/LearnerStatusParts';
 import { ATTENTION_HASH, AttentionBanner, ReviewSheet, sheetKey, useTitleCount, type SheetDevice, type SheetFamilyMove, type SheetOutgoing } from '@/components/console/AttentionParts';
@@ -101,6 +101,16 @@ function SpaceInner(): JSX.Element {
   // grown-up lock the overlay is drawn in the same render that first draws the roster and the roster is never painted.
   const [codeOpen, setCodeOpen] = useState<boolean>(() => codeOverlayFlagged(browserStorage('session'), spaceId));
   const codeOpener = useRef<HTMLButtonElement | null>(null);
+  // CO-2: the class cards whose What to revisit is open, by learner id. In memory only (the next visit starts closed); it
+  // survives a quiet re-read and a new card order, and Show the code closes every card.
+  const [revisitOpen, setRevisitOpen] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleRevisit = useCallback((id: string): void => {
+    setRevisitOpen((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }, []);
   const errorPanel = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -269,6 +279,7 @@ function SpaceInner(): JSX.Element {
   const codeShown = roster !== null && codeOverlayShown(roster, now);
   const codeView = roster !== null && codeOpen ? codeOverlayView(roster, now, locale, appUrl()) : null;
   const openCode = useCallback((): void => {
+    setRevisitOpen((prev) => (prev.size === 0 ? prev : new Set()));
     setCodeOpen(true);
     void load(true);
   }, [load]);
@@ -749,14 +760,31 @@ function SpaceInner(): JSX.Element {
                           {strip ? <JourneyStrip kind={roster.space.kind} summary={l.summary} variant="card" trailing={questsJoin ? quests : undefined} /> : null}
                           {strip === null ? <div data-testid="quests-line">{quests}</div> : null}
                           {strip && !questsJoin ? <div data-testid="quests-line">{quests}</div> : null}
-                          {l.summary.needsPractice.length ? (
-                            <div>
-                              {learnerRevisit.before}
-                              {jamo(l.summary.needsPractice)}
-                              {learnerRevisit.after}
-                            </div>
-                          ) : null}
-                          <StudentWordsLines words={studentWords(l.summary, locale)} />
+                          {roster.space.kind === 'class' ? (
+                            // CO-2 (section 3.7): a class card keeps the count line and puts the letters and words to revisit
+                            // behind a button, closed on every load, so a shared classroom screen never shows them beside a name.
+                            <>
+                              <StudentWordsCount words={studentWords(l.summary, locale)} />
+                              <RevisitFold
+                                open={revisitOpen.has(l.id)}
+                                onToggle={() => toggleRevisit(l.id)}
+                                describedBy={`roster-learner-${index}`}
+                                jamo={l.summary.needsPractice}
+                                words={studentWords(l.summary, locale)}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {l.summary.needsPractice.length ? (
+                                <div>
+                                  {learnerRevisit.before}
+                                  {jamo(l.summary.needsPractice)}
+                                  {learnerRevisit.after}
+                                </div>
+                              ) : null}
+                              <StudentWordsLines words={studentWords(l.summary, locale)} />
+                            </>
+                          )}
                           {latestPlan && readout && planReaches(latestPlan, l.id) ? (
                             <div data-testid="plan-line">
                               {c.space.learner.planReadout(
