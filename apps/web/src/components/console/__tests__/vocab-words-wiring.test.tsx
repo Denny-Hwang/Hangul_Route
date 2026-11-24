@@ -164,7 +164,7 @@ describe('the roster with word counts', () => {
   });
 
   it('draws the lines and the week from slices without firstTryRate, as P-4b will send them', async () => {
-    learners = [learner('l:1', 'Mina', wordsWithoutRate(['vocab:uyu'])), learner('l:2', 'Sam', wordsWithoutRate(['vocab:uyu', 'vocab:ppang']))];
+    learners = [learner('l:1', 'Mina', wordsWithoutRate(['vocab:uyu'])), learner('l:2', 'Sam', wordsWithoutRate(['vocab:uyu', 'vocab:ppang'])), learner('l:3', 'Ana', wordsWithoutRate(['vocab:uyu']))];
     const root = await roster();
     const [mina] = byTestId(root, 'student-card');
     if (!mina) throw new Error('cards');
@@ -172,6 +172,22 @@ describe('the roster with word counts', () => {
     await openRevisit(mina);
     expect(byTestId(mina, 'student-words-revisit').map(textOf)).toEqual(['Words to revisit: 우유 uyu (milk)']);
     expect(byTestId(root, 'week-words-revisit').map(textOf)).toEqual(['Words to revisit together: 우유 uyu (milk) · 빵 ppang (bread)']);
+  });
+
+  // AMENDMENTS-CLASS-CODE-OVERLAY CO-2c (OD-CO8 (a)): below 3 learners with words to revisit, the line would be one or two
+  // learners' own list.
+  it('a class with fewer than 3 learners with words to revisit has no together line', async () => {
+    learners = [learner('l:1', 'Mina', words(['vocab:uyu'])), learner('l:2', 'Sam', words(['vocab:sagwa-apple', 'vocab:uyu']))];
+    const root = await roster();
+    expect(byTestId(root, 'week-words-revisit')).toHaveLength(0);
+    expect(textOf(root)).not.toContain('Words to revisit together');
+  });
+
+  it('a family keeps its together line with one learner', async () => {
+    kindOf.kind = 'family';
+    learners = [learner('l:1', 'Mina', words(['vocab:uyu']))];
+    const root = await roster();
+    expect(byTestId(root, 'week-words-revisit').map(textOf)).toEqual(['Words to revisit together: 우유 uyu (milk)']);
   });
 
   it('names the class words to revisit together in the week, and keeps the roster order', async () => {

@@ -123,7 +123,13 @@ describe('the roster readouts (GX-8)', () => {
     expect(byTestId(root, 'week-anchor')).toHaveLength(0);
     expect(textOf(root)).not.toMatch(/anchor|–/);
     act(() => mounted?.unmount());
-    learners = [learner('l:1', 'Mina', { summary: summary({ stage1: { questsDone: 3, questsTotal: 15, anchorAccuracy: 0.8 } }) })];
+    // CO-2c (OD-CO8 (a)): in a class the line needs at least 3 learners with a figure.
+    const figure = (id: string, name: string): ReturnType<typeof learner> => learner(id, name, { summary: summary({ stage1: { questsDone: 3, questsTotal: 15, anchorAccuracy: 0.8 } }) });
+    learners = [figure('l:1', 'Mina'), figure('l:2', 'Sam')];
+    root = await page();
+    expect(byTestId(root, 'week-anchor')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    learners = [figure('l:1', 'Mina'), figure('l:2', 'Sam'), figure('l:3', 'Ana')];
     root = await page();
     expect(byTestId(root, 'week-anchor').map(textOf)).toEqual(['Stage 1 first-try answers: 80%']);
   });
