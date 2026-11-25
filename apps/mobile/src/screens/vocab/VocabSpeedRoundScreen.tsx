@@ -350,7 +350,7 @@ function StartSheet({
   );
 }
 
-function RoundPlay({
+export function RoundPlay({
   topicKey,
   playing,
   navigation,
@@ -576,6 +576,7 @@ function RoundPlay({
           romanizationShown={romanizationShown}
           ring={state.hint === 'ring'}
           hoya={nudge ? { tone: nudge.pose, message: nudge.line } : null}
+          cantHear={config.mode === 'relaxed'}
           onAnswer={(optionId) => dispatch({ type: 'answer', optionId })}
           onAdvance={() => dispatch({ type: 'reveal-done' })}
           testID="vocab-question"

@@ -25,6 +25,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
@@ -66,6 +67,11 @@ export interface RoundProps<R extends ReviewRound> {
    * module, so none is shared by two chunks.
    */
   grade: (target: string, typed: string) => TypedGrade;
+  /**
+   * The heard rounds offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b). The Daily Review, Keep going and This
+   * week in Korea pass it; the Stage and Cell Check do not until CH-1e. Text rounds never show it.
+   */
+  cantHear?: boolean;
 }
 
 /** The pause on the check mark before the next round. */
@@ -89,9 +95,9 @@ function useAdvance(onSolved: () => void, reduced: boolean): () => void {
 }
 
 /** The sound of a round, through the shared prompt slot (F-AUDIO-004 §3.8): text with why and one action when it cannot play. */
-function useRoundSound(text: string | null, heard: boolean) {
+function useRoundSound(text: string | null, heard: boolean, cantHear = false) {
   // [FU] FU-3: the item's say clip (review pack) counts as sound, so a device with no Korean voice hears it.
-  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard });
+  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard, cantHear: cantHear && heard });
   const { play, reset } = slot;
   const hear = useCallback(() => {
     if (text === null) return;
@@ -112,7 +118,7 @@ function optionLabel(o: PickOption, showRomanization: boolean): string {
   return o.label ?? '';
 }
 
-export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<PickRound>): ReactElement {
+export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false }: RoundProps<PickRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const [wrong, setWrong] = useState<readonly string[]>([]);
@@ -121,7 +127,8 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: Round
   const advance = useAdvance(onSolved, reducedMotion);
   const pictureSize = useMediaSize(touchTarget.hero);
   const lc = useLayoutClass();
-  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard);
+  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear);
+  const hearAgainRef = useRef<View | null>(null);
   const showOptionRomanization = round.ask !== 'sound';
   const tiles = round.options.every((o) => o.picture !== undefined);
 
@@ -162,8 +169,25 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: Round
             leading={<Icon name="speaker" size={spacing.lg} color={colors.brand.secondaryDark} />}
             accessibilityLabel={slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain}
             onPress={hear}
+            pressableRef={hearAgainRef}
             testID="daily-review-hear-again"
           />
+          {slot.cantHear ? (
+            round.cue !== undefined ? (
+              // The cue (a picture or a meaning) settles the round, and showing the prompt would print the answer: guidance only.
+              <CantHear guidanceOnly round={round.question.itemId} active={slot.cantHearActive} onHear={hear} />
+            ) : (
+              <CantHear
+                round={round.question.itemId}
+                active={slot.cantHearActive}
+                onHear={hear}
+                onShowLetters={slot.showLetters}
+                focusAfter={hearAgainRef}
+                lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
+               
+              />
+            )
+          ) : null}
           <PromptPanel view={slot.view} onAction={(action) => slot.act(action, hear)} ko={round.prompt.ko} romanization={round.prompt.romanization} testID="daily-review-prompt-panel" />
           {round.cue?.picture ? <PictureArt pictureRef={round.cue.picture} gloss={round.answer.gloss ?? ''} size={pictureSize} /> : null}
           {round.cue?.gloss ? <Body weight="semibold">{round.cue.gloss}</Body> : null}
@@ -558,7 +582,7 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
  * The session has already chosen this round, so a chunk that fails to load (a stale cache, a dropped asset) shows
  * Hoya's oops line and Try again rather than leaving the round on its heading.
  */
-export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildRound>): ReactElement {
+export function BuildRoundLoader({ round, onFirst, onSolved, cantHear }: RoundProps<BuildRound>): ReactElement {
   const m = useMessages();
   const { chunk, failed, retry } = useSyllableBuildChunk();
   if (chunk === null) {
@@ -574,7 +598,7 @@ export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildR
       </View>
     );
   }
-  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
+  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} cantHear={cantHear === true} />;
 }
 // ---- shape (row CM-33) -------------------------------------------------------------------------------------
 

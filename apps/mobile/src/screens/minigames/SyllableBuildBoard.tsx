@@ -28,6 +28,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { heldAnswers } from '../../components/held-answers';
@@ -80,6 +81,12 @@ export interface SyllableBuildBoardProps {
   autoplay: boolean;
   /** The surface id for the sound notice's telemetry (`audio.fallback_shown`). */
   source: string;
+  /**
+   * Offer "Can't hear it?" next to the speaker (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): the quest step and the review round
+   * do; the Block Sprint (a clocked drill, OD-CH4) and the Stage and Cell Check (CH-1e) do not. Show the letters shows
+   * the block's romanization, never the block.
+   */
+  cantHear?: boolean;
   testID?: string;
 }
 
@@ -136,7 +143,7 @@ function targetSpeech(target: SyllableBuildBoardProps['target'], source: string)
   return { text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source };
 }
 
-export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
+export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, cantHear = false, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.syllableBuild;
   const a11y = m.a11y.minigame.syllableBuild;
@@ -146,7 +153,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const parts = useMemo(() => partsOf(target.ko), [target.ko]);
 
   // [FU] FU-3: the slot asks about what plays (the target's recording, else the say clip of its spoken text).
-  const slot = usePromptSlot({ source, hasClip: hasClipFor(targetSpeech(target, source)) });
+  const slot = usePromptSlot({ source, hasClip: hasClipFor(targetSpeech(target, source)), cantHear });
+  const speakerRef = useRef<View | null>(null);
   const { play: slotPlay } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
@@ -288,6 +296,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
       <View style={{ flexDirection: 'row', gap: spacing.lg, alignItems: 'flex-start' }}>
         <View style={{ flexShrink: 1, gap: spacing.sm, minWidth: touchTarget.min }}>
           <GuardedPressable
+            ref={speakerRef}
             setsLock={false}
             testID={`${testID}-speaker`}
             onPress={say}
@@ -304,6 +313,17 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
           >
             <Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />
           </GuardedPressable>
+          {slot.cantHear ? (
+            <CantHear
+              // Keyed by the block: a round is a new board, but a new block closes an open sheet all the same.
+              round={target.ko}
+              active={slot.cantHearActive}
+              onHear={say}
+              onShowLetters={slot.showLetters}
+              focusAfter={speakerRef}
+              lettersText={target.romanization}
+            />
+          ) : null}
           {right ? (
             <View accessibilityLiveRegion="polite" testID={`${testID}-built`}>
               <KoreanText ko={target.ko} romanization={target.romanization} gloss={target.gloss} size="md" accessibilityLabel={prompt.blockLabel ?? undefined} />

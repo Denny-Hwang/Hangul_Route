@@ -52,8 +52,8 @@ vi.mock('../../reviews/DailyReviewRoute', async () => {
       if (roundsGate.wait) await roundsGate.wait;
       return {
       TopRow: ({ filled, total }: { filled: number; total: number }) => createElement('div', { 'data-testid': 'top-row', 'data-filled': filled, 'data-total': total }),
-      RoundView: ({ onFirst, onSolved }: { onFirst: (a: { correct: boolean }) => void; onSolved: () => void }) =>
-        createElement('button', { 'data-testid': 'round-stub', role: 'button', onClick: () => (onFirst({ correct: false }), onSolved()) }, 'answer'),
+      RoundView: ({ onFirst, onSolved, cantHear }: { onFirst: (a: { correct: boolean }) => void; onSolved: () => void; cantHear?: boolean }) =>
+        createElement('button', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, role: 'button', onClick: () => (onFirst({ correct: false }), onSolved()) }, 'answer'),
       };
     },
   };
@@ -174,6 +174,13 @@ describe('WeekDropScreen (B, C, D)', () => {
     expect(storage.get(WEEK_DROP_KEY(ID))).toEqual(['2026-11-02']);
     await press(buttonsNamed(r.root, EN.learner.results.backHome.cta)[0]!);
     expect(goBack).toHaveBeenCalled();
+  });
+
+  it('the rounds offer "Can\'t hear it?" on their heard rounds (AMENDMENTS-AUDIO-CANT-HEAR CH-1b)', async () => {
+    const r = await meet();
+    await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
+    await idle();
+    expect(byTestId(r.root, 'round-stub')[0]?.props['data-cant-hear']).toBe(true);
   });
 
   it('a tap on Practice before the round views have loaded: waits for them and plays the rounds, never a silent Done', async () => {

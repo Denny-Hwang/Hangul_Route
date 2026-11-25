@@ -304,7 +304,7 @@ describe('the spelling round (Listen & Pick, promptKind spelling)', () => {
     expect(byTestId(r.root, 'listen-pick-hear-again')).toHaveLength(0);
     expect(byTestId(r.root, 'listen-pick-speaker').length).toBeGreaterThan(0);
     const cells = byTestId(r.root, 'listen-pick-options')[0]!.children.filter((c): c is ReactTestInstance => typeof c !== 'string');
-    const bases = r.root.findAll((n) => n.props.style !== undefined && JSON.stringify(n.props.style).includes('"flexBasis":"45%"'));
+    const bases = r.root.findAll((n) => n.props.style !== undefined && (JSON.stringify(n.props.style) ?? '').includes('"flexBasis":"45%"'));
     expect(cells.length).toBeGreaterThan(0);
     expect(bases.length).toBeGreaterThanOrEqual(2);
   });
