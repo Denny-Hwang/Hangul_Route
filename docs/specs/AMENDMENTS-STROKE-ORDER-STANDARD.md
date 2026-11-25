@@ -7,6 +7,8 @@ Status: ready for rows SO-0b, SO-0c, SO-1, SO-1b, SO-1d and SO-2 (owner decision
 **Owner**: solo dev; the stroke table needs a person who teaches Hangul handwriting (§3.4)
 **Rollout**: SO-1 next release; SO-2 (now a check of the AU-14 data against the sourced table) letter by letter as table rows are approved
 
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-TRACE-COVERAGE.md` [TC]** (work order WO-14 of the 2026-11 review) (§3.1 "every surface below asks it"; §4 "New trace rounds for more letters (WO-14)"): one more surface asks `strokeOrderTaught`: the **Trace the new letters** page of Discover in quests 1–10, where each new letter is traced once, unscored. Its Show me follows §3.2 (shape reveal and "Shape guide" while untaught; the ordered animation once SO-3 adds the id) and plays the letter card's sound; the page gives no order, direction or loop tip, taught or not. Tracing a letter never adds it to `reviewedStrokeIds` (§3.5: a person only). Its "finished" rule reads every accepted form (OD-SO12). Until SO-3, a learner's first tracing of each letter has only a shape guide; the trace-coverage spec recommends that the SO-3 reviewer take the quest 1–3 letters first.
+
 ---
 
 ## 1. Context
