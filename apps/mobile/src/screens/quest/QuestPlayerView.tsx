@@ -129,7 +129,9 @@ function decide(plan: () => Promise<{ chunk: QuestReviewChunk; plan: QuestReview
 
 /**
  * The quest player body (F-BROWSE-001 BR-5a): the step header, Discover, the game launcher and the
- * narrative steps, with the run kept in `quest-run-store` (memory only). It reaches no learner store,
+ * narrative steps, with the run kept in `quest-run-store` (memory). The device copy of the run (per profile, 24
+ * hours, AU-12: `store/quest-run-saved.ts`, read by Home's hero, LR-2) is the screen's: this body writes none of it
+ * (the ports clear it on Leave and on a finish). It reaches no learner store,
  * no navigation stack and no telemetry client of its own: every exit goes through `ports`. Its one
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.

@@ -4,6 +4,7 @@ Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §4.3 (due pool,
 **Supersedes the layout of `reviews/daily-test.md`** (F-RVW-001 §3.2 pools A to D): the Daily Test is rebuilt on the F-CURR-002 memory model. The item dots, the shell reuse and the "stars, never a score" rule carry over; the 4-5 item pool, the 60-90 s length and the pool-A-to-D picker are replaced.
 Audience: **learner, any age** (P4 / P5 / P6). A first-time reader must be able to finish it with pictures, sounds and one button per step. No grown-up control on this screen.
 Mock: `design/screens/daily-review/` (shots at 320 and 768) · Keep going: `reviews/keep-going.md` · Built by row **CM-14** (behind `dailyReview`)
+Amended 2026-11-25 by `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]: a finish that could not be saved shows a save-failed page ("We could not save this yet.", Try again on the same answers) instead of "All refreshed today" (D), and a stop over it says "This is not saved yet. Your stars and cards stay." (`reviews/save-failed.md`); the result pages show the save-later line while the progress write is failing; the ordinary stop sheet (E) is unchanged (row LR-4, #1103; OD-LR8).
 
 ## Scenario (Given-When-Then)
 

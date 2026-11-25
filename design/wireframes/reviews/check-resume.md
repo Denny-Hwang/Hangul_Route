@@ -1,6 +1,6 @@
 # Reviews/Check resume — the Hangul Check and the Stage Check go on after an interruption (wireframe v2)
 
-Spec: `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` §3.4 (rows LR-3a, LR-3b; work order WO-07 b), revision 2 · amends the intro of `reviews/hangul-check.md` (A) and `reviews/stage-check.md` (D) with a reading frame and a resume variant; parts, pauses and result unchanged · **waits for OD-LR1 (what Stop does) and OD-LR9 (when answers are stored)**, both awaiting the owner; this file draws the recommendations, OD-LR1 (c) and OD-LR9 (b)
+Spec: `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` §3.4 (rows LR-3a, LR-3b; work order WO-07 b), revision 2 · amends the intro of `reviews/hangul-check.md` (A) and `reviews/stage-check.md` (D) with a reading frame and a resume variant; parts, pauses and result unchanged · OD-LR1 (c) and OD-LR9 (b) decided by the owner 2026-11-24 (as recommended); built by rows LR-3a (#1112) and LR-3b (#1117)
 Audience: **learner, any age** (P4 / P5 / P6)
 Route: `StageReview { stageKey: 'stage1' }` (the Hangul Check) · `StageCheck { stageKey }` (Stages 2-7)
 Mock: row LR-0b, `design/screens/quest-leave-resume/`
@@ -92,4 +92,4 @@ Exit to: the check's rounds (Continue) · the check's intro (Start again) · bac
 
 ## Open questions
 
-- OD-LR1 (does Stop forget the place) and OD-LR9 (store at each pause, after each answer, or after each answer with a replay) await the owner (spec §10).
+- OD-LR1 (c) and OD-LR9 (b) were decided by the owner on 2026-11-24, as recommended (spec §10); nothing is open here.

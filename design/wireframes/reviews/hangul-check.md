@@ -3,6 +3,7 @@
 Spec: `docs/specs/F-QUEST-002-discover-check-stage1-complete.md` §3.9 (items, scoring, caregiver channel, leaving), §3.10 (Listen & Pick review mode), §3.13 (telemetry), §6 PR Q-10b · Stage 1 configuration of `reviews/stage-review.md` (F-RVW-001 §3.4; its "4 to 6 items" is superseded for Stage 1 only) · star rules F-RVW-001 §3.1
 Audience: **learner (any age; P4/P5/P6)**; the numbers reach the grown-up channel only
 Code: `apps/mobile/src/screens/reviews/StageReviewScreen.tsx` (renders), `apps/mobile/src/logic/stage1/hangul-check.ts` (`buildHangulCheck`), `apps/mobile/src/logic/stage1/review-flow.ts` (reducer, tally, result view, entry, telemetry), `apps/mobile/src/store/review-run-store.ts` (first try per item), `apps/mobile/src/logic/reviews/{star-calc,banned-text}.ts`, `store/progress-store.ts` `recordReview`, `logic/sync/summarize.ts` `stage1AnchorOf`
+Amended 2026-11-25 by `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]: an interrupted check goes on. The intro gains a reading frame and a resume page ("Pick up where you left off?", Continue and Start again, `reviews/check-resume.md`); Stop keeps the stored check for 24 hours and its sheet says "You can keep going later." once an answer is given, so "nothing is saved" no longer holds (E); the sheet draws the safe choice, Keep going, filled (rows LR-3a #1112 and LR-6 #1119; OD-LR1 (c), OD-LR9 (b)).
 
 ## Scenario (Given-When-Then)
 
