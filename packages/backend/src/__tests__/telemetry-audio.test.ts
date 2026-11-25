@@ -65,3 +65,43 @@ describe('POST /api/telemetry: audio.source_summary (AC-B9)', () => {
     expect(keptEventFields('audio.playback_failed', payload, 'p1')).toEqual({ profileId: 'p1', payload });
   });
 });
+
+/**
+ * `audio.fallback_shown` (AMENDMENTS-AUDIO-CANT-HEAR CH-4, OD-CH2 (b); Worker first): only `{ source, reason }` is
+ * kept and never a profile id, so a count of "the learner could not hear" cannot be linked to a child's profile.
+ */
+describe('POST /api/telemetry: audio.fallback_shown (CH-4)', () => {
+  it.each(['muted', 'no_voice', 'error', 'blocked', 'asked'])('stores reason %s from a child profile without the profile id', async (reason) => {
+    const r = await post({ name: 'audio.fallback_shown', profileId: 'child_profile_1', payload: { source: 'match-sound', reason } });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.profileId).toBeUndefined();
+    expect(r.body.data?.event.payload).toEqual({ source: 'match-sound', reason });
+    expect(store.events.at(-1)?.profileId).toBeUndefined();
+    expect(store.events.at(-1)?.payload).toEqual({ source: 'match-sound', reason });
+  });
+
+  it('keeps only source and reason: an extra key (a profile id, a name, a text) is dropped', () => {
+    const kept = keptEventFields('audio.fallback_shown', { source: 'discover', reason: 'asked', profileId: 'p1', name: 'Alice', text: '가' }, 'p1');
+    expect(kept).toEqual({ profileId: undefined, payload: { source: 'discover', reason: 'asked' } });
+  });
+
+  it.each([
+    ['an unknown reason', { source: 'discover', reason: 'deaf' }, { source: 'discover' }],
+    ['a free-text source', { source: 'Alice reads 가', reason: 'asked' }, { reason: 'asked' }],
+    ['an over-long source', { source: 'a'.repeat(41), reason: 'asked' }, { reason: 'asked' }],
+    ['a non-string source', { source: 7, reason: 'asked' }, { reason: 'asked' }],
+  ])('drops a field that does not fit: %s', (_label, payload, expected) => {
+    expect(keptEventFields('audio.fallback_shown', payload, 'p1')).toEqual({ profileId: undefined, payload: expected });
+  });
+
+  it('a missing or empty payload keeps no payload and no profile id', () => {
+    expect(keptEventFields('audio.fallback_shown', undefined, 'p1')).toEqual({ profileId: undefined, payload: undefined });
+    expect(keptEventFields('audio.fallback_shown', { nothing: 1 }, 'p1')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('every source the app sends today fits', () => {
+    for (const source of ['match-sound', 'discover', 'listen-pick', 'story-check', 'vocab-card', 'vocab-speed', 'type-hangul-hear', 'presenter', 'quest-review']) {
+      expect(keptEventFields('audio.fallback_shown', { source, reason: 'muted' }, 'p1').payload).toEqual({ source, reason: 'muted' });
+    }
+  });
+});

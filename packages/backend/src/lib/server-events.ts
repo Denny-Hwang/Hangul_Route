@@ -355,6 +355,18 @@ function audioSummaryPayload(payload: Record<string, unknown> | undefined): Reco
   return parsed.success ? parsed.data : undefined;
 }
 
+/**
+ * `audio.fallback_shown` ([CH] AMENDMENTS-AUDIO-CANT-HEAR CH-4, OD-CH2 (b), TELEMETRY-NAMES-2 row 19, Worker first):
+ * only `source` (a surface slug) and `reason` (a failure kind, or `asked` when the learner taps Show the letters) are
+ * kept, and never a profile id, so a count of learners who cannot hear is not tied to a child's profile. This drops
+ * the profile id from the `muted` / `no_voice` / `error` / `blocked` events of the same name too.
+ */
+const AUDIO_FALLBACK_SHOWN = 'audio.fallback_shown';
+const AUDIO_FALLBACK_SHOWN_RULES: Readonly<Record<string, FieldRule>> = {
+  source: (value) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,39}$/.test(value),
+  reason: oneOf(['muted', 'no_voice', 'error', 'blocked', 'asked']),
+};
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -403,6 +415,7 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9) keeps its strict payload only, and never a profile id.
  * A section 18 name of AMENDMENTS-ROUTE-CLASS-BLEND keeps only its documented fields and never a profile id (`ROUTE_BLEND_PAYLOAD_RULES`).
  * So does an `auth.native.*` name of F-AUTH-004 section 15 (`NATIVE_AUTH_PAYLOAD_RULES`), and `app.crash` (`CRASH_PAYLOAD_RULES`).
+ * `audio.fallback_shown` (AMENDMENTS-AUDIO-CANT-HEAR CH-4) keeps only `source` and `reason`, and never a profile id.
  * [DP] So does a `storage.*` name of AMENDMENTS-DURABLE-PROGRESS section 3.9 (`STORAGE_PAYLOAD_RULES`).
  */
 export function keptEventFields(
@@ -421,6 +434,7 @@ export function keptEventFields(
     const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;
     return { profileId: !CURR_NO_PROFILE.has(name) && typeof profileId === 'string' ? profileId : undefined, payload: kept };
   }
+  if (name === AUDIO_FALLBACK_SHOWN) return { profileId: undefined, payload: ruledPayload(AUDIO_FALLBACK_SHOWN_RULES, payload) };
   if (name === AUDIO_SOURCE_SUMMARY) return { profileId: undefined, payload: audioSummaryPayload(payload) };
   if (name === 'session.end') return { profileId: typeof profileId === 'string' ? profileId : undefined, payload: sessionEndPayload(payload) };
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };

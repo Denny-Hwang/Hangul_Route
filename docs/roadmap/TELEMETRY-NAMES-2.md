@@ -43,7 +43,7 @@ Rules that apply to every row:
 | 16 | `card.catchup_granted` | F-STORY-006 §3.9 | `{ count, episode, stage, welcome, quest, set }` (one per reconcile that adds more than the welcome card) | 6.2 | 6.4b |
 | 17 | `card_set.complete` | F-STORY-006 §3.9 | `{ setId, cardsAwarded }` | 6.2 | 6.4b |
 | 18 | `audio.capability_checked` | F-AUDIO-004 §3.14 | `{ platform, engine: 'clips+tts' \| 'tts' \| 'clips' \| 'none', koVoice: 'none' \| 'network' \| 'local' \| 'enhanced' \| 'premium', reason? }` (once per session) | A-1 | A-4a |
-| 19 | `audio.fallback_shown` | F-AUDIO-004 §3.14 | `{ source, reason: 'muted' \| 'no_voice' \| 'error' \| 'blocked' }` (once per session, source, reason) | A-1 | A-5a, A-5b, 002 2.6a, 003 3.4a |
+| 19 | `audio.fallback_shown` | F-AUDIO-004 §3.14 | `{ source, reason: 'muted' \| 'no_voice' \| 'error' \| 'blocked' \| 'asked' }` (once per session, source, reason). The Worker keeps only `source` (a surface slug) and `reason`, and never a profile id (AMENDMENTS-AUDIO-CANT-HEAR CH-4, OD-CH2 (b); Worker first, as `audio.source_summary`); `asked` is sent when the learner taps Show the letters, once the client commit of CH-4 has shipped | A-1 | A-5a, A-5b, 002 2.6a, 003 3.4a |
 | 20 | `audio.mute_changed` | F-AUDIO-004 §3.14 | `{ muted, source: 'profile' \| 'fallback_panel' }` | A-1 | A-4a |
 | 21 | `audio.playback_failed` | F-AUDIO-004 §3.14 | `{ kind: 'clip' \| 'tts', reason: 'missing' \| 'fetch' \| 'decode' \| 'blocked' \| 'timeout' \| 'engine', code, source }`: `code` a Web Speech error code, `timeout`, `none` or `other`; `source` the surface id or `unknown` (amended 2026-10-17, A-11; at most 3 per (kind, reason, code) and 12 per page) | A-1 | A-3, A-4a, A-11 |
 

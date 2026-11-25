@@ -144,7 +144,11 @@ export function usePromptSlot({
     if (action !== 'none') replay();
   }, []);
 
-  const showLetters = useCallback((): void => dispatch('show_text'), []);
+  // The ask is counted once per session and source by the controller (AMENDMENTS-AUDIO-CANT-HEAR CH-4): a count of taps, no learner.
+  const showLetters = useCallback((): void => {
+    dispatch('show_text');
+    if (reportFallback) noteFallbackShown(source, 'asked');
+  }, [reportFallback, source]);
 
   const showLink = cantHear && !view.textShown;
   return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters };
