@@ -17,6 +17,7 @@ import {
   GuardedPressable,
   TapBoard,
 } from '@hangul-route/design-system';
+import { a11yRomanization } from '@hangul-route/content-schema';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -26,6 +27,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerOptionLabel } from '../../logic/answer-feedback';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { loneLetterQuestion, loneLetterVoice } from '../../logic/audio/jamo-lines';
 import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
@@ -36,7 +38,10 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playJamo, warmClips } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { AnswerAnnouncer } from './answer-announcer';
 import { GameColumns } from './GameColumns';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 interface Props {
   scope: MinigameScope;
@@ -82,6 +87,13 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   const roundRef = useRef(round);
   roundRef.current = round;
 
+  // F-A11Y-001 AF-4a: each result is said once, by the answer announcer; with a screen reader on a right answer shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const next = useRoundNext();
+  /** The round last moved on from: a second Next (or a late wait) for the same round does nothing (the last round ends the step once). */
+  const movedFrom = useRef(-1);
+
   const clearReplay = (): void => {
     if (replayTimer.current) clearTimeout(replayTimer.current);
     replayTimer.current = null;
@@ -102,10 +114,13 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
     setLockedWrongIds([]);
     setFeedback('idle');
     reset();
+    // A new round empties the announcer and, with a reader on, moves focus to the round's header node (§3.4).
+    clear();
+    if (roundIdx > 0) focusPrompt();
     const say = (): void => void pacing.track(play(() => playJamo(round.promptJamo, loneLetterQuestion(round.promptJamo))));
     if (roundIdx === 0) pacing.opening(say);
     else say();
-  }, [roundIdx, round, play, reset, pacing]);
+  }, [roundIdx, round, play, reset, pacing, clear, focusPrompt]);
 
   // Recordings for this game's letters are fetched and decoded before their round (§3.10).
   useEffect(() => {
@@ -126,9 +141,26 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
     );
   }
 
+  const last = roundIdx >= rounds.length - 1;
+  const advance = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
+    next.hide();
+    if (last) {
+      markStepComplete();
+      onFinish();
+    } else {
+      setRoundIdx(roundIdx + 1);
+    }
+  };
+
+  /** A tile's sound value: what the announcer and an answered tile's name call it (never its Hangul). */
+  const soundOf = (romanization: string): string => a11yRomanization(romanization, m.a11y.romanizationOr);
+
   const handleTap = (jamoId: string): void => {
     // A locked wrong tile takes no tap (AMENDMENTS-TOUCH R3): a bounce on it is never another miss, nudge or replay.
     if (feedback === 'correct' || lockedWrongIds.includes(jamoId)) return;
+    const item = soundOf(round.tiles.find((j) => j.id === jamoId)?.romanization ?? '');
     if (jamoId === round.promptJamo.id) {
       tapLight();
       success();
@@ -136,14 +168,15 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
       setFeedback('correct');
       // Answered: the replay a miss just scheduled would say this prompt again over the next round (M6).
       clearReplay();
+      const say = (): Promise<void> => a.announce({ kind: 'right', item });
       // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a prompt that is still sounding.
-      pacing.after(700, () => {
-        if (roundIdx >= rounds.length - 1) {
-          markStepComplete();
-          onFinish();
-        } else {
-          setRoundIdx(roundIdx + 1);
-        }
+      // OD-AF2 (b): at least the result floor. A reader on waits for Next instead (OD-AF9 (b)), the last round included.
+      void afterRightAnswer({
+        readerOn: a.readerOn,
+        gameMinMs: 700,
+        announce: a.readerOn ? () => next.afterFocus(say) : say,
+        showNext: next.show,
+        waitThenAdvance: (minMs) => void pacing.after(minMs, advance),
       });
     } else {
       nudge();
@@ -151,14 +184,23 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
       setFeedback('wrong');
       setLockedWrongIds([...lockedWrongIds, jamoId]);
       clearReplay();
-      replayTimer.current = setTimeout(() => {
-        replayTimer.current = null;
-        if (shouldAutoReplay(viewRef.current)) void hear();
-      }, 800);
+      // With a reader on nothing plays by itself after a miss: the learner taps Hear it (§3.4).
+      afterMiss({
+        readerOn: a.readerOn,
+        announce: () => a.announce({ kind: 'missListen', item }),
+        replay: () => {
+          replayTimer.current = setTimeout(() => {
+            replayTimer.current = null;
+            if (shouldAutoReplay(viewRef.current)) void hear();
+          }, 800);
+        },
+      });
     }
   };
 
   const spoken = loneLetterVoice(round.promptJamo);
+  // The round's header node (§3.4): the heading as it is on screen, no Hangul, no button.
+  const roundLabel = m.a11y.answer.round(roundIdx + 1, rounds.length, view.heading);
   const bubble = wrongAnswerBubble(round.promptJamo, m.learner.audio);
 
   return (
@@ -175,7 +217,9 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
         arrangement={gameArrangement(layoutClass)}
         prompt={
           <>
-            <Heading level="prompt">{view.heading}</Heading>
+            <View ref={a.promptRef} testID="match-sound-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
+              <Heading level="prompt">{view.heading}</Heading>
+            </View>
             <Spacer size="md" />
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
@@ -216,6 +260,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
           </>
         }
         answers={
+          <>
           <TapBoard lock="board" held={!slot.settled}>
             {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice, and a locked wrong tile takes no tap (R3). */}
             <View
@@ -240,8 +285,12 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
                     state={state}
                     size="lg"
                     dimension={tile}
-                    accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile, m.a11y.romanizationOr)}
-                    disabled={state === 'wrong'}
+                    accessibilityLabel={
+                      state === 'idle'
+                        ? jamoTileA11yLabel(j.romanization, m.a11y.tile, m.a11y.romanizationOr)
+                        : answerOptionLabel(state === 'correct' ? 'correct' : 'wrong', soundOf(j.romanization), m.a11y.minigame.option)
+                    }
+                    locked={state !== 'idle'}
                     testID={`match-sound-tile-${j.id}`}
                     onPress={() => handleTap(j.id)}
                   />
@@ -249,6 +298,21 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
               })}
             </View>
           </TapBoard>
+          {next.shown ? (
+            <>
+              <Spacer size="lg" />
+              <Button
+                pressableRef={next.nextRef}
+                label={m.learner.minigame.trace.next.cta}
+                tone="primary"
+                size="hero"
+                fullWidth
+                onPress={advance}
+                testID="match-sound-next"
+              />
+            </>
+          ) : null}
+          </>
         }
         feedback={
           feedback === 'wrong' ? (
@@ -257,6 +321,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
               <HoyaBubble
                 testID="match-sound-bubble"
                 tone="thinking"
+                live={false}
                 message={bubble.message}
                 {...(bubble.korean === undefined ? {} : { korean: bubble.korean })}
                 {...(bubble.romanization === undefined ? {} : { romanization: bubble.romanization })}
@@ -266,6 +331,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
           ) : null
         }
       />
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
     </Screen>
   );

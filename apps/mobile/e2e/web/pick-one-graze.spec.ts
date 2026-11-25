@@ -20,6 +20,8 @@ const AFTER_LOCK = 700;
 /** Past the lock and a miss's 800 ms replay (which can move the cards). */
 const AFTER_MISS = 1_200;
 const ANSWERED = /^(Right answer|Not this one)/;
+/** A locked miss (F-A11Y-001 AF-4a): named "Not this one: …" and focusable, never `aria-disabled`. */
+const LOCKED = /^Not this one/;
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -180,7 +182,7 @@ for (const profile of [
         /** Nothing was answered: no tile locked, no replay of the prompt, the same round. */
         const expectNothing = async (from: number, what: string): Promise<void> => {
           await page.waitForTimeout(AFTER_LOCK);
-          for (const id of ids) await expect(page.getByTestId(id), `${what}: ${id}`).not.toHaveAttribute('aria-disabled', 'true');
+          for (const id of ids) await expect(page.getByTestId(id), `${what}: ${id}`).not.toHaveAttribute('aria-label', LOCKED);
           expect(await saidCount(page), `${what}: no replay`).toBe(from);
           await expect(roundPill(page, round)).toBeVisible();
         };
@@ -219,8 +221,8 @@ for (const profile of [
           from = await saidCount(page);
           const edge = await slide(page, a, b, 4);
           await touch.graze(edge.start, edge.dx, edge.dy, { steps: 4 });
-          await expect(page.getByTestId(a)).toHaveAttribute('aria-disabled', 'true');
-          await expect(page.getByTestId(b)).not.toHaveAttribute('aria-disabled', 'true');
+          await expect(page.getByTestId(a)).toHaveAttribute('aria-label', LOCKED);
+          await expect(page.getByTestId(b)).not.toHaveAttribute('aria-label', LOCKED);
           await expect.poll(() => saidCount(page)).toBe(from + 1);
           await page.waitForTimeout(AFTER_MISS);
         } else if (!checkedTwoFingers) {
@@ -237,15 +239,15 @@ for (const profile of [
           await touch.end(1);
           await page.waitForTimeout(40);
           await touch.end(2);
-          await expect(page.getByTestId(b)).toHaveAttribute('aria-disabled', 'true');
-          await expect(page.getByTestId(a)).not.toHaveAttribute('aria-disabled', 'true');
+          await expect(page.getByTestId(b)).toHaveAttribute('aria-label', LOCKED);
+          await expect(page.getByTestId(a)).not.toHaveAttribute('aria-label', LOCKED);
           await page.waitForTimeout(AFTER_MISS);
         }
 
         // The matrix: each wrong tile still open, then the right one, takes the next graze and must commit.
         for (const id of [...wrongIds, rightId]) {
           if (queue.length === 0) break;
-          if (id !== rightId && (await page.getByTestId(id).getAttribute('aria-disabled')) === 'true') continue;
+          if (id !== rightId && LOCKED.test((await page.getByTestId(id).getAttribute('aria-label')) ?? '')) continue;
           const g = queue.shift()!;
           const p = centre(await inView(page, id));
           await touch.graze(p, g.dx, g.dy, { steps: 4, holdMs: g.holdMs ?? 0 });
@@ -253,7 +255,7 @@ for (const profile of [
             round += 1;
             await expect(roundPill(page, round), `graze ${g.dx},${g.dy} on the right tile`).toBeVisible();
           } else {
-            await expect(page.getByTestId(id), `graze ${g.dx},${g.dy} on ${id}`).toHaveAttribute('aria-disabled', 'true');
+            await expect(page.getByTestId(id), `graze ${g.dx},${g.dy} on ${id}`).toHaveAttribute('aria-label', LOCKED);
             await page.waitForTimeout(AFTER_MISS);
           }
         }

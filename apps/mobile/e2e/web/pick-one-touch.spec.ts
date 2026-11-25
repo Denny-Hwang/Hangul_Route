@@ -104,8 +104,9 @@ for (const size of [
       await touch.tap(await at(page, wrongId));
       await expect(shown(page, 'match-sound-bubble')).toBeVisible();
       await expect.poll(() => saidCount(page), { timeout: 3_000 }).toBe(missFrom + 1);
-      // Locked: disabled, still amber, and a tap on it later is no second miss (no second replay).
-      await expect(page.getByTestId(wrongId)).toHaveAttribute('aria-disabled', 'true');
+      // Locked (F-A11Y-001 AF-4a: named "Not this one: …", focusable, not disabled), still amber, and a tap on it later is no second miss (no second replay).
+      await expect(page.getByTestId(wrongId)).toHaveAttribute('aria-label', /^Not this one/);
+      await expect(page.getByTestId(wrongId)).not.toHaveAttribute('aria-disabled', 'true');
       await page.waitForTimeout(AFTER_LOCK);
       await touch.tap(await at(page, wrongId));
       await page.waitForTimeout(1_500);
