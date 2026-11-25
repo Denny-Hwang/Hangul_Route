@@ -30,9 +30,12 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...(await import('../../../test-support/audio-rig')).rigAudio(() => rig.current!),
 }));
+const events = vi.hoisted(() => [] as Array<{ name: string; payload?: unknown }>);
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  track: vi.fn(async () => undefined),
+  track: vi.fn(async (event: { name: string; payload?: unknown }) => {
+    events.push(event);
+  }),
 }));
 vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => false }));
 vi.mock('../../../platform/device-family', () => ({ currentDeviceFamily: () => 'computer' }));
@@ -57,6 +60,7 @@ beforeEach(() => {
   rig.current = createAudioRig({ voices: [KO_VOICE] });
   useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false, tts: { state: 'ready', voiceId: 'com.apple.voice.Yuna', voiceName: 'Yuna', local: true, quality: 'standard' } });
   clearReaderLog(reader);
+  events.length = 0;
 });
 
 afterEach(async () => {
@@ -151,6 +155,27 @@ describe('Dictation, "Can\'t hear it?" (test 19)', () => {
     expect(hasId(r.root, 'cant-hear')).toBe(false);
   });
 
+  it('Show the letters sends audio.fallback_shown {source, reason: asked} exactly once, and nothing else about the ask', async () => {
+    const { r } = await game([APPLE, MILK]);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown')).toEqual([]);
+    await showLetters(r);
+    const sent = (): unknown[] => events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload);
+    expect(sent()).toEqual([{ source: 'type-hangul-hear', reason: 'asked' }]);
+    // Asked again on the next round: the count is one per session and source.
+    await typeKeys(r, 'ㅅㅏㄱㅗㅏ');
+    await tap(r, 'type-hangul-done');
+    await tick(2000);
+    await showLetters(r);
+    expect(sent()).toEqual([{ source: 'type-hangul-hear', reason: 'asked' }]);
+  });
+
+  it('the word wrapper after Show the letters shrinks with the row, so a long word line wraps inside the window', async () => {
+    const { r } = await game([APPLE]);
+    await showLetters(r);
+    const style = byTestId(r.root, 'dictation-asked-word')[0]!.props.style as { flexShrink?: number; minWidth?: string };
+    expect(style).toMatchObject({ flexShrink: 1, minWidth: '0px' });
+  });
+
   it('Show the letters: focus goes to the word once it is there, and nothing else is announced', async () => {
     const { r } = await game([APPLE]);
     await tap(r, 'cant-hear');
@@ -213,6 +238,10 @@ describe('Dictation, "Can\'t hear it?" (test 19)', () => {
     expect(texts(r)).toContain('사과');
     expect(hasId(r.root, 'cant-hear')).toBe(false);
     expect(hasId(r.root, 'dictation-prompt-speaker')).toBe(false);
+    // The device switch is not the learner's ask: no focus move, no focus wrapper, no `asked` count (CH-1f keys on `asked`).
+    expect(reader.log).toEqual([]);
+    expect(hasId(r.root, 'dictation-asked-word')).toBe(false);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown')).toEqual([]);
   });
 
   it('Always show the letters during the hold opens as see at once, not after 1.5 s', async () => {

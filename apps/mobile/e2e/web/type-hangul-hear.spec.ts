@@ -255,6 +255,35 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     });
   }
 
+  // Review of #1111: the see word's wrapper must shrink with the row, or a long real gloss ("추석 chuseok · the autumn harvest
+  // festival") runs out of the window at 320 x 568 (its right edge was at x = 414, the gloss under Skip).
+  test('320 x 568: after Show the letters a long word line wraps inside the window, clear of Skip', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await koreanVoice(page);
+    await boot(page, 'on');
+    await open(page, { rounds: ['hearChuseok'] });
+    await page.getByTestId('cant-hear').scrollIntoViewIfNeeded();
+    await page.getByTestId('cant-hear').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Show the letters' }).click();
+    const word = page.getByTestId('dictation-asked-word');
+    await expect(word).toContainText('추석');
+    await expect(word).toContainText('the autumn harvest festival');
+    await word.scrollIntoViewIfNeeded();
+    const box = (await word.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(-0.5);
+    expect(box.x + box.width, 'the word line runs out of the window').toBeLessThanOrEqual(320.5);
+    // Clear of Skip: they do not overlap.
+    const skip = (await page.getByTestId('type-hangul-skip').boundingBox())!;
+    const overlap = box.x < skip.x + skip.width && skip.x < box.x + box.width && box.y < skip.y + skip.height && skip.y < box.y + box.height;
+    expect(overlap, 'the word line overlaps Skip').toBe(false);
+    // It wrapped: the gloss text sits inside the wrapper's box and the wrapper is taller than one line of body text.
+    const gloss = (await page.getByText('· the autumn harvest festival').boundingBox())!;
+    expect(gloss.x + gloss.width).toBeLessThanOrEqual(320.5);
+    expect(box.height).toBeGreaterThan(gloss.height * 1.5);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'ch-1c-see-long-320x568');
+  });
+
   test('switch off (built-in pct 0): the round is the shipped Type Hangul see round of the word, with no notice', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await koreanVoice(page);

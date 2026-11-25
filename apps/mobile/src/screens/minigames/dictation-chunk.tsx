@@ -125,7 +125,7 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   const decided = opened !== null && opened.round === roundIdx ? opened.value : null;
   const base = hearOpening({ tts, hasClip: clip, muted, held: heldFor === roundIdx });
   // Sound off and no voice keep their own notice; a round that would be heard opens as `see` when the device switch is on.
-  const live: HearOpening = alwaysShow && base.kind !== 'see' ? { kind: 'see', reason: 'asked' } : base;
+  const live: HearOpening = alwaysShow && base.kind !== 'see' ? { kind: 'see', reason: 'always' } : base;
   const opening: HearOpening = decided ?? live;
   // Once decided, the round keeps its opening: turning sound on keeps a `see` round as it is (no flicker).
   useEffect(() => {
@@ -341,6 +341,9 @@ export function AskedWord({
       }
       focusable
       {...{ tabIndex: -1 }}
+      // The word may be as long as a row: the wrapper shrinks with it (react-native-web's View does not by default), so the
+      // line wraps inside the window instead of running out of it at 320.
+      style={{ flexShrink: 1, minWidth: 0 }}
       testID="dictation-asked-word"
     >
       {children}
