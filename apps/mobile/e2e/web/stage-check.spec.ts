@@ -291,6 +291,87 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
   });
 });
 
+/**
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3b (section 3.4, OD-LR7): a Stage Check cut short by a reload (an app kill, a
+ * discarded tab) goes on: the stored run (`hr:check-run:<profileId>`: the plan's rounds and each first answer once it
+ * was recorded) brings "Pick up where you left off?", Continue goes on at the round after the last one answered, and the
+ * result clears the run.
+ */
+test.describe('[LR] an interrupted Stage Check goes on (LR-3b)', () => {
+  const storedCount = async (page: Page, id: string): Promise<number> => ((await readStored<{ answers?: unknown[] }>(page, `check-run:${id}`))?.answers ?? []).length;
+
+  test('after a reload: the resume page, Continue at the next round, every round counted once, the run cleared by the result', async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.setViewportSize({ width: 393, height: 727 });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    const id = await learner(page, ON, { stageCeremonyAt: { stage2: AT } });
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByTestId('journey-stage-check-stage2').click();
+    await page.getByTestId('stage-check-go').click();
+    await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
+    // Three rounds, the first missed on the first try; each is stored once its recording settled.
+    await answer(page, false);
+    await answer(page, true);
+    await answer(page, true);
+    await expect.poll(() => storedCount(page, id)).toBe(3);
+    const before = await readStored<{ rounds: unknown[]; startedAt: string }>(page, `check-run:${id}`);
+    expect(before?.rounds).toHaveLength(20);
+
+    // The app is closed and opened again: the Stage Check says it can go on.
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await closeInstallGuide(page);
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByTestId('journey-stage-check-stage2').click();
+    const resume = page.getByTestId('stage-check-resume');
+    await expect(resume).toBeVisible();
+    await expect(page.getByTestId('stage-check-intro')).toHaveCount(0);
+    await expect(page.getByTestId('stage-check-resume-title')).toHaveText('Pick up where you left off?');
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start again' })).toBeVisible();
+    // No count, no fraction, no percent, and no reading-practice switch (the run keeps its choice).
+    expect(await page.locator('body').innerText()).not.toMatch(/\d+\s*\/\s*\d+|%/);
+    await expect(page.getByRole('switch')).toHaveCount(0);
+    for (const [width, height] of [
+      [360, 740],
+      [320, 568],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await expect(resume).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `stage-check-resume-${width}`);
+    }
+    await page.setViewportSize({ width: 393, height: 727 });
+
+    // Continue: the fourth round, in the first part (its dots say Round 4), the stored rounds never asked again.
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 4');
+    let answered = 3;
+    while ((await page.getByTestId('stage-check-result').count()) === 0) {
+      if ((await page.getByTestId('stage-check-pause').count()) > 0) {
+        await page.getByTestId('stage-check-keep-going').click();
+        continue;
+      }
+      await answer(page, true);
+      answered += 1;
+      expect(answered).toBeLessThanOrEqual(20);
+    }
+    expect(answered).toBe(20);
+
+    // One entry for the stage with all 20 rounds and the one miss from before the reload (19 of 20 first try: 3 stars), and nothing left stored.
+    await expect(page.getByTestId('stage-check-headline')).toHaveText('Wonderful!');
+    const snap = await readStored<{ reviews: Array<{ kind: string; id: string; itemIds: string[]; missedItemIds?: string[] }> }>(page, `progress:${id}`);
+    const entries = snap?.reviews.filter((r) => r.kind === 'stage-certificate') ?? [];
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.id).toBe('stage-check:stage2');
+    expect(entries[0]?.itemIds).toHaveLength(20);
+    expect(entries[0]?.missedItemIds).toHaveLength(1);
+    await expect.poll(() => readStored(page, `check-run:${id}`)).toBeNull();
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('text size Largest at 320 x 568 (the fit rule)', () => {
   test('the summary, the Journey header (its buttons under the header, wrapping) and the ceremony fit', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
