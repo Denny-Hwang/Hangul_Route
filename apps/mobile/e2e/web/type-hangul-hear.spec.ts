@@ -195,6 +195,59 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-hear-apple' }]);
   });
 
+  // AMENDMENTS-AUDIO-CANT-HEAR row CH-1c: "Can't hear it?" on a hear round, at the two phone widths.
+  for (const size of [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+  ]) {
+    test(`${size.width} x ${size.height}: Can't hear it? then Show the letters turns the hear round into the see round, with the link back on the next round`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await koreanVoice(page);
+      await boot(page, 'on');
+      await open(page, { rounds: ['hearApple', 'hearMilk'] });
+      const link = page.getByTestId('cant-hear');
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAccessibleName("Can't hear it?");
+      // After the speaker, before the answer field, inside the window and clear of the keys.
+      const [lb, sb, fb, kb] = [await link.boundingBox(), await page.getByTestId('dictation-prompt-speaker').boundingBox(), await page.getByTestId('type-hangul-field').boundingBox(), await key(page, 'ㅅ').boundingBox()];
+      expect(lb!.y).toBeGreaterThanOrEqual(sb!.y + sb!.height - 0.5);
+      expect(lb!.y + lb!.height).toBeLessThanOrEqual(fb!.y + 0.5);
+      expect(lb!.y + lb!.height).toBeLessThanOrEqual(kb!.y + 0.5);
+      expect(lb!.height).toBeGreaterThanOrEqual(64 - 0.5);
+      expect(lb!.x).toBeGreaterThanOrEqual(-0.5);
+      expect(lb!.x + lb!.width).toBeLessThanOrEqual(size.width + 0.5);
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `ch-1c-hear-${size.width}x${size.height}`);
+
+      await link.click();
+      const sheet = page.getByRole('dialog');
+      await expect(sheet.getByTestId('cant-hear-line')).toBeVisible();
+      await shot(page, `ch-1c-sheet-${size.width}x${size.height}`);
+      await sheet.getByRole('button', { name: 'Show the letters' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+
+      // The see round: the word with its romanization, "No sound? Read it here." and no reason line, no speaker, no link.
+      await expect(page.getByTestId('type-hangul-prompt')).toContainText('사과');
+      await expect(page.getByTestId('dictation-notice')).toContainText('No sound? Read it here.');
+      await expect(page.getByTestId('dictation-notice')).not.toContainText(/Sound is off|No Korean voice|did not play/);
+      await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
+      await expect(link).toHaveCount(0);
+      await expect(page.getByTestId('type-hangul-field')).toHaveAttribute('aria-label', 'Type this word');
+      await expect(page.getByTestId('dictation-asked-word')).toBeFocused();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `ch-1c-see-${size.width}x${size.height}`);
+
+      // It scores as a plain see round; the next round opens heard, with the link again.
+      await typeKeys(page, 'ㅅㅏㄱㅗㅏ');
+      await page.getByTestId('type-hangul-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+      expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-hear-apple' }]);
+      await expect(page.getByTestId('dictation-prompt-speaker')).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByTestId('cant-hear')).toBeVisible();
+      await expect(page.getByTestId('type-hangul-prompt')).toHaveCount(0);
+    });
+  }
+
   test('switch off (built-in pct 0): the round is the shipped Type Hangul see round of the word, with no notice', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await koreanVoice(page);

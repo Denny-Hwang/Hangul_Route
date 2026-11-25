@@ -21,7 +21,11 @@ export const HEAR_HOLD_MS = 1500;
 /** Failed plays in one hear round before it becomes a `see` round. */
 export const HEAR_FAILURES_TO_SEE = 2;
 
-export type HearSeeReason = 'no_voice' | 'muted' | 'error';
+/**
+ * Why a hear round is a `see` round. `asked`: the learner's own "Show the letters" (or the device's "Always show the
+ * letters"; AMENDMENTS-AUDIO-CANT-HEAR CH-1c). Nothing failed, so there is no reason line and no action.
+ */
+export type HearSeeReason = 'no_voice' | 'muted' | 'error' | 'asked';
 export type HearOpening = { kind: 'hold' } | { kind: 'hear' } | { kind: 'see'; reason: HearSeeReason };
 
 export interface HearOpeningInput {

@@ -18,9 +18,10 @@ import {
   GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { MutableRefObject, ReactElement, ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { CantHear } from '../../components/CantHear';
 import { PictureArt } from '../../components/PictureArt';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -38,6 +39,7 @@ import {
 } from '../../logic/type-hangul/hear-mode';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { useAudioStore } from '../../store/audio-store';
 
 /**
@@ -72,6 +74,16 @@ export interface HearRound {
   /** The speaker: plays the word (unlimited). Does nothing while the round holds or once it is `see`. */
   play: () => void;
   slot: PromptSlot;
+  /** The round's index: the link's `round`, so a sheet left open closes when the round changes. */
+  round: number;
+  /** "Can't hear it?" (CH-1c): drawn on a hear round that is heard (`hold` included) while no text shows. */
+  cantHear: boolean;
+  /** `cantHear` and the round is open: while it holds (`HEAR_HOLD_MS`) the link is drawn but takes no tap. */
+  cantHearActive: boolean;
+  /** Show the letters: the round becomes the `see` round with reason `asked`; focus then goes to its word. */
+  showLetters: () => void;
+  /** The `see` round's word after Show the letters: where focus goes (`AskedWord`). */
+  wordRef: MutableRefObject<View | null>;
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
 }
@@ -88,8 +100,12 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   // [FU] FU-3: the round's recording, else the say clip of its word, so a device with no Korean voice still hears it.
   const clip = speech !== null && hasClipFor(speech);
   // Only a hear round reports its fallback: a `see` round beside it in the scope plays nothing and shows no notice.
-  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip, reportFallback: isHear });
-  const { play: slotPlay, reset: slotReset } = slot;
+  // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1c): only a hear round opts in. The slot's `cantHearActive` follows the
+  // voice check, which a hear round does not wait for; its `hold` is the round's, so the link's activity is decided here.
+  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip, reportFallback: isHear, cantHear: isHear });
+  const { play: slotPlay, reset: slotReset, showLetters: slotShowLetters } = slot;
+  // "Always show the letters" (CH-2): a hear round opens as the see round of the word, as it does with sound off.
+  const alwaysShow = useAudioStore((s) => s.showLetters);
   const tts = useAudioStore((s) => s.tts.state);
   const muted = useAudioStore((s) => s.muted);
   const [heldFor, setHeldFor] = useState<number | null>(null);
@@ -107,7 +123,9 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   }, [roundIdx, isHear, slotReset]);
 
   const decided = opened !== null && opened.round === roundIdx ? opened.value : null;
-  const live = hearOpening({ tts, hasClip: clip, muted, held: heldFor === roundIdx });
+  const base = hearOpening({ tts, hasClip: clip, muted, held: heldFor === roundIdx });
+  // Sound off and no voice keep their own notice; a round that would be heard opens as `see` when the device switch is on.
+  const live: HearOpening = alwaysShow && base.kind !== 'see' ? { kind: 'see', reason: 'asked' } : base;
   const opening: HearOpening = decided ?? live;
   // Once decided, the round keeps its opening: turning sound on keeps a `see` round as it is (no flicker).
   useEffect(() => {
@@ -115,6 +133,23 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   }, [isHear, decided, live.kind, live, roundIdx]);
 
   const mode: HearRound['mode'] = !isHear ? 'see' : opening.kind;
+  const reason = isHear && opening.kind === 'see' ? opening.reason : null;
+
+  // Show the letters (the learner's own ask): the round is the `see` round with no reason line. Focus goes to the word
+  // once it is drawn (it is not there when the sheet closes), and nothing else is announced (spec 3.7).
+  const wordRef = useRef<View | null>(null);
+  const focusWord = useRef(false);
+  const showLetters = useCallback((): void => {
+    if (!isHear) return;
+    focusWord.current = true;
+    setOpened({ round: roundIdx, value: { kind: 'see', reason: 'asked' } });
+    slotShowLetters();
+  }, [isHear, roundIdx, slotShowLetters]);
+  useEffect(() => {
+    if (reason !== 'asked' || !focusWord.current) return;
+    focusWord.current = false;
+    focusForScreenReader(wordRef.current);
+  }, [reason]);
   const text = speech?.text;
   const audioRef = speech?.audioRef;
   const play = useCallback((): void => {
@@ -140,13 +175,18 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
 
   return {
     mode,
-    reason: isHear && opening.kind === 'see' ? opening.reason : null,
+    reason,
     revealed: revealedFor === roundIdx,
     reveal: () => setRevealedFor(roundIdx),
     play: () => {
       if (mode === 'hear') play();
     },
     slot,
+    round: roundIdx,
+    cantHear: isHear && mode !== 'see' && slot.cantHear,
+    cantHearActive: isHear && mode === 'hear' && slot.cantHear,
+    showLetters,
+    wordRef,
     helpOpen,
     setHelpOpen,
   };
@@ -221,6 +261,11 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
     <PromptPanel view={view} variant="status" compact={compact} onAction={(action) => hear.slot.act(action, hear.play)} onHelp={() => hear.setHelpOpen(true)} testID={`${testID}-status`} />
   );
 
+  // "Can't hear it?" (CH-1c): after the speaker, before the answer field; inactive while the round holds.
+  const link = hear.cantHear ? (
+    <CantHear round={hear.round} active={hear.cantHearActive} onHear={hear.play} onShowLetters={hear.showLetters} focusAfter={hear.wordRef} testID="cant-hear" />
+  ) : null;
+
   if (compact) {
     // The meaning button is one hit area at least 64 tall: the meaning, then "Show how it sounds" (the romanization once tapped).
     return (
@@ -241,6 +286,7 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
             {hear.revealed ? romanization : <Caption tone="secondary" style={{ textDecorationLine: 'underline' }}>{t.hear.showSound}</Caption>}
           </Pressable>
         </View>
+        {link}
         {status}
         <VoiceHelpSheet visible={hear.helpOpen} onClose={() => hear.setHelpOpen(false)} />
       </View>
@@ -258,8 +304,46 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
         </Body>
       </View>
       {hear.revealed ? romanization : <Button label={t.hear.showSound} tone="ghost" size="sm" onPress={hear.reveal} testID={`${testID}-show-sound`} />}
+      {link}
       {status}
       <VoiceHelpSheet visible={hear.helpOpen} onClose={() => hear.setHelpOpen(false)} />
+    </View>
+  );
+}
+
+/**
+ * The `see` round's word after Show the letters (`reason` `'asked'`): one focusable item with the word's name, so focus
+ * has somewhere to land once the word is drawn (AMENDMENTS-AUDIO-CANT-HEAR section 3.7). Any other round: the children as
+ * they are.
+ */
+export function AskedWord({
+  hear,
+  target,
+  romanizationShown = true,
+  children,
+}: {
+  hear: HearRound;
+  target: Pick<KoText, 'ko' | 'romanization'> & { en?: string };
+  /** The learner's setting: while it hides the romanization, the name is the Korean alone (as `KoreanText` is drawn). */
+  romanizationShown?: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const m = useMessages();
+  if (hear.reason !== 'asked') return <>{children}</>;
+  return (
+    <View
+      ref={hear.wordRef}
+      accessible
+      accessibilityLabel={
+        romanizationShown
+          ? m.a11y.koreanItem({ ko: target.ko, romanization: target.romanization, ...(target.en === undefined ? {} : { gloss: target.en }) })
+          : m.a11y.vocab.cards.word(target.ko)
+      }
+      focusable
+      {...{ tabIndex: -1 }}
+      testID="dictation-asked-word"
+    >
+      {children}
     </View>
   );
 }
