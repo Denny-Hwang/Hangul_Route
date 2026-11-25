@@ -22,6 +22,7 @@ import {
   useLayoutClass,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  MARK_MIN,
   useTypeScale,
   TapBoard,
   TapTarget,
@@ -38,6 +39,7 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerItem, spokenParts } from '../../logic/answer-feedback';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { cubicBezierPoints } from '../../logic/flip';
@@ -50,7 +52,6 @@ import {
   hintView,
   instructionOf,
   lineView,
-  placedAnnouncement,
   showSkip,
   trayView,
   widestTile,
@@ -61,8 +62,12 @@ import {
 import { hasClipFor, playPrompt, stop, warmClips, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
+import { AnswerAnnouncer } from './answer-announcer';
+import { DiscMark, LookHereRing } from './answer-marks';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * Sentence Builder (`order-it`, F-CURR-001 §3.4, §3.7, §3.11): read what the sentence means,
@@ -72,6 +77,14 @@ import { PictureArt } from './PictureArt';
  * two-question Check, through `host`. Stacked at every width (the line reads left to right
  * across one column). Design: design/wireframes/minigame/sentence-builder.md and
  * design/screens/minigame-sentence-builder/v1/.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c; design/components/AnswerFeedback/spec.md D2, D4, D9; OD-AF8 (c)): a tile tried
+ * for a place keeps `dash` (it stays tappable, so it is not `replay`), now on a disc straddling its corner in
+ * `text.primary`; a placed tile's check is 20; look-here is the one dashed ring outside the tile. Each result is said once
+ * by the answer announcer (a placed tile as its place and romanization, a miss by the tile and Hoya's line with its
+ * `{ko:}` read as romanization, never Hangul); the placed line, the built panel and the hint are not live. After the last
+ * tile the wait is the 1000 ms floor and the sentence's sound with a screen reader off; with one on, Next shows and waits
+ * for it (OD-AF9 (b)), the last round included, and the sentence's sound starts after the line.
  */
 
 interface Props {
@@ -109,8 +122,6 @@ function sentenceSpeech(sentence: SbRound['sentence']): PlaySpec {
 const koreanSpeech = { accessibilityLanguage: 'ko', lang: 'ko' };
 /** One tile is one word: on the web its Korean never breaks inside the word (§3.14, word-break keep-all); native Text keeps a spaceless word whole. */
 const wholeWord = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}) as unknown as TextStyle;
-/** Read by assistive tech, not drawn (a 1 px clipped box), as NotePage's live line. */
-const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -143,6 +154,20 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const mounted = useRef(true);
   const completed = useRef(false);
   const dispatchRef = useRef<(event: SbEvent) => void>(() => undefined);
+  // F-A11Y-001 AF-4c: each result is said once by the answer announcer; with a screen reader on a built sentence shows Next.
+  const speech = useAnswerAnnouncement();
+  const { clear } = speech;
+  const speechRef = useRef(speech);
+  speechRef.current = speech;
+  const nextButton = useRoundNext();
+  const nextRef = useRef(nextButton);
+  nextRef.current = nextButton;
+  /** Counts the rounds moved on from: a late wait, a second Next, or a sound that comes after the move does nothing. */
+  const turn = useRef(0);
+  const patternRef = useRef(patternNote);
+  patternRef.current = patternNote;
+  const textRef = useRef({ a11y: m.a11y, copy });
+  textRef.current = { a11y: m.a11y, copy };
 
   // The current round's sentence may have a bundled recording: then a missing Korean voice is not a missing sound (as Match Sound).
   const slotRound = rounds[state.roundIdx];
@@ -188,18 +213,9 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
           later(ms, () => dispatchRef.current({ type: 'settle' }));
           return;
         }
-        case 'play-sentence': {
-          // The built sentence is heard once, in full; with no sound the next round opens after a short pause.
-          const heard = hear().then(
-            () => undefined,
-            () => undefined,
-          );
-          const pause = new Promise<void>((resolve) => later(NO_SOUND_ADVANCE_MS, resolve));
-          void Promise.all([heard, pause]).then(() => {
-            if (mounted.current) dispatchRef.current({ type: 'advance' });
-          });
+        case 'play-sentence':
+          // The built sentence is the right answer's own sound: `dispatch` runs it after the line (§3.4).
           return;
-        }
         case 'complete':
           // The flow emits it once; the guard keeps the host to one call whatever the timing.
           if (completed.current) return;
@@ -211,14 +227,71 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
     [hear],
   );
 
+  /** The next round, or the end of the step: once, whether Next or the wait asks (a second press does nothing). */
+  const moveOn = useCallback((): void => {
+    if (!mounted.current || stateRef.current.status !== 'complete') return;
+    turn.current += 1;
+    nextRef.current.hide();
+    dispatchRef.current({ type: 'advance' });
+  }, []);
+
   const dispatch = useCallback(
     (event: SbEvent): void => {
-      const out = stepFlow(stateRef.current, roundsRef.current, event);
+      const before = stateRef.current;
+      const out = stepFlow(before, roundsRef.current, event);
       stateRef.current = out.state;
       setState(out.state);
+      const round = roundsRef.current[before.roundIdx];
+      const tile = event.type === 'tap' && round ? round.tray.find((t) => t.id === event.tileId) : undefined;
+      const { a11y: texts, copy: words } = textRef.current;
+      const speak = speechRef.current;
+      const finished = out.effects.some((e) => e.type === 'play-sentence');
+      if (tile && round && finished) {
+        // The last tile: the line, the sentence's sound (after it, dropped if the round moved on), then the floor and the advance.
+        out.effects.forEach(runEffect);
+        const at = turn.current;
+        const place = round.open[before.placed.length];
+        // The place and the word placed (a particle round's word is the stem and the piece: "chaegi", not "i").
+        const placedWord = (place === undefined ? undefined : round.words[place]?.romanization) ?? tile.romanization;
+        const say = (): Promise<void> =>
+          speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, placedWord)) });
+        let heard: Promise<void> = Promise.resolve();
+        void afterRightAnswer({
+          readerOn: speak.readerOn,
+          gameMinMs: NO_SOUND_ADVANCE_MS,
+          announce: speak.readerOn ? () => nextRef.current.afterFocus(say) : say,
+          play: () => {
+            if (turn.current !== at || !mounted.current) return;
+            heard = hear().then(
+              () => undefined,
+              () => undefined,
+            );
+          },
+          showNext: () => nextRef.current.show(),
+          waitThenAdvance: (minMs) => {
+            const pause = new Promise<void>((resolve) => later(minMs, resolve));
+            void Promise.all([heard, pause]).then(() => {
+              if (turn.current === at) moveOn();
+            });
+          },
+        });
+        return;
+      }
       out.effects.forEach(runEffect);
+      if (!tile || !round) return;
+      if (out.effects.some((e) => e.type === 'haptic' && e.kind === 'nudge')) {
+        // A miss: the tile tried, and Hoya's line (a particle miss adds the quest's note), `{ko:}` as romanization (§3.2).
+        const hint = hintView(out.state, words, patternRef.current);
+        const spoken = hint === null ? '' : [hint.line, hint.note ? spokenParts(hint.note) : ''].filter((x) => x !== '').join(' ');
+        afterMiss({ readerOn: speak.readerOn, announce: () => speak.announce({ kind: 'missHint', item: tile.romanization, hint: spoken }) });
+      } else if (before.placed.length < out.state.placed.length) {
+        // A right tile that is not the last: its place and romanization.
+        const place = round.open[before.placed.length];
+        const placedWord = (place === undefined ? undefined : round.words[place]?.romanization) ?? tile.romanization;
+        void speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, placedWord)) });
+      }
     },
-    [runEffect],
+    [runEffect, hear, moveOn],
   );
   dispatchRef.current = dispatch;
 
@@ -234,7 +307,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const roundIdx = state.roundIdx;
   useEffect(() => {
     reset();
-  }, [roundIdx, reset]);
+    clear();
+  }, [roundIdx, reset, clear]);
 
   const round = rounds[roundIdx];
   if (state.status === 'empty' || !round) {
@@ -258,7 +332,6 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const hint = hintView(state, copy, patternNote);
   const done = doneView(round, state, copy);
   const widest = widestTile(round, ctx);
-  const announcement = placedAnnouncement(round, state, m.a11y.minigame);
   const gloss = round.sentence.en;
 
   return (
@@ -318,10 +391,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
         {done !== null ? <Icon name="check" size={spacing.xxl} color={colors.feedback.successDark} /> : null}
       </View>
 
-      {/* A right tile landing is announced by its place (wireframe "States", screen reader). */}
-      <Text {...KOREAN_LINE_BREAK} testID="sentence-builder-live" style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
-        {announcement}
-      </Text>
+      {/* A right tile landing is said once by the answer announcer, as its place and romanization (§3.3). */}
+      <AnswerAnnouncer line={speech.line} testID="sentence-builder-live" />
 
       {done === null ? (
         <>
@@ -338,20 +409,29 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
           </TapBoard>
         </>
       ) : (
-        <View accessibilityLiveRegion="polite" testID="sentence-builder-done" style={{ gap: spacing.sm }}>
-          <Spacer size="md" />
-          <Body>{done.line}</Body>
-          <View style={{ alignSelf: 'flex-start' }}>
-            <KoreanText ko={done.sentence.ko} romanization={done.sentence.romanization} gloss={done.sentence.en} size="md" testID="sentence-builder-sentence" />
+        <>
+          {/* Not a live region: the announcer says the result once (§3.3). */}
+          <View testID="sentence-builder-done" style={{ gap: spacing.sm }}>
+            <Spacer size="md" />
+            <Body>{done.line}</Body>
+            <View style={{ alignSelf: 'flex-start' }}>
+              <KoreanText ko={done.sentence.ko} romanization={done.sentence.romanization} gloss={done.sentence.en} size="md" testID="sentence-builder-sentence" />
+            </View>
           </View>
-        </View>
+          {nextButton.shown ? (
+            <>
+              <Spacer size="lg" />
+              <Button pressableRef={nextButton.nextRef} label={copy.trace.next.cta} tone="primary" size="hero" fullWidth onPress={moveOn} testID="sentence-builder-next" />
+            </>
+          ) : null}
+        </>
       )}
 
-      <View accessibilityLiveRegion="polite">
+      <View>
         {hint ? (
           <>
             <Spacer size="lg" />
-            <HoyaBubble tone="thinking" message={hint.line} testID="sentence-builder-hint" />
+            <HoyaBubble tone="thinking" message={hint.line} live={false} testID="sentence-builder-hint" />
             {hint.note ? <NoteLine parts={hint.note} /> : null}
           </>
         ) : null}
@@ -409,11 +489,11 @@ const tileBox = (min: number) =>
     gap: spacing.xxs,
   }) as const;
 
-/** A small status glyph in the tile's top corner: colour is never the only cue. */
-function Mark({ name, color }: { name: 'check' | 'dash'; color: string }): ReactElement {
+/** A placed tile's check in its top corner (20, `MARK_MIN`: colour is never the only cue); its tile keeps 24 of end padding. */
+function PlacedMark(): ReactElement {
   return (
     <View style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Icon name={name} size={spacing.lg} color={color} />
+      <Icon name="check" size={MARK_MIN} color={colors.feedback.successDark} />
     </View>
   );
 }
@@ -453,7 +533,7 @@ function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion 
         }}
       >
         <TileFace ko={unit.ko} romanization={unit.romanization} />
-        {placed ? <Mark name="check" color={colors.feedback.successDark} /> : null}
+        {placed ? <PlacedMark /> : null}
       </View>
     );
     // Only a tile the learner placed slides in; a word a particle round gives stands still.
@@ -516,14 +596,12 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
   }, [tile.returning, reducedMotion, rise]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: rise.value }] }));
   const tried = tile.look === 'tried';
-  // The look-here ring: a focus-coloured frame around the tile (a transparent one otherwise, so nothing moves).
+  // The wrapper keeps the room the look-here ring takes (a transparent frame, so nothing moves); the ring itself is the one
+  // dashed look-here shape, drawn outside the tile (AnswerFeedback D4).
   return (
     <Animated.View
       testID={tile.look === 'ring' ? 'sentence-builder-ring' : tile.returning ? 'sentence-builder-returning' : undefined}
-      style={[
-        style,
-        { padding: spacing.xs, margin: -spacing.xs, borderRadius: radii.lg, borderWidth: borderWidth.thick, borderColor: tile.look === 'ring' ? colors.border.focus : 'transparent' },
-      ]}
+      style={[style, { padding: spacing.xs, margin: -spacing.xs, borderRadius: radii.lg, borderWidth: borderWidth.thick, borderColor: 'transparent' }]}
     >
       <TapTarget onCommit={onPress} accessibilityLabel={tile.accessibilityLabel} testID={`sentence-builder-tile-${tile.id}`}>
         {({ pressed }) => {
@@ -543,7 +621,9 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
               }}
             >
               <TileFace ko={tile.ko} romanization={tile.romanization} />
-              {tried ? <Mark name="dash" color={colors.text.secondary} /> : null}
+              {/* Tried here, still tappable (OD-AF8 (c)): `dash` on a disc straddling the corner, in `text.primary`. */}
+              {tried ? <DiscMark mark="tried" answerBorder={p?.borderWidth ?? borderWidth.base} testID={`sentence-builder-tried-${tile.id}`} /> : null}
+              {tile.look === 'ring' ? <LookHereRing radius={radii.md} answerBorder={p?.borderWidth ?? borderWidth.base} testID="sentence-builder-ring-dashed" /> : null}
             </View>
           );
         }}

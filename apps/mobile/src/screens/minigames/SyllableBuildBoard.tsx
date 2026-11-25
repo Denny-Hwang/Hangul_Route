@@ -2,6 +2,7 @@ import type { SyllableZone } from '@hangul-route/content-schema';
 import {
   Body,
   Caption,
+  Button,
   HoyaBubble,
   Icon,
   KOREAN_LANGUAGE,
@@ -35,13 +36,19 @@ import { heldAnswers } from '../../components/held-answers';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerItem, answerOptionLabel, lookHereLine } from '../../logic/answer-feedback';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
-import { hoyaLine, startBuild, stepBuild, type BuildEffect, type BuildEvent, type BuildState } from '../../logic/syllable-build/flow';
+import { hoyaLine, NO_FINAL, startBuild, stepBuild, wantedLetter, type BuildEffect, type BuildEvent, type BuildState } from '../../logic/syllable-build/flow';
+import { letterName } from '../../logic/syllable-build/letters';
 import { partsOf } from '../../logic/syllable-build/pool';
 import type { TileRows } from '../../logic/syllable-build/tiles';
 import { promptView, rowViews, zoneViews, type TileLook, type ZoneLook } from '../../logic/syllable-build/view';
 import { hasClipFor, playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { AnswerAnnouncer } from './answer-announcer';
+import { CornerMark, LookHereRing } from './answer-marks';
+import { useAnswerAnnouncement, type AnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * One Syllable Build round (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md, the mock
@@ -52,9 +59,18 @@ import { nudge, success, tapLight } from '../../platform/haptics';
  *
  * - Tiles at `touchTarget.min` (64, the 48 dp floor met), zones 64 x 64 on a phone with the final zone 64 tall across
  *   the block, `touchTarget.hero` from regular. Four tiles and their gaps fit the 288 of a 320 window.
- * - A miss is amber with the mark dot, never red; the right block takes the success look with the check glyph.
+ * - A miss is amber with the `replay` mark, never red; the right block takes the success look with the `check` glyph.
  * - Reduced motion: nothing moves (letters appear in place, nothing pulses); the pause before the next round stays,
  *   so the built block and its sound are not skipped.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c; design/components/AnswerFeedback/spec.md D2, D4, D9): the drawn dot is `replay`
+ * at 20 inside the corner of a zone or tile, a right zone shows `check`, the second miss rings the right tile with the
+ * dashed look-here ring, and a marked or right zone and a marked tile are named with the state first. Each result is
+ * said once by the answer announcer (the right block by its romanization, a miss by the letter that did not fit, never
+ * Hangul); the least wait after a right block is the 1000 ms floor, and with a screen reader on the block shows Next and
+ * waits for it (OD-AF9 (b)) and the block's sound starts after the line. The sound that replays by itself after a miss
+ * is not played with a reader on (the learner taps Hear it). A quest step passes its own `speech` so its heading can be
+ * the round's header node.
  */
 
 export interface BoardTarget {
@@ -87,38 +103,19 @@ export interface SyllableBuildBoardProps {
    * the block's romanization, never the block.
    */
   cantHear?: boolean;
+  /** The quest step's announcement hook, when its heading is the round's header node (§3.4); else the board has its own. */
+  speech?: AnswerAnnouncement;
   testID?: string;
 }
 
 /** How long the built block stays on screen, with its sound, before the next round. */
 export const SOLVED_PAUSE_MS = motion.duration.celebration;
 
-const MARK = spacing.md;
+/** A mark's inset from the corner of a zone or tile (AnswerFeedback: inside the corner, `spacing.xs`). */
+const MARK_INSET = spacing.xs;
 /** A jamo face is part of its tile's picture: half the tile, so it keeps its size at every text setting (wireframe, States). */
 const JAMO_FACE = 0.5;
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
-
-function Mark({ look }: { look: 'marked' | 'right' }): ReactElement {
-  return look === 'right' ? (
-    <View style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-      <Icon name="check" size={MARK + spacing.xs} color={colors.feedback.success} />
-    </View>
-  ) : (
-    <View
-      style={{
-        position: 'absolute',
-        top: spacing.xxs,
-        right: spacing.xxs,
-        width: MARK,
-        height: MARK,
-        borderRadius: radii.circle,
-        backgroundColor: colors.feedback.nudge,
-        borderWidth: borderWidth.thin,
-        borderColor: colors.text.primary,
-      }}
-    />
-  );
-}
 
 const ZONE_LOOK: Record<ZoneLook, { backgroundColor?: string; borderColor: string; borderWidth: number; borderStyle: 'solid' | 'dashed' }> = {
   empty: { borderColor: colors.border.shape, borderWidth: borderWidth.base, borderStyle: 'dashed' },
@@ -131,7 +128,6 @@ const ZONE_LOOK: Record<ZoneLook, { backgroundColor?: string; borderColor: strin
 function tileColors(zone: SyllableZone, look: TileLook): { backgroundColor: string; borderColor: string; borderWidth: number; borderBottomWidth?: number } {
   if (look === 'selected') return { backgroundColor: colors.brand.secondaryLight, borderColor: colors.brand.secondary, borderWidth: borderWidth.thick };
   if (look === 'marked') return { backgroundColor: colors.feedback.nudgeLight, borderColor: colors.feedback.nudge, borderWidth: borderWidth.thick };
-  if (look === 'ring') return { backgroundColor: zone === 'vowel' ? colors.surface.sunken : colors.surface.paper, borderColor: colors.border.focus, borderWidth: borderWidth.thick };
   // The keyboard's two quiet fills: paper for consonants, sunken for vowels; a final tile has the Build a Letter base line.
   if (zone === 'vowel') return { backgroundColor: colors.surface.sunken, borderColor: colors.border.subtle, borderWidth: borderWidth.base };
   if (zone === 'final') return { backgroundColor: colors.surface.paper, borderColor: colors.border.subtle, borderWidth: borderWidth.base, borderBottomWidth: spacing.xs };
@@ -143,7 +139,7 @@ function targetSpeech(target: SyllableBuildBoardProps['target'], source: string)
   return { text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source };
 }
 
-export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, cantHear = false, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
+export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, cantHear = false, speech, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.syllableBuild;
   const a11y = m.a11y.minigame.syllableBuild;
@@ -167,11 +163,29 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
 
   const [state, setState] = useState<BuildState>(() => (parts ? startBuild(parts, fixed ?? null) : startBuild({ first: '', vowel: '', final: null })));
   const stateRef = useRef(state);
+  // F-A11Y-001 AF-4c: each result is said once by the answer announcer; with a screen reader on a right block shows Next.
+  const ownSpeech = useAnswerAnnouncement();
+  const a = speech ?? ownSpeech;
+  const aRef = useRef(a);
+  aRef.current = a;
+  const nextButton = useRoundNext();
+  const nextRef = useRef(nextButton);
+  nextRef.current = nextButton;
+  const mounted = useRef(true);
+  /** The block has moved on (Next, or its wait): a second Next, or a late wait or sound, does nothing. */
+  const moved = useRef(false);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round waits for the built word to be said.
   const pacing = useSoundPacing();
   const handlers = useRef({ onFirst, onSolved, onRight });
   handlers.current = { onFirst, onSolved, onRight };
+  // Read when a result comes, so `dispatch` keeps one identity.
+  const latestTexts = useRef({ a11y: m.a11y, lookHere: copy.lookHere });
+  latestTexts.current = { a11y: m.a11y, lookHere: copy.lookHere };
+  const targetRomanization = useRef(target.romanization);
+  targetRomanization.current = target.romanization;
+  const targetGloss = useRef(target.gloss);
+  targetGloss.current = target.gloss;
 
   const say = useCallback((): void => {
     void pacing.track(slotPlay(() => playPrompt(targetSpeech(target, source))));
@@ -185,7 +199,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
           handlers.current.onFirst(effect.correct, effect.hinted);
           return;
         case 'play':
-          if (effect.why === 'replay' && !shouldAutoReplay(viewRef.current)) return;
+          // With a screen reader on the sound is not replayed by itself after a miss: the learner taps Hear it (§3.4).
+          if (effect.why === 'replay' && (!shouldAutoReplay(viewRef.current) || aRef.current.readerOn)) return;
           say();
           return;
         case 'schedule-replay':
@@ -205,28 +220,72 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
           // The round-ending commit locks the app clock, so the next round's keyed board mounts locked (KT-D5).
           lockRef.current(TAP_LOCK_MS);
           handlers.current.onRight?.();
-          pacing.after(SOLVED_PAUSE_MS, () => handlers.current.onSolved());
           return;
       }
     },
-    [say, pacing],
+    [say],
   );
+
+  /** The block moves on once: Next, or the wait that follows a right block with the reader off. */
+  const moveOn = useCallback((): void => {
+    if (moved.current || !mounted.current) return;
+    moved.current = true;
+    nextRef.current.hide();
+    handlers.current.onSolved();
+  }, []);
 
   const dispatch = useCallback(
     (event: BuildEvent): void => {
       if (!parts) return;
-      const out = stepBuild(stateRef.current, event, { target: parts, voice: !viewRef.current.textShown });
+      const before = stateRef.current;
+      const out = stepBuild(before, event, { target: parts, voice: !viewRef.current.textShown });
       stateRef.current = out.state;
       setState(out.state);
+      const solved = out.effects.some((e) => e.type === 'solved');
+      const missed = out.effects.some((e) => e.type === 'schedule-replay');
+      const { a11y: texts } = latestTexts.current;
+      const speak = aRef.current;
+      if (solved) {
+        // The block's sound is the right answer's own: it starts after the line, and is dropped if Next came first.
+        const sound = out.effects.find((e) => e.type === 'play' && e.why === 'right');
+        out.effects.filter((e) => e !== sound).forEach(run);
+        const say = (): Promise<void> => speak.announce({ kind: 'right', item: answerItem(texts, targetRomanization.current, targetGloss.current) });
+        void afterRightAnswer({
+          readerOn: speak.readerOn,
+          gameMinMs: SOLVED_PAUSE_MS,
+          announce: speak.readerOn ? () => nextRef.current.afterFocus(say) : say,
+          play: () => {
+            if (moved.current || !mounted.current) return;
+            if (sound) run(sound);
+          },
+          showNext: () => nextRef.current.show(),
+          waitThenAdvance: (minMs) => void pacing.after(minMs, moveOn),
+        });
+        return;
+      }
       out.effects.forEach(run);
+      if (missed) {
+        // The letter of the first zone that did not fit; the miss that turns the look-here ring on carries its line (§3.2).
+        const zone = (['first', 'vowel', 'final'] as const).find((z) => out.state.marked.includes(z));
+        const tried = zone === undefined ? null : out.state.zones[zone];
+        // No final is a tile with no letter: it is named, never left empty ("Not this one: . Listen again.").
+        const item = tried === null || tried === undefined ? '' : tried === NO_FINAL ? texts.minigame.syllableBuild.noFinal : letterName(tried);
+        const ringed = out.state.ring !== null && before.ring === null;
+        afterMiss({
+          readerOn: speak.readerOn,
+          announce: () => speak.announce(ringed ? { kind: 'missHint', item, hint: latestTexts.current.lookHere } : { kind: 'missListen', item }),
+        });
+      }
     },
-    [parts, run],
+    [parts, run, pacing, moveOn],
   );
   dispatchRef.current = dispatch;
 
   useEffect(() => {
+    mounted.current = true;
     if (autoplay) say();
     return () => {
+      mounted.current = false;
       if (replayTimer.current) clearTimeout(replayTimer.current);
       stop();
     };
@@ -247,12 +306,16 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   // outside its own lock, so a bounce on a tile never empties the zone it just filled.
   const zoneBox = (zone: (typeof zones)[number], width: number, height: number): ReactElement => {
     const look = ZONE_LOOK[zone.look];
+    // The state first (§3.2): a zone that did not fit is "Not this one", the built block's zones are "Right answer".
+    const label = zone.look === 'marked' ? answerOptionLabel('wrong', zone.accessibilityLabel, m.a11y.minigame.option) : zone.look === 'right' ? answerOptionLabel('correct', zone.accessibilityLabel, m.a11y.minigame.option) : zone.accessibilityLabel;
     return (
       <TapTarget
         key={zone.zone}
         testID={`${testID}-zone-${zone.zone}`}
-        accessibilityLabel={zone.accessibilityLabel}
-        disabled={!zone.tappable}
+        accessibilityLabel={label}
+        // A right block is locked, never disabled (§3.1); an empty or fixed zone has nothing to take back.
+        disabled={!zone.tappable && zone.look !== 'right'}
+        inactive={zone.look === 'right'}
         gapFill={false}
         onCommit={() => dispatch({ type: 'clear', zone: zone.zone })}
       >
@@ -280,7 +343,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
                   </Text>
                 )
               ) : null}
-              {zone.look === 'marked' || zone.look === 'right' ? <Mark look={zone.look} /> : null}
+              {zone.look === 'marked' || zone.look === 'right' ? <CornerMark mark={zone.look === 'right' ? 'right' : 'miss'} inset={MARK_INSET} testID={`${testID}-mark-zone-${zone.zone}`} /> : null}
             </View>
           );
         }}
@@ -325,7 +388,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
             />
           ) : null}
           {right ? (
-            <View accessibilityLiveRegion="polite" testID={`${testID}-built`}>
+            // The announcer says the built block once, so this is not a live region too (§3.3).
+            <View testID={`${testID}-built`}>
               <KoreanText ko={target.ko} romanization={target.romanization} gloss={target.gloss} size="md" accessibilityLabel={prompt.blockLabel ?? undefined} />
             </View>
           ) : (
@@ -380,13 +444,16 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
                 {row.tiles.map((t) => {
                   const look = tileColors(t.zone, t.look);
+                  // The state first (§3.2); a miss is not "selected" (a reader would take it for the answer).
+                  const label = t.look === 'marked' ? answerOptionLabel('wrong', t.accessibilityLabel, m.a11y.minigame.option) : t.look === 'ring' ? answerOptionLabel('hint', t.accessibilityLabel, m.a11y.minigame.option) : t.accessibilityLabel;
                   return (
                     <TapTarget
                       key={t.key}
                       testID={`${testID}-tile-${t.key}`}
-                      accessibilityLabel={t.accessibilityLabel}
-                      accessibilityState={{ selected: t.look === 'selected' || t.look === 'marked' }}
-                      disabled={right}
+                      accessibilityLabel={label}
+                      accessibilityState={{ selected: t.look === 'selected' }}
+                      // A right block locks its tiles: inactive, never disabled (§3.1).
+                      inactive={right}
                       onCommit={() => dispatch({ type: 'tile', zone: t.zone, letter: t.letter })}
                     >
                       {({ pressed }) => {
@@ -414,7 +481,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
                                 {t.face}
                               </Text>
                             )}
-                            {t.look === 'marked' ? <Mark look="marked" /> : null}
+                            {t.look === 'ring' ? <LookHereRing radius={radii.lg} answerBorder={look.borderWidth} testID={`${testID}-ring`} /> : null}
+                            {t.look === 'marked' ? <CornerMark mark="miss" inset={MARK_INSET} testID={`${testID}-mark-tile-${t.key}`} /> : null}
                           </View>
                         );
                       }}
@@ -427,15 +495,22 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
         </View>
       </TapBoard>
 
-      <View accessibilityLiveRegion="polite" style={{ minHeight: touchTarget.min }}>
+      {nextButton.shown ? (
+        <Button pressableRef={nextButton.nextRef} label={m.learner.minigame.trace.next.cta} tone="primary" size="hero" fullWidth onPress={moveOn} testID={`${testID}-next`} />
+      ) : null}
+
+      {/* The announcer says the result once, so Hoya's line is not a live region too (§3.3). */}
+      <View style={{ minHeight: touchTarget.min }}>
         {line !== null ? (
           <HoyaBubble
             testID={`${testID}-hoya`}
             tone={line === 'built' ? 'cheering' : 'thinking'}
             message={line === 'built' ? copy.built : line === 'lookHere' ? copy.lookHere : copy.miss[line]}
+            live={false}
           />
         ) : null}
       </View>
+      {speech === undefined ? <AnswerAnnouncer line={a.line} /> : null}
     </View>
   );
 }

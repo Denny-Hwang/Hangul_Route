@@ -99,7 +99,7 @@ describe('the Syllable Build board', () => {
     await tap(r.root, 'syllable-build-tile-vowel:ㅓ');
     await tap(r.root, 'syllable-build-tile-final:ㅂ');
     expect(texts(r)).toContain('Listen to the middle sound.');
-    expect(texts(r)).toContain('Vowel, ㅓ, letter eo, listen again');
+    expect(texts(r)).toContain('Not this one: Vowel, ㅓ, letter eo, listen again');
     await tap(r.root, 'syllable-build-tile-vowel:ㅗ');
     expect(texts(r)).toContain('This one goes here.');
     await tap(r.root, 'syllable-build-tile-vowel:ㅏ');

@@ -1,13 +1,15 @@
 import { Body, Button, Heading, Pill, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { partsOf } from '../../logic/syllable-build/pool';
 import { shuffled } from '../../logic/syllable-build/tiles';
+import { AnswerAnnouncer } from './answer-announcer';
 import type { MinigameHost } from './host';
 import { SyllableBuildBoard } from './SyllableBuildBoard';
+import { useAnswerAnnouncement } from './use-answer-announcement';
 
 /**
  * Syllable Build in a quest step (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md,
@@ -16,6 +18,10 @@ import { SyllableBuildBoard } from './SyllableBuildBoard';
  * (`answer`, with the hint flag of Show how it sounds); the step completes after the last round, or on Skip, which
  * records nothing more. Played only while `game.syllable-build` is on (`syllable-build-entry.tsx`); off, the step is
  * Listen & Pick on the block.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c): the board says each result once; this step's heading is the round's header node
+ * (the heading and the target's romanization are not on it before the block is built, so it names the round and the
+ * heading), and a new round moves screen-reader focus to it.
  */
 
 interface Props {
@@ -41,6 +47,13 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
     [scope, seed],
   );
   const [index, setIndex] = useState(0);
+  const speech = useAnswerAnnouncement();
+  const { clear, focusPrompt } = speech;
+  // A new round empties the announcer and, with a reader on, moves focus to the round's header node (§3.4).
+  useEffect(() => {
+    clear();
+    if (index > 0) focusPrompt();
+  }, [index, clear, focusPrompt]);
   const done = useRef(false);
   const complete = (): void => {
     if (done.current) return;
@@ -67,7 +80,7 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
     <Screen tone="canvas" testID="syllable-build-game">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Pill label={copy.progress.pill(index + 1, rounds.length)} size="sm" />
-        <View style={{ flex: 1 }}>
+        <View ref={speech.promptRef} style={{ flex: 1 }} testID="syllable-build-round" accessible accessibilityRole="header" accessibilityLabel={m.a11y.answer.round(index + 1, rounds.length, copy.syllableBuild.heading)}>
           <Heading level="prompt">{copy.syllableBuild.heading}</Heading>
         </View>
         <Button label={copy.skip.cta} tone="ghost" size="md" onPress={complete} testID="syllable-build-skip" />
@@ -86,6 +99,7 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
         {...(round.fixedZone !== undefined ? { fixed: round.fixedZone } : {})}
         // Round 1 never autoplays (the first sound needs a tap), as Listen & Pick.
         autoplay={index > 0}
+        speech={speech}
         cantHear
         source="syllable-build"
         // Hinted with a right answer only: the quest host records a hinted answer as right (row CM-31), so a miss stays a miss.
@@ -95,6 +109,7 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
           else setIndex(index + 1);
         }}
       />
+      <AnswerAnnouncer line={speech.line} />
     </Screen>
   );
 }

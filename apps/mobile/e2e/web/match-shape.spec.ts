@@ -91,10 +91,12 @@ async function tapUntil(target: Locator, done: () => Promise<boolean>): Promise<
 const visible = (target: Locator) => (): Promise<boolean> => target.isVisible();
 
 async function playOrigin(page: Page, round: Origin, checks?: (page: Page) => Promise<void>): Promise<void> {
-  await expect(page.getByRole('heading', { name: 'Which letter comes from this shape?' })).toBeVisible();
+  // The origin heading is the round's header node (F-A11Y-001 AF-4c): it names the round and holds the visible heading.
+  await expect(page.getByTestId('match-shape-round')).toContainText('Which letter comes from this shape?');
   if (round.wrong !== undefined) {
     const wrong = page.getByTestId(`match-shape-tile-jamo:${round.wrong}`);
-    await tapUntil(wrong, visible(page.getByText('Look at the picture again. Which letter has that shape?')));
+    // Hoya's visible line (the hidden announcer says it too, with the tile's name before it).
+    await tapUntil(wrong, visible(page.getByTestId('match-shape-hoya').getByText('Look at the picture again. Which letter has that shape?')));
     expect(await drawnColors(wrong)).not.toContain(RED);
   }
   await tapUntil(page.getByTestId(`match-shape-tile-jamo:${round.target}`), visible(page.getByTestId('match-shape-continue')));
@@ -161,8 +163,9 @@ test.describe('Match Shape on (game.match-shape at 100)', () => {
         // The picture is the prompt: an image named by its fact; the tiles name their letter and sound.
         await expect(p.getByTestId('match-shape-art')).toBeVisible();
         await expect(p.getByTestId('match-shape-note')).toHaveText('The tongue touches the upper gum.');
-        await expect(p.getByRole('button', { name: 'ㄴ, n', exact: true })).toBeVisible();
-        await expect(p.getByRole('button', { name: 'ㄱ, g or k', exact: true })).toBeVisible();
+        // An answered tile's name starts with its state (F-A11Y-001 AF-4c): "Right answer: ㄴ, n", "Not this one: ㄱ, g or k".
+        await expect(p.getByRole('button', { name: /^(Right answer: )?ㄴ, n$/ })).toBeVisible();
+        await expect(p.getByRole('button', { name: /^(Not this one: )?ㄱ, g or k$/ })).toBeVisible();
         await expectTileTargets(p);
         await expectNoHorizontalOverflow(p);
         // Where this comes from: plain text in place, the institutions named, no link anywhere on the round.
@@ -176,7 +179,8 @@ test.describe('Match Shape on (game.match-shape at 100)', () => {
       },
       2: async (p) => {
         // A pair tile is named by its letter and letter name, never its sound, until it is found.
-        await expect(p.getByTestId('match-shape-heading')).toHaveAttribute('aria-label', 'Tap every ㅂ, letter bieup, b or p');
+        // The step's round node names the round and the target's sound, never the letter's Hangul (F-A11Y-001 AF-4c).
+        await expect(p.getByTestId('match-shape-heading')).toHaveAttribute('aria-label', /^Question \d+ of \d+\. Tap every copy of this letter b or p$/);
         await expect(p.getByTestId('match-shape-tile-0')).toHaveAttribute('aria-label', 'ㅂ, letter bieup');
         await expect(p.getByTestId('match-shape-tile-1')).toHaveAttribute('aria-label', 'ㅍ, letter pieup');
         await expectTileTargets(p);

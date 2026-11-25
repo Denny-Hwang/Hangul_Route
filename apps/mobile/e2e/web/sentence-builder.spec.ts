@@ -157,7 +157,7 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     // The right words in order: placed, announced by place, and the round finishes with the sentence.
     await placeTile(page, '밥을, babeul');
     await expect(page.getByLabel('Place 1 of 2: 밥을, babeul')).toBeVisible();
-    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Place 1 of 2: 밥을, babeul');
+    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Right answer: Place 1 of 2: babeul.');
     await expect(page.getByTestId('sentence-builder-live')).toHaveAttribute('aria-live', 'polite');
     // Filling a place clears the tried marks, so the verb is plain again.
     await placeTile(page, '먹어요, meogeoyo');
@@ -176,7 +176,7 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     await expect(page.getByTestId('sentence-builder-note')).toContainText('after a final consonant');
     await shot(page, 'sentence-builder-320-particle-miss');
     await placeTile(page, '이, i');
-    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Place 1 of 2: 책이, chaegi');
+    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Right answer: Place 1 of 2: chaegi.');
     await expectBuilt(page, 'chaegi isseoyo');
 
     // A round built with no miss records one right answer; Skip ends the step without recording the rest.
@@ -212,8 +212,8 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     // Skip waits out the answer lock of the last tile (AMENDMENTS-TOUCH 6.3).
     await pastTapLock(page);
     await page.getByRole('button', { name: 'Skip' }).click();
-    // Past the no-sound pause (motion.duration.crawl) after which the built sentence would advance.
-    await page.waitForTimeout(900);
+    // Past the no-sound pause (the 1000 ms result floor, F-A11Y-001 OD-AF2) after which the built sentence would advance.
+    await page.waitForTimeout(1_300);
     expect((await log(page)).completes).toBe(1);
   });
 
@@ -225,7 +225,7 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     // Settled well inside the animated slide-and-return (RETURN_MS, 520 ms).
     await expect(page.getByTestId('sentence-builder-returning')).toHaveCount(0, { timeout: 300 });
     await placeTile(page, '밥을, babeul');
-    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Place 1 of 2: 밥을, babeul');
+    await expect(page.getByTestId('sentence-builder-live')).toHaveText('Right answer: Place 1 of 2: babeul.');
   });
 
   test('reading practice (romanization on tap): tiles show no romanization line but keep it in their names; empty places match the tiles', async ({ page }) => {

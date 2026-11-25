@@ -27,7 +27,7 @@ import { Touchscreen, type TouchPoint } from './touch';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 /** Past the 400 ms lock, with room for a busy machine's slow event dispatch. */
 const AFTER_LOCK = 700;
-/** Past the lock and Hidden Heritage's 600 ms miss ring. */
+/** Past the lock (Hidden Heritage's miss ring has no timer now: it stays until the next tap, F-A11Y-001 OD-AF7). */
 const AFTER_MISS = 1_000;
 const en = getMessages('en');
 
@@ -120,15 +120,17 @@ for (const profile of PROFILES) {
       test.setTimeout(120_000);
       await openScene(page, 'scene:food-market', profile.largest);
       const touch = await Touchscreen.of(page);
-      // A thing that is never asked (an "other"): every tap on it is one more scored answer, a miss, and the round goes on.
+      // Things that are never asked (the "others"): every tap on one is one more scored answer, a miss, and the round goes on.
+      // A missed spot is locked until the next tap that changes the board (OD-AF7), so the matrix alternates two of them.
       const round = HiddenHeritageRoundSchema.parse(FOOD_MARKET_SCENE.round);
       const other = round.others[0]!.id;
       const spot = page.getByTestId(`hh-spot-${other}`);
+      const second = page.getByTestId(`hh-spot-${round.others[1]!.id}`);
       await page.waitForTimeout(AFTER_LOCK);
 
-      for (const g of MATRIX) {
+      for (const [i, g] of MATRIX.entries()) {
         const before = await hhAnswers(page);
-        await touch.graze(centre(await inView(spot)), g.dx, g.dy, { steps: 4, holdMs: g.holdMs ?? 0 });
+        await touch.graze(centre(await inView(i % 2 === 0 ? spot : second)), g.dx, g.dy, { steps: 4, holdMs: g.holdMs ?? 0 });
         await expect.poll(() => hhAnswers(page), { message: `graze ${g.dx},${g.dy}` }).toBe(before + 1);
         await page.waitForTimeout(AFTER_MISS);
       }

@@ -8,6 +8,7 @@ import {
   KOREAN_LANGUAGE,
   KOREAN_LINE_BREAK,
   KoreanText,
+  MARK_DISC,
   Pill,
   Progress,
   Screen,
@@ -26,6 +27,7 @@ import {
   useLayoutClass,
   useTypeScale,
 } from '@hangul-route/design-system';
+import type { HiddenHeritageSpot } from '@hangul-route/content-schema';
 import type { HiddenHeritageScene } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { HIDDEN_HERITAGE_RINGS } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
@@ -36,16 +38,21 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { afterMiss, afterRightAnswer, answerItem, lookHereLine } from '../../logic/answer-feedback';
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import { sceneCardBack } from '../../logic/hidden-heritage-card-back';
 import {
+  askedId,
   canSkip,
   endView,
   headerView,
+  HINT_AFTER_MISSES,
   liveText,
+  meaningOf,
   MIN_SCENE_WIDTH,
   promptView,
+  ringMarkOffset,
   sceneLayout,
   showsHoya,
   slotViews,
@@ -54,6 +61,7 @@ import {
   spotViews,
   startFlow,
   stepFlow,
+  thingName,
   validRounds,
   type FlowEffect,
   type FlowEvent,
@@ -66,9 +74,13 @@ import { picWordFallback } from '../../logic/hidden-heritage-fallback';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { AnswerAnnouncer } from './answer-announcer';
+import { MarkDisc } from './answer-marks';
 import type { MinigameHost } from './host';
 import { HiddenHeritageSceneArt } from './HiddenHeritageScene';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 import { useScrollViewScroller } from './use-scroll-view-scroller';
 
 /**
@@ -78,6 +90,15 @@ import { useScrollViewScroller } from './use-scroll-view-scroller';
  * button named by its meaning), in reading order, at least 48 dp; the word to find is Korean with its romanization,
  * heard and written, never an English label. Nothing moves: rings appear and clear without fading, so reduced motion
  * changes nothing. Under 256 dp of width the step plays Pic-Word Match on the same targets (`picWordFallback`).
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c; design/components/AnswerFeedback/spec.md D6, D9): the found ring shows `check`
+ * and the miss ring `replay`, each on a disc on the ring's top-end corner moved in just far enough to stay whole inside the
+ * scene (`ringMarkOffset`); look-here keeps its dashed ring inside the spot with no mark. A miss stays until the learner's
+ * next tap that changes the board (no timer, OD-AF7) and the missed spot is inactive meanwhile. Each result is said once by
+ * the answer announcer (a found word by its romanization and meaning, a miss by the thing tapped and "Look again"; the miss
+ * that rings the answer adds the look-here line), never Hangul; the visible caption stays, its live region goes. After a
+ * right tap the wait is the 1000 ms floor with a screen reader off, and with one on Next shows and waits for it (OD-AF9
+ * (b)); the word's sound starts after the line and is dropped if Next came first.
  */
 
 interface Props {
@@ -105,16 +126,25 @@ const ringColour: Record<RingKind, string> = {
 };
 const CASING = resolveColor(HIDDEN_HERITAGE_RINGS.casing);
 
-/** A ring at `borderWidth.thick` with a `text.primary` casing on both sides, so it reads on any fill. */
-function Ring({ kind }: { kind: RingKind }): ReactElement {
+/**
+ * A ring at `borderWidth.thick` with a `text.primary` casing on both sides, so it reads on any fill. A found or miss ring
+ * carries its disc (`check`, `replay`) on its top-end corner, kept whole inside the scene (D6); look-here has no mark.
+ */
+function Ring({ kind, spot, sceneWidth }: { kind: RingKind; spot: HiddenHeritageSpot; sceneWidth: number }): ReactElement {
   const inset = kind === 'hint' ? HINT_INSET : 0;
   const casing = { borderWidth: borderWidth.thin, borderColor: CASING, borderRadius: radii.md };
+  const disc = kind === 'hint' ? null : ringMarkOffset(spot, sceneWidth, MARK_DISC.size);
   return (
-    <View pointerEvents="none" testID={`hh-ring-${kind}`} style={{ position: 'absolute', top: inset, left: inset, right: inset, bottom: inset, ...casing }}>
-      <View style={{ flex: 1, borderWidth: borderWidth.thick, borderColor: ringColour[kind], borderStyle: kind === 'hint' ? 'dashed' : 'solid', borderRadius: radii.md }}>
-        <View style={{ flex: 1, ...casing }} />
+    <>
+      <View pointerEvents="none" testID={`hh-ring-${kind}`} style={{ position: 'absolute', top: inset, left: inset, right: inset, bottom: inset, ...casing }}>
+        <View style={{ flex: 1, borderWidth: borderWidth.thick, borderColor: ringColour[kind], borderStyle: kind === 'hint' ? 'dashed' : 'solid', borderRadius: radii.md }}>
+          <View style={{ flex: 1, ...casing }} />
+        </View>
       </View>
-    </View>
+      {disc ? (
+        <MarkDisc mark={kind === 'found' ? 'right' : 'miss'} place={disc} testID={`hh-ring-${kind}-mark`} />
+      ) : null}
+    </>
   );
 }
 
@@ -133,11 +163,12 @@ function Spot({ view, sceneWidth, hit, onTap }: { view: SpotView; sceneWidth: nu
       // Keyboard focus on the button inside (react-native-web's focus events bubble): the focus outline on the drawn spot.
       {...({ onFocus: () => setFocused(true), onBlur: () => setFocused(false) } as ViewProps)}
     >
-      <TapTarget testID={`hh-spot-${view.id}`} accessibilityLabel={view.label} onCommit={() => onTap(view.id)} style={{ width: hit.width, height: hit.height }}>
+      {/* The spot that shows its miss ring is locked, still focusable, never disabled (§3.1): a tap on it is not a second miss. */}
+      <TapTarget testID={`hh-spot-${view.id}`} accessibilityLabel={view.label} inactive={view.ring === 'miss'} onCommit={() => onTap(view.id)} style={{ width: hit.width, height: hit.height }}>
         {({ pressed }) => (
           <>
             <View pointerEvents="none" style={{ position: 'absolute', left: rect.left - hit.left, top: rect.top - hit.top, width: rect.width, height: rect.height }}>
-              {view.ring ? <Ring kind={view.ring} /> : null}
+              {view.ring ? <Ring kind={view.ring} spot={view.spot} sceneWidth={sceneWidth} /> : null}
               {focused ? (
                 <View
                   pointerEvents="none"
@@ -243,10 +274,23 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const stateRef = useRef(state);
   const hostRef = useRef(host);
   hostRef.current = host;
-  const timers = useRef<{ clear: ReturnType<typeof setTimeout> | null; advance: (() => void) | null }>({ clear: null, advance: null });
+  const timers = useRef<{ advance: (() => void) | null }>({ advance: null });
   // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3, QS-4: the first word waits for the scene; the next word waits for the found one.
   const pacing = useSoundPacing();
   const dispatchRef = useRef<(e: FlowEvent) => void>(() => undefined);
+  // F-A11Y-001 AF-4c: each result is said once by the answer announcer; with a screen reader on a right tap shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const aRef = useRef(a);
+  aRef.current = a;
+  const nextButton = useRoundNext();
+  const nextRef = useRef(nextButton);
+  nextRef.current = nextButton;
+  const mounted = useRef(true);
+  /** Counts the words moved on from: a late wait, a second Next, or a sound that comes after the move does nothing. */
+  const turn = useRef(0);
+  const latest = useRef({ a11y: m.a11y, copy: m.learner.hiddenHeritage });
+  latest.current = { a11y: m.a11y, copy: m.learner.hiddenHeritage };
 
   const slot = usePromptSlot({ source: AUDIO_SOURCE, textOnScreen: true });
   const { play: slotPlay } = slot;
@@ -259,6 +303,15 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
     },
     [rounds, slotPlay, pacing],
   );
+
+  /** The word moves on once: Next, or the wait that follows a right tap with the reader off. */
+  const moveOn = useCallback((): void => {
+    if (!mounted.current || stateRef.current.pending === null) return;
+    turn.current += 1;
+    nextRef.current.hide();
+    setRevealed(false);
+    dispatchRef.current({ type: 'advance' });
+  }, []);
 
   const runEffect = useCallback(
     (effect: FlowEffect): void => {
@@ -275,23 +328,17 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
             success();
           } else nudge();
           return;
-        case 'cancel-clear':
-          if (timers.current.clear) clearTimeout(timers.current.clear);
-          timers.current.clear = null;
-          return;
-        case 'schedule-clear':
-          timers.current.clear = setTimeout(() => dispatchRef.current({ type: 'clear-flash' }), effect.ms);
-          return;
         case 'cancel-advance':
           timers.current.advance?.();
           timers.current.advance = null;
+          nextRef.current.hide();
           return;
         case 'schedule-advance':
-          // The flow's delay is the least wait; the found word is said to its end first (QS-4).
+          // The flow's delay is the least wait, lifted to the result floor by the caller; the found word is said to its end
+          // first (QS-4).
           timers.current.advance = pacing.after(effect.ms, () => {
             timers.current.advance = null;
-            setRevealed(false);
-            dispatchRef.current({ type: 'advance' });
+            moveOn();
           });
           return;
         case 'complete':
@@ -299,14 +346,55 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           return;
       }
     },
-    [say, pacing],
+    [say, pacing, moveOn],
   );
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
-      const out = stepFlow(stateRef.current, event, rounds);
+      const before = stateRef.current;
+      const out = stepFlow(before, event, rounds);
       stateRef.current = out.state;
       setState(out.state);
+      const speak = aRef.current;
+      const { a11y: texts, copy: words } = latest.current;
+      const round = rounds[before.roundIdx];
+      const thing = (id: string) => round?.targets.find((t) => t.id === id);
+      if (event.type === 'tap' && round !== undefined) {
+        const asked = askedId(before);
+        const wait = out.effects.find((e) => e.type === 'schedule-advance');
+        if (wait?.type === 'schedule-advance' && asked !== null) {
+          // A found word: the line, the word's sound (after it, dropped if the word moved on), then the floor and the advance.
+          const target = thing(asked);
+          const sound = out.effects.find((e) => e.type === 'play');
+          out.effects.filter((e) => e !== sound && e !== wait).forEach(runEffect);
+          const at = turn.current;
+          const item = target ? answerItem(texts, target.word.romanization, meaningOf(target.word) ?? undefined) : '';
+          const say = (): Promise<void> => speak.announce({ kind: 'right', item });
+          void afterRightAnswer({
+            readerOn: speak.readerOn,
+            gameMinMs: wait.ms,
+            announce: speak.readerOn ? () => nextRef.current.afterFocus(say) : say,
+            play: () => {
+              if (turn.current !== at || !mounted.current) return;
+              if (sound) runEffect(sound);
+            },
+            showNext: () => nextRef.current.show(),
+            waitThenAdvance: (minMs) => runEffect({ type: 'schedule-advance', ms: minMs }),
+          });
+          return;
+        }
+        out.effects.forEach(runEffect);
+        if (out.effects.some((e) => e.type === 'haptic' && e.kind === 'nudge')) {
+          // The thing tapped, and "Look again"; the miss that rings the answer carries the look-here line instead (§3.2).
+          const tappedThing = [...round.targets, ...round.others].find((t) => t.id === event.id);
+          const item = tappedThing ? thingName(tappedThing.word) : '';
+          const answer = asked === null ? undefined : thing(asked);
+          const ringed = asked !== null && (out.state.misses[asked] ?? 0) >= HINT_AFTER_MISSES && (before.misses[asked] ?? 0) < HINT_AFTER_MISSES;
+          const hint = ringed && answer ? lookHereLine(texts, thingName(answer.word)) : words.again;
+          afterMiss({ readerOn: speak.readerOn, announce: () => speak.announce({ kind: 'missHint', item, hint }) });
+        }
+        return;
+      }
       out.effects.forEach(runEffect);
     },
     [rounds, runEffect],
@@ -314,9 +402,10 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   dispatchRef.current = dispatch;
 
   useEffect(() => {
+    mounted.current = true;
     const t = timers.current;
     return () => {
-      if (t.clear) clearTimeout(t.clear);
+      mounted.current = false;
       t.advance?.();
       stop();
     };
@@ -344,14 +433,19 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
       // [QS-3] The scene has just appeared: its first word waits for it. A tap on Hear it first plays at once.
       pacing.opening(() => dispatchRef.current({ type: 'start' }));
     } else if (narrowed && started.current) {
-      const t = timers.current;
-      if (t.clear) clearTimeout(t.clear);
-      t.clear = null;
-      t.advance = null;
+      timers.current.advance = null;
       pacing.dispose();
       stop();
     }
   }, [sceneFits, narrowed]);
+
+  // A new word empties the announcer and, with a reader on, moves focus to the word's header node (§3.4).
+  const wordKey = `${state.roundIdx}:${state.at}`;
+  const firstWord = useRef(wordKey);
+  useEffect(() => {
+    clear();
+    if (wordKey !== firstWord.current) focusPrompt();
+  }, [wordKey, clear, focusPrompt]);
 
   const round = rounds[state.roundIdx];
   const scene = round ? scenes.get(round.sceneId) : undefined;
@@ -401,7 +495,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
             {views.map((v) =>
               v.ring ? (
                 <View key={v.id} pointerEvents="none" style={{ position: 'absolute', ...spotRect(v.spot, width) }}>
-                  <Ring kind={v.ring} />
+                  <Ring kind={v.ring} spot={v.spot} sceneWidth={width} />
                 </View>
               ) : null,
             )}
@@ -438,7 +532,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           <Spacer size="lg" />
           <Heading level="title">{copy.allFound}</Heading>
           <Spacer size="md" />
-          {sceneView(spotViews(round, state, m.a11y.hiddenHeritage), false)}
+          {sceneView(spotViews(round, state, m.a11y.hiddenHeritage, m.a11y.minigame.option), false)}
           <Spacer size="md" />
           <View testID="hh-end" style={{ gap: spacing.sm }}>
             {endView(round).map((e) => (
@@ -459,14 +553,23 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   }
 
   const prompt = promptView(round, state);
-  const views = spotViews(round, state, m.a11y.hiddenHeritage);
+  const views = spotViews(round, state, m.a11y.hiddenHeritage, m.a11y.minigame.option);
   const hear = (): void => {
     setRevealed(true);
     dispatch({ type: 'hear' });
   };
   const promptBlock = (
     <View>
-      <Caption tone="secondary">{copy.prompt}</Caption>
+      {/* The word's header node (§3.4): "Find this" and the word's romanization, never the Hangul; the word itself stays its own button. */}
+      <View
+        ref={a.promptRef}
+        testID="hh-round"
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel={m.a11y.answer.round(Math.min(header.max, header.value + 1), header.max, [copy.prompt, prompt?.word.romanization].filter((part): part is string => part !== undefined).join(' '))}
+      >
+        <Caption tone="secondary">{copy.prompt}</Caption>
+      </View>
       <Spacer size="xs" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
         {prompt ? (
@@ -482,7 +585,8 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           />
         ) : null}
       </View>
-      <View accessibilityLiveRegion="polite">
+      {/* The visible caption stays; the announcer says the result once, so it is not a live region too (§3.3). */}
+      <View>
         <Caption tone="muted">{liveText(round, state, m.a11y.hiddenHeritage, copy)}</Caption>
       </View>
     </View>
@@ -507,17 +611,21 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
       )}
     </View>
   );
-  // Not a live region: the caption under the prompt already announces "Look again" once.
+  // Not a live region: the announcer says "Look again" once (§3.3).
   const hoya = (
     <View>
       {showsHoya(state) ? (
         <>
           <Spacer size="md" />
-          <HoyaBubble tone="thinking" message={copy.again} />
+          <HoyaBubble tone="thinking" message={copy.again} live={false} />
         </>
       ) : null}
     </View>
   );
+  // Next (a reader on): the word moves on once pressed (§3.4, OD-AF9 (b)); under the scene's found slots.
+  const next = nextButton.shown ? (
+    <Button pressableRef={nextButton.nextRef} label={m.learner.minigame.trace.next.cta} tone="primary" size="hero" fullWidth onPress={moveOn} testID="hh-next" />
+  ) : null;
   const panel = (
     <PromptPanel
       variant="status"
@@ -538,6 +646,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
             <View style={{ flex: 1, minWidth: COLUMN_MIN, gap: spacing.md }}>
               {promptBlock}
               {slots}
+              {next}
               {panel}
               {hoya}
             </View>
@@ -550,6 +659,12 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
             {sceneView(views, true)}
             <Spacer size="md" />
             {slots}
+            {next ? (
+              <>
+                <Spacer size="md" />
+                {next}
+              </>
+            ) : null}
             <Spacer size="sm" />
             {panel}
             {hoya}
@@ -558,6 +673,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
         <Spacer size="xl" />
       </View>
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      <AnswerAnnouncer line={a.line} />
     </Screen>
   );
 }

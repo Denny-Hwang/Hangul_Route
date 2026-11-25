@@ -7,7 +7,7 @@ import { fallbackScope } from '../../../logic/match-shape/fallback';
 import type { ShapeRound } from '../../../logic/reviews/review-rounds';
 import { byTestId, hostNodes, press, render, screenTexts } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
-import { PAIR_SOLVED_PAUSE_MS } from '../MatchShapeBoard';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { MatchShapeGame } from '../MatchShapeGame';
 import { MatchShapeStepBody } from '../MatchShapeStepBody';
 import { ReadPickGame } from '../ReadPickGame';
@@ -134,14 +134,15 @@ describe('a pair round (tap every copy among look-alikes)', () => {
   it('names tiles by letter and letter name until found; every copy found first try is right, then the round moves on', async () => {
     const h = host();
     const r = await toPair(h);
-    expect(screenTexts(r.root)).toContain('Tap every ㅂ, letter bieup, b or p');
+    // The step's round node names the round and the target's sound, never the letter's Hangul (F-A11Y-001 AF-4c, §3.4).
+    expect(screenTexts(r.root).some((t) => /^Question 3 of \d+\. Tap every copy of this letter b or p$/.test(t))).toBe(true);
     const names = [...LAYOUT].map((_t, i) => byTestId(r.root, `match-shape-tile-${i}`)[0]?.props['aria-label']);
     expect(names).toEqual(['ㅂ, letter bieup', 'ㅍ, letter pieup', 'ㅍ, letter pieup', 'ㅂ, letter bieup', 'ㅍ, letter pieup', 'ㅂ, letter bieup']);
     for (const i of [0, 3, 5]) await tapId(r.root, `match-shape-tile-${i}`);
     expect(h.answers.at(-1)).toEqual(['ms:pair:bieup', true, { itemId: 'ms:pair:bieup' }]);
     expect(byTestId(r.root, 'match-shape-tile-0')[0]?.props['aria-label']).toBe('ㅂ, letter bieup, b or p, found');
     await act(async () => {
-      vi.advanceTimersByTime(PAIR_SOLVED_PAUSE_MS);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     expect(screenTexts(r.root)).toContain('The shape of the mouth.');
   });
@@ -216,7 +217,7 @@ describe('the review round at the produce rung', () => {
     expect(screenTexts(r.root).join(' ')).toContain('a short stroke points up from a flat line.');
     for (const t of tiles.filter((x) => x.props['aria-label'] === 'ㅓ, letter eo')) await press(t);
     await act(async () => {
-      vi.advanceTimersByTime(PAIR_SOLVED_PAUSE_MS);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     expect(first).toEqual([false]);
     expect(solved).toBe(1);
@@ -252,7 +253,7 @@ describe('[QS-4] a pair round waits for the letter name', () => {
     const r = await toPair(host());
     holdSound();
     for (const i of [0, 3, 5]) await tapId(r.root, `match-shape-tile-${i}`);
-    await advance(PAIR_SOLVED_PAUSE_MS + 600);
+    await advance(RESULT_MARK_MIN_MS + 600);
     expect(screenTexts(r.root)).not.toContain('The shape of the mouth.');
     for (const end of ends.splice(0)) end();
     await advance(0);
