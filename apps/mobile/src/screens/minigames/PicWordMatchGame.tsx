@@ -89,6 +89,8 @@ interface Props {
 
 interface TileFrameProps {
   badge: number | undefined;
+  /** The corner of the number: `end` for a picture card (its mark sits in the row), `start` for a word card (F6: its mark takes the end corner). */
+  badgeCorner: 'start' | 'end';
   /** The ChoiceCard, which takes `ringStyle(selected)` as its `targetStyle`. */
   children: ReactNode;
 }
@@ -105,14 +107,15 @@ const ringStyle = (selected: boolean): ViewStyle => (selected ? RING_SELECTED : 
 
 /**
  * The match number on both tiles of a matched pair, next to the card's check mark, so a match never relies on colour
- * alone. It takes no touch: a touch under it reaches the tile.
+ * alone. It takes no touch: a touch under it reaches the tile. A word card is a tile (F-A11Y-001 F6), its mark on the
+ * end corner, so its number takes the start corner and never covers the mark.
  */
-function TileFrame({ badge, children }: TileFrameProps): ReactElement {
+function TileFrame({ badge, badgeCorner, children }: TileFrameProps): ReactElement {
   return (
     <View>
       {children}
       {badge !== undefined ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}>
+        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.sm, ...(badgeCorner === 'end' ? { right: spacing.sm } : { left: spacing.sm }) }}>
           <Pill label={String(badge)} tone="primary" size="sm" />
         </View>
       ) : null}
@@ -355,7 +358,7 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
                 if (!pair) return null;
                 const view = pictureTileView(pair, state, m.a11y.minigame);
                 return (
-                  <TileFrame key={pairId} badge={view.badge}>
+                  <TileFrame key={pairId} badge={view.badge} badgeCorner="end">
                     <ChoiceCard
                       testID={`pic-word-picture-${pairId}`}
                       state={view.cardState}
@@ -378,13 +381,14 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
                 if (!pair) return null;
                 const view = wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);
                 return (
-                  <TileFrame key={pairId} badge={view.badge}>
+                  <TileFrame key={pairId} badge={view.badge} badgeCorner="start">
                     <ChoiceCard
                       testID={`pic-word-word-${pairId}`}
                       state={view.cardState}
                       ko={view.ko}
                       romanization={view.romanization}
                       gloss={view.gloss}
+                      layout="tile"
                       accessibilityLabel={view.accessibilityLabel}
                       onPress={select('word', pairId)}
                       targetStyle={ringStyle(view.selected)}
