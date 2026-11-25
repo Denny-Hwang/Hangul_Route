@@ -3,7 +3,7 @@ import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clozeFixtureScope } from '../../../logic/cloze-pick/e2e-rounds';
 import { tileId } from '../../../logic/cloze-pick/round';
-import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickStep, type ClozePickRendered } from '../cloze-pick-entry';
 import { endVoiceCheckHold } from '../../../store/audio-store';
@@ -65,7 +65,7 @@ async function playToTheEnd(on: boolean) {
     expect(node, id).toBeDefined();
     await press(node!);
     await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
   }
   return { rendered, h };

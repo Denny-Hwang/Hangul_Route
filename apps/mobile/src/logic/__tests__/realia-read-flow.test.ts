@@ -21,12 +21,14 @@ import {
   REALIA_READ_TIMING,
   lineBaseLabel,
   lineGloss,
+  lineHintName,
   lineSpeech,
   lineViews,
   playableRealia,
   realiaArrangement,
   realiaHeaderView,
   realiaOptionColumns,
+  realiaOptionItem,
   realiaOptionView,
   realiaKeyLabel,
   realiaStatus,
@@ -431,5 +433,27 @@ describe('realiaStatus', () => {
     expect(realiaStatus(menu.realia, q1, one, 'review', COPY, A11Y, OR).hoya).toBeUndefined();
     const hit = run(one, [tap('samcheon', 600)]).state;
     expect(realiaStatus(menu.realia, q1, hit, 'quest', COPY, A11Y, OR).hoya).toBeUndefined();
+  });
+});
+
+describe('lineHintName and realiaOptionItem (F-A11Y-001 §3.2: names without Hangul)', () => {
+  const ramyeon = menu.realia.entries.find((e) => e.id === 'ramyeon')!;
+  it('names the look-here line by romanization, its value and its direction; lineBaseLabel keeps the Korean', () => {
+    expect(lineHintName(ramyeon, A11Y, OR)).toBe('ramyeon, samcheon won');
+    expect(lineBaseLabel(ramyeon, A11Y, OR)).toContain('라면');
+    const sign = playableRealia(REALIA_FIXTURES.sign)!.realia.entries;
+    expect(lineHintName(sign.find((e) => e.id === 'summit')!, A11Y, OR)).toBe(`jeongsang, han sigan, ${A11Y.realia.dir.right}`);
+    expect(lineHintName(sign.find((e) => e.id === 'entrance')!, A11Y, OR)).toBe(`ipgu, ${A11Y.realia.dir.left}`);
+  });
+  it('names an option by romanization (and meaning after a right answer), a picture by its name, a figure as it is', () => {
+    const samcheon = q1.options.find((o) => o.id === 'samcheon')!;
+    expect(realiaOptionItem(samcheon, en.a11y, false)).toBe('samcheon won');
+    expect(realiaOptionItem(samcheon, en.a11y, true)).toBe('samcheon won, 3,000 won');
+    const picture = menu.rounds[3]!.options[1]!;
+    expect(realiaOptionItem(picture, en.a11y, true)).toBe('bread');
+    expect(realiaOptionItem({ id: 'p', pictureRef: 'word:x' }, en.a11y, true)).toBe(en.a11y.minigame.picture);
+    const figure = playableRealia(REALIA_FIXTURES.ticket)!.rounds[0]!.options[0]!;
+    expect(realiaOptionItem(figure, en.a11y, true)).toBe('3:00');
+    expect(realiaOptionItem({ id: 'f' }, en.a11y, true)).toBe('');
   });
 });

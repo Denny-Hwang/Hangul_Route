@@ -16,6 +16,7 @@ import {
   useMediaSize,
   TapBoard,
 } from '@hangul-route/design-system';
+import { a11yRomanization } from '@hangul-route/content-schema';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
@@ -24,9 +25,11 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { afterMiss, afterRightAnswer, lookHereLine } from '../../logic/answer-feedback';
 import { screenScrollsWithColumns } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
+  lineHintName,
   lineSpeech,
   lineViews,
   playableRealia,
@@ -34,6 +37,7 @@ import {
   realiaHeaderView,
   realiaKeyLabel,
   realiaOptionColumns,
+  realiaOptionItem,
   realiaOptionView,
   realiaStatus,
   sheetKind,
@@ -49,10 +53,13 @@ import {
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { AnswerAnnouncer } from './answer-announcer';
 import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { RealiaSheetView } from './realia-kinds-entry';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * Realia Read (F-CURR-001 §3.6, row G-2): read a drawn menu, ticket, trail sign or price cards
@@ -60,6 +67,12 @@ import { RealiaSheetView } from './realia-kinds-entry';
  * (reducer, effects, view-models); this file renders it and runs the effects. Reading is the
  * skill: nothing here asks the learner to speak. Design: design/wireframes/minigame/realia-read.md,
  * design/screens/minigame-realia-read/.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4b): each result is said once by the answer announcer (a right option by its
+ * romanization and meaning, a miss by what was tapped; the miss that rings the answer's line carries the look-here line,
+ * named by romanization), Hoya's line and the look-here line under the options are not live, the advance waits the 1000 ms
+ * result floor with a screen reader off, and with one on a right option shows Next (OD-AF9 (b)), the last question
+ * included, and the option's sound starts after the line. A reader hears nothing play by itself after a miss.
  */
 
 interface Props {
@@ -94,6 +107,19 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
   const playRef = useRef(play);
   playRef.current = play;
   const dispatchRef = useRef<(event: RealiaReadEvent) => void>(() => undefined);
+  // F-A11Y-001 AF-4b: each result is said once, by the answer announcer; with a screen reader on a right option shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const nextButton = useRoundNext();
+  const mounted = useRef(false);
+  /** The question last moved on from: a second Next (or a late wait) for the same question does nothing; its sound is not said after it. */
+  const movedFrom = useRef(-1);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // The lines and options are printed on screen, so a speaker that cannot sound shows only the status
   // panel (F-AUDIO-004 A-5b): why, with the one action, under the sheet for a line and under the options
@@ -151,14 +177,65 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
     }
   }, [say]);
 
-  const dispatch = useCallback(
-    (event: RealiaReadEvent): void => {
-      const out = stepRealiaRead(stateRef.current, event);
-      stateRef.current = out.state;
-      setState(out.state);
-      out.effects.forEach(runEffect);
+  /** What a result needs from this render: read when the tap comes, so `dispatch` keeps one identity. */
+  const latest = useRef({ a, next: nextButton, a11y: m.a11y, or: m.a11y.romanizationOr });
+  latest.current = { a, next: nextButton, a11y: m.a11y, or: m.a11y.romanizationOr };
+
+  /** A tap that scored: the line is said once, and the effects that follow are the answer's own (§3.4). */
+  const settle = useCallback(
+    (before: RealiaReadState, after: RealiaReadState, tapped: string, effects: RealiaReadEffect[]): void => {
+      const current = playRef.current;
+      const round = current?.rounds[before.roundIdx];
+      const { a: say, next, a11y: texts, or } = latest.current;
+      const option = round?.options.find((o) => o.id === tapped);
+      const sound = effects.find((e) => e.type === 'play-option');
+      const advanceNow = effects.find((e) => e.type === 'schedule-advance');
+      const correct = effects.some((e) => e.type === 'answer' && e.correct);
+      effects.filter((e) => e !== sound && e !== advanceNow).forEach(runEffect);
+      if (!current || !round || !option) return;
+      const asked = before.roundIdx;
+      if (correct && advanceNow?.type === 'schedule-advance') {
+        const speak = (): Promise<void> => say.announce({ kind: 'right', item: realiaOptionItem(option, texts, true) });
+        void afterRightAnswer({
+          readerOn: say.readerOn,
+          gameMinMs: advanceNow.ms,
+          announce: say.readerOn ? () => next.afterFocus(speak) : speak,
+          ...(sound === undefined
+            ? {}
+            : {
+                play: () => {
+                  // A reader on may press Next before the line ends: the question has moved on, so its sound is not said.
+                  if (movedFrom.current === asked || !mounted.current) return;
+                  runEffect(sound);
+                },
+              }),
+          showNext: next.show,
+          waitThenAdvance: (minMs) => runEffect({ type: 'schedule-advance', ms: minMs }),
+        });
+        return;
+      }
+      const item = realiaOptionItem(option, texts, false);
+      const entry = round.answerEntryId === undefined ? undefined : current.realia.entries.find((e) => e.id === round.answerEntryId);
+      // The miss that rings the answer's line carries the look-here line, named without its Hangul.
+      const ringed = after.lookHere && !before.lookHere && entry !== undefined;
+      afterMiss({
+        readerOn: say.readerOn,
+        announce: () => say.announce(ringed ? { kind: 'missHint', item, hint: lookHereLine(texts, lineHintName(entry, texts.minigame, or)) } : { kind: 'miss', item }),
+      });
     },
     [runEffect],
+  );
+
+  const dispatch = useCallback(
+    (event: RealiaReadEvent): void => {
+      const before = stateRef.current;
+      const out = stepRealiaRead(before, event);
+      stateRef.current = out.state;
+      setState(out.state);
+      if (event.type === 'tap' && out.effects.some((e) => e.type === 'answer')) settle(before, out.state, event.optionId, out.effects);
+      else out.effects.forEach(runEffect);
+    },
+    [runEffect, settle],
   );
   dispatchRef.current = dispatch;
 
@@ -173,11 +250,17 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
   const round = play?.rounds[state.roundIdx];
   // A new question starts a new prompt slot: the last question's "Tap to hear" does not carry over.
   const roundId = round?.id;
+  const roundIdx = state.roundIdx;
   useEffect(() => {
     slotReset();
     lastSaid.current = null;
     setSoundAt(null);
   }, [roundId, slotReset]);
+  // A new question empties the announcer and, with a reader on, moves focus to the question's header node (§3.4).
+  useEffect(() => {
+    clear();
+    if (roundIdx > 0) focusPrompt();
+  }, [roundIdx, clear, focusPrompt]);
   /** The slot's status panel at one place: quiet (the live region kept) unless the last tap was there. */
   const soundPanel = (at: SoundAt, testID: string): ReactElement => (
     <PromptPanel
@@ -206,6 +289,16 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
       </Screen>
     );
   }
+
+  /** Next (a reader on): the question moves on once; a second press, or one after it has moved, does nothing. */
+  const advanceNow = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
+    nextButton.hide();
+    dispatch({ type: 'advance' });
+  };
+  // The question's header node (§3.4): the question and its key word by romanization, never its Hangul.
+  const roundLabel = m.a11y.answer.round(roundIdx + 1, play.rounds.length, [round.questionEn, round.key ? a11yRomanization(round.key.romanization, m.a11y.romanizationOr) : undefined].filter((part): part is string => part !== undefined).join(' '));
 
   const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr };
   const header = realiaHeaderView(host.mode, state, copy);
@@ -256,9 +349,11 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
         }
         answers={
           <View style={{ gap: spacing.md }}>
-            <Heading level="prompt" testID="realia-read-question">
-              {round.questionEn}
-            </Heading>
+            <View ref={a.promptRef} testID="realia-read-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
+              <Heading level="prompt" testID="realia-read-question">
+                {round.questionEn}
+              </Heading>
+            </View>
             {round.key ? (
               <View style={{ alignItems: 'center' }}>
                 <KoreanText
@@ -293,15 +388,27 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
                 })}
               </View>
             </TapBoard>
+            {nextButton.shown ? (
+              <Button
+                pressableRef={nextButton.nextRef}
+                label={copy.trace.next.cta}
+                tone="primary"
+                size="hero"
+                fullWidth
+                onPress={advanceNow}
+                testID="realia-read-next"
+              />
+            ) : null}
             {soundPanel('options', 'realia-read-option-sound')}
           </View>
         }
         feedback={
-          <View accessibilityLiveRegion="polite" testID="realia-read-status">
+          <View testID="realia-read-status">
             {status.hoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={status.hoya} />
+                {/* The announcer says the result once, so this result bubble and the look-here line are not live regions too (§3.3). */}
+                <HoyaBubble tone="thinking" message={status.hoya} live={false} />
               </>
             ) : null}
             {status.lookHere ? (
@@ -312,6 +419,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
           </View>
         }
       />
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>

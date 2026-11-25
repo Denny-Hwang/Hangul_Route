@@ -8,6 +8,7 @@ import {
 } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { HostMode } from '../screens/minigames/host';
+import { answerItem } from './answer-feedback';
 import { seededRandom } from './listen-pick';
 import type { MinigameScope } from './minigame-config';
 
@@ -258,6 +259,16 @@ export function lineBaseLabel(entry: RealiaEntry, a11y: MinigameA11y, or: string
   return parts.join(', ');
 }
 
+/**
+ * A line's name for the look-here line a result announces (F-A11Y-001 §3.2, OD-AF5 (a)): its romanization, value and
+ * direction, with no Hangul (`lineBaseLabel` keeps the Korean for the line's own name).
+ */
+export function lineHintName(entry: RealiaEntry, a11y: MinigameA11y, or: string): string {
+  const parts = [a11yRomanization(entry.text.romanization, or), ...(entry.value ? [a11yRomanization(entry.value.romanization, or)] : [])];
+  if (entry.dir) parts.push(a11y.realia.dir[entry.dir]);
+  return parts.join(', ');
+}
+
 /** The UI-language gloss of a line, shown when it is found: "instant noodles, 3,000 won". */
 export function lineGloss(entry: RealiaEntry): string {
   return entry.value ? `${entry.text.en}, ${entry.value.en}` : entry.text.en;
@@ -390,6 +401,16 @@ export function realiaOptionView(
   }
   const accessibilityLabel = cardState === 'correct' || cardState === 'wrong' ? a11y.option[cardState](base) : base;
   return { ...view, accessibilityLabel };
+}
+
+/**
+ * What a result line calls an option (F-A11Y-001 §3.2): a Korean answer by its romanization (and, after a right answer,
+ * its meaning), a picture by its name, a figure as it is; never Hangul (OD-AF5 (a)).
+ */
+export function realiaOptionItem(option: RealiaOption, a11y: Messages['a11y'], gloss: boolean): string {
+  if (option.text) return answerItem(a11y, a11yRomanization(option.text.romanization, a11y.romanizationOr), gloss ? option.text.en : undefined);
+  if (option.pictureRef !== undefined) return option.labelEn ?? a11y.minigame.picture;
+  return option.figure ?? '';
 }
 
 /**

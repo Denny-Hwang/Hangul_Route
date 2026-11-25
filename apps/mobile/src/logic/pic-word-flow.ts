@@ -1,5 +1,6 @@
 import type { PicWordRound, RomanizationMode } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { answerItem } from './answer-feedback';
 import { seededRandom } from './listen-pick';
 import type { MinigameScope } from './minigame-config';
 
@@ -10,8 +11,9 @@ import type { MinigameScope } from './minigame-config';
  *
  * Rules in one place: pairing is tap-tap in either order (no drag); a tap on
  * the selected tile keeps it selected (a bounce never un-selects,
- * AMENDMENTS-TOUCH 6.1); a wrong pair ambers the SECOND tile for 600 ms
- * and leaves the first selected, and is scored against the FIRST-selected
+ * AMENDMENTS-TOUCH 6.1); a wrong pair ambers the SECOND tile and leaves the first
+ * selected, and the amber stays (no timer: F-A11Y-001 OD-AF7, row AF-4b) until the learner's next tap that changes the
+ * board: another tile, or a pair. It is scored against the FIRST-selected
  * tile's pair (key `b<board>:<pairId>`, so a miss and the later match share one
  * key and the run store keeps the later answer as a retry); after a pair's
  * second miss its partner is ringed; a right pair locks both tiles under one
@@ -20,9 +22,7 @@ import type { MinigameScope } from './minigame-config';
  */
 
 export const PIC_WORD_TIMING = {
-  /** A wrong second tile stays amber this long. */
-  missClearMs: 600,
-  /** Last pair matched -> the next board (or the end). */
+  /** Last pair matched -> the next board (or the end); the result floor of F-A11Y-001 OD-AF2 (b) is the least wait. */
   advanceDelayMs: 700,
 } as const;
 
@@ -55,7 +55,7 @@ export interface PicWordFlowState {
   matched: readonly string[];
   /** Misses per scored pair on this board. */
   missCounts: Readonly<Record<string, number>>;
-  /** The second tile of a wrong pair, amber for `missClearMs`. */
+  /** The second tile of a wrong pair: amber until the learner's next tap that changes the board (OD-AF7). */
   flash: Selection | null;
   /** Any answer has been given in this run (Skip appears). */
   answered: boolean;
@@ -63,7 +63,6 @@ export interface PicWordFlowState {
 
 export type FlowEvent =
   | { type: 'select'; side: Side; pairId: string }
-  | { type: 'clear-flash' }
   | { type: 'advance' }
   | { type: 'skip' };
 
@@ -71,8 +70,6 @@ export type FlowEffect =
   | { type: 'answer'; roundKey: string; correct: boolean; pairId: string }
   | { type: 'haptic'; kind: 'success' | 'nudge' }
   | { type: 'play'; pairId: string }
-  | { type: 'schedule-clear'; ms: number }
-  | { type: 'cancel-clear' }
   | { type: 'schedule-advance'; ms: number }
   | { type: 'complete' };
 
@@ -104,11 +101,9 @@ const unchanged = (state: PicWordFlowState): FlowStep => ({ state, effects: [] }
 
 const other = (side: Side): Side => (side === 'picture' ? 'word' : 'picture');
 
-/** Drops the amber flash and, if one was showing, its timer. */
-function withoutFlash(state: PicWordFlowState): { state: PicWordFlowState; effects: FlowEffect[] } {
-  return state.flash === null
-    ? { state, effects: [] }
-    : { state: { ...state, flash: null }, effects: [{ type: 'cancel-clear' }] };
+/** Drops the amber flash, if one was showing. */
+function withoutFlash(state: PicWordFlowState): PicWordFlowState {
+  return state.flash === null ? state : { ...state, flash: null };
 }
 
 function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: 'select' }>): FlowStep {
@@ -117,27 +112,22 @@ function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: '
 
   // The selected tile again changes nothing: a child's bounce or a double tap never un-selects (AMENDMENTS-TOUCH 6.1).
   if (first !== null && first.side === event.side && first.pairId === event.pairId) return unchanged(state);
-  // The amber tile of the miss just made, while it still shows: a bounce on it is not a second miss (AMENDMENTS-TOUCH 6.1).
+  // The amber tile of the miss just made, which stays until the board changes: a tap on it is not a second miss (AMENDMENTS-TOUCH 6.1).
   if (state.flash !== null && state.flash.side === event.side && state.flash.pairId === event.pairId) return unchanged(state);
 
   // First tile, or another tile on the same side: the selection moves, no pair is attempted.
   if (first === null || first.side === event.side) {
-    const dropped = withoutFlash(state);
-    return {
-      state: { ...dropped.state, selected: { side: event.side, pairId: event.pairId } },
-      effects: dropped.effects,
-    };
+    return { state: { ...withoutFlash(state), selected: { side: event.side, pairId: event.pairId } }, effects: [] };
   }
 
   const roundKey = pairRoundKey(state.boardIdx, first.pairId);
 
   if (first.pairId === event.pairId) {
-    const dropped = withoutFlash(state);
     const matched = [...state.matched, first.pairId];
     const finished = matched.length >= state.pairCounts[state.boardIdx]!;
     return {
       state: {
-        ...dropped.state,
+        ...withoutFlash(state),
         selected: null,
         matched,
         answered: true,
@@ -146,7 +136,6 @@ function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: '
       effects: [
         { type: 'answer', roundKey, correct: true, pairId: first.pairId },
         { type: 'haptic', kind: 'success' },
-        ...dropped.effects,
         { type: 'play', pairId: first.pairId },
         ...(finished ? [{ type: 'schedule-advance', ms: PIC_WORD_TIMING.advanceDelayMs } as const] : []),
       ],
@@ -163,8 +152,6 @@ function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: '
     effects: [
       { type: 'answer', roundKey, correct: false, pairId: first.pairId },
       { type: 'haptic', kind: 'nudge' },
-      { type: 'cancel-clear' },
-      { type: 'schedule-clear', ms: PIC_WORD_TIMING.missClearMs },
     ],
   };
 }
@@ -194,13 +181,11 @@ export function stepFlow(state: PicWordFlowState, event: FlowEvent): FlowStep {
   switch (event.type) {
     case 'select':
       return selectStep(state, event);
-    case 'clear-flash':
-      return state.flash === null ? unchanged(state) : { state: { ...state, flash: null }, effects: [] };
     case 'advance':
       return advanceStep(state);
     case 'skip':
       if (!canSkip(state)) return unchanged(state);
-      return { state: { ...state, status: 'done' }, effects: [{ type: 'cancel-clear' }, { type: 'complete' }] };
+      return { state: { ...state, status: 'done' }, effects: [{ type: 'complete' }] };
   }
 }
 
@@ -380,6 +365,14 @@ export function wordTileView(
   const gloss = base.cardState === 'correct' ? pair.word.en : undefined;
   const spoken = [pair.word.ko, romanization, gloss].filter((part) => part !== undefined && part !== '').join(', ');
   return { ...base, ko: pair.word.ko, romanization, gloss, accessibilityLabel: announce(spoken) };
+}
+
+/**
+ * What a result line calls a pair's tile (F-A11Y-001 §3.2): a picture by its meaning, a word by its romanization and,
+ * once it is matched, its meaning; never its Hangul (OD-AF5 (a)).
+ */
+export function tileItem(pair: PicWordPair, side: Side, a11y: Messages['a11y'], withMeaning: boolean): string {
+  return side === 'picture' ? pair.word.en : answerItem(a11y, pair.word.romanization, withMeaning ? pair.word.en : undefined);
 }
 
 /** The line under the board (a live region): what is selected and what to do next. */
