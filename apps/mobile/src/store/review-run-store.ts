@@ -3,10 +3,13 @@ import type { ReviewAnswer } from '../logic/stage1/review-flow';
 import type { MinigameHost } from '../screens/minigames/host';
 
 /**
- * The Hangul Check run in progress (F-QUEST-002 §3.9). Ephemeral: it persists nothing and never
+ * The Hangul Check run in progress (F-QUEST-002 §3.9). In memory: this store persists nothing and never
  * touches `quest-run-store`, a quest or a quest's stars. The first answer per item scores; later
  * answers are retries (F-001 §3.2). The result is written once, through
  * `progress-store.recordReview`, by the screen that finished the run; leaving resets it.
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a: the answers are also kept on the device after each answer, so an
+ * interrupted check goes on (`store/check-run-saved.ts` subscribes to this store and `restore` puts a stored run
+ * back); the reset on leaving stays, the stored check is not this store's.
  */
 
 interface State {
@@ -18,6 +21,11 @@ interface Actions {
   begin: (itemIds: readonly string[]) => void;
   /** First answer per item scores; an id that is not in the run is ignored. */
   answer: (itemId: string, correct: boolean) => void;
+  /**
+   * [LR] A stored run back: the items and the first-try record of each one answered. An item restored keeps its first
+   * answer; a later answer to it is a retry. Only items of the run are kept.
+   */
+  restore: (itemIds: readonly string[], answers: Readonly<Record<string, ReviewAnswer>>) => void;
   reset: () => void;
 }
 
@@ -30,6 +38,14 @@ export const useReviewRunStore = create<State & Actions>((set, get) => ({
     if (!itemIds.includes(itemId)) return;
     const seen = answers[itemId];
     set({ answers: { ...answers, [itemId]: seen ? { ...seen, retries: seen.retries + 1 } : { first: correct, retries: 0 } } });
+  },
+  restore: (itemIds, answers) => {
+    const kept: Record<string, ReviewAnswer> = {};
+    for (const id of itemIds) {
+      const answer = answers[id];
+      if (answer) kept[id] = { first: answer.first, retries: answer.retries };
+    }
+    set({ itemIds: [...itemIds], answers: kept });
   },
   reset: () => set({ itemIds: [], answers: {} }),
 }));
