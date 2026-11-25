@@ -441,6 +441,8 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
                 <ui.RoundView
                   round={round}
                   reducedMotion={reducedMotion}
+                  cantHear
+                  hidesRomanization={hideRomanization}
                   onFirst={(answer) => onFirst(index, answer)}
                   onSolved={onSolved}
                   grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}

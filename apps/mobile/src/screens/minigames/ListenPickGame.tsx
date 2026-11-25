@@ -1,4 +1,4 @@
-import { isReadPickScope, isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
+import { a11yRomanization, isReadPickScope, isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
 import { romanizationShown } from '@hangul-route/i18n';
 import {
   Body,
@@ -28,6 +28,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { AskedRomanization } from '../../components/AskedRomanization';
 import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -40,6 +41,7 @@ import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '..
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
+  askedTextIsRomanizationOnly,
   checkHoldsRomanization,
   headerView,
   listenPickSpeech,
@@ -63,7 +65,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { AnswerAnnouncer } from './answer-announcer';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
-import type { HostMode, MinigameHost } from './host';
+import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { useAnswerAnnouncement } from './use-answer-announcement';
 import { useRoundNext } from './use-round-next';
@@ -132,9 +134,6 @@ interface Focusable {
 
 /** The spelling round's option name (letter names), or none. */
 type OptionItemLabel = ((text: { ko: string; romanization: string }) => string) | undefined;
-
-/** The hosts whose Listen & Pick offers "Can't hear it?" (CH-1b); `check` and `review` follow with CH-1e. */
-const PRACTICE_HOSTS: readonly HostMode[] = ['quest', 'vocab', 'preview'];
 
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
@@ -221,9 +220,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
     hasClip: current !== undefined && hasClipFor(listenPickSpeech(current)),
     textOnScreen: spellingNow || textMode,
-    // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): on the practice hosts only (the Checks wait for CH-1e), never
-    // on a text prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
-    cantHear: !textMode && PRACTICE_HOSTS.includes(host.mode),
+    // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b, CH-1e): on every host, the Checks included, never on a text
+    // prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
+    cantHear: !textMode,
     guidanceOnly: spellingNow,
   });
   const { play: slotPlay, reset: slotReset } = slot;
@@ -404,14 +403,19 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const spellingKit = spellingNow ? spelling : null;
   // The spelling round's Korean is its answer: a sound that cannot play (no voice, sound off) shows only the status
   // panel, never the prompt text, until the round resolves.
+  // A Check whose options hold or hide their romanization asks for the romanization only (CH-1e, section 3.12): the text
+  // the learner asked for (or the Always switch brought up) is read as a sound, the Hangul is never printed above the options.
+  const askedRomanizationOnly = askedTextIsRomanizationOnly(host.mode, romanizationMode, textMode);
   const prompt = promptView(
     round,
     spellingKit === null ? state : { ...state, textPrompt: false },
     host.mode,
     spellingKit === null ? slot.view.textShown || textMode : false,
+    askedRomanizationOnly && (slot.asked || slot.alwaysShown),
   );
+  const content = prompt.content;
   const resolved = state.status === 'resolved' || state.status === 'done';
-  const hear = (): void => dispatch({ type: 'hear' });
+  const hear =(): void => dispatch({ type: 'hear' });
   /** Next (a reader on): the round moves on once; a second press, or one after the round has moved, does nothing. */
   const advanceNow = (): void => {
     if (movedFrom.current === roundIdx) return;
@@ -547,7 +551,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                       onHear={hear}
                       onShowLetters={slot.showLetters}
                       focusAfter={speakerNodeRef}
-                      lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
+                      lettersText={
+                        askedRomanizationOnly
+                          ? a11yRomanization(round.prompt.romanization, m.a11y.romanizationOr)
+                          : m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })
+                      }
                     />
                   )}
                 </View>
@@ -555,15 +563,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
 
               {/* Not live: the answer's word is said once by the announcer (§3.3). */}
               <View style={{ alignItems: 'center', gap: spacing.sm }}>
-                {prompt.content ? (
-                  <KoreanText
-                    ko={prompt.content.ko}
-                    romanization={prompt.content.romanization}
-                    gloss={prompt.content.gloss}
-                    size="md"
-                    testID="listen-pick-prompt-text"
-                  />
-                ) : null}
+                {content === undefined ? null : content.ko === undefined ? (
+                  <AskedRomanization romanization={content.romanization} testID="listen-pick-prompt-text" />
+                ) : (
+                  <KoreanText ko={content.ko} romanization={content.romanization} gloss={content.gloss} size="md" testID="listen-pick-prompt-text" />
+                )}
               </View>
               {/* The Korean is drawn just above, so the panel carries the read line, why and the one action. */}
               <View style={{ alignSelf: 'stretch' }}>

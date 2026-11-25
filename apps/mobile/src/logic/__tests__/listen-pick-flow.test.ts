@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
   LISTEN_PICK_TIMING,
+  askedTextIsRomanizationOnly,
   checkHoldsRomanization,
   headerView as headerViewWith,
   listenPickSpeech,
@@ -650,5 +651,46 @@ describe('optionItem (F-A11Y-001 §3.2: what a result line calls an option)', ()
   });
   it("uses the spelling round's own name for a text option, as it is", () => {
     expect(optionItem(slashed, a11y, { gloss: true, labelOf: (t) => `spelled ${t.romanization}` })).toBe('spelled g/k');
+  });
+});
+
+describe('the asked text in a Check (AMENDMENTS-AUDIO-CANT-HEAR CH-1e, section 3.12)', () => {
+  const asking = startFlow(2);
+  const resolved = run(startFlow(2), [tap('a', 100)]).state;
+
+  it('askedTextIsRomanizationOnly: the quest Check always, the Hangul Check only with its switch on, a practice host never', () => {
+    expect(askedTextIsRomanizationOnly('check', 'always', false)).toBe(true);
+    expect(askedTextIsRomanizationOnly('check', 'tap', false)).toBe(true);
+    expect(askedTextIsRomanizationOnly('review', 'tap', false)).toBe(true);
+    expect(askedTextIsRomanizationOnly('review', 'always', false)).toBe(false);
+    for (const mode of ['quest', 'vocab', 'preview'] as const) {
+      expect(askedTextIsRomanizationOnly(mode, 'tap', false)).toBe(false);
+      expect(askedTextIsRomanizationOnly(mode, 'always', false)).toBe(false);
+    }
+  });
+
+  it('a text prompt round has no sound to ask about, so it is never the romanization-only case', () => {
+    expect(askedTextIsRomanizationOnly('check', 'always', true)).toBe(false);
+    expect(askedTextIsRomanizationOnly('review', 'tap', true)).toBe(false);
+  });
+
+  it('romanizationOnly: the text carries the romanization and no Hangul while the question is open', () => {
+    expect(promptView(textRound, asking, 'check', true, true)).toEqual({
+      showText: true,
+      content: { ko: undefined, romanization: 'ga', gloss: undefined },
+    });
+    expect(promptView(textRound, asking, 'review', true, true).content?.ko).toBeUndefined();
+  });
+
+  it('without the flag the surface keeps its own text (Sound off, a practice host, a Check with the romanization shown)', () => {
+    expect(promptView(textRound, asking, 'check', true)).toEqual({
+      showText: true,
+      content: { ko: '가', romanization: 'ga', gloss: undefined },
+    });
+  });
+
+  it('the flag changes nothing when no text shows, and once the round resolved the answer is known so the Korean shows', () => {
+    expect(promptView(textRound, asking, 'check', false, true)).toEqual({ showText: false, content: undefined });
+    expect(promptView(textRound, resolved, 'check', true, true).content).toEqual({ ko: '가', romanization: 'ga', gloss: 'the letter giyeok' });
   });
 });

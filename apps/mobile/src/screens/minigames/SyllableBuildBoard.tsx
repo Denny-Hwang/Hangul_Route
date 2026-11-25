@@ -99,7 +99,7 @@ export interface SyllableBuildBoardProps {
   source: string;
   /**
    * Offer "Can't hear it?" next to the speaker (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): the quest step and the review round
-   * do; the Block Sprint (a clocked drill, OD-CH4) and the Stage and Cell Check (CH-1e) do not. Show the letters shows
+   * do, and so do the Stage and Cell Check (CH-1e); the Block Sprint (a clocked drill, OD-CH4) does not. Show the letters shows
    * the block's romanization, never the block.
    */
   cantHear?: boolean;

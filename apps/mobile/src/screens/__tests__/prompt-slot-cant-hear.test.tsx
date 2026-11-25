@@ -187,3 +187,56 @@ describe('slot with Always show the letters on (AMENDMENTS-AUDIO-CANT-HEAR CH-2,
     await unmount(r);
   });
 });
+
+describe('slot.asked and slot.alwaysShown (CH-1e: a Check reads them, CH-1f marks by `asked`)', () => {
+  it('asked is true only after Show the letters, stays through a right answer and a play, and reset() clears it', async () => {
+    const r = await render(<Probe />);
+    expect(slot!.asked).toBe(false);
+    expect(slot!.alwaysShown).toBe(false);
+    await act(async () => {
+      slot!.showLetters();
+    });
+    expect(slot!.asked).toBe(true);
+    await act(async () => {
+      await slot!.play(async () => 'played');
+    });
+    expect(slot!.asked).toBe(true);
+    expect(slot!.alwaysShown).toBe(false);
+    await act(async () => {
+      slot!.reset();
+    });
+    expect(slot!.asked).toBe(false);
+    await unmount(r);
+  });
+
+  it('Sound off, no Korean voice and a failed play are not an ask', async () => {
+    useAudioStore.setState({ voiceCheckPending: false, muted: true });
+    const muted = await render(<Probe />);
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(muted);
+
+    useAudioStore.setState({ muted: false, tts: READY, lastFailure: { reason: 'error', at: 1 } });
+    const failed = await render(<Probe />);
+    await act(async () => {
+      await slot!.play(async () => 'unavailable');
+    });
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(failed);
+  });
+
+  it('Always show the letters is alwaysShown and not asked; a cue round (guidance only) and a surface that did not opt in are neither', async () => {
+    useAudioStore.setState({ showLetters: true, voiceCheckPending: false, tts: READY });
+    const on = await render(<Probe />);
+    expect(slot!.alwaysShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(on);
+    const cue = await render(<Probe guidanceOnly />);
+    expect(slot!.alwaysShown).toBe(false);
+    await unmount(cue);
+    const out = await render(<Probe cantHear={false} />);
+    expect(slot!.alwaysShown).toBe(false);
+    await unmount(out);
+  });
+});

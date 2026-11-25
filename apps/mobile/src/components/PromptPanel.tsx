@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { FallbackAction } from '../logic/audio/prompt-state';
 import type { PromptPanelView } from '../logic/audio/prompt-view';
+import { AskedRomanization } from './AskedRomanization';
 
 /**
  * The visible text fallback for a sound prompt (F-AUDIO-004 §3.8, wireframe
@@ -31,6 +32,11 @@ interface TextProps extends CommonProps {
    */
   ko?: string;
   romanization?: string;
+  /**
+   * A Check's asked text (AMENDMENTS-AUDIO-CANT-HEAR section 3.12): draw `romanization` alone, never the Hangul (`ko` is
+   * not drawn), so the round stays a decoding item.
+   */
+  romanizationOnly?: boolean;
 }
 
 /**
@@ -83,7 +89,9 @@ export function PromptPanel(props: Props): ReactElement {
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
             {props.variant !== 'status' ? (
               <>
-                {props.ko !== undefined ? (
+                {props.romanizationOnly === true && props.romanization !== undefined ? (
+                  <AskedRomanization romanization={props.romanization} testID={`${testID}-text`} />
+                ) : props.ko !== undefined ? (
                   <KoreanText ko={props.ko} romanization={props.romanization ?? ''} size="md" testID={`${testID}-text`} />
                 ) : null}
                 <Body tone="muted" align="center">{view.readLine}</Body>

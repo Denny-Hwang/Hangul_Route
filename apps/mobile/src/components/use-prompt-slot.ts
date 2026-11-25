@@ -48,6 +48,16 @@ export interface PromptSlot {
   cantHearActive: boolean;
   /** "Show the letters": the learner asks for this round's text (the `show_text` event). It stays until `reset()`. */
   showLetters: () => void;
+  /**
+   * The learner asked for this round's text (Show the letters) and it has not been reset: the signal CH-1f marks a right
+   * answer as hinted by (section 3.13). Not set by Sound off, no voice, a failed play or "Always show the letters".
+   */
+  asked: boolean;
+  /**
+   * "Always show the letters" (CH-2) applies to this prompt: it opted in with `cantHear` and is not a cue round. Not an
+   * ask (unmarked), but a Check treats its text as it does an ask (the romanization only, section 3.12).
+   */
+  alwaysShown: boolean;
 }
 
 export interface PromptSlotOptions {
@@ -161,7 +171,7 @@ export function usePromptSlot({
   }, [reportFallback, source]);
 
   const showLink = cantHear && !view.textShown;
-  return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters };
+  return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters, asked: state.asked === true, alwaysShown: alwaysShow };
 }
 
 function isLookupList(says: ClipLookup | readonly ClipLookup[]): says is readonly ClipLookup[] {

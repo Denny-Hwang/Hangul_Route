@@ -1,4 +1,4 @@
-import { composeTyped } from '@hangul-route/content-schema';
+import { a11yRomanization, composeTyped } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -68,10 +68,16 @@ export interface RoundProps<R extends ReviewRound> {
    */
   grade: (target: string, typed: string) => TypedGrade;
   /**
-   * The heard rounds offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b). The Daily Review, Keep going and This
-   * week in Korea pass it; the Stage and Cell Check do not until CH-1e. Text rounds never show it.
+   * The heard rounds offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b, CH-1e). The Daily Review, Keep going, This
+   * week in Korea and the Stage and Cell Check pass it. Text rounds never show it.
    */
   cantHear?: boolean;
+  /**
+   * The options hide their romanization (the Stage Check with its "hide the romanization" switch on): the text the learner
+   * asks for is the prompt's romanization only, no Hangul, so the round stays a decoding item (section 3.12, OD-CH6 (c)).
+   * Absent: the surface's own text, as with Sound off. Only the Stage Check passes it.
+   */
+  hidesRomanization?: boolean;
 }
 
 /** The pause on the check mark before the next round. */
@@ -118,7 +124,7 @@ function optionLabel(o: PickOption, showRomanization: boolean): string {
   return o.label ?? '';
 }
 
-export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false }: RoundProps<PickRound>): ReactElement {
+export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false, hidesRomanization = false }: RoundProps<PickRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const [wrong, setWrong] = useState<readonly string[]>([]);
@@ -129,6 +135,9 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
   const lc = useLayoutClass();
   const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear, round.cue !== undefined);
   const hearAgainRef = useRef<View | null>(null);
+  // CH-1e: where the options hide their romanization, the asked text (Show the letters, or the Always switch) is the
+  // romanization only. A cue round is guidance only, so it never prints its prompt.
+  const romanizationOnly = hidesRomanization && round.cue === undefined && (slot.asked || slot.alwaysShown);
   const showOptionRomanization = round.ask !== 'sound';
   const tiles = round.options.every((o) => o.picture !== undefined);
 
@@ -183,12 +192,22 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
                 onHear={hear}
                 onShowLetters={slot.showLetters}
                 focusAfter={hearAgainRef}
-                lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
-               
+                lettersText={
+                  hidesRomanization
+                    ? a11yRomanization(round.prompt.romanization, m.a11y.romanizationOr)
+                    : m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })
+                }
               />
             )
           ) : null}
-          <PromptPanel view={slot.view} onAction={(action) => slot.act(action, hear)} ko={round.prompt.ko} romanization={round.prompt.romanization} testID="daily-review-prompt-panel" />
+          <PromptPanel
+            view={slot.view}
+            onAction={(action) => slot.act(action, hear)}
+            ko={round.prompt.ko}
+            romanization={round.prompt.romanization}
+            romanizationOnly={romanizationOnly}
+            testID="daily-review-prompt-panel"
+          />
           {round.cue?.picture ? <PictureArt pictureRef={round.cue.picture} gloss={round.answer.gloss ?? ''} size={pictureSize} /> : null}
           {round.cue?.gloss ? <Body weight="semibold">{round.cue.gloss}</Body> : null}
         </View>

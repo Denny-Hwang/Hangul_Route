@@ -21,7 +21,7 @@ export interface BuildRoundViewProps {
   round: BuildRound;
   onFirst: (answer: RoundAnswer) => void;
   onSolved: () => void;
-  /** Offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): not in the Stage and Cell Check until CH-1e. */
+  /** Offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b, CH-1e): the review rounds and the Stage and Cell Check; not the Block Sprint. */
   cantHear?: boolean;
 }
 
