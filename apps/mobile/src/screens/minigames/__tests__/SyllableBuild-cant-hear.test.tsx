@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { endVoiceCheckHold, useAudioStore } from '../../../store/audio-store';
 import { clearReaderLog, focusNodes, hasId, pressableById } from '../../../test-support/cant-hear-rig';
 import { byTestId, press, textOf } from '../../../test-support/render';
+import type { MinigameHost } from '../host';
 import { SyllableBuildBoard } from '../SyllableBuildBoard';
+import { SyllableBuildGame } from '../SyllableBuildGame';
 
 /**
  * "Can't hear it?" on Syllable Build (AMENDMENTS-AUDIO-CANT-HEAR row CH-1b, section 3.1, test 18): the link sits next to
@@ -100,5 +102,23 @@ describe('Syllable Build, "Can\'t hear it?" (test 18)', () => {
     expect(textOf(byTestId(r.root, 'cant-hear-line')[0]!)).toBe(T.cantHear.lines.computer);
     expect(hasId(r.root, 'cant-hear-show-letters')).toBe(true);
     expect(hasId(r.root, 'cant-hear-hear')).toBe(true);
+  });
+});
+
+describe('the quest step passes it (test 18)', () => {
+  it('SyllableBuildGame shows the link on its board', async () => {
+    const round = { id: 'sb:bap', target: { ko: '밥', romanization: 'bap', en: 'rice, a meal' }, ...TILES };
+    const host: MinigameHost = { mode: 'quest', answer: () => undefined, complete: () => undefined };
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(
+        <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
+          <SyllableBuildGame scope={{ kind: 'syllable-build', syllableBuild: { rounds: [round] } }} host={host} />
+        </LayoutProvider>,
+        { createNodeMock: focusNodes(['syllable-build-speaker']) as never },
+      );
+    });
+    mounted.push(r);
+    expect(hasId(r.root, 'cant-hear')).toBe(true);
   });
 });

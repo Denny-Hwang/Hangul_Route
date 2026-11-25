@@ -350,7 +350,7 @@ function StartSheet({
   );
 }
 
-function RoundPlay({
+export function RoundPlay({
   topicKey,
   playing,
   navigation,

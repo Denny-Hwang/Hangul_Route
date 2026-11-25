@@ -295,36 +295,35 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     <View testID={testID} style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.lg, alignItems: 'flex-start' }}>
         <View style={{ flexShrink: 1, gap: spacing.sm, minWidth: touchTarget.min }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs }}>
-            <GuardedPressable
-              ref={speakerRef}
-              setsLock={false}
-              testID={`${testID}-speaker`}
-              onPress={say}
-              accessibilityRole="button"
-              accessibilityLabel={speakerLabel}
-              style={{
-                width: touchTarget.min,
-                height: touchTarget.min,
-                borderRadius: radii.pill,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: colors.brand.secondary,
-              }}
-            >
-              <Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />
-            </GuardedPressable>
-            {slot.cantHear ? (
-              <CantHear
-                round={testID}
-                active={slot.cantHearActive}
-                onHear={say}
-                onShowLetters={slot.showLetters}
-                focusAfter={speakerRef}
-                lettersText={target.romanization}
-              />
-            ) : null}
-          </View>
+          <GuardedPressable
+            ref={speakerRef}
+            setsLock={false}
+            testID={`${testID}-speaker`}
+            onPress={say}
+            accessibilityRole="button"
+            accessibilityLabel={speakerLabel}
+            style={{
+              width: touchTarget.min,
+              height: touchTarget.min,
+              borderRadius: radii.pill,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.brand.secondary,
+            }}
+          >
+            <Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />
+          </GuardedPressable>
+          {slot.cantHear ? (
+            <CantHear
+              // Keyed by the block: a round is a new board, but a new block closes an open sheet all the same.
+              round={target.ko}
+              active={slot.cantHearActive}
+              onHear={say}
+              onShowLetters={slot.showLetters}
+              focusAfter={speakerRef}
+              lettersText={target.romanization}
+            />
+          ) : null}
           {right ? (
             <View accessibilityLiveRegion="polite" testID={`${testID}-built`}>
               <KoreanText ko={target.ko} romanization={target.romanization} gloss={target.gloss} size="md" accessibilityLabel={prompt.blockLabel ?? undefined} />

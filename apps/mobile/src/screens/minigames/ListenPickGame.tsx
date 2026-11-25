@@ -426,19 +426,22 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                 </View>
               ) : null}
               {slot.cantHear ? (
-                spellingKit !== null ? (
-                  // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
-                  <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
-                ) : (
-                  <CantHear
-                    round={roundIdx}
-                    active={slot.cantHearActive}
-                    onHear={hear}
-                    onShowLetters={slot.showLetters}
-                    focusAfter={speakerNodeRef}
-                    lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
-                  />
-                )
+                // Centred under Hear again, as the speaker above it.
+                <View style={{ alignSelf: 'center' }}>
+                  {spellingKit !== null ? (
+                    // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
+                    <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
+                  ) : (
+                    <CantHear
+                      round={roundIdx}
+                      active={slot.cantHearActive}
+                      onHear={hear}
+                      onShowLetters={slot.showLetters}
+                      focusAfter={speakerNodeRef}
+                      lettersText={m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })}
+                    />
+                  )}
+                </View>
               ) : null}
 
               <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
