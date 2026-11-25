@@ -1,7 +1,6 @@
 import type { Profile, ProgressSnapshot } from '@hangul-route/content-schema';
-import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
+import { ConfirmSheet, LayoutProvider, layoutClassFor, type ConfirmSheetProps } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
-import { Fragment, createElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { episodesAll } from '../../../content';
@@ -23,12 +22,6 @@ import { buttonsNamed, byTestId, cleanup, passTapLock, press, render, resetPlatf
 
 const rig = vi.hoisted(() => ({ right: true, failRemove: false, mem: new Map<string, unknown>(), stall: null as Promise<void> | null }));
 
-// The stop sheet is a Modal the Node renderer cannot show: a stand-in that draws its children while visible.
-vi.mock('react-native', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-native')>();
-  const Modal = ({ visible, children }: { visible?: boolean; children?: unknown }) => (visible === true ? createElement(Fragment, null, children as never) : null);
-  return { ...actual, Modal };
-});
 vi.mock('@react-navigation/native', () => ({ CommonActions: { reset: (state: unknown) => ({ type: 'RESET', payload: state }) } }));
 vi.mock('../../../platform/storage', () => ({
   readJson: vi.fn(async () => null),
@@ -139,6 +132,9 @@ async function open(nav = fakeNav()): Promise<{ r: ReactTestRenderer; nav: Retur
   return { r, nav };
 }
 
+/** The stop sheet the screen holds: a Modal the Node renderer cannot show, so its element is read (as the Stage Check's tests). */
+const sheetOf = (r: ReactTestRenderer): ConfirmSheetProps => r.root.findAllByType(ConfirmSheet)[0]!.props as ConfirmSheetProps;
+const sheetOpen = (r: ReactTestRenderer): boolean => r.root.findAllByType(ConfirmSheet).some((n) => (n.props as ConfirmSheetProps).visible);
 const button = (r: ReactTestRenderer, label: string): ReactTestInstance => buttonsNamed(r.root, label)[0]!;
 const tap = async (r: ReactTestRenderer, label: string): Promise<void> => {
   await press(button(r, label));
@@ -453,19 +449,38 @@ describe('[LR] Start again, Stop and Close keep the stored check; Let us go repl
     const { r, nav } = await playSome(3);
     expect(await back(nav)).toBe(true);
     await flush();
-    expect(byTestId(r.root, 'hangul-check-leave')).toHaveLength(1);
-    expect(screenTexts(r.root)).toContain(M.leave.bodyKept);
-    expect(screenTexts(r.root)).not.toContain(M.leave.body);
-    await tap(r, M.leave.stay.cta);
+    expect(sheetOpen(r)).toBe(true);
+    expect(sheetOf(r).testID).toBe('hangul-check-leave');
+    expect(sheetOf(r).message).toBe(M.leave.bodyKept);
+    await act(async () => sheetOf(r).onCancel());
+    expect(sheetOpen(r)).toBe(false);
     expect(nav.goBack).not.toHaveBeenCalled();
     expect(byTestId(r.root, 'part-stub')).toHaveLength(1);
 
     expect(await back(nav)).toBe(true);
     await flush();
-    await tap(r, M.leave.stop.cta);
+    await act(async () => sheetOf(r).onConfirm());
     expect(nav.goBack).toHaveBeenCalledTimes(1);
     await settleSavedChecksForTests();
     expect(Object.keys(stored()!.answers)).toHaveLength(3);
+  });
+
+  // [LR-6] Keep going is the filled button and Stop the plain one, the same on the Hangul Check and the Stage Check
+  // (the design system draws `safeFilled`: tests of ConfirmSheet). Never the danger tone on a learner screen.
+  it('[LR-6] the stop sheet is the ConfirmSheet with Keep going the filled safe choice and Stop the plain one', async () => {
+    const { r, nav } = await playSome(2);
+    expect(await back(nav)).toBe(true);
+    await flush();
+    expect(sheetOf(r)).toMatchObject({
+      visible: true,
+      testID: 'hangul-check-leave',
+      title: M.leave.title,
+      cancelLabel: M.leave.stay.cta,
+      confirmLabel: M.leave.stop.cta,
+      safeFilled: true,
+    });
+    expect(sheetOf(r).confirmTone ?? 'primary').toBe('primary');
+    expect(sheetOf(r).confirmFirst).toBeUndefined();
   });
 
   it('before the first answer nothing is stored, and the sheet keeps its old line', async () => {
@@ -473,15 +488,15 @@ describe('[LR] Start again, Stop and Close keep the stored check; Let us go repl
     await tap(r, M.intro.start.cta);
     expect(await back(nav)).toBe(true);
     await flush();
-    expect(screenTexts(r.root)).toContain(M.leave.body);
-    expect(screenTexts(r.root)).not.toContain(M.leave.bodyKept);
+    expect(sheetOf(r).message).toBe(M.leave.body);
+    expect(sheetOf(r).message).not.toBe(M.leave.bodyKept);
   });
 
   it('a stopped check offers the resume page when the check is opened again', async () => {
     const { r, nav } = await playSome(3);
     await back(nav);
     await flush();
-    await tap(r, M.leave.stop.cta);
+    await act(async () => sheetOf(r).onConfirm());
     await cleanup();
     const { r: again } = await open();
     expect(byTestId(again.root, 'hangul-check-resume')).toHaveLength(1);

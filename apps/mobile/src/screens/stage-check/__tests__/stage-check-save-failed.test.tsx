@@ -255,6 +255,7 @@ describe('the Stage Check when its finish cannot be saved (LR-4, tests 25, 26, 2
       message: 'This is not saved yet. Your stars and cards stay.',
       cancelLabel: EN.learner.stageReview.leave.stay.cta,
       confirmLabel: EN.learner.stageReview.leave.stop.cta,
+      safeFilled: true,
     });
     await act(async () => sheetOf(r).onCancel());
     expect(sheetOpen(r)).toBe(false);
