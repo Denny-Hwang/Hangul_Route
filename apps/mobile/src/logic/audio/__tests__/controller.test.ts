@@ -1286,6 +1286,21 @@ describe('controller: telemetry', () => {
     ]);
   });
 
+  it('audio.fallback_shown with reason asked (Show the letters) is sent once per session and source', () => {
+    const r = rig();
+    r.events.length = 0;
+    r.ctl.noteFallbackShown('match-sound', 'asked');
+    r.ctl.noteFallbackShown('match-sound', 'asked');
+    r.ctl.noteFallbackShown('discover', 'asked');
+    r.ctl.noteFallbackShown('match-sound', 'muted');
+    expect(r.events).toEqual([
+      { name: 'audio.fallback_shown', payload: { source: 'match-sound', reason: 'asked' } },
+      { name: 'audio.fallback_shown', payload: { source: 'discover', reason: 'asked' } },
+      { name: 'audio.fallback_shown', payload: { source: 'match-sound', reason: 'muted' } },
+    ]);
+    expect(JSON.stringify(r.events)).not.toContain('profile');
+  });
+
   it('audio.playback_failed is capped at 3 per (kind, reason, code)', async () => {
     const r = rig();
     r.events.length = 0;

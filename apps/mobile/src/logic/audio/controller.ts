@@ -173,6 +173,13 @@ export const systemClock: Clock = {
 
 // --- Telemetry (§3.14); `audio.mute_changed` belongs to the store ------------
 
+/**
+ * The reason an `audio.fallback_shown` event carries: a failure kind (`FallbackReason`) or `'asked'`, the learner tapping
+ * Show the letters (AMENDMENTS-AUDIO-CANT-HEAR CH-4). Telemetry only: `'asked'` is not a failure, so `FallbackReason`
+ * (the prompt state's reasons, each with a panel line and action) stays as it is.
+ */
+export type FallbackShownReason = FallbackReason | 'asked';
+
 export type PlaybackFailReason = 'missing' | 'fetch' | 'decode' | 'blocked' | 'timeout' | 'engine';
 /**
  * Why a playback failed, as a code: a Web Speech error code, `'timeout'` (no answer from the engine in
@@ -190,7 +197,7 @@ export interface PlaybackFailedPayload {
 
 export type AudioTelemetryEvent =
   | { name: 'audio.capability_checked'; payload: CapabilityCheckedPayload }
-  | { name: 'audio.fallback_shown'; payload: { source: string; reason: FallbackReason } }
+  | { name: 'audio.fallback_shown'; payload: { source: string; reason: FallbackShownReason } }
   | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload }
   | { name: 'audio.source_summary'; payload: AudioSourceSummaryPayload };
 
@@ -245,7 +252,7 @@ export interface AudioController {
   playJamo(jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult>;
   stop(): void;
   /** Called by the fallback panel when it first shows; fires `audio.fallback_shown` once per (source, reason). */
-  noteFallbackShown(source: string, reason: FallbackReason): void;
+  noteFallbackShown(source: string, reason: FallbackShownReason): void;
   /** The counts since the last summary (AC-B9). */
   sourceCounts(): AudioSourceCounts;
   /**

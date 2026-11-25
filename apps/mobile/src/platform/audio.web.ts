@@ -25,6 +25,7 @@ import {
   type TtsEngine,
   type TtsHandlers,
   type TtsRequest,
+  type FallbackShownReason,
 } from '../logic/audio/controller';
 import type { FallbackReason } from '../logic/audio/prompt-state';
 import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
@@ -662,7 +663,7 @@ export function createWebAudio(env: WebAudioEnv) {
     hasClipFor,
     /** The build holds a playable clip of this pack now (the level check's prompts, AMENDMENTS-AUDIO-CLIPS AC-B6). */
     hasPackClips,
-    noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
+    noteFallbackShown: (source: string, reason: FallbackShownReason): void => controller.noteFallbackShown(source, reason),
     /** Test only: how many utterances the page-wide live set holds (shared by every instance: compare to a baseline). */
     liveUtteranceCountForTests: (): number => LIVE_UTTERANCES.size,
     dispose: (): void => {
@@ -737,7 +738,7 @@ export function installGestureUnlock(): () => void {
 export function warmClips(refs: readonly string[]): Promise<void> {
   return audio().warmClips(refs);
 }
-export function noteFallbackShown(source: string, reason: FallbackReason): void {
+export function noteFallbackShown(source: string, reason: FallbackShownReason): void {
   audio().noteFallbackShown(source, reason);
 }
 export function hasClip(ref: string | undefined): boolean {
