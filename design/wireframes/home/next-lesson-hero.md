@@ -5,6 +5,7 @@ Audience: **learner, any age** (and a grown-up handing the device to them)
 Route: learner app Home tab
 Mock: `design/screens/learner-shell/home-hero.md`
 Amended by: `home/goal-ring-weekly-dots.md` (F-CURR-002 §7.4: a week strip above the hero; the "Streak N days" pill moves into the strip as its streak line, and a "N words known" pill takes its place, `journey/mastery-ring.md` G)
+Amended 2026-11-25 by `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]: Panel A gains a resume variant for a lesson left in the middle: the button reads Continue, a caption says "You can go on from step 3 of 5.", and a quiet Start again asks first (`home/next-lesson-resume.md`; row LR-2, #1089). Nothing else on Home moves.
 
 ## Scenario (Given-When-Then)
 
