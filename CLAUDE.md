@@ -176,6 +176,7 @@ Hangul_Route/
 - **상태 관리**: `zustand`
 - **서버 상태 / API**: `@tanstack/react-query`
 - **테스트**: `vitest`. E2E 는 Detox / Playwright (PWA offline e2e 는 main 머지 때 `web-app.yml` (PR 은 릴리스 빌드만, 2026-11-18 오너 결정), switch-on e2e 는 nightly `switch-on-e2e.yml`).
+- **Lint 는 진짜다 (접근성 규칙).** `pnpm lint` 는 `apps/mobile`·`apps/web`·`packages/design-system` 에서 접근성 규칙을 실제로 검사하고 CI 에서 실패시킨다 (`--no-inline-config`). `eslint-disable` 주석은 아무 효과가 없다 — 위반은 코드로 고친다. (AMENDMENTS-A11Y-CI, 2026-11-24 오너 승인)
 - **스타일**: `packages/design-system` 의 **토큰만** 사용.
   - 색상·간격·타이포·반경·그림자 하드코딩 금지.
   - 색상 리터럴(`#fff`, `rgb(...)`) 직접 사용 금지.
@@ -240,6 +241,7 @@ Hangul_Route/
 - ❌ `console.log` 를 production 코드에 남기지 말 것. 로깅은 `packages/shared-types` (또는 shared logger) 경유.
 - ❌ `main` 브랜치 직접 push. 모든 변경은 PR.
 - ❌ `--no-verify` / `--force` 계열 옵션으로 훅·검증 우회.
+- ❌ ESLint suppression 줄(`eslint-suppressions.json`) 또는 axe baseline 줄(`axe-baseline.json`)을 **늘리지 말 것** — 둘 다 줄어들기만 한다. `eslint-disable` 로 가리지 말 것.
 - ❌ 명시적으로 지정되지 않은 파일/패키지에 "겸사겸사" 수정.
 - ❌ 선택된 UI 로케일을 거치지 않은 UI 문자열 (예: 영어 UI 에 섞인 한국어 문구). **UI 문자열 = 선택된 UI 로케일** (기본 English, Korean · Spanish 선택; 공개 여부는 `LOCALE_STATUS`), **학습 대상 한국어 = 항상 로마자 + UI 언어 gloss** (§1 Languages).
 
@@ -313,4 +315,4 @@ Hangul_Route/
 
 ---
 
-_Last updated: 2026-10-13 (stale references refreshed: coverage gate inside `ci.yml`, agent design passes (2026-10-12), i18n layer shipped, public locales set by `LOCALE_STATUS`, R8, workflow list; F-I18N-001 PR 17). Previous: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_
+_Last updated: 2026-11-24 (§4 lint is real and §8 never raise an ESLint suppression or axe baseline line; AMENDMENTS-A11Y-CI AC-4, owner approved). Previous: 2026-10-13 (stale references refreshed: coverage gate inside `ci.yml`, agent design passes (2026-10-12), i18n layer shipped, public locales set by `LOCALE_STATUS`, R8, workflow list; F-I18N-001 PR 17). Previous: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_
