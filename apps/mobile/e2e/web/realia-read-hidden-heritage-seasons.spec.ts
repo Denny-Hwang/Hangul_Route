@@ -77,9 +77,11 @@ test.describe('Hidden Heritage, the four seasons (F-CURR-002 CM-37 part 3)', () 
       await shot(page, `hidden-heritage-seasons-ask-${size.name}`);
       await page.getByTestId('hh-spot-bandalgaseumgom').click();
       await expect(page.getByText('Look again').first()).toBeVisible();
-      // State, not sleeps: the miss is logged and its ring clears on its own (MISS_RING_MS) before the next tap.
+      // State, not sleeps: the miss is logged and its ring stays until the next tap that changes the board (OD-AF7).
       await expect.poll(async () => (await log(page)).answers.length).toBe(1);
-      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
+      // Past the scene board's answer lock (the old 600 ms ring clear used to give it).
+      await page.waitForTimeout(450);
       for (let i = 0; i < 4; i += 1) {
         ko = await asked(page);
         await page.getByTestId(`hh-spot-${TARGETS[ko]!.id}`).click();

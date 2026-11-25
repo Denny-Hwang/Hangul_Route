@@ -94,10 +94,14 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
         await spot(page, other[0]!).click();
         await expect(page.getByText('Look again').first()).toBeVisible();
         await expect(page.getByTestId('hh-ring-miss')).toBeVisible();
-        // State, not sleeps: the miss ring clears on its own (MISS_RING_MS) before the next tap.
-        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+        // F-A11Y-001 OD-AF7: no timer clears the miss; it stays (with its replay mark) until the next tap that changes the board.
+        await page.waitForTimeout(1_000);
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
+        await expect(page.getByTestId('hh-ring-miss-mark')).toBeVisible();
         await spot(page, other[1]!).click();
         await expect(page.getByTestId('hh-ring-hint')).toBeVisible();
+        // The new miss took the old one's place: one miss ring on the board.
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
         await shot(page, `hidden-heritage-hint-${size.name}`);
         expect(await asked(page)).toBe(ko);
         await expectNoShame(page);

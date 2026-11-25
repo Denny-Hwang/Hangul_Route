@@ -101,8 +101,10 @@ test.describe('Hidden Heritage, the Seollal room (F-CURR-002 CM-37)', () => {
         await spot(page, 'bangseok').click();
         await expect(page.getByText('Look again').first()).toBeVisible();
         expect(await page.locator('body').innerText()).not.toMatch(SHAME);
-        // State, not sleeps: the miss ring clears on its own before the next tap.
-        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+        // F-A11Y-001 OD-AF7: the miss ring stays until the next tap that changes the board (the right spot clears it).
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
+        // Past the scene board's answer lock (the old 600 ms ring clear used to give it).
+        await page.waitForTimeout(450);
         for (let i = 0; i < 3; i += 1) {
           const ko = await asked(page);
           await spot(page, TARGETS[ko]!.id).click();

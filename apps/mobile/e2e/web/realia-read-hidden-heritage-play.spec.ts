@@ -88,8 +88,10 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
         await expect(page.getByText('Look again').first()).toBeVisible();
         await expect(page.getByTestId('hh-ring-miss')).toBeVisible();
         expect(await page.locator('body').innerText()).not.toMatch(SHAME);
-        // State, not sleeps: the miss ring clears on its own (MISS_RING_MS) before the next tap.
-        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+        // F-A11Y-001 OD-AF7: the miss ring stays until the next tap that changes the board (the right spot clears it).
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
+        // Past the scene board's answer lock (the old 600 ms ring clear used to give it).
+        await page.waitForTimeout(450);
         for (let i = 0; i < 4; i += 1) {
           ko = await asked(page);
           await spot(page, TARGETS[ko]!.id).click();
@@ -148,7 +150,9 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
       // A miss nudges and a find shows its meaning, both readable at Largest.
       await spot(page, ko === '윷' ? 'eolle' : 'yutpan').click();
       await expect(page.getByText('Look again').first()).toBeVisible();
-      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(1);
+      // Past the scene board's answer lock (the old 600 ms ring clear used to give it).
+      await page.waitForTimeout(450);
       await spot(page, TARGETS[ko]!.id).click();
       await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
       await expectNoHorizontalOverflow(page);
