@@ -6,6 +6,7 @@ import type { MinigameScope } from '../../../logic/minigame-config';
 import { useQuestRunStore } from '../../../store/quest-run-store';
 import { byTestId, render } from '../../../test-support/render';
 import { BuildLetterGame } from '../BuildLetterGame';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
 import { playPrompt } from '../../../platform/audio';
 
@@ -13,7 +14,7 @@ import { playPrompt } from '../../../platform/audio';
  * AMENDMENTS-TOUCH 6.5 (row KT-6, R2): Build a Letter's tray and slots sit on one `target` board. A used tray tile stays
  * disabled, so a second tap on it does nothing; a filled slot is a take-back target (`gapFill={false}`, named
  * "Take back ...") that removes its tile and shifts the later ones left; a touch just outside a filled slot never reaches
- * it; and the 900 ms wrong reset locks the board, so taps then are swallowed instead of accepted and wiped. The taps go
+ * it; and a wrong build stays (F-A11Y-001 OD-AF7 (i)), with only the bounce guard after the commit swallowing a touch. The taps go
  * straight to the host's click handler (or the board's responder, with the DOM rectangles mocked), on a fake clock.
  */
 
@@ -181,21 +182,23 @@ describe('Build a Letter Undo button (OW-1-undo): a backspace for the last place
     expect(answers).toEqual([[0, true]]);
   });
 
-  it('a wrong full fill still resets after 900 ms; Undo is swallowed during the reset and never reveals the answer', async () => {
+  it('a wrong full fill stays (F-A11Y-001 OD-AF7 (i)): Undo is on, takes the last tile back and never reveals the answer', async () => {
     const r = await draw(GA);
     await tick(TAP_LOCK_MS);
     await click(r.root, `build-letter-tile-${A}`);
     await tick(TAP_LOCK_MS);
     await click(r.root, `build-letter-tile-${G}`);
     expect(answers).toEqual([[0, false]]);
-    expect(disabled(r.root, undo)).toBe(true);
+    expect(disabled(r.root, undo)).toBe(false);
+    // The bounce guard after the commit swallows an Undo that comes at once.
     await tick(300);
     await click(r.root, undo);
     expect(slots(r.root)).toEqual(['ㅏ', 'ㄱ']);
-    await tick(600);
-    expect(slots(r.root)).toEqual(['', '']);
+    await tick(900);
+    expect(slots(r.root)).toEqual(['ㅏ', 'ㄱ']);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['ㅏ', '']);
     expect(answers).toEqual([[0, false]]);
-    expect(disabled(r.root, undo)).toBe(true);
   });
 
   it('is swallowed while the right block shows', async () => {
@@ -284,7 +287,7 @@ describe('Build a Letter on a target board (AMENDMENTS-TOUCH 6.5, R2)', () => {
     expect(slots(r.root)).toEqual(['', '']);
   });
 
-  it('taps during the 900 ms wrong reset are swallowed, not accepted and then wiped; after it, a tap counts', async () => {
+  it('taps right after a miss are swallowed by the bounce guard (the build stays, there is no 900 ms reset); after it, a slot tap takes a tile back', async () => {
     const r = await draw(GA);
     await tick(TAP_LOCK_MS);
     // ㅏ then ㄱ: a full block in the wrong order, one scored attempt.
@@ -293,17 +296,17 @@ describe('Build a Letter on a target board (AMENDMENTS-TOUCH 6.5, R2)', () => {
     await click(r.root, `build-letter-tile-${G}`);
     expect(answers).toEqual([[0, false]]);
     const others = round1Distractors(r.root);
-    // During the reset: a tray tile and a filled slot take nothing.
+    // Within the guard: a tray tile and a filled slot take nothing.
     await tick(300);
     await click(r.root, `build-letter-tile-${others[0]}`);
     await click(r.root, 'build-letter-slot-0');
     expect(slots(r.root)).toEqual(['ㅏ', 'ㄱ']);
+    // Nothing empties the slots by itself.
     await tick(600);
-    expect(slots(r.root)).toEqual(['', '']);
+    expect(slots(r.root)).toEqual(['ㅏ', 'ㄱ']);
     expect(answers).toEqual([[0, false]]);
-    // The reset is over: a tap is the start of the next attempt.
-    await tick(50);
-    await click(r.root, `build-letter-tile-${G}`);
+    // After the guard a slot tap takes that tile back, and a tap on a tray tile starts a new build.
+    await click(r.root, 'build-letter-slot-0');
     expect(slots(r.root)).toEqual(['ㄱ', '']);
   });
 });
@@ -363,7 +366,8 @@ describe('[QS-4] the next round waits for the syllable that is still sounding', 
     await click(q.root, `build-letter-tile-${G}`);
     await tick(TAP_LOCK_MS);
     await click(q.root, `build-letter-tile-${A}`);
-    await tick(899);
+    // The game's own 900 ms is under the result floor (F-A11Y-001 OD-AF2 (b)): nothing moves on before 1000 ms.
+    await tick(RESULT_MARK_MIN_MS - 1);
     expect(quick).not.toHaveBeenCalled();
     await tick(1);
     expect(quick).toHaveBeenCalledTimes(1);

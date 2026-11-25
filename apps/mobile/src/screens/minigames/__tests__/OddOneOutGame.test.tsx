@@ -5,7 +5,7 @@ import { byTestId, press, render, unmount } from '../../../test-support/render';
 import { OddOneOutGame } from '../OddOneOutGame';
 
 /**
- * Odd One Out on its answer board (AMENDMENTS-TOUCH section 6, row KT-3, R3): a locked wrong tile is disabled, keeps
+ * Odd One Out on its answer board (AMENDMENTS-TOUCH section 6, row KT-3, R3): a locked wrong tile is locked (focusable, not disabled: F-A11Y-001 AF-4a), keeps
  * its amber look, and a tap or a bounce on it is never another `answerRound(false)` or nudge.
  */
 
@@ -32,14 +32,14 @@ const host = (root: ReactTestInstance, id: string): ReactTestInstance[] => byTes
 const pressable = (root: ReactTestInstance, id: string): ReactTestInstance | undefined => host(root, id).find((n) => typeof n.props.onClick === 'function');
 
 describe('Odd One Out (AMENDMENTS-TOUCH row KT-3, R3)', () => {
-  it('a miss locks that tile: disabled, and a tap and a bounce on it add no miss and no nudge', async () => {
+  it('a miss locks that tile (not disabled), and a tap and a bounce on it add no miss and no nudge', async () => {
     const r = await render(<OddOneOutGame scope={SCOPE} onFinish={() => undefined} />);
     mounted.push(r);
     expect(host(r.root, 'jamo:giyeok').length).toBeGreaterThan(0);
     await press(pressable(r.root, 'jamo:a')!);
     expect(answers).toEqual([[0, false]]);
     expect(haptics.nudge).toHaveBeenCalledTimes(1);
-    expect(host(r.root, 'jamo:a').some((n) => n.props['aria-disabled'] === true)).toBe(true);
+    expect(host(r.root, 'jamo:a').some((n) => n.props['aria-disabled'] === true)).toBe(false);
     const locked = pressable(r.root, 'jamo:a');
     if (locked) {
       await press(locked);

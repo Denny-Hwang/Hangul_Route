@@ -209,7 +209,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // [QS] AMENDMENTS-QUEST-SOUND-BACK rows QS-1 to QS-5 (sounds get room at both ends): the web clip player's gain node and
   // fades, the screen wait and the answer's sound wait are audio code every quest uses, so they are in the start bundle.
   // On top of the QB rows the release `build:web` (CI=1) measures 4,957,992 B raw, 592 B over the line. The line is the
-  // measurement plus a 4,008 B margin (one measured raise, 4,600 B over the previous line).
+  // measurement plus a 3,931 B margin (one measured raise, 4,600 B over the previous line).
   // [PX] AMENDMENTS-PICTURES-2026-11 rows PX-4 and PX-5 (scenes, props, realia and Hoya): the story-scene registry,
   // the realia dressings, Hoya's figure and the scene-art renderer (which now draws the vocab tones of the hidden-heritage
   // things) are in the start bundle, and the redrawn settings and props carry more shapes. The release `build:web`
@@ -273,13 +273,22 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the release `build:web` (CI=1) of the AF-2 branch measures 4,625,094 B raw / 1,273,518 B gzip (+7,145 B raw, +2,368 B
   // gzip), 3,194 B over the previous line. The line is the measurement plus a 3,806 B margin (one measured raise, 7,000 B
   // over the previous line).
+  // [AF] F-A11Y-001 AF-4a (Match Sound, Odd One Out and Build a Letter import the announcer, its hook, the announcement rules and the Next hook;
+  // both tile games and Build a Letter are imported statically by MinigameScreen) on top of AF-2 (4,625,094 B raw / 1,273,518 B gzip) the release
+  // `build:web` (CI=1) measures 4,630,569 B raw / 1,274,804 B gzip (+5,475 B raw, +1,286 B gzip). Merged with AF-3 (Card Match, which imports the
+  // same announcer and Next hook; #1102) the tree measures 4,633,012 B raw / 1,275,605 B gzip, 1,488 B under the AF-4a line
+  // of 4,634,500 B. The line is that measurement plus a 3,988 B margin: 4,637,000 B (one measured raise, 2,500 B over the AF-4a line).
   // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-4 (the save-failed page; the Daily Review and Stage Check failed phase): the
   // learner.dailyReview.saveFailed en strings are in the learner dictionary, so they are in the start bundle (the page
   // itself is in the Daily Review chunk). The previous line (4,628,900 B) was set at AF-2; the merged LR-4 branch, with
   // AF-3 (main b52ab30da, Card Match on the answer feedback parts) in it, measures 4,629,855 B raw / 1,275,059 B gzip with
   // the release `build:web` (CI=1), 955 B over that line. The line is the measurement plus a 4,045 B margin (one measured
   // raise, 5,000 B over the previous line).
-  startBundleRaw: 4_633_900,
+  // [AF] [LR] Rows LR-4 and AF-4a merged (main f31c6b313 with LR-4, AF-3 and AF-4a together): the release `build:web` (CI=1)
+  // measures 4,634,508 B raw / 1,276,063 B gzip, 608 B over the LR-4 line (4,633,900 B) and 2,492 B under the AF-4a line
+  // (4,637,000 B). The line is the measurement plus a 3,992 B margin (one measured raise, 1,500 B over the AF-4a line and
+  // 4,600 B over main's LR-4 line).
+  startBundleRaw: 4_638_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

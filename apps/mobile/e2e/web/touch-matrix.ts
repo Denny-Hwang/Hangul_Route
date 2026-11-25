@@ -43,6 +43,8 @@ export const AFTER_LOCK = 500;
 export const AFTER_MISS = 1_200;
 /** How long a move that must commit nothing is watched: past the lock, the replay and a right answer's 700 ms advance. */
 export const WATCH_MS = 1_400;
+/** The result floor (`RESULT_MARK_MIN_MS`, 1000 ms) plus 200 ms: a solved round has moved on after it. */
+const RESULT_FLOOR_WAIT_MS = 1_200;
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 export const PRESS_OUTLINE = 'rgb(133, 115, 96)';
 /**
@@ -325,12 +327,22 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
   // An answer already tapped in this round: some boards (Read Pick) show a miss only by paint, so it still reads as open.
   const tapped = new Set<string>();
   let round = '';
+  let solvedWaits = 0;
 
   // The device voice check settles a moment after a prompt opens and may put "No sound? Read it here." above the answers.
   await calm(page);
   for (;;) {
     const settled = await settle(page);
-    const answers = settled.some((a) => SOLVED.test(a.label)) ? [] : settled.filter((a) => !a.disabled);
+    const solved = settled.some((a) => SOLVED.test(a.label));
+    // A right answer holds its look for the result floor (F-A11Y-001 OD-AF2 (b), 1000 ms) before the round moves on, which two
+    // reads 350 ms apart can both fall inside: wait it out, a few times, before reading an empty board as the end of the run.
+    if (solved && o.onIdle === undefined && solvedWaits < 3) {
+      solvedWaits += 1;
+      await page.waitForTimeout(RESULT_FLOOR_WAIT_MS);
+      continue;
+    }
+    if (!solved) solvedWaits = 0;
+    const answers = solved ? [] : settled.filter((a) => !a.disabled);
     if (answers.length === 0) {
       if (o.onIdle !== undefined && (await o.onIdle())) {
         continue;

@@ -2,8 +2,10 @@ import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { findJamo } from '../../content/jamo';
 import {
+  blockRows,
   blockShape,
   removeLastTile,
+  shapePlaceHeight,
   shapeHint as shapeHintWith,
   tileAccessibilityLabel as tileAccessibilityLabelWith,
   type BlockShape,
@@ -106,5 +108,25 @@ describe('removeLastTile (the Undo button of Build a Letter)', () => {
     const placed = ['jamo:giyeok', 'jamo:a'];
     removeLastTile(placed);
     expect(placed).toEqual(['jamo:giyeok', 'jamo:a']);
+  });
+});
+
+/** F-A11Y-001 AF-4a (AnswerFeedback D7): the shape picture's place is kept under the slots at the block's own height. */
+describe('blockRows and shapePlaceHeight', () => {
+  it('counts the rows of every shape: 1 beside, 2 under or beside with a final, 3 under with a final', () => {
+    expect(blockRows({ vowel: 'beside', hasFinal: false })).toBe(1);
+    expect(blockRows({ vowel: 'under', hasFinal: false })).toBe(2);
+    expect(blockRows({ vowel: 'beside', hasFinal: true })).toBe(2);
+    expect(blockRows({ vowel: 'under', hasFinal: true })).toBe(3);
+  });
+
+  it('is rows x cell + (rows - 1) x gap: 40, 88 and 136 on the phone sizes', () => {
+    expect(shapePlaceHeight({ vowel: 'beside', hasFinal: false }, 40, 8)).toBe(40);
+    expect(shapePlaceHeight({ vowel: 'under', hasFinal: false }, 40, 8)).toBe(88);
+    expect(shapePlaceHeight({ vowel: 'under', hasFinal: true }, 40, 8)).toBe(136);
+  });
+
+  it('grows with a scaled cell', () => {
+    expect(shapePlaceHeight({ vowel: 'under', hasFinal: false }, 60, 8)).toBe(128);
   });
 });

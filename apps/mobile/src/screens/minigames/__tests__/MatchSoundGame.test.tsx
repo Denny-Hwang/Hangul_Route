@@ -3,6 +3,7 @@ import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { jamoVoice } from '../../../logic/audio/jamo-voice';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { useAudioStore } from '../../../store/audio-store';
@@ -97,8 +98,8 @@ describe('M6: no stale replay over the next round', () => {
     await press(tile(r.root, wrong));
     await tick(60);
     await press(tile(r.root, target!));
-    // The 700 ms advance opens round 2, which says its own prompt; the 800 ms replay of round 1 is gone.
-    await tick(700);
+    // The advance (the 1000 ms result floor) opens round 2, which says its own prompt; the 800 ms replay of round 1 is gone.
+    await tick(RESULT_MARK_MIN_MS);
     const afterAdvance = spoken();
     expect(afterAdvance).toHaveLength(2);
     expect(afterAdvance[1]).not.toBe(first);
@@ -119,7 +120,7 @@ describe('M6: no stale replay over the next round', () => {
 });
 
 describe('R3: a locked wrong tile takes no tap (AMENDMENTS-TOUCH row KT-3)', () => {
-  it('after a miss the tile is disabled, keeps its amber look, and a tap on it is no second miss: no replay, no new bubble', async () => {
+  it('after a miss the tile is locked (not disabled), keeps its amber look, and a tap on it is no second miss: no replay, no new bubble', async () => {
     const r = await play({ kind: 'match-sound', jamoIds: L1, rounds: 2, focusJamoIds: ['jamo:giyeok'] });
     const [first] = spoken();
     const target = NAME_OF.get(first!)!;
@@ -128,8 +129,8 @@ describe('R3: a locked wrong tile takes no tap (AMENDMENTS-TOUCH row KT-3)', () 
     // The miss's own replay, 800 ms later.
     await tick(800);
     expect(spoken()).toEqual([first, first]);
-    const locked = byTestId(r.root, `match-sound-tile-${wrong}`).find((n) => n.props['aria-disabled'] !== undefined);
-    expect(locked?.props['aria-disabled']).toBe(true);
+    // Locked, not disabled (F-A11Y-001 AF-4a): a focusable button that still shows the miss.
+    expect(byTestId(r.root, `match-sound-tile-${wrong}`).some((n) => n.props['aria-disabled'] === true)).toBe(false);
     // A tap and a bounce on the locked tile: nothing is answered, so no replay is scheduled again.
     const node = byTestId(r.root, `match-sound-tile-${wrong}`).find((n) => typeof n.props.onClick === 'function');
     if (node) {
@@ -141,7 +142,7 @@ describe('R3: a locked wrong tile takes no tap (AMENDMENTS-TOUCH row KT-3)', () 
     expect(spoken()).toEqual([first, first]);
     // The right tile still answers.
     await press(tile(r.root, target));
-    await tick(700);
+    await tick(RESULT_MARK_MIN_MS);
     expect(spoken()).toHaveLength(3);
   });
 });
@@ -190,8 +191,8 @@ describe('[QS] round 1 waits 350 ms for the screen (QS-3)', () => {
     await tick(SCREEN_SETTLE_MS);
     const [first] = spoken();
     await press(tile(r.root, NAME_OF.get(first!)!));
-    // The prompt has long ended, so the advance is the game's own 700 ms; round 2 speaks in that same tick.
-    await tick(700);
+    // The prompt has long ended, so the advance is the result floor (1000 ms); round 2 speaks in that same tick.
+    await tick(RESULT_MARK_MIN_MS);
     expect(spoken()).toHaveLength(2);
   });
 });

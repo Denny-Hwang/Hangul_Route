@@ -98,7 +98,8 @@ async function playMatchSound(page: Page, open: string, rounds: number, missFirs
       const wrong = tiles.filter({ hasNotText: prompt }).first();
       await wrong.click();
       // The missed tile locks; the game says the prompt once more (800 ms) and the board's answer lock passes.
-      await expect(wrong).toBeDisabled();
+      // Locked, named "Not this one: …" and not disabled (F-A11Y-001 AF-4a).
+      await expect(page.getByRole('button', { name: /^Not this one: / })).toHaveCount(1);
       await page.waitForTimeout(1000);
       heard = await spokenCount(page);
     }

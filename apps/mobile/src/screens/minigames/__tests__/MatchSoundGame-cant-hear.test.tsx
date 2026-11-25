@@ -4,6 +4,7 @@ import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { jamoVoice } from '../../../logic/audio/jamo-voice';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { DeviceFamily } from '../../../logic/device-family';
 import type { MinigameScope } from '../../../logic/minigame-config';
@@ -46,6 +47,9 @@ const reader = vi.hoisted(() => ({
 }));
 vi.mock('../../../platform/screen-reader', async (importOriginal) => ({
   ...(await importOriginal<object>()),
+  // react-native-web answers "a screen reader is on" on every platform; these tests are the reader-off path (F-A11Y-001 AF-4a).
+  isScreenReaderEnabled: () => Promise.resolve(false),
+  subscribeScreenReader: () => () => undefined,
   focusForScreenReader: (node: { testId?: string } | null) => {
     reader.focused.push(node);
     reader.log.push(`focus:${node?.testId ?? 'none'}`);
@@ -284,7 +288,7 @@ describe('Show the letters (test 12)', () => {
     expect(has(r.root, 'cant-hear')).toBe(false);
     await press(tile(r.root, 'jamo:nieun'));
     expect(useQuestRunStore.getState().answersGiven).toBe(1);
-    await tick(700);
+    await tick(RESULT_MARK_MIN_MS);
     expect(textOf(r.root)).toContain(T.heading.listen);
     expect(has(r.root, 'prompt-panel-text')).toBe(false);
     expect(has(r.root, 'cant-hear')).toBe(true);
@@ -396,7 +400,7 @@ describe('Hear it (test 14)', () => {
     await press(pressable(r.root, 'cant-hear-hear'));
     await tick(0);
     await press(tile(r.root, 'jamo:nieun'));
-    await tick(700);
+    await tick(RESULT_MARK_MIN_MS);
     const before = spoken().length;
     await act(async () => {
       release();
@@ -414,8 +418,8 @@ describe('a wrong tap after Show the letters (test 15)', () => {
     await tick(400);
     const before = spoken().length;
     await press(tile(r.root, 'jamo:a'));
-    const locked = byTestId(r.root, 'match-sound-tile-jamo:a').find((n) => n.props['aria-disabled'] !== undefined);
-    expect(locked?.props['aria-disabled']).toBe(true);
+    // Locked, not disabled (F-A11Y-001 AF-4a): a focusable button that still shows the miss.
+    expect(byTestId(r.root, 'match-sound-tile-jamo:a').some((n) => n.props['aria-disabled'] === true)).toBe(false);
     expect(JSON.stringify(r.toJSON())).not.toContain('#C0392B');
     await tick(799);
     expect(spoken().length).toBe(before);
@@ -429,9 +433,9 @@ describe('the round changes while the sheet is open (test 16)', () => {
     const r = await open();
     await openSheet(r);
     expect(has(r.root, 'cant-hear-sheet')).toBe(true);
-    // The tiles sit under the scrim in the test tree; a right tap advances the round after its 700 ms.
+    // The tiles sit under the scrim in the test tree; a right tap advances the round after the 1000 ms result floor.
     await press(tile(r.root, 'jamo:nieun'));
-    await tick(700);
+    await tick(RESULT_MARK_MIN_MS);
     expect(has(r.root, 'cant-hear-sheet')).toBe(false);
     expect(has(r.root, 'cant-hear')).toBe(true);
   });
@@ -442,7 +446,7 @@ describe('the round changes while the sheet is open (test 16)', () => {
     await press(pressable(r.root, 'cant-hear-show-letters'));
     await tick(0);
     await press(tile(r.root, 'jamo:nieun'));
-    await tick(700);
+    await tick(RESULT_MARK_MIN_MS);
     await tick(1_000);
     expect(has(r.root, 'prompt-panel-text')).toBe(false);
     expect(has(r.root, 'cant-hear')).toBe(true);
@@ -502,10 +506,10 @@ describe('the step after the sheet waits for the modal to go (iOS and the web), 
     modal.reportsDismiss = false;
     const r = await open();
     await openSheet(r);
-    // A right tap: the next round opens 700 ms later.
+    // A right tap: the next round opens 1000 ms later (the result floor).
     await press(tile(r.root, 'jamo:nieun'));
-    await tick(400);
-    // Closed now, its wait would end at 1000 ms; the round changes at 700 ms and takes it away.
+    await tick(700);
+    // Closed now, its wait would end at 1300 ms; the round changes at 1000 ms and takes it away.
     await press(pressable(r.root, 'cant-hear-sheet-close'));
     await tick(300);
     await tick(2_000);

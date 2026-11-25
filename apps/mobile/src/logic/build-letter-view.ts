@@ -46,3 +46,18 @@ export function shapeHint(shape: BlockShape, copy: Messages['learner']['minigame
 export function removeLastTile(placed: readonly string[]): string[] {
   return placed.slice(0, -1);
 }
+
+/** How many rows the block's boxes take (`SyllableBlock`): the vowel beside or under, plus the final's own lower row. */
+export function blockRows(shape: BlockShape): number {
+  return (shape.vowel === 'under' ? 2 : 1) + (shape.hasFinal ? 1 : 0);
+}
+
+/**
+ * The height of the block's shape picture: `rows x cell + (rows - 1) x gap` (40, 88 or 136 on the phone sizes). Build a
+ * Letter keeps this place under the slots in every state, so the picture appearing after a miss moves nothing
+ * (F-A11Y-001 §3.5; design/components/AnswerFeedback/spec.md D7).
+ */
+export function shapePlaceHeight(shape: BlockShape, cell: number, gap: number): number {
+  const rows = blockRows(shape);
+  return rows * cell + (rows - 1) * gap;
+}

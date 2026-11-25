@@ -11,7 +11,7 @@ import { Touchscreen, type TouchPoint } from './touch';
  * text, on a phone turned sideways and on a tablet.
  *
  * The English cases play Holidays quest 7 (the Seollal greeting): its first block is 달, three slots (initial, vowel, final),
- * so Undo is pressed twice in a row on a real touch screen, and a wrong full fill is reset by the board while Undo waits. The
+ * so Undo is pressed twice in a row on a real touch screen, and a wrong full fill stays (with its shape picture) until the learner acts. The
  * Spanish and Korean cases use the guest quest's first block (가, two slots) at 320 x 640 with the largest text: the label
  * must neither wrap nor push the page sideways. In every case Undo is at least 64 x 64, named for a screen reader, dimmed and
  * inert while nothing is placed, and is on screen together with the slots (and the tray too where the window is tall enough, see tilesWithUndo).
@@ -21,7 +21,7 @@ import { Touchscreen, type TouchPoint } from './touch';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 /** Past the 400 ms lock, with room for a busy machine's slow event dispatch. */
 const AFTER_LOCK = 700;
-/** The wrong block shows its hint this long, then the slots empty (BuildLetterGame WRONG_RESET_MS), plus slow dispatch. */
+/** Past the old 900 ms reset (F-A11Y-001 OD-AF7 (i): a wrong block now stays), plus slow dispatch. */
 const AFTER_RESET = 1500;
 const en = getMessages('en');
 
@@ -51,13 +51,15 @@ const insideWindow = (target: Locator): Promise<boolean> =>
 
 const PROFILES = [
   { name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true, tilesWithUndo: false },
-  { name: 'phone sideways 740 x 360', viewport: { width: 740, height: 360 }, largest: false, tilesWithUndo: true },
+  { name: 'phone sideways 740 x 360', viewport: { width: 740, height: 360 }, largest: false, tilesWithUndo: false },
   { name: 'phone sideways 740 x 360, largest text', viewport: { width: 740, height: 360 }, largest: true, tilesWithUndo: false },
   { name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false, tilesWithUndo: true },
 ] as const;
 // tilesWithUndo: the board is the slots, Undo, then the tray. At the largest text the tray sits below Undo and needs a scroll
 // (a phone 320 high 640 shows the slots and Undo; a phone turned sideways with the largest text, 360 high, cannot hold the
 // slots, Undo and the tray at once). That is how the board was before Undo; Undo sits next to the slots it acts on.
+// F-A11Y-001 AF-4a (AnswerFeedback D7, owner Q2): the shape picture's place now sits under the slots in every state, at the
+// block's own height (136 for 달, three rows), so a phone turned sideways (360 high) also needs a scroll to the tray.
 
 const largestText = (page: Page): Promise<void> =>
   seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
@@ -189,7 +191,7 @@ for (const profile of PROFILES) {
       await expect.poll(() => placedCount(page)).toBe(0);
     });
 
-    test('a wrong full block still resets by itself after 900 ms, and Undo waits meanwhile', async ({ page }) => {
+    test('a wrong full block stays with its shape picture until the learner acts (OD-AF7 (i)); Undo is on and takes the last tile back', async ({ page }) => {
       test.setTimeout(150_000);
       await openClosedBlock(page, profile.largest);
       const undo = page.getByTestId('build-letter-undo');
@@ -202,20 +204,23 @@ for (const profile of PROFILES) {
         await touch.graze(centre(await inView(tile)), 0, 16, { steps: 4 });
         await page.waitForTimeout(AFTER_LOCK);
       }
-      await expect(page.getByText(/Not quite/)).toBeVisible();
-      expect(await placedCount(page), 'the wrong block shows for a moment').toBe(3);
-      await expect(undo, 'Undo waits while the wrong block shows').toHaveAttribute('aria-disabled', 'true');
-      await touch.tap(centre(await inView(undo)));
+      await expect(page.getByTestId('build-letter-hoya')).toBeVisible();
+      await expect(page.getByTestId('build-letter-shape'), 'the shape picture shows in its kept place').toBeAttached();
+      expect(await placedCount(page), 'the wrong block shows').toBe(3);
+      await expect(undo, 'Undo is on while the wrong block shows').not.toHaveAttribute('aria-disabled', 'true');
+      // No timer empties it: it is still there well past the old 900 ms reset, with Hoya's line.
       await page.waitForTimeout(AFTER_RESET);
-      expect(await placedCount(page), 'the board emptied itself').toBe(0);
-      await expect(undo).toHaveAttribute('aria-disabled', 'true');
-      // The same block can be tried again at once, and Undo works on the new attempt.
-      await page.waitForTimeout(AFTER_LOCK);
-      await touch.graze(centre(await inView(page.getByRole('button', { name: 'Korean letter ㄷ, tap to select', exact: true }))), 0, 16, { steps: 4 });
-      await expect.poll(() => placedCount(page)).toBe(1);
-      await page.waitForTimeout(AFTER_LOCK);
+      expect(await placedCount(page), 'the wrong block stays').toBe(3);
+      await expect(page.getByTestId('build-letter-hoya')).toBeVisible();
+      // Undo takes the last tile back, and that ends the miss: the picture and Hoya's line go.
       await touch.tap(centre(await inView(undo)));
-      await expect.poll(() => placedCount(page)).toBe(0);
+      await expect.poll(() => placedCount(page)).toBe(2);
+      await expect(page.getByTestId('build-letter-shape')).toHaveCount(0);
+      await expect(page.getByTestId('build-letter-hoya')).toHaveCount(0);
+      // The same block can be tried again at once.
+      await page.waitForTimeout(AFTER_LOCK);
+      await touch.graze(centre(await inView(page.getByRole('button', { name: 'final l', exact: true }))), 0, 16, { steps: 4 });
+      await expect.poll(() => placedCount(page)).toBe(3);
     });
   });
 }
