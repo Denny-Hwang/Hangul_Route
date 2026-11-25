@@ -231,6 +231,10 @@ test.describe('Discover: the guidance-only link (CH-1d)', () => {
       await expect(sheet.getByRole('button', { name: 'Hear it' })).toBeVisible();
       await shot(page, `ch-1d-sheet-${size.width}x${size.height}`);
 
+      // The page says its first letter by itself once it has settled (AU-10, QS-3): wait for that to land, and be quiet,
+      // before counting what Hear it adds.
+      await expect.poll(async () => (await utterances(page)).length, { timeout: 10_000 }).toBeGreaterThanOrEqual(1);
+      await page.waitForTimeout(800);
       // Hear it plays the page's first sound once, through the card's own Hear it.
       const before = (await utterances(page)).length;
       await sheet.getByRole('button', { name: 'Hear it' }).click();

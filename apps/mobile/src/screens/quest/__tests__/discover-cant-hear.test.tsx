@@ -124,6 +124,23 @@ describe('Discover, "Can\'t hear it?" (test 20)', () => {
     expect(order.map((n) => n.props['data-testid'])).toEqual(['discover-read-along', 'cant-hear', 'discover-read-along-status']);
   });
 
+  it('the link is drawn but inactive while the voice check holds, takes no tap, and turns active when it ends', async () => {
+    useAudioStore.setState({ voiceCheckPending: true });
+    const r = await open([LETTERS]);
+    expect(count(r, 'cant-hear')).toBe(1);
+    const link = byTestId(r.root, 'cant-hear')[0]!;
+    expect(link.props.style.opacity).toBe(0.6);
+    const tap = byTestId(r.root, 'cant-hear').find((n) => typeof n.props.onClick === 'function');
+    if (tap) await press(tap);
+    expect(hasId(r.root, 'cant-hear-sheet')).toBe(false);
+    await act(async () => {
+      useAudioStore.setState({ voiceCheckPending: false });
+    });
+    expect(byTestId(r.root, 'cant-hear')[0]!.props.style.opacity).not.toBe(0.6);
+    await press(pressableById(r.root, 'cant-hear'));
+    expect(hasId(r.root, 'cant-hear-sheet')).toBe(true);
+  });
+
   it('the sheet is guidance only: the line for this device and Hear it as the primary action, no Show the letters', async () => {
     const r = await open([LETTERS]);
     await press(pressableById(r.root, 'cant-hear'));
@@ -146,6 +163,22 @@ describe('Discover, "Can\'t hear it?" (test 20)', () => {
     await press(pressableById(r.root, 'discover-hear-jamo:a|sound'));
     await tick(500);
     expect(spoken()).toEqual(['아', '아']);
+  });
+
+  it('on an exchange page Hear it reads the exchange once, as Read along does (both lines, in order), and never stops one already reading', async () => {
+    const r = await open([EXCHANGE]);
+    await press(pressableById(r.root, 'cant-hear'));
+    await press(pressableById(r.root, 'cant-hear-hear'));
+    await tick(4000);
+    expect(spoken()).toEqual(['안녕하세요!', '안녕하세요!']);
+    expect(hasId(r.root, 'cant-hear-sheet')).toBe(false);
+
+    // Read along already running: Hear it starts nothing and does not stop it (Read along would toggle it off).
+    await press(pressableById(r.root, 'discover-read-along'));
+    await press(pressableById(r.root, 'cant-hear'));
+    await press(pressableById(r.root, 'cant-hear-hear'));
+    await tick(4000);
+    expect(spoken()).toHaveLength(4);
   });
 
   it('is hidden while the card shows a reason: sound off, no Korean voice, a play that could not sound', async () => {

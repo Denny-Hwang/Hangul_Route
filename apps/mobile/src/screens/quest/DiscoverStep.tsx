@@ -562,7 +562,7 @@ function DiscoverItemCard({
       {slot.cantHear ? (
         // Centred under the buttons, as Hear it above it.
         <View style={{ alignSelf: 'center' }}>
-          <CantHear guidanceOnly round={item.key} active onHear={() => dispatch({ type: 'hear', id: item.hear.id })} />
+          <CantHear guidanceOnly round={item.key} active={slot.cantHearActive} onHear={() => dispatch({ type: 'hear', id: item.hear.id })} />
         </View>
       ) : null}
 
@@ -733,9 +733,11 @@ function ExchangeCard({
         />
         {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
       </View>
-      {slot.cantHear && first ? (
+      {slot.cantHear ? (
         <View style={{ alignSelf: 'flex-start' }}>
-          <CantHear guidanceOnly round={render.item.key} active onHear={() => dispatch({ type: 'hear', id: first.hear.id })} />
+          {/* The exchange's main control is Read along, so Hear it reads the exchange once, as that button does
+              (while it is already being read, there is nothing to start: Read along would stop it). */}
+          <CantHear guidanceOnly round={render.item.key} active={slot.cantHearActive} onHear={() => (render.reading ? undefined : dispatch({ type: 'readAlong', item: render.item.key }))} />
         </View>
       ) : null}
       <PromptPanel
