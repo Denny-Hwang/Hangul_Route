@@ -48,8 +48,8 @@
       "gloss": "j 소리: 바람을 세게 내지 않는 부드러운 소리예요."
     },
     "jamo:chieut": {
-      "soundHint": "‘책’의 첫소리. ch 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "글과 그림을 묶어 만든 읽을거리",
+      "soundHint": "‘치마’의 첫소리. ch 소리에 바람을 세게 내보내요.",
+      "exampleWord.gloss": "허리에 둘러 입는 옷",
       "gloss": "ch 소리: 바람을 세게 내보내는 소리예요."
     },
     "jamo:kieuk": {
@@ -58,8 +58,8 @@
       "gloss": "k 소리: 바람을 세게 내보내는 강한 소리예요."
     },
     "jamo:tieut": {
-      "soundHint": "‘토끼’의 첫소리. t 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "귀가 길고 깡충깡충 뛰는 동물",
+      "soundHint": "‘토마토’의 첫소리. t 소리에 바람을 세게 내보내요.",
+      "exampleWord.gloss": "빨갛고 동그란 열매 채소",
       "gloss": "t 소리: 혀끝을 떼며 바람을 세게 내보내는 소리예요."
     },
     "jamo:pieup": {
@@ -73,8 +73,8 @@
       "gloss": "h 소리: 숨을 내쉬는 소리예요."
     },
     "jamo:a": {
-      "soundHint": "‘아빠’의 아 소리. 입을 크게 벌려요.",
-      "exampleWord.gloss": "아버지를 다정하게 부르는 말",
+      "soundHint": "‘아기’의 아 소리. 입을 크게 벌려요.",
+      "exampleWord.gloss": "아주 어린 아이",
       "gloss": "a 소리: 입을 크게 벌리는 소리예요."
     },
     "jamo:ya": {
@@ -113,8 +113,8 @@
       "gloss": "yu 소리: u 앞에 y를 붙인 소리예요."
     },
     "jamo:eu": {
-      "soundHint": "‘으뜸’의 으 소리. 입술을 옆으로 펴요.",
-      "exampleWord.gloss": "가장 좋거나 첫째가는 것",
+      "soundHint": "‘그림’에 들어 있는 으 소리. 입술을 옆으로 펴요.",
+      "exampleWord.gloss": "선이나 색으로 모양을 나타낸 것",
       "gloss": "eu 소리: u와 i 사이의 부드러운 소리예요."
     },
     "jamo:i": {
