@@ -2,15 +2,16 @@ import { TapLockProvider, TapTarget, touchTarget, useTapLock } from '@hangul-rou
 import type { ReactElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { byTestId, press, render, unmount } from '../../../test-support/render';
 import { CardMatchGame } from '../CardMatchGame';
 
 /**
- * AMENDMENTS-TOUCH 6.2 (row KT-4a, F3): Card Match through react-native-web. The wrong-flash timer only clears
- * the pick it was set for (a stale timer never un-selects the next pick); the order stays a Korean card first,
- * so a meaning tapped first is a no-op and scores nothing; both columns are buttons at least `touchTarget.min`
- * tall; leaving the game clears the flash and the completion timers.
+ * AMENDMENTS-TOUCH 6.2 (row KT-4a, F3) as amended by F-A11Y-001 OD-AF6 (a) (row AF-3): Card Match through
+ * react-native-web. A miss stays marked while the same Korean word is picked and no timer lets the pick go (so no timer
+ * un-selects the next pick either); the order stays a Korean card first, so a meaning tapped first is a no-op and scores
+ * nothing; both columns are buttons at least `touchTarget.min` tall; leaving the game clears the completion timer.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -79,8 +80,8 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-describe('Card Match: a stale wrong-flash timer (F3)', () => {
-  it('does not un-select the next pick: geune, the wrong "sand", then morae 250 ms later stays selected past the flash', async () => {
+describe('Card Match: no timer un-selects a pick (F3, rewritten for OD-AF6 (a))', () => {
+  it('does not un-select the next pick: geune, the wrong "sand", then morae 250 ms later stays selected, however long', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
@@ -88,7 +89,7 @@ describe('Card Match: a stale wrong-flash timer (F3)', () => {
     await wait(250);
     await tap(r, 'ko', MORAE);
     expect(selected(r, 'ko', MORAE)).toBe(true);
-    await wait(700);
+    await wait(10_000);
     expect(selected(r, 'ko', MORAE)).toBe(true);
     expect(selected(r, 'ko', GEUNE)).toBe(false);
     // The pick still makes its pair.
@@ -99,13 +100,18 @@ describe('Card Match: a stale wrong-flash timer (F3)', () => {
     ]);
   });
 
-  it('still lets go of the pick that missed when nothing else is tapped', async () => {
+  it('the Korean pick that missed is held: no timer lets it go, so the learner can tap another meaning at once', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
     expect(selected(r, 'ko', GEUNE)).toBe(true);
-    await wait(600);
-    expect(selected(r, 'ko', GEUNE)).toBe(false);
+    await wait(10_000);
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
+    await tap(r, 'en', GEUNE);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([
+      ['pair-0', false],
+      ['pair-0', true],
+    ]);
   });
 
   it('a bounce on the selected card keeps it selected', async () => {
@@ -117,23 +123,17 @@ describe('Card Match: a stale wrong-flash timer (F3)', () => {
     expect(run.answers).toEqual([]);
   });
 
-  it('a second wrong pair inside the flash gets its own full flash', async () => {
+  it('leaves no timer behind: a miss starts none', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
-    await wait(400);
-    await tap(r, 'ko', MORAE);
-    await tap(r, 'en', GEUNE);
-    // 400 ms on, the first timer would have fired; the second pick is still the one that missed and stays selected.
-    await wait(400);
-    expect(selected(r, 'ko', MORAE)).toBe(true);
-    await wait(200);
-    expect(selected(r, 'ko', MORAE)).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+    await unmount(r);
   });
 });
 
-describe('Card Match: taps during the wrong flash (review #934)', () => {
-  it('a bounce on the amber card of a miss is not a second miss', async () => {
+describe('Card Match: taps on a marked meaning (review #934, rewritten for OD-AF6 (a))', () => {
+  it('a bounce on the marked meaning of a miss is not a second miss', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
@@ -144,20 +144,16 @@ describe('Card Match: taps during the wrong flash (review #934)', () => {
     expect(selected(r, 'ko', GEUNE)).toBe(true);
   });
 
-  it('the amber card counts again once the flash is over', async () => {
+  it('the marked meaning stays marked and still scores nothing 10 s later (no timer clears it)', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
-    await wait(600);
-    await tap(r, 'ko', GEUNE);
+    await wait(10_000);
     await tap(r, 'en', MORAE);
-    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([
-      ['pair-0', false],
-      ['pair-0', false],
-    ]);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', false]]);
   });
 
-  it('re-tapping the pick that missed during the flash keeps it selected after the flash, ready to pair', async () => {
+  it('re-tapping the pick that missed keeps it picked, ready to pair, and keeps the mark', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
     await tap(r, 'en', MORAE);
@@ -187,10 +183,11 @@ describe('Card Match: a Korean card first, as today (6.2)', () => {
     expect(audio.playPrompt).toHaveBeenCalledTimes(1);
     await tap(r, 'en', GEUNE);
     expect(run.answers).toEqual([['pair-0', true, { texts: ['그네'], rung: 'read' }]]);
-    expect(card(r, 'ko', GEUNE).props['aria-disabled']).toBe(true);
+    // A matched card is inactive (claimed by the board, focusable), never `disabled` (F-A11Y-001 §3.1).
+    expect(card(r, 'ko', GEUNE).props['aria-disabled']).not.toBe(true);
   });
 
-  it('a meaning is inactive (no press look, still a focusable button) until a Korean card is picked, and while it shows a miss', async () => {
+  it('a meaning is inactive (no press look, still a focusable button) until a Korean card is picked, and while it is marked as a miss', async () => {
     const r = await play();
     const target = (idx: number): ReactTestInstance => r.root.find((n) => n.type === TapTarget && n.props.testID === `card-match-en-${idx}`);
     for (let i = 0; i < PAIRS.length; i += 1) expect(target(i).props.inactive, `en-${i} with no pick`).toBe(true);
@@ -198,11 +195,12 @@ describe('Card Match: a Korean card first, as today (6.2)', () => {
     await tap(r, 'ko', GEUNE);
     for (let i = 0; i < PAIRS.length; i += 1) expect(target(i).props.inactive, `en-${i} after a pick`).toBe(false);
     await tap(r, 'en', MORAE);
-    expect(target(MORAE).props.inactive, 'the amber meaning of the miss').toBe(true);
+    expect(target(MORAE).props.inactive, 'the marked meaning of the miss').toBe(true);
     expect(target(GEUNE).props.inactive).toBe(false);
-    await wait(600);
-    expect(target(MORAE).props.inactive, 'the miss let go of the pick').toBe(true);
-    expect(selected(r, 'ko', GEUNE)).toBe(false);
+    await wait(10_000);
+    expect(target(MORAE).props.inactive, 'still marked: no timer lets it go').toBe(true);
+    expect(target(GEUNE).props.inactive).toBe(false);
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
   });
 
   it('a meaning tapped after a pair is made, with no new Korean pick, scores nothing', async () => {
@@ -236,19 +234,19 @@ describe('Card Match: targets and timers', () => {
     }
   });
 
-  it('finishes 800 ms after the last pair, once', async () => {
+  it('finishes the result floor (1000 ms, OD-AF2 (b); Card Match\'s own 800 is shorter) after the last pair, once', async () => {
     const r = await play();
     for (let i = 0; i < PAIRS.length; i += 1) {
       await tap(r, 'ko', i);
       await tap(r, 'en', i);
     }
-    await wait(799);
+    await wait(RESULT_MARK_MIN_MS - 1);
     expect(finishes).toBe(0);
     await wait(1);
     expect([finishes, run.completes]).toEqual([1, 1]);
   });
 
-  it('leaving before the end clears the completion and flash timers', async () => {
+  it('leaving before the end clears the completion timer', async () => {
     const r = await play();
     for (let i = 0; i < PAIRS.length; i += 1) {
       await tap(r, 'ko', i);
