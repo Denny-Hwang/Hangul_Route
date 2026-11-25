@@ -9,6 +9,8 @@ import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, ty
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 import { finishOnce, stepsOnce } from './save-retry';
+import type { SavedStageCheck } from './saved-check';
+import { resumableStageCheck, savedStageCheck, stageCheckRecorded, type ResumableStageCheck } from './saved-stage-check';
 import {
   planStageCheck,
   stageCheckCompleteEvent,
@@ -37,6 +39,10 @@ import {
  * - Each round's first answer is recorded as it is given (`recordAnswers`, the spacing rule), so a stopped check keeps
  *   them; the `reviews[]` entry and, at 3 stars, `stageCheckAt` are written only when it is finished.
  * - `review.start` is sent when the learner starts the first part (D's Let's go), `review.complete` at the end.
+ * - [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3b (section 3.4, OD-LR7): the check goes on after an interruption. The screen
+ *   stores the plan's rounds with each first answer once its recording has settled (`savedRun`), and `resumeSession` reads
+ *   the stored value back against the world (the stage, the language, the review items, 24 hours, each round's shape). A
+ *   resumed check records only new answers and never calls `begin` again. The rules are `saved-stage-check.ts`.
  */
 
 export interface StageCheckDeps {
@@ -57,6 +63,8 @@ export interface StageCheckDeps {
   dictation?(profileId: string): boolean;
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
+  /** The review-item chunk's hash of this build (`reviewItemsChunk.hash`): a stored run is resumed only against the set its plan was made from. */
+  itemsHash(): string;
   recordReview(profileId: string, entry: ReviewEntry): void;
   recordAnswers(profileId: string, answers: readonly MemoryAnswer[]): Promise<void>;
   /** Every quest of the stage open to the learner now (F-ENT-003): read again when the check finishes. */
@@ -84,11 +92,23 @@ export interface StageCheckFinished {
   missed: boolean;
 }
 
+/** What `resumeSession` makes of a stored value: a run to go on with, one whose result is already recorded, or nothing. */
+export type StageCheckResume = { kind: 'run'; run: ResumableStageCheck } | { kind: 'recorded' } | { kind: 'none' };
+
 export interface StageCheckApi {
   readWorld(profileId: string | null, now?: Date): Promise<StageCheckWorldRead>;
   /** Whether the stage has a Stage Check to offer (10 or more playable rounds); false while off or unreadable. */
   offerable(profileId: string | null, stage: StageKey): Promise<boolean>;
   startSession(world: StageCheckWorld, stage: StageKey, locale: UiLocale): Promise<PlannedStageCheck | null>;
+  /**
+   * [LR] Row LR-3b: a stored value as a check to go on with (the plan's rounds as stored, never built again), when it is a
+   * run of `stage` in `locale` made from this build's review items, at most 24 hours old, every round passing its shape
+   * check with its item still in the index and not retired. `recorded`: the run's result is already in the learner's
+   * progress (a kill between the entry and the clear), so it is not offered again. Never rejects; any failure is `none`.
+   */
+  resumeSession(world: StageCheckWorld, saved: unknown, locale: UiLocale, stage: StageKey, now?: Date): Promise<StageCheckResume>;
+  /** [LR] The value to store for a check in progress: the answers given whose recording has settled. */
+  savedRun(plan: PlannedStageCheck, run: { locale: UiLocale; answers: ReadonlyMap<number, RoundAnswer>; hideRomanization: boolean; startedAt: string }): SavedStageCheck;
   /** The learner starts the first part: `review.start`. */
   begin(world: StageCheckWorld, plan: PlannedStageCheck, hideRomanization: boolean): void;
   /** Records a round's first answer now (the spacing rule). */
@@ -204,6 +224,21 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
         if (plan !== null && (await loadCells(planItems(plan), ctx, tried))) plan = planStageCheck(ctx, stage, cells, { gloss: gloss(), seed }, out);
       }
       return plan;
+    },
+
+    async resumeSession(world, saved, locale, stage, now = new Date()) {
+      try {
+        const index = await deps.items();
+        const found = resumableStageCheck(saved, now.getTime(), { stage, locale, itemsHash: deps.itemsHash(), index });
+        if (found === null) return { kind: 'none' };
+        return stageCheckRecorded(deps.snapshot(world.profileId), stage, found.startedAt) ? { kind: 'recorded' } : { kind: 'run', run: found };
+      } catch {
+        return { kind: 'none' };
+      }
+    },
+
+    savedRun(plan, run) {
+      return savedStageCheck({ stage: plan.stage, itemsHash: deps.itemsHash(), rounds: plan.rounds, ...run });
     },
 
     begin(world, plan, hideRomanization) {

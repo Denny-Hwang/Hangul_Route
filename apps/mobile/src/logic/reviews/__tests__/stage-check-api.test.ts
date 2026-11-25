@@ -8,6 +8,9 @@ import type { MemoryAnswer } from '../../memory/memory-runtime';
 import { INDEX } from '../../memory/__tests__/fixtures';
 import { gridEpisodesOf } from '../../my-route/order';
 import type { RoundAnswer } from '../daily-review';
+import { SAVED_RUN_MAX_AGE_MS } from '../../quest-flow/saved-run';
+import type { SavedStageCheck } from '../saved-check';
+import type { PlannedStageCheck } from '../stage-check';
 import { createStageCheckApi, type StageCheckDeps, type StageCheckWorld } from '../stage-check-api';
 
 /**
@@ -40,6 +43,7 @@ function fake(over: Partial<StageCheckDeps> = {}): Fake {
     voice: () => true,
     hydrate: async () => undefined,
     snapshot: () => ({ vocab: undefined }) as unknown as ProgressSnapshot,
+    itemsHash: () => 'hash-1',
     // As the store: an entry with an id already held merges into it (`mergeReview`).
     recordReview: (_p, entry) => {
       const i = out.reviews.findIndex((r) => r.id === entry.id);
@@ -278,5 +282,181 @@ describe('in Spanish or Korean', () => {
     const offline = fake({ ensureCell: async () => Promise.reject(new Error('offline')) });
     const plan = await createStageCheckApi(offline.deps).startSession(await world(offline), 'stage2', 'ko');
     for (const r of plan?.rounds ?? []) expect(r.question.itemId.startsWith('vocab:')).toBe(true);
+  });
+});
+
+/**
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3b (test 22): `resumeSession` gives a stored Stage Check back as stored, and
+ * nothing for a run that is not this stage, this language, this build's review items, within a day, or whose rounds do not
+ * pass their shape check; a run whose result is already in the progress is `recorded`.
+ */
+describe('resumeSession and savedRun (LR-3b)', () => {
+  const START = '2026-10-22T09:00:00.000Z';
+  const LATER = new Date(Date.parse(START) + 60 * 60 * 1000);
+
+  /** A plan with the round types the formats can make (the voice and the game switches on), and what is stored for it. */
+  async function stored(over: Partial<StageCheckDeps> = {}, locale: 'en' | 'es' | 'ko' = 'en', answered = 8) {
+    const f = fake({ games: () => new Set(['syllable-build', 'match-shape']), clozePick: () => true, dictation: () => true, ...over });
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage3', locale))!;
+    const answers = new Map(Array.from({ length: answered }, (_, i): [number, RoundAnswer] => [i, i % 3 === 0 ? { correct: false } : { correct: true, ...(i % 4 === 0 ? { hinted: true } : {}) }]));
+    const run = api.savedRun(plan, { locale, answers, hideRomanization: true, startedAt: START });
+    // The stored value is JSON, as the storage keeps it.
+    const saved = JSON.parse(JSON.stringify(run)) as SavedStageCheck;
+    return { f, api, w, plan, answers, run, saved };
+  }
+
+  it('savedRun holds the stage, the language, the items hash, the plan rounds, the answers by index, the choice and the start time', async () => {
+    const { plan, run, answers } = await stored();
+    expect(run).toMatchObject({ v: 1, kind: 'stage', stage: 'stage3', locale: 'en', itemsHash: 'hash-1', hideRomanization: true, startedAt: START });
+    expect(run.rounds).toEqual(plan.rounds);
+    expect(run.answers.map(([i]) => i)).toEqual([...answers.keys()]);
+    expect(Object.fromEntries(run.answers)).toEqual(Object.fromEntries(answers));
+  });
+
+  it('the stored rounds come back as stored, with the answers, the choice, the start time and the next round', async () => {
+    const { api, w, plan, saved, answers } = await stored();
+    const found = await api.resumeSession(w, saved, 'en', 'stage3', LATER);
+    expect(found.kind).toBe('run');
+    if (found.kind !== 'run') return;
+    expect(found.run.plan).toEqual({ stage: 'stage3', rounds: plan.rounds, soundNotice: plan.soundNotice } satisfies PlannedStageCheck);
+    expect(found.run.answers).toEqual(answers);
+    expect(found.run).toMatchObject({ hideRomanization: true, startedAt: START, next: 8 });
+  });
+
+  it('the plans of every stage pass the shape check after JSON, and between them they hold several round types', async () => {
+    const types = new Set<string>();
+    for (const stage of ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'] as const) {
+      const f = fake({ games: () => new Set(['syllable-build', 'match-shape']), clozePick: () => true, dictation: () => true });
+      const api = createStageCheckApi(f.deps);
+      const w = await world(f);
+      const plan = (await api.startSession(w, stage, 'en'))!;
+      plan.rounds.forEach((r) => types.add(r.type));
+      const saved = JSON.parse(JSON.stringify(api.savedRun(plan, { locale: 'en', answers: new Map([[0, { correct: true }]]), hideRomanization: false, startedAt: START })));
+      expect((await api.resumeSession(w, saved, 'en', stage, LATER)).kind, stage).toBe('run');
+    }
+    expect([...types]).toEqual(expect.arrayContaining(['pick', 'type', 'order']));
+  });
+
+  it('the next round is the first without an answer: a gap is asked again, every round answered is the end', async () => {
+    const { api, w, saved } = await stored();
+    const gap = { ...saved, answers: saved.answers.filter(([i]) => i !== 3) };
+    const g = await api.resumeSession(w, gap, 'en', 'stage3', LATER);
+    expect(g.kind === 'run' && g.run.next).toBe(3);
+    const all20 = { ...saved, answers: saved.rounds.map((_, i): [number, RoundAnswer] => [i, { correct: true }]) };
+    const done = await api.resumeSession(w, all20, 'en', 'stage3', LATER);
+    expect(done.kind === 'run' && done.run.next).toBe(saved.rounds.length);
+  });
+
+  const kindOf = async (mutate: (saved: SavedStageCheck) => unknown, ask: { locale?: 'en' | 'es' | 'ko'; stage?: 'stage2' | 'stage3'; now?: Date; deps?: Partial<StageCheckDeps> } = {}) => {
+    const { f, saved } = await stored();
+    const api = createStageCheckApi({ ...f.deps, ...ask.deps });
+    const w = await world(f);
+    const value = mutate(JSON.parse(JSON.stringify(saved)) as SavedStageCheck);
+    return (await api.resumeSession(w, value, ask.locale ?? 'en', ask.stage ?? 'stage3', ask.now ?? LATER)).kind;
+  };
+
+  it('nothing for another stage, another language, another review-item set', async () => {
+    expect(await kindOf((s) => s, { stage: 'stage2' })).toBe('none');
+    expect(await kindOf((s) => s, { locale: 'es' })).toBe('none');
+    expect(await kindOf((s) => s, { deps: { itemsHash: () => 'hash-2' } })).toBe('none');
+    expect(await kindOf((s) => s)).toBe('run');
+  });
+
+  it('nothing past 24 hours, whichever way on the clock; fresh at exactly 24 hours', async () => {
+    const t = Date.parse(START);
+    expect(await kindOf((s) => s, { now: new Date(t + SAVED_RUN_MAX_AGE_MS) })).toBe('run');
+    expect(await kindOf((s) => s, { now: new Date(t + SAVED_RUN_MAX_AGE_MS + 1) })).toBe('none');
+    expect(await kindOf((s) => s, { now: new Date(t - SAVED_RUN_MAX_AGE_MS - 1) })).toBe('none');
+  });
+
+  it('nothing when an item of a round is retired or gone from the index, or the index cannot be read', async () => {
+    const { f, saved } = await stored();
+    const first = saved.rounds[0]!.question.itemId;
+    const w = await world(f);
+    const retired = createStageCheckApi({ ...f.deps, items: async () => ({ ...INDEX, retired: new Set([first]) }) });
+    expect((await retired.resumeSession(w, saved, 'en', 'stage3', LATER)).kind).toBe('none');
+    const gone = createStageCheckApi({ ...f.deps, items: async () => ({ ...INDEX, byId: new Map([...INDEX.byId].filter(([id]) => id !== first)) }) });
+    expect((await gone.resumeSession(w, saved, 'en', 'stage3', LATER)).kind).toBe('none');
+    const offline = createStageCheckApi({ ...f.deps, items: async () => Promise.reject(new Error('offline')) });
+    expect((await offline.resumeSession(w, saved, 'en', 'stage3', LATER)).kind).toBe('none');
+  });
+
+  it('nothing for a round that fails the shape check', async () => {
+    const bad = (edit: (round: Record<string, unknown>) => void) =>
+      kindOf((s) => {
+        edit(s.rounds[2] as unknown as Record<string, unknown>);
+        return s;
+      });
+    expect(await bad((r) => (r.type = 'puzzle'))).toBe('none');
+    expect(await bad((r) => delete r.question)).toBe('none');
+    expect(await bad((r) => ((r.question as Record<string, unknown>).itemId = 7))).toBe('none');
+    expect(await bad((r) => ((r.question as Record<string, unknown>).rung = 'master'))).toBe('none');
+    expect(await bad((r) => ((r.question as Record<string, unknown>).cue = 'sound'))).toBe('none');
+    expect(await bad((r) => ((r.answer as Record<string, unknown>).ko = 'x'))).toBe('none');
+    expect(await bad((r) => delete r.answer)).toBe('none');
+  });
+
+  it('nothing for a round of each type missing a field its view reads', async () => {
+    const { saved } = await stored();
+    const byType = new Map(saved.rounds.map((r, i) => [r.type, i] as const));
+    const needs: Record<string, string[]> = {
+      pick: ['heard', 'ask', 'prompt', 'options', 'answerId'],
+      type: ['mode', 'target'],
+      order: ['tiles', 'words'],
+      cloze: ['gapped', 'meaning', 'tiles', 'answerId'],
+      build: ['target'],
+      shape: ['target', 'lookAlike'],
+    };
+    let checked = 0;
+    for (const [type, fields] of Object.entries(needs)) {
+      const at = byType.get(type as never);
+      if (at === undefined) continue;
+      for (const field of fields) {
+        const out = await kindOf((s) => {
+          delete (s.rounds[at] as unknown as Record<string, unknown>)[field];
+          return s;
+        });
+        expect(out, `${type} without ${field}`).toBe('none');
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(5);
+  });
+
+  it('nothing when the answers are bad: out of the plan, twice for one round, a bad shape, none at all', async () => {
+    expect(await kindOf((s) => ({ ...s, answers: [...s.answers, [99, { correct: true }]] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: [...s.answers, [0, { correct: true }]] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: [[0, { correct: 'yes' }]] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: [[0.5, { correct: true }]] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: [[0]] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: [] }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, answers: 'x' }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, rounds: [] }))).toBe('none');
+  });
+
+  it('nothing for garbage or another kind of check run', async () => {
+    for (const value of [null, undefined, 'x', 7, [], {}, { v: 2 }]) expect(await kindOf(() => value)).toBe('none');
+    expect(await kindOf((s) => ({ ...s, kind: 'hangul' }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, v: 2 }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, hideRomanization: 'yes' }))).toBe('none');
+    expect(await kindOf((s) => ({ ...s, startedAt: 'yesterday' }))).toBe('none');
+  });
+
+  it('a run whose result is already in the progress is recorded, not offered again; an older, other-stage or unlatched entry is not', async () => {
+    const { f, saved } = await stored();
+    const entry = (over: Partial<ReviewEntry>): ReviewEntry => ({ id: 'stage-check:stage3', kind: 'stage-certificate', generatedAt: '2026-10-22T09:30:00.000Z', scope: 'stage3', itemIds: [], resultStars: 2, ...over });
+    const ask = async (snap: Partial<ProgressSnapshot> | undefined) =>
+      (await createStageCheckApi({ ...f.deps, snapshot: () => snap as ProgressSnapshot | undefined }).resumeSession(await world(f), saved, 'en', 'stage3', LATER)).kind;
+    expect(await ask({ reviews: [entry({})] })).toBe('recorded');
+    expect(await ask({ reviews: [entry({ generatedAt: START })] })).toBe('recorded');
+    expect(await ask({ reviews: [entry({ generatedAt: '2026-10-22T08:59:59.000Z' })] })).toBe('run');
+    expect(await ask({ reviews: [entry({ id: 'stage-check:stage2', scope: 'stage2' })] })).toBe('run');
+    expect(await ask({ reviews: [] })).toBe('run');
+    expect(await ask(undefined)).toBe('run');
+    // A 3-star entry whose latch was not written is not a finished check: the finish runs again (the latch is earliest-wins).
+    expect(await ask({ reviews: [entry({ resultStars: 3 })] })).toBe('run');
+    expect(await ask({ reviews: [entry({ resultStars: 3 })], stageCheckAt: { stage3: '2026-10-22T09:30:00.000Z' } })).toBe('recorded');
   });
 });

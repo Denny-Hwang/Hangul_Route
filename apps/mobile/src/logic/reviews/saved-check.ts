@@ -1,6 +1,9 @@
+import type { StageKey, UiLocale } from '@hangul-route/content-schema';
 import { SAVED_RUN_MAX_AGE_MS } from '../quest-flow/saved-run';
 import type { HangulCheck } from '../stage1/hangul-check';
 import type { ReviewAnswer } from '../stage1/review-flow';
+import type { RoundAnswer } from './daily-review';
+import type { ReviewRound } from './review-rounds';
 
 /**
  * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (section 3.4): a check stopped or interrupted goes on where it stopped.
@@ -13,7 +16,9 @@ import type { ReviewAnswer } from '../stage1/review-flow';
  *
  * Row LR-3a stores the Hangul Check (`kind: 'hangul'`). Row LR-3b adds the Stage Check beside it (`kind: 'stage'`:
  * its planned rounds and its first answer per round index) and reuses the parts below that name no check:
- * `isFreshCheckRun` (24 hours either way), `isReviewAnswer`, `answeredLike` and `nextAfterLastAnswered`.
+ * `isFreshCheckRun` (24 hours either way), `isReviewAnswer`, `answeredLike` and `nextAfterLastAnswered`. The Stage
+ * Check's own rules (`saved-stage-check.ts`) live in the memory chunk with its API, so this start-bundle file holds only
+ * the Stage Check's stored type.
  */
 
 /** The stored value's version; a row that changes what is stored changes it (a value of another version is dropped). */
@@ -35,8 +40,30 @@ export interface SavedHangulCheck {
   startedAt: string;
 }
 
-/** Every kind of check run that can be stored (row LR-3b adds `stage`). */
-export type SavedCheckRun = SavedHangulCheck;
+/**
+ * The Stage Check as stored (row LR-3b, OD-LR7): the plan's rounds as played, not questions to rebuild them from (the
+ * plan reads the learner's memory states, voice and switches at the moment it is made, and each first answer is written
+ * into that store, so a plan made again after the first parts would be another check). Bump `v` when a row changes a
+ * round's required fields (`saved-stage-check.ts` checks them).
+ */
+export interface SavedStageCheck {
+  v: 1;
+  kind: 'stage';
+  stage: StageKey;
+  /** The UI language of the rounds' meanings: a run is resumed only in the same one. */
+  locale: UiLocale;
+  /** `reviewItemsChunk.hash` when the plan was made: a new review-item set discards the run. */
+  itemsHash: string;
+  rounds: ReviewRound[];
+  /** The first answer per round index, `[index, answer]` pairs, each already recorded in the memory store. */
+  answers: Array<[number, RoundAnswer]>;
+  hideRomanization: boolean;
+  /** ISO time the check began (a resumed check keeps it). */
+  startedAt: string;
+}
+
+/** Every kind of check run that can be stored. */
+export type SavedCheckRun = SavedHangulCheck | SavedStageCheck;
 
 /** The value to store for a Hangul Check in progress. */
 export function savedHangulCheck(run: {

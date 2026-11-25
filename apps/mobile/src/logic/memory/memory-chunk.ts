@@ -243,6 +243,7 @@ export function stageCheckApi(): StageCheckApi {
     dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
+    itemsHash: () => reviewItemsChunk.hash,
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
     recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
     latch: (profileId, stage, at) => {
