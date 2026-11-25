@@ -14,6 +14,7 @@ import {
   shuffleBoard,
   startFlow,
   stepFlow,
+  tileItem,
   validBoards,
   wordTileView as wordTileViewWith,
   type FlowEffect,
@@ -92,7 +93,7 @@ describe('startFlow', () => {
 
   it('ignores every event when empty', () => {
     const empty = startFlow([]);
-    for (const event of [pic('bap'), { type: 'advance' } as const, { type: 'skip' } as const, { type: 'clear-flash' } as const]) {
+    for (const event of [pic('bap'), { type: 'advance' } as const, { type: 'skip' } as const]) {
       expect(stepFlow(empty, event)).toEqual({ state: empty, effects: [] });
     }
   });
@@ -175,10 +176,9 @@ describe('a wrong pair', () => {
     expect(out.effects).toEqual([
       { type: 'answer', roundKey: 'b0:bap', correct: false, pairId: 'bap' },
       { type: 'haptic', kind: 'nudge' },
-      { type: 'cancel-clear' },
-      { type: 'schedule-clear', ms: PIC_WORD_TIMING.missClearMs },
     ]);
-    expect(PIC_WORD_TIMING.missClearMs).toBe(600);
+    // F-A11Y-001 OD-AF7 (row AF-4b): no timer lets the miss go.
+    expect(PIC_WORD_TIMING).not.toHaveProperty('missClearMs');
   });
 
   it('keys the miss by the FIRST-selected tile: word first, picture second', () => {
@@ -197,30 +197,31 @@ describe('a wrong pair', () => {
     ]);
   });
 
-  it('clears the amber flash when the timer fires', () => {
+  it('keeps the amber miss and the first pick while the learner does nothing: only a tap that changes the board drops it (OD-AF7)', () => {
     const missed = run(fresh(), [pic('bap'), word('san')]).state;
-    const out = stepFlow(missed, { type: 'clear-flash' });
-    expect(out.state.flash).toBeNull();
-    expect(out.state.selected).toEqual({ side: 'picture', pairId: 'bap' });
-    expect(out.effects).toEqual([]);
+    expect(missed.flash).toEqual({ side: 'word', pairId: 'san' });
+    // A tap on the amber tile itself changes nothing, and neither does a late advance.
+    expect(stepFlow(missed, word('san'))).toEqual({ state: missed, effects: [] });
+    expect(stepFlow(missed, { type: 'advance' })).toEqual({ state: missed, effects: [] });
   });
 
-  it('ignores a flash timer that fires with nothing flashing', () => {
-    expect(stepFlow(fresh(), { type: 'clear-flash' })).toEqual({ state: fresh(), effects: [] });
-  });
-
-  it('drops a pending flash (and its timer) when the learner matches', () => {
+  it('drops the flash when the learner matches', () => {
     const missed = run(fresh(), [pic('bap'), word('san')]).state;
     const out = stepFlow(missed, word('bap'));
     expect(out.state.flash).toBeNull();
-    expect(out.effects).toContainEqual({ type: 'cancel-clear' });
+    expect(out.effects.map((e) => e.type)).toEqual(['answer', 'haptic', 'play']);
   });
 
-  it('drops a pending flash when the selection changes', () => {
+  it('drops the flash when the selection changes, with no effect to run', () => {
     const missed = run(fresh(), [pic('bap'), word('san')]).state;
     const out = stepFlow(missed, pic('hanbok'));
     expect(out.state.flash).toBeNull();
-    expect(out.effects).toEqual([{ type: 'cancel-clear' }]);
+    expect(out.effects).toEqual([]);
+  });
+
+  it('moves the flash to the next wrong tile: only the latest miss shows', () => {
+    const state = run(fresh(), [pic('bap'), word('san'), word('hanbok')]).state;
+    expect(state.flash).toEqual({ side: 'word', pairId: 'hanbok' });
   });
 
   it('counts misses per scored pair and shows the hint ring after the second one', () => {
@@ -258,10 +259,10 @@ describe('a wrong pair', () => {
     expect(hintTarget(out.state)).toBeNull();
   });
 
-  it('counts the same wrong tile again once its flash has cleared', () => {
-    const cleared = stepFlow(run(fresh(), [pic('bap'), word('san')]).state, { type: 'clear-flash' }).state;
+  it('counts the same wrong tile again once the board has changed (another wrong tile took the amber)', () => {
+    const cleared = run(fresh(), [pic('bap'), word('san'), word('hanbok')]).state;
     const out = stepFlow(cleared, word('san'));
-    expect(out.state.missCounts).toEqual({ bap: 2 });
+    expect(out.state.missCounts).toEqual({ bap: 3 });
     expect(out.effects).toContainEqual({ type: 'answer', roundKey: 'b0:bap', correct: false, pairId: 'bap' });
   });
 
@@ -338,7 +339,7 @@ describe('skip', () => {
     const out = stepFlow(answered, { type: 'skip' });
     expect(out.state.status).toBe('done');
     expect(out.state.matched).toEqual(['bap']);
-    expect(out.effects).toEqual([{ type: 'cancel-clear' }, { type: 'complete' }]);
+    expect(out.effects).toEqual([{ type: 'complete' }]);
     expect(canSkip(out.state)).toBe(false);
   });
 
@@ -425,7 +426,7 @@ describe('tile views', () => {
   });
 
   it('rings the partner of the scored tile after two misses', () => {
-    const state = run(fresh(), [pic('bap'), word('san'), word('hanbok'), { type: 'clear-flash' }]).state;
+    const state = run(fresh(), [pic('bap'), word('san'), word('hanbok')]).state;
     const tile = wordTileView(bap, state, always);
     expect(tile.cardState).toBe('hint');
     expect(tile.accessibilityLabel).toBe('Look here: 밥, bap');
@@ -433,7 +434,7 @@ describe('tile views', () => {
   });
 
   it('rings the picture partner when the scored tile was a word', () => {
-    const state = run(fresh(), [word('bap'), pic('san'), pic('hanbok'), { type: 'clear-flash' }]).state;
+    const state = run(fresh(), [word('bap'), pic('san'), pic('hanbok')]).state;
     expect(pictureTileView(bap, state).cardState).toBe('hint');
   });
 
@@ -607,5 +608,15 @@ describe('pictureSide', () => {
 
   it('shrinks in landscape', () => {
     expect(pictureSide(844, 390)).toBe('min');
+  });
+});
+
+describe('tileItem (F-A11Y-001 §3.2: what a result line calls a tile)', () => {
+  const bap = board.pairs[0]!;
+  it('names a picture by its meaning and a word by its romanization, with the meaning only once matched; never Hangul', () => {
+    expect(tileItem(bap, 'picture', messages.a11y, false)).toBe('rice');
+    expect(tileItem(bap, 'word', messages.a11y, false)).toBe('bap');
+    expect(tileItem(bap, 'word', messages.a11y, true)).toBe('bap, rice');
+    expect(tileItem(bap, 'picture', messages.a11y, true)).toBe('rice');
   });
 });

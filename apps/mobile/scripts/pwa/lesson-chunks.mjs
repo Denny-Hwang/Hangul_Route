@@ -288,6 +288,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,634,508 B raw / 1,276,063 B gzip, 608 B over the LR-4 line (4,633,900 B) and 2,492 B under the AF-4a line
   // (4,637,000 B). The line is the measurement plus a 3,992 B margin (one measured raise, 1,500 B over the AF-4a line and
   // 4,600 B over main's LR-4 line).
+  // [AF] F-A11Y-001 AF-4b (Listen & Pick, Pic-Word Match, Read Pick and Story Sequence import the announcer, the announcement
+  // rules and the Next hook, and their result code grows): on top of main (4,634,508 B raw / 1,276,063 B gzip) the release `build:web`
+  // (CI=1) measured 4,641,856 B raw / 1,278,538 B gzip (+7,348 B raw), 3,356 B over the line. Realia Read, played from Stage 4 on, then became
+  // a chunk of its own (`realia-read-chunk`, a screen chunk of 8,738 B raw), and the build measures 4,634,003 B raw / 1,276,409 B gzip
+  // (505 B raw under main, 4,497 B under the line). The line is unchanged: no raise.
   // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-1 (the web English twin's `console` is `console-app.ts`, the six subtrees a web
   // source reads, so `en/console.ts` leaves the start bundle): on main 5f453304d (4,634,508 B raw / 1,276,063 B gzip) the
   // release `build:web` (CI=1) measures 4,559,730 B raw / 1,253,422 B gzip (-74,778 B raw, -22,641 B gzip). The line stays
@@ -582,6 +587,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   Object.freeze({ name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' }),
   Object.freeze({ name: 'join-space-chunk', marker: 'screen-chunk:join-space' }),
   Object.freeze({ name: 'placement-chunk', marker: 'screen-chunk:placement' }),
+  // [AF] F-A11Y-001 row AF-4b: Realia Read (`src/screens/minigames/realia-read-chunk.tsx`, reached only through the literal
+  // `import()` of `src/screens/minigames/realia-read-entry.tsx`): the answer feedback of the choice games took the start
+  // bundle over its line, and this game is only played from Stage 4 on.
+  Object.freeze({ name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' }),
 ]);
 
 /**

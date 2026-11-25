@@ -139,10 +139,10 @@ describe('[QS-4] Listen and Pick (and the Quick check): the confirm ends before 
     await releasedAtTheCap(LISTEN_PICK_TIMING.advanceDelayMs, () => h.completes === 1);
   });
 
-  it('a confirm that has ended does not add to the 700 ms', async () => {
+  it('a confirm that has ended does not add to the 1000 ms floor (F-A11Y-001 OD-AF2 (b); it was 700)', async () => {
     const r = await open(<ListenPickGame scope={scope} host={host()} />);
     await press(pressable(r.root, `listen-pick-option-${rounds[0]!.answerId}`));
-    await tick(LISTEN_PICK_TIMING.advanceDelayMs - 1);
+    await tick(RESULT_MARK_MIN_MS - 1);
     expect(round2(r)).toBe(false);
     await tick(1);
     expect(round2(r)).toBe(true);
@@ -184,10 +184,10 @@ describe('[QS-4] Read Pick: the letter\'s sound ends before the next round, with
     const r = await open(<ReadPickGame scope={scope} host={host()} />);
     audio.hold = true;
     await press(pressable(r.root, 'read-pick-option-r1-right'));
-    await heldUntilTheSoundEnds(motion.duration.celebration, () => round2(r));
+    await heldUntilTheSoundEnds(RESULT_MARK_MIN_MS, () => round2(r));
   });
 
-  it('with reduced motion the least wait is 0, and the sound still ends first; the cap releases it', async () => {
+  it('with reduced motion the least wait is still the 1000 ms result floor (F-A11Y-001 AF-4b), and the sound still ends first; the cap releases it', async () => {
     reduced.on = true;
     const h = host();
     const r = await open(<ReadPickGame scope={scope} host={h} />);
@@ -205,11 +205,15 @@ describe('[QS-4] Read Pick: the letter\'s sound ends before the next round, with
     expect(h.completes).toBe(1);
   });
 
-  it('with reduced motion and no sound left to wait for, the next round opens at once', async () => {
+  it('with reduced motion and no sound left to wait for, the next round opens at the 1000 ms floor, not at once (OD-AF2 (b))', async () => {
     reduced.on = true;
     const r = await open(<ReadPickGame scope={scope} host={host()} />);
     await press(pressable(r.root, 'read-pick-option-r1-right'));
     await tick(0);
+    expect(round2(r)).toBe(false);
+    await tick(RESULT_MARK_MIN_MS - 1);
+    expect(round2(r)).toBe(false);
+    await tick(1);
     expect(round2(r)).toBe(true);
   });
 });

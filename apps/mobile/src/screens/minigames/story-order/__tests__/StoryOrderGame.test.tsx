@@ -113,9 +113,10 @@ describe('Story Order: ordering', () => {
     expect(textOf(byTestId(r.root, 'story-order-slot-1')[0]!)).toContain('먼저');
     expect(textOf(byTestId(r.root, 'story-order-slot-1')[0]!)).toContain('meonjeo');
     expect(byTestId(r.root, 'story-order-slot-1')[0]!.props['aria-label']).toBe('Place 1 of 4: 먼저 일어나요.');
-    expect(textOf(byTestId(r.root, 'story-order-announce')[0]!)).toBe('Place 1 of 4: 먼저 일어나요.');
-    expect(byTestId(r.root, 'story-order-announce')[0]!.props['aria-live']).toBe('polite');
-    expect(reader.announced).toEqual(['Place 1 of 4: 먼저 일어나요.']);
+    // F-A11Y-001 AF-4b: the placement is a result, said once by the answer announcer, with no Hangul (OD-AF5 (a)).
+    expect(textOf(byTestId(r.root, 'answer-announcer')[0]!)).toBe('Right answer: Place 1 of 4: meonjeo ireonayo, First, I get up.');
+    expect(byTestId(r.root, 'story-order-announce')).toHaveLength(0);
+    expect(reader.announced).toEqual([]);
     expect(said()).toEqual(['먼저 일어나요.']);
     expect(log.answers).toEqual([{ key: 'so:morning:0', correct: true, itemId: 'morning/up' }]);
     expect(cardIds(r.root)).not.toContain('up');

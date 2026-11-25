@@ -61,6 +61,8 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
       'apps/mobile/src/screens/route/route-proposal-chunk.tsx': 'apps/mobile/src/screens/route/RouteProposalScreen.tsx',
       'apps/mobile/src/screens/sync/join-space-chunk.tsx': 'apps/mobile/src/screens/sync/JoinSpaceScreen.tsx',
       'apps/mobile/src/screens/placement/placement-chunk.tsx': 'apps/mobile/src/screens/placement/PlacementScreen.tsx',
+      // F-A11Y-001 row AF-4b: Realia Read is played from Stage 4 on, and its answer feedback left the start bundle's line.
+      'apps/mobile/src/screens/minigames/realia-read-chunk.tsx': 'apps/mobile/src/screens/minigames/RealiaReadGame.tsx',
     };
     for (const [chunk, screen] of Object.entries(screens)) {
       expect(graph.chunks.has(chunk), chunk).toBe(true);

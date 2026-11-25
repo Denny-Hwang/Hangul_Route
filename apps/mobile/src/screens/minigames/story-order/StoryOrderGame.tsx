@@ -30,6 +30,7 @@ import { PromptPanel } from '../../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../../components/use-prompt-slot';
 import { useMessages } from '../../../i18n/use-messages';
+import { answerItem } from '../../../logic/answer-feedback';
 import { useRomanizationMode } from '../../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { playableStoryOrder } from '../../../logic/story-order/fallback';
@@ -54,13 +55,15 @@ import {
   type StoryOrderCopy,
 } from '../../../logic/story-order/story-order-view';
 import { HIGHLIGHT_SLOT_AFTER_WRONG, remainingCards } from '../../../logic/story/sequence-player';
-import { SEQUENCE_WRONG_FLASH_MS, autoAdvanceDue, replayAdvanceDelay, sequenceSeed, slotViews } from '../../../logic/story/sequence-view';
+import { autoAdvanceDue, replayAdvanceDelay, sequenceSeed, slotViews } from '../../../logic/story/sequence-view';
 import { playPrompt, stop } from '../../../platform/audio';
 import { nudge, success } from '../../../platform/haptics';
 import { useReducedMotion } from '../../../platform/motion';
 import { announceForScreenReader, focusForScreenReader } from '../../../platform/screen-reader';
+import { AnswerAnnouncer } from '../answer-announcer';
 import type { MinigameHost } from '../host';
 import { PictureArt } from '../PictureArt';
+import { useAnswerAnnouncement } from '../use-answer-announcement';
 
 interface Props {
   scope: MinigameScope;
@@ -87,6 +90,12 @@ const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, ov
  * the lines in order with their meanings, then Done. Layout A of the minigame shell. The rules are
  * `logic/story-order/story-order-player.ts` over Story Sequence's player. Design: design/wireframes/minigame/story-order.md,
  * design/screens/minigame-variety/ (mock/story-order.html, board O).
+ *
+ * Answer feedback (F-A11Y-001 row AF-4b, OD-AF7): a wrong card keeps its amber, its `replay` mark and its "Try another"
+ * name until the learner's next tap that changes the board (no timer). Each result is said once by the answer announcer,
+ * on every platform (the placement line used to be a hidden live line plus its own iOS call, and said the line's Hangul;
+ * it is now the place and the line's romanization and meaning, with no Hangul, OD-AF5 (a)); the miss that rings the next
+ * card carries the look-here line; Hoya's line is not live. The replay line is not a result and stays as it was.
  */
 export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): ReactElement {
   const m = useMessages();
@@ -112,14 +121,15 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
   const [note, setNote] = useState<Note>('none');
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
-  const [announce, setAnnounce] = useState('');
+  // One announcement per result, by the answer announcer on every platform (§3.3).
+  const speech = useAnswerAnnouncement();
+  const { announce, clear } = speech;
   const [replayAnnounce, setReplayAnnounce] = useState('');
   // Show meanings unmounts its button: focus moves to the line that replaces it, so it is never lost.
   const meaningsRef = useRef<View | null>(null);
   useEffect(() => {
     if (state.meanings) focusForScreenReader(meaningsRef.current);
   }, [state.meanings]);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // A placed card leaves the row of cards with the focus on it (WCAG 2.4.3, the wireframe's Accessibility): focus moves
   // to the first card still to place, to the first card of a new round, or to the replay's title once the row is full,
@@ -162,7 +172,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
   );
 
   const run = useCallback(
-    (effect: StoryOrderEffect, next: StoryOrderState): void => {
+    (effect: StoryOrderEffect, next: StoryOrderState, all: readonly StoryOrderEffect[]): void => {
       switch (effect.type) {
         case 'answer':
           // The last slot names no item (one card left): it scores, and the memory store hears nothing.
@@ -174,23 +184,27 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           setWrongFlash(null);
           const card = cardById.get(effect.cardId);
           if (card) {
-            const line = copy.sequence.slotLabel(next.seq.placed.length, next.seq.solution.length, card.line.ko);
-            // Android and the web read the polite live line below; iOS has no live regions, so VoiceOver is told.
-            setAnnounce(line);
-            announceForScreenReader(line);
+            // The place and the line by romanization and meaning, never its Hangul: Android and the web read the announcer's
+            // polite region, iOS is told once (§3.3).
+            const item = answerItem(m.a11y, card.line.romanization, card.line.en);
+            void announce({ kind: 'right', item: copy.sequence.slotLabel(next.seq.placed.length, next.seq.solution.length, item) });
             void say(card);
           }
           setFocusTurn((n) => n + 1);
           return;
         }
-        case 'miss':
+        case 'miss': {
           nudge();
           setNote('wrong');
           setRevealed((prev) => new Set(prev).add(effect.cardId));
+          // The miss stays until the next tap that changes the board (OD-AF7); the meanings shown name the card's meaning too.
           setWrongFlash(effect.cardId);
-          if (flashTimer.current) clearTimeout(flashTimer.current);
-          flashTimer.current = setTimeout(() => setWrongFlash(null), SEQUENCE_WRONG_FLASH_MS);
+          const card = cardById.get(effect.cardId);
+          const item = card ? answerItem(m.a11y, card.line.romanization, next.meanings ? card.line.en : undefined) : '';
+          // The miss that rings the next card carries the look-here line; every other miss is a plain retry.
+          void announce(all.some((e) => e.type === 'highlight') ? { kind: 'missHint', item, hint: copy.sequence.lookHere } : { kind: 'miss', item });
           return;
+        }
         case 'highlight':
           setNote('look');
           return;
@@ -199,7 +213,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           slotReset();
           setNote('none');
           setRevealed(new Set());
-          setAnnounce('');
+          clear();
           setFocusTurn((n) => n + 1);
           return;
         case 'complete':
@@ -207,7 +221,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           hostRef.current.complete();
       }
     },
-    [cardById, copy.sequence, say, slotReset],
+    [cardById, copy.sequence, say, slotReset, announce, clear, m.a11y],
   );
 
   const dispatch = useCallback(
@@ -215,18 +229,12 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       const out = stepStoryOrder(play, stateRef.current, action);
       stateRef.current = out.state;
       setState(out.state);
-      out.effects.forEach((e) => run(e, out.state));
+      out.effects.forEach((e) => run(e, out.state, out.effects));
     },
     [play, run],
   );
 
-  useEffect(
-    () => () => {
-      if (flashTimer.current) clearTimeout(flashTimer.current);
-      stop();
-    },
-    [],
-  );
+  useEffect(() => () => stop(), []);
 
   // Replay: say each line as it comes up, then move on by itself after the line and a short gap (never sooner than the
   // replay interval from its start), unless paused; never with reduced motion (Back and Next step through instead).
@@ -374,6 +382,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
         <Spacer size="sm" />
         <Button label={copy.sequence.replay.skip.cta} tone="ghost" size="md" fullWidth onPress={() => dispatch({ type: 'skipReplay' })} testID="story-order-skip-replay" />
         <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+        <AnswerAnnouncer key="answer-announcer" line={speech.line} />
       </Screen>
     );
   }
@@ -440,9 +449,6 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           </View>
         ))}
       </View>
-      <Text {...KOREAN_LINE_BREAK} testID="story-order-announce" accessibilityLiveRegion="polite" aria-live="polite" style={VISUALLY_HIDDEN}>
-        {announce}
-      </Text>
       {placedCount > 0 ? soundPanel('story-order-sound') : null}
       <Spacer size="lg" />
       {/* One board for the cards (AMENDMENTS-TOUCH section 6, row KT-5): a graze still counts, and a bounce never taps
@@ -485,8 +491,9 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
         <Button label={copy.storyOrder.showMeanings} tone="secondary" size="md" onPress={() => dispatch({ type: 'showMeanings' })} testID="story-order-show-meanings" />
       )}
       <Spacer size="lg" />
-      <View accessibilityLiveRegion="polite">
-        {note === 'none' ? null : <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.sequence.tryAnother : copy.sequence.lookHere} />}
+      <View>
+        {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
+        {note === 'none' ? null : <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.sequence.tryAnother : copy.sequence.lookHere} live={false} />}
       </View>
       {/* The Check has no Skip (check-launcher.ts): a Check step completes on the learner's answers only. */}
       {host.mode === 'check' ? null : (
@@ -496,6 +503,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
         </>
       )}
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      <AnswerAnnouncer key="answer-announcer" line={speech.line} />
     </Screen>
   );
 }
