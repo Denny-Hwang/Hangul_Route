@@ -124,9 +124,9 @@
     "kind": "consonant",
     "order": 10,
     "exampleWord": {
-      "ko": "책",
-      "romanization": "chaek",
-      "en": "book"
+      "ko": "치마",
+      "romanization": "chima",
+      "en": "skirt"
     }
   },
   {
@@ -150,9 +150,9 @@
     "kind": "consonant",
     "order": 12,
     "exampleWord": {
-      "ko": "토끼",
-      "romanization": "tokki",
-      "en": "rabbit"
+      "ko": "토마토",
+      "romanization": "tomato",
+      "en": "tomato"
     }
   },
   {
@@ -189,9 +189,9 @@
     "kind": "vowel",
     "order": 15,
     "exampleWord": {
-      "ko": "아빠",
-      "romanization": "appa",
-      "en": "dad"
+      "ko": "아기",
+      "romanization": "agi",
+      "en": "baby"
     }
   },
   {
@@ -293,9 +293,9 @@
     "kind": "vowel",
     "order": 23,
     "exampleWord": {
-      "ko": "으뜸",
-      "romanization": "eutteum",
-      "en": "first"
+      "ko": "그림",
+      "romanization": "geurim",
+      "en": "picture"
     }
   },
   {

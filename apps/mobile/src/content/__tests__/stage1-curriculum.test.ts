@@ -899,3 +899,38 @@ describe('a word read in Discover and asked in a Check is the same KoText', () =
     expect(compared).toBeGreaterThanOrEqual(8);
   });
 });
+
+describe('T12 the letter records (AMENDMENTS-STAGE1-CONTENT-FIXES CF-1a)', () => {
+  const letters = jamoAll.filter((j) => j.kind !== 'batchim');
+
+  it("every Stage 1 letter's example word uses only the 30 Stage 1 symbols and holds the letter itself", () => {
+    expect(letters).toHaveLength(24);
+    for (const jamo of letters) {
+      const symbols = wordSymbols(jamo.exampleWordKo ?? '');
+      expect(symbols, `${jamo.id} ${jamo.exampleWordKo}`).not.toBeNull();
+      expect(symbols, `${jamo.id} ${jamo.exampleWordKo}`).toContain(jamo.id);
+    }
+  });
+
+  it('names the four fixed example words (ㅊ ㅌ ㅏ ㅡ) with their romanization and gloss', () => {
+    const word = (id: string) => {
+      const j = findJamo(id);
+      return [j?.exampleWordKo, j?.exampleWordRomanization, j?.exampleWordEn];
+    };
+    expect(word('jamo:chieut')).toEqual(['치마', 'chima', 'skirt']);
+    expect(word('jamo:tieut')).toEqual(['토마토', 'tomato', 'tomato']);
+    expect(word('jamo:a')).toEqual(['아기', 'agi', 'baby']);
+    expect(word('jamo:eu')).toEqual(['그림', 'geurim', 'picture']);
+  });
+
+  it('marks ㄹ with the tap [ɾ], not the trill [r]', () => {
+    expect(findJamo('jamo:rieul')?.ipa).toBe('ɾ');
+  });
+
+  it('describes the final ㄹ as a clear l (not the dark l of "ball"), and no hint claims a voiced sound or "ball"', () => {
+    expect(findJamo('jamo:rieul-batchim')?.soundHint).toBe('ends in a clear l, tongue tip behind the top teeth');
+    for (const jamo of jamoAll) {
+      expect(jamo.soundHint, jamo.id).not.toMatch(/ball|voiced/i);
+    }
+  });
+});
