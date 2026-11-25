@@ -5,7 +5,6 @@ import { initSequenceState, reduceSequence, type SequenceAction, type SequenceSt
 import {
   SEQUENCE_LINE_GAP_MS,
   SEQUENCE_REPLAY_MS,
-  SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
   replayAdvanceDelay,
   longestKoreanGlyphs,
@@ -42,9 +41,8 @@ const legacyCard: SequenceCard = {
 const plainCard: SequenceCard = { id: 'b', caption: 'Eat' };
 
 describe('timings', () => {
-  it('replays about every 2.5 s and flashes a wrong card for about 600 ms', () => {
+  it('replays about every 2.5 s (a wrong card keeps its look until the board changes: F-A11Y-001 OD-AF7)', () => {
     expect(SEQUENCE_REPLAY_MS).toBe(2500);
-    expect(SEQUENCE_WRONG_FLASH_MS).toBe(600);
   });
 });
 

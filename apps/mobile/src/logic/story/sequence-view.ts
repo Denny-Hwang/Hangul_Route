@@ -25,8 +25,6 @@ export const SEQUENCE_LINE_GAP_MS = 600;
 export function replayAdvanceDelay(elapsedMs: number): number {
   return Math.max(SEQUENCE_LINE_GAP_MS, SEQUENCE_REPLAY_MS - Math.max(0, elapsedMs));
 }
-/** A wrong card keeps its amber look for about this long (ms). */
-export const SEQUENCE_WRONG_FLASH_MS = 600;
 
 /** Widest Korean text (glyphs without spaces) that a card holds on one line, below / at tablet width. */
 const FITS_PHONE = 3;

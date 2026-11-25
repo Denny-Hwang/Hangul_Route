@@ -7,6 +7,7 @@ import {
   HoyaBubble,
   Icon,
   KoreanText,
+  MARK_MIN,
   Pill,
   Progress,
   SCENE_ART_REGISTRY,
@@ -59,7 +60,6 @@ import {
   type SequenceState,
 } from '../../logic/story/sequence-player';
 import {
-  SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
   replayAdvanceDelay,
   longestKoreanGlyphs,
@@ -77,6 +77,8 @@ import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { AnswerAnnouncer } from './answer-announcer';
+import { useAnswerAnnouncement } from './use-answer-announcement';
 
 interface Props {
   scope: MinigameScope;
@@ -120,6 +122,12 @@ type Note = 'hint' | 'wrong' | 'look';
  * card shows its scene art (PR 3.5b) when the picture resolves, the replay
  * shows it full width; a card without art shows its words alone on the paper
  * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/sequence.md (F, G).
+ *
+ * Answer feedback (F-A11Y-001 row AF-4b, OD-AF7): a wrong card keeps its amber, its `replay` mark and its "Try another"
+ * name until the learner's next tap that changes the board (no timer). Each result is said once by the answer announcer
+ * (a placed card as its place and caption, a miss by the caption tried; the miss that rings the next card carries the
+ * look-here line) and Hoya's line is not live. There is no per-tap advance or focus move: the round ends in its own
+ * replay and Done. A filled slot's check is `MARK_MIN` (20).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, chain }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -138,7 +146,8 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const [note, setNote] = useState<Note>('hint');
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // F-A11Y-001 AF-4b: each result is said once, by the answer announcer.
+  const { announce, line: announcerLine } = useAnswerAnnouncement();
 
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
@@ -221,23 +230,26 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
       };
       out.effects.forEach(run);
       if (action.type === 'tap' && out.state.wrongBySlot !== previous.wrongBySlot) {
-        // A miss: the card flashes amber for a moment and its romanization is shown (D2).
+        // A miss: the card keeps its amber, its mark and its romanization until the next tap that changes the board (D2, OD-AF7).
         setRevealed((prev) => new Set(prev).add(action.cardId));
         setWrongFlash(action.cardId);
-        if (flashTimer.current) clearTimeout(flashTimer.current);
-        flashTimer.current = setTimeout(() => setWrongFlash(null), SEQUENCE_WRONG_FLASH_MS);
+      }
+      if (action.type === 'tap' && out.effects.some((e) => e.type === 'answer')) {
+        // One line per result (§3.3): the place a right card took, or the card that did not fit (and the look-here line when it rings the next one).
+        const tapped = cardById.get(action.cardId);
+        const total = out.state.solution.length;
+        if (out.effects.some((e) => e.type === 'answer' && e.correct)) {
+          void announce({ kind: 'right', item: copy.slotLabel(out.state.placed.length, total, tapped?.caption) });
+        } else {
+          const item = tapped?.caption ?? '';
+          void announce(out.effects.some((e) => e.type === 'highlight') ? { kind: 'missHint', item, hint: copy.lookHere } : { kind: 'miss', item });
+        }
       }
     },
-    [answerRound, finish, keyPrefix, chainAnswer],
+    [answerRound, finish, keyPrefix, chainAnswer, announce, cardById, copy],
   );
 
-  useEffect(
-    () => () => {
-      if (flashTimer.current) clearTimeout(flashTimer.current);
-      stop();
-    },
-    [],
-  );
+  useEffect(() => () => stop(), []);
 
   // Replay: speak the line of each card as it comes up, at the sentence rate. The line is printed on the card,
   // so a line that cannot sound shows only the status panel under it (F-AUDIO-004 A-5b): why, and the one
@@ -418,6 +430,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
           testID="story-sequence-skip-replay"
         />
         <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+        <AnswerAnnouncer key="answer-announcer" line={announcerLine} />
       </Screen>
     );
   }
@@ -474,7 +487,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
               </Text>
               {card ? (
                 <>
-                  <Icon name="check" size={spacing.lg} color={colors.feedback.success} />
+                  <Icon name="check" size={MARK_MIN} color={colors.feedback.success} />
                   <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
                 </>
               ) : null}
@@ -528,11 +541,13 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
       </TapBoard>
 
       <Spacer size="lg" />
-      <View accessibilityLiveRegion="polite">
+      <View>
         {note === 'hint' ? null : (
-          <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.tryAnother : copy.lookHere} />
+          // The announcer says the result once, so this result bubble is not a live region too (§3.3).
+          <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.tryAnother : copy.lookHere} live={false} />
         )}
       </View>
+      <AnswerAnnouncer key="answer-announcer" line={announcerLine} />
       {chain?.noSkip === true ? null : (
         <>
           <Spacer size="xl" />
