@@ -1,5 +1,7 @@
 Status: ready (amends `F-AUDIO-004-korean-voice-quality.md`; also amends F-001 sections 3.2 and 3.3, F-QUEST-002 sections 3.2 and 3.10, F-PLC-001's sound-letter strand, F-STORY-002's keyword audio, `AMENDMENTS-LECTURE-V2.md`'s letter slide and sound quiz, and the open Match Shape PR #865)
 
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (M9): the `jamo.json` drift test also pins `en` to the letter's `soundHint` and the es / ko `gloss` to the overlay's `soundHint` (row CF-2); no speech change. Row CF-1b adds three spoken texts with no clip yet (고구마, 도토리, 한국어; they play through the device voice until the next clip round) and removes the say clips the regenerated manifest no longer lists (설 and 날, and 코코아 and 토스트 if no retired item keeps them), with their license and lock rows. The letter records' example words are not spoken texts of the manifest.
+
 > Basis: `origin/main` `524961dae` (#845). Every `file:line` below is at that commit unless it names an open PR. Paths under `apps/mobile/src/` are written from `src/`. Open PRs read for this amendment: #865 (Match Shape), #855 (Syllable Build, Decoding Sprint) and #850 (Dictation).
 >
 > Owner decisions do **not** gate the whole amendment. Each one gates only the rows named in section 12, and each has a default that applies until the owner answers.

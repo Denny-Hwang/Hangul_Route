@@ -2,6 +2,8 @@ Status: ready
 
 > **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 3 and 5): one device record `hr:device:settings` = `{ uiLocale, uiLocaleAt, textSize }` for every surface of the app host; resolution device record > signed-in account > detection > `en`; the per-profile and All lessons session overrides removed with a migration; `?lang=` only seeds a device that never chose; open tabs follow through `BroadcastChannel('hr-prefs')`. Sections 3.2 and 3.3 below describe the shipped behaviour until rows DN-3 and DN-5.
 
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (§3.5 item 6): `content/episodes/stage-1/jamo.json` no longer holds English sound-alikes such as "G — sounds like the start of 'go'": each letter's `en` is its `soundHint` from `apps/mobile/src/content/jamo.ts`, and each es and ko `gloss` of `stage1-jamo.json` is that overlay's own `soundHint` (row CF-2). The jamo examples ㅊ ㅌ ㅏ ㅡ become 치마, 토마토, 아기, 그림, and their es / ko `exampleWord.gloss` and ko `soundHint` follow (row CF-1a).
+
 # F-I18N-001 — UI locales: English, Korean and Spanish, end to end
 
 **Scope**: new `packages/i18n` · `packages/content-schema` (locale + overlay schemas, telemetry names) · `apps/mobile` (locale store, pickers, string extraction, platform detection) · `apps/web` (console locale provider, landing `/es/` `/ko/`, string extraction) · `packages/design-system` (`KoreanText`, label props) · `scripts/validate-content.mjs` (F-CNT-001 becomes locale-aware) · `scripts/check-i18n.mjs` (new) · `content/i18n/**` (new)
