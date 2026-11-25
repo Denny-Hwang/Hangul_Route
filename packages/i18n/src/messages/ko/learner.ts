@@ -776,6 +776,7 @@ export const learner = {
       },
       showLetters: { cta: '글자 보기' },
     },
+    alwaysShowLetters: '항상 글자 보기',
     tapToReplay: '눌러서 다시 듣기',
     action: {
       turn_on: { cta: '소리 켜기' },

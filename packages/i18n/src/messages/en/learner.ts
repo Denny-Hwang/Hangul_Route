@@ -1173,6 +1173,11 @@ export const learner = {
       },
       showLetters: { cta: 'Show the letters' },
     },
+    /**
+     * The device switch on Profile's Sound card (AMENDMENTS-AUDIO-CANT-HEAR CH-2, OD-CH1 (b)): every sound-only round
+     * opens with its text and the sound still plays. "Letters" as in `cantHear.showLetters`.
+     */
+    alwaysShowLetters: 'Always show the letters',
     tapToReplay: 'Tap to replay',
     /** The panel's one button, keyed by `FallbackAction` (`none` has no button). */
     action: {

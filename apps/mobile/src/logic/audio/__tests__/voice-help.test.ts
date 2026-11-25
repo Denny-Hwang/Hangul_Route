@@ -11,8 +11,7 @@ import {
 const messages = getMessages('en');
 const COPY = messages.learner.audio;
 const soundCardView = (status: KoVoiceStatus, muted: boolean): SoundCardView => soundCardViewWith(status, muted, COPY);
-const soundSwitchLabel = (status: KoVoiceStatus, muted: boolean): string =>
-  soundSwitchLabelWith(status, muted, COPY, messages.a11y.soundSwitch);
+const soundSwitchLabel = (status: KoVoiceStatus): string => soundSwitchLabelWith(status, COPY, messages.a11y.soundSwitch);
 const VOICE_HELP = voiceHelpContent(COPY.voiceHelp);
 
 const ready: KoVoiceStatus = { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local: true, quality: 'standard' };
@@ -57,16 +56,16 @@ describe('soundCardView', () => {
 });
 
 describe('soundSwitchLabel', () => {
-  it('is one group: switch state and voice state', () => {
-    expect(soundSwitchLabel(ready, false)).toBe('Sound, on. Korean voice ready.');
-    expect(soundSwitchLabel(ready, true)).toBe('Sound, off. Korean voice ready.');
-    expect(soundSwitchLabel(noVoice, false)).toBe('Sound, on. No Korean voice on this device.');
-    expect(soundSwitchLabel(unknown, false)).toBe('Sound, on. Looking for a Korean voice.');
-    expect(soundSwitchLabel(netOnly, true)).toBe('Sound, off. Korean voice needs the internet.');
+  it('is one group: the switch and the voice state; on and off are the switch\'s own and are not said twice', () => {
+    expect(soundSwitchLabel(ready)).toBe('Sound. Korean voice ready.');
+    expect(soundSwitchLabel(noVoice)).toBe('Sound. No Korean voice on this device.');
+    expect(soundSwitchLabel(unknown)).toBe('Sound. Looking for a Korean voice.');
+    expect(soundSwitchLabel(netOnly)).toBe('Sound. Korean voice needs the internet.');
+    for (const s of [ready, unknown, noVoice, netOnly]) expect(soundSwitchLabel(s)).not.toMatch(/^Sound, (on|off)/i);
   });
 
   it('always starts with the word Sound so the switch is found by its name', () => {
-    for (const s of [ready, unknown, noVoice, netOnly]) expect(soundSwitchLabel(s, false).startsWith('Sound')).toBe(true);
+    for (const s of [ready, unknown, noVoice, netOnly]) expect(soundSwitchLabel(s).startsWith('Sound')).toBe(true);
   });
 });
 

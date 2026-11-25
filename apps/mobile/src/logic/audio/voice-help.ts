@@ -27,14 +27,12 @@ export function soundCardView(status: KoVoiceStatus, muted: boolean, copy: Audio
   };
 }
 
-/** The switch, its state and the voice line read as one group: "Sound, on. Korean voice ready." */
-export function soundSwitchLabel(
-  status: KoVoiceStatus,
-  muted: boolean,
-  copy: AudioCopy,
-  label: Messages['a11y']['soundSwitch'],
-): string {
-  return label(muted, voiceStatusLine(status, copy).replace(':', ''));
+/**
+ * The switch and the voice line read as one group: "Sound. Korean voice ready." The state is the switch's own
+ * (`checked`), so the name does not say "on" or "off" a second time.
+ */
+export function soundSwitchLabel(status: KoVoiceStatus, copy: AudioCopy, label: Messages['a11y']['soundSwitch']): string {
+  return label(voiceStatusLine(status, copy).replace(':', ''));
 }
 
 export type VoiceHelpSectionId = 'apple' | 'android' | 'computer';

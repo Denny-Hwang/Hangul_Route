@@ -68,7 +68,7 @@ export const a11y = {
   flipToBack: '눌러서 카드 뒷면 보기',
   flipToFront: '눌러서 카드 앞면 보기',
   shareCard: '이 카드 공유하기',
-  soundSwitch: (muted: boolean, voice: string) => `소리, ${muted ? '꺼짐' : '켜짐'}. ${voice}.`,
+  soundSwitch: (voice: string) => `소리. ${voice}.`,
   minigame: {
     hear: (romanization: string) => `듣기: ${romanization}`,
     finalTile: (romanization: string) => `받침 ${romanization}`,
