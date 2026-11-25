@@ -345,6 +345,22 @@ describe('RG-1 F3: a stop before the suffix 히 / 혀 / 혔 / 힌 / 힐 aspirate
     expect(romanizeWord(ko)).toBe(rr);
   });
 
+  it('ㄷ before the suffix 힌 / 힐 gives ㅊ', () => {
+    expect(romanizeWord('닫힌')).toBe('dachin');
+    expect(romanizeWord('닫힐')).toBe('dachil');
+  });
+
+  it('every remaining final of the table aspirates (synthetic blocks: no real word has them before 히)', () => {
+    expect(romanizeWord('옷히')).toBe('oti'); // ㅅ -> ㅌ
+    expect(romanizeWord('꽃히')).toBe('kkochi'); // ㅊ -> ㅊ
+    expect(romanizeWord('부엌히')).toBe('bueoki'); // ㅋ -> ㅋ
+  });
+
+  it('is not applied across a space (romanize splits words first)', () => {
+    expect(romanize('읽 고').text).toBe('ik go');
+    expect(romanize('잡 혀요').text).toBe('jap hyeoyo');
+  });
+
   it('the noun convention for every other ㅎ block is unchanged', () => {
     expect(romanizeWord('집현전')).toBe('jiphyeonjeon');
     expect(romanizeWord('묵호')).toBe('mukho');
