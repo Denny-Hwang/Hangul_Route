@@ -219,6 +219,16 @@ describe('the result: stars only, 80% first try passes', () => {
     expect(checkResult(rs, hinted)).toMatchObject({ stars: 2, passed: false, firstTryCorrect: 7 });
   });
 
+  it('a right answer after the learner\'s own ask (CH-1f) counts for the Check as it did, and reaches the memory store as hinted; a miss after it is a plain miss', () => {
+    const asked = answersOf(10, 8);
+    for (const i of [0, 1, 2, 3, 8]) asked.set(i, { correct: i < 8, asked: true });
+    expect(checkResult(rs, asked)).toEqual(checkResult(rs, answersOf(10, 8)));
+    const stored = checkAnswers(rs, asked);
+    expect(stored.slice(0, 4).every((a) => a.correct && a.hinted === true)).toBe(true);
+    expect(stored[4]).not.toHaveProperty('hinted');
+    expect(stored[8]).toEqual({ itemId: rs[8]?.question.itemId, rung: rs[8]?.question.rung, correct: false });
+  });
+
   it('a Check not finished (a round unanswered) never passes', () => {
     const partial = answersOf(9, 9);
     expect(checkResult(rs, partial)).toMatchObject({ stars: 3, passed: false });

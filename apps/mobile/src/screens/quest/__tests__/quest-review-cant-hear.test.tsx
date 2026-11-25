@@ -25,7 +25,11 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...(await import('../../../test-support/audio-rig')).rigAudio(() => rig.current!),
 }));
-vi.mock('../../../logic/memory/boot', async (importOriginal) => ({ ...(await importOriginal<object>()), recordAnswers: async () => undefined }));
+const memory = vi.hoisted(() => ({ recorded: [] as unknown[][] }));
+vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  recordAnswers: async (_profileId: string, answers: unknown[]) => void memory.recorded.push(answers),
+}));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => undefined) }));
 vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => false }));
 vi.mock('../../../platform/device-family', () => ({ currentDeviceFamily: () => 'computer' }));
@@ -64,6 +68,7 @@ beforeEach(() => {
   useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false });
   useProgressStore.setState({ byProfile: {} });
   clearReaderLog(reader);
+  memory.recorded.length = 0;
 });
 
 afterEach(async () => {
@@ -136,5 +141,58 @@ describe('quest warm-up and Try these again, "Can\'t hear it?" (test 18)', () =>
   it('a read round (nothing is played) has no link', async () => {
     const r = await open(heard({ mode: 'see', instruction: 'seeMeaning', options: [{ id: 'lex:ba', label: 'a' }, { id: 'lex:pa', label: 'b' }], answerId: 'lex:ba' }));
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+  });
+});
+
+/**
+ * The hinted mark (AMENDMENTS-AUDIO-CANT-HEAR row CH-1f, section 3.13, test 22): a right first tap after the learner's own Show
+ * the letters is recorded hinted for the memory store; a wrong first tap is a plain miss; no ask, and a cue round (guidance
+ * only), record nothing extra. The session's stars follow `correct`.
+ */
+describe('quest warm-up and Try these again, the hinted mark (CH-1f, test 22)', () => {
+  const ask = async (r: ReactTestRenderer): Promise<void> => {
+    await press(pressableById(r.root, 'cant-hear'));
+    await press(pressableById(r.root, 'cant-hear-show-letters'));
+    await tick(400);
+  };
+  /** Taps `id` first, finishes the one-round session and returns what the memory store was handed. */
+  const recordedAfter = async (r: ReactTestRenderer, ...taps: string[]): Promise<unknown[][]> => {
+    for (const id of taps) await press(pressableById(r.root, `quest-review-option-${id}`));
+    await tick(3_000);
+    return memory.recorded;
+  };
+
+  it('asked, then the right option first: recorded hinted, correct', async () => {
+    const r = await open(heard());
+    await ask(r);
+    expect(await recordedAfter(r, 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read', hinted: true }]]);
+  });
+
+  it('asked, then a wrong option first: a plain miss, even when the right option follows', async () => {
+    const r = await open(heard());
+    await ask(r);
+    expect(await recordedAfter(r, 'lex:pa', 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: false, rung: 'read' }]]);
+  });
+
+  it('not asked: an ordinary right answer', async () => {
+    const r = await open(heard());
+    expect(await recordedAfter(r, 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read' }]]);
+  });
+
+  it('Sound off, no Korean voice and "Always show the letters" show the text with no ask: not hinted', async () => {
+    useAudioStore.setState({ muted: true });
+    expect(await recordedAfter(await open(heard()), 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read' }]]);
+    memory.recorded.length = 0;
+    useAudioStore.setState({ muted: false, showLetters: true });
+    expect(await recordedAfter(await open(heard()), 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read' }]]);
+    memory.recorded.length = 0;
+    useAudioStore.setState({ showLetters: false });
+    rig.current = createAudioRig({ voices: [] });
+    expect(await recordedAfter(await open(heard()), 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read' }]]);
+  });
+
+  it('a heard round with a cue is guidance only: nothing is asked, nothing is marked', async () => {
+    const r = await open(heard({ cue: { gloss: 'Father' } }));
+    expect(await recordedAfter(r, 'lex:ba')).toEqual([[{ itemId: 'syl:ba', correct: true, rung: 'read' }]]);
   });
 });

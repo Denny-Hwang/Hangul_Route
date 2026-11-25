@@ -191,6 +191,23 @@ describe('answers, credits and the result', () => {
     expect(memoryAnswerOf(r, { correct: true, hinted: true })).toMatchObject({ hinted: true });
   });
 
+  it('a right first answer after the learner\'s own ask is hinted for the memory store; a miss after it is a plain miss (CH-1f)', () => {
+    const r = rounds[0] as ReviewRound;
+    expect(memoryAnswerOf(r, { correct: true, asked: true })).toEqual({ itemId: r.question.itemId, rung: r.question.rung, correct: true, hinted: true });
+    expect(memoryAnswerOf(r, { correct: false, asked: true })).toEqual({ itemId: r.question.itemId, rung: r.question.rung, correct: false });
+    expect(memoryAnswerOf(r, { correct: true, asked: false })).not.toHaveProperty('hinted');
+  });
+
+  it('the ask leaves the stars and the missed items as they were: only the round\'s own hint counts against them (CH-1f)', () => {
+    const answers = (list: readonly RoundAnswer[]): Map<number, RoundAnswer> => new Map(list.map((a, i) => [i, a] as const));
+    const plain = sessionResult(rounds, answers(Array.from({ length: 10 }, () => ({ correct: true }))));
+    const asked = sessionResult(rounds, answers(Array.from({ length: 10 }, () => ({ correct: true, asked: true }))));
+    expect(asked).toEqual(plain);
+    expect(asked.stars).toBe(3);
+    expect(asked.missedItemIds).toEqual([]);
+    expect(sessionResult(rounds, answers([{ correct: true, asked: true, hinted: true }])).missedItemIds).toEqual([rounds[0]?.question.itemId]);
+  });
+
   it('stars by F-RVW-001 section 3.1 over the rounds answered; a hinted answer is not right; never 0', () => {
     const answers = (pattern: readonly (RoundAnswer | undefined)[]): Map<number, RoundAnswer> => new Map(pattern.flatMap((a, i) => (a ? [[i, a] as const] : [])));
     const right = { correct: true };

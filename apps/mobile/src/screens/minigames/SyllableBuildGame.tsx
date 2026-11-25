@@ -103,7 +103,8 @@ export function SyllableBuildGame({ scope, host, onBack }: Props): ReactElement 
         cantHear
         source="syllable-build"
         // Hinted with a right answer only: the quest host records a hinted answer as right (row CM-31), so a miss stays a miss.
-        onFirst={(correct, hinted) => host.answer(round.id, correct, { itemId: round.id, ...(hinted && correct ? { hinted: true } : {}) })}
+        // A right block after the learner's own Show the letters is hinted too (AMENDMENTS-AUDIO-CANT-HEAR CH-1f).
+        onFirst={(correct, hinted, asked) => host.answer(round.id, correct, { itemId: round.id, ...((hinted || asked === true) && correct ? { hinted: true } : {}) })}
         onSolved={() => {
           if (index + 1 >= rounds.length) complete();
           else setIndex(index + 1);

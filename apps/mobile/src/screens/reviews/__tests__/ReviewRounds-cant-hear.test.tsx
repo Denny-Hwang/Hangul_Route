@@ -253,12 +253,13 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
   });
 
   it('a right first answer after Show the letters is reported as a right one and the ask is counted once: identifiable as asked (CH-1f)', async () => {
-    const first: Array<{ correct: boolean }> = [];
+    const first: Array<{ correct: boolean; asked?: boolean }> = [];
     const r = await open(HEARD, { cantHear: true, hidesRomanization: true, check: 'stage-check', onFirst: (a) => void first.push(a) });
     await ask(r);
     expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'stage-check', reason: 'asked' }]);
     await press(pressableById(r.root, 'daily-review-option-lex:namu'));
-    expect(first).toEqual([{ correct: true }]);
+    // CH-1f: the right answer carries the ask, which the memory store records as hinted; `hinted` is not set, so the stars stay.
+    expect(first).toEqual([{ correct: true, asked: true }]);
     expect(events.filter((e) => e.name === 'audio.fallback_shown')).toHaveLength(1);
   });
 
@@ -303,5 +304,121 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
   it('a Syllable Build round in a Check has its link; Show the letters shows the block\'s romanization, as ever', async () => {
     const r = await open(BUILD, { cantHear: true, hidesRomanization: true });
     expect(hasId(r.root, 'cant-hear')).toBe(true);
+  });
+});
+
+/**
+ * The hinted mark (AMENDMENTS-AUDIO-CANT-HEAR row CH-1f, section 3.13, test 22): the first answer of a round the learner asked
+ * the letters for carries `asked` when it is right (the memory store records it hinted) and nothing when it is wrong (a plain
+ * miss); the stars are not touched (`hinted` stays the round's own hint). Text from Sound off, no Korean voice, a failed play
+ * or "Always show the letters", and a cue round (guidance only), carry nothing.
+ */
+describe('RoundView, the hinted mark (CH-1f, test 22)', () => {
+  const REPLY: PickRound = { ...HEARD, ask: 'reply', prompt: { ko: '안녕하세요', romanization: 'annyeonghaseyo' }, question: question('lex:hi') };
+  const hostProps = [
+    ['the Daily Review (no check)', {}],
+    ['the Stage Check', { check: 'stage-check' as const, hidesRomanization: true }],
+    ['the Stage Check with the switch off', { check: 'stage-check' as const }],
+    ['the Cell Check', { check: 'cell-check' as const }],
+  ] as const;
+  const ask = async (r: ReactTestRenderer): Promise<void> => {
+    await press(pressableById(r.root, 'cant-hear'));
+    await press(pressableById(r.root, 'cant-hear-show-letters'));
+    await tick(400);
+  };
+  const firsts = (): { list: Array<{ correct: boolean; hinted?: boolean; asked?: boolean }>; onFirst: (a: { correct: boolean }) => void } => {
+    const list: Array<{ correct: boolean; hinted?: boolean; asked?: boolean }> = [];
+    return { list, onFirst: (a) => void list.push(a) };
+  };
+
+  it.each(hostProps)('%s: asked, then the right option first says asked, and not hinted', async (_name, props) => {
+    const { list, onFirst } = firsts();
+    const r = await open(HEARD, { cantHear: true, ...props, onFirst });
+    await ask(r);
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    expect(list).toEqual([{ correct: true, asked: true }]);
+  });
+
+  it.each(hostProps)('%s: asked, then a wrong option first is a plain miss', async (_name, props) => {
+    const { list, onFirst } = firsts();
+    const r = await open(HEARD, { cantHear: true, ...props, onFirst });
+    await ask(r);
+    await press(pressableById(r.root, 'daily-review-option-lex:nabi'));
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    expect(list).toEqual([{ correct: false }]);
+  });
+
+  it.each(hostProps)('%s: not asked, a right first option says nothing', async (_name, props) => {
+    const { list, onFirst } = firsts();
+    const r = await open(HEARD, { cantHear: true, ...props, onFirst });
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    expect(list).toEqual([{ correct: true }]);
+  });
+
+  it('a heard reply round (an exchange) is marked the same way', async () => {
+    const { list, onFirst } = firsts();
+    const r = await open(REPLY, { cantHear: true, check: 'cell-check', onFirst });
+    await ask(r);
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    expect(list).toEqual([{ correct: true, asked: true }]);
+  });
+
+  it('Sound off, no Korean voice, a failed play and "Always show the letters" show the text with no ask: nothing is marked', async () => {
+    const answer = async (): Promise<unknown> => {
+      const { list, onFirst } = firsts();
+      const r = await open(HEARD, { cantHear: true, onFirst });
+      await tick(2_000);
+      await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+      return list;
+    };
+    useAudioStore.setState({ muted: true });
+    expect(await answer()).toEqual([{ correct: true }]);
+    useAudioStore.setState({ muted: false });
+    rig.current = createAudioRig({ voices: [] });
+    expect(await answer()).toEqual([{ correct: true }]);
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    rig.current.synth.speak = () => {
+      throw new Error('no speech');
+    };
+    expect(await answer()).toEqual([{ correct: true }]);
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    useAudioStore.setState({ showLetters: true });
+    expect(await answer()).toEqual([{ correct: true }]);
+  });
+
+  it('a heard round with a cue is guidance only, so nothing is asked and nothing is marked', async () => {
+    const { list, onFirst } = firsts();
+    const r = await open(CUED, { cantHear: true, onFirst });
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    expect(list).toEqual([{ correct: true }]);
+  });
+
+  describe('Syllable Build round', () => {
+    const tileId = (zone: string, letter: string): string => `daily-review-build-board-tile-${zone}:${letter}`;
+    const build = async (r: ReactTestRenderer, vowel: string): Promise<void> => {
+      await press(pressableById(r.root, tileId('first', 'ㅂ')));
+      await press(pressableById(r.root, tileId('vowel', vowel)));
+      await press(pressableById(r.root, tileId('final', 'ㅂ')));
+    };
+
+    it.each(hostProps)('%s: asked, then the right block is asked; a wrong block is a plain miss', async (_name, props) => {
+      const right = firsts();
+      const a = await open(BUILD, { cantHear: true, ...props, onFirst: right.onFirst });
+      await ask(a);
+      await build(a, 'ㅏ');
+      expect(right.list).toEqual([{ correct: true, asked: true }]);
+      const wrong = firsts();
+      const b = await open(BUILD, { cantHear: true, ...props, onFirst: wrong.onFirst });
+      await ask(b);
+      await build(b, 'ㅓ');
+      expect(wrong.list).toEqual([{ correct: false }]);
+    });
+
+    it('not asked: a right block says nothing', async () => {
+      const { list, onFirst } = firsts();
+      const r = await open(BUILD, { cantHear: true, onFirst });
+      await build(r, 'ㅏ');
+      expect(list).toEqual([{ correct: true }]);
+    });
   });
 });

@@ -164,7 +164,9 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
     if (jamoId === round.promptJamo.id) {
       tapLight();
       success();
-      answerRound(roundIdx, true, { jamoIds: [round.promptJamo.id], rung: 'recognize' });
+      // The learner's own ask (Show the letters) makes a right answer a hinted one for the memory store (AMENDMENTS-AUDIO-CANT-HEAR
+      // CH-1f, section 3.13): no promotion, no demotion; the stars follow `correct`. Sound off and "Always show the letters" are not asks.
+      answerRound(roundIdx, true, { jamoIds: [round.promptJamo.id], rung: 'recognize' }, slot.asked);
       setFeedback('correct');
       // Answered: the replay a miss just scheduled would say this prompt again over the next round (M6).
       clearReplay();

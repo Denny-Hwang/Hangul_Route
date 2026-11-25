@@ -8,7 +8,7 @@ import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/a
 import { clearReaderLog, focusNodes, hasId, newReaderLog, pressableById } from '../../../test-support/cant-hear-rig';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import { byTestId, press, render, textOf, unmount } from '../../../test-support/render';
-import type { HostMode, MinigameHost } from '../host';
+import type { AnswerMeta, HostMode, MinigameHost } from '../host';
 import { ListenPickGame } from '../ListenPickGame';
 
 /**
@@ -64,6 +64,8 @@ const SPELLING: ListenPickRound = {
 const mounted: ReactTestRenderer[] = [];
 /** What the host was told: [round, correct]. */
 const answers: Array<[string | number, boolean]> = [];
+/** What each answer said beside right or wrong (`AnswerMeta`), in the same order as `answers`. */
+const metas: Array<AnswerMeta | undefined> = [];
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
@@ -73,6 +75,7 @@ beforeEach(() => {
   clearReaderLog(reader);
   events.length = 0;
   answers.length = 0;
+  metas.length = 0;
 });
 
 afterEach(async () => {
@@ -91,7 +94,7 @@ async function game(
   mode: HostMode,
   extra: { rounds?: ListenPickRound[]; textPrompt?: boolean; spelling?: boolean; romanization?: 'always' | 'tap' } = {},
 ): Promise<ReactTestRenderer> {
-  const host: MinigameHost = { mode, answer: (round, correct) => void answers.push([round, correct]), complete: () => undefined };
+  const host: MinigameHost = { mode, answer: (round, correct, meta) => void (answers.push([round, correct]), metas.push(meta)), complete: () => undefined };
   const rounds = extra.rounds ?? ROUNDS;
   const kit = extra.spelling === true ? await import('../dictation-chunk') : null;
   const textPrompt = extra.textPrompt === true ? { heading: 'Read it', missLine: 'Look again', prompt: () => null } : undefined;
@@ -223,6 +226,8 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'quest-check', reason: 'asked' }]);
     await press(pressableById(r.root, 'listen-pick-option-neo'));
     expect(answers).toEqual([[0, true]]);
+    // CH-1f: it reaches the memory store as hinted; the Check counts it right as it did.
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo', hinted: true }]);
     // The answer is known now, so the Korean shows with the meaning, as in any quest Check.
     expect(promptText(r)).toContain('너');
     // The ask is counted once per session and source.
@@ -244,6 +249,7 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     await showLetters(r);
     await press(pressableById(r.root, 'listen-pick-option-na'));
     expect(answers).toEqual([[0, false]]);
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
     expect(promptText(r)).toBe('neo');
   });
 
@@ -254,5 +260,92 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     await tick(2500);
     expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
     expect(hasId(r.root, 'cant-hear')).toBe(true);
+  });
+});
+
+/**
+ * The hinted mark (AMENDMENTS-AUDIO-CANT-HEAR row CH-1f, section 3.13, test 22): on every host a right first answer after the
+ * learner's own Show the letters says `hinted: true`; a wrong one stays a plain miss; text with no ask (Sound off, no Korean
+ * voice, a failed or blocked play, "Always show the letters") and a round answered without the ask say nothing.
+ */
+describe('Listen & Pick, the hinted mark (CH-1f, test 22)', () => {
+  const ask = async (r: ReactTestRenderer): Promise<void> => {
+    await press(pressableById(r.root, 'cant-hear'));
+    await press(pressableById(r.root, 'cant-hear-show-letters'));
+    await tick(400);
+  };
+
+  it.each<HostMode>(['quest', 'check', 'review', 'vocab', 'preview'])('the %s host: asked, then the right option first is hinted', async (mode) => {
+    const r = await game(mode);
+    await ask(r);
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(answers).toEqual([[0, true]]);
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo', hinted: true }]);
+  });
+
+  it.each<HostMode>(['quest', 'check', 'review'])('the %s host: asked, then a wrong option first is a plain miss', async (mode) => {
+    const r = await game(mode);
+    await ask(r);
+    await press(pressableById(r.root, 'listen-pick-option-na'));
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(answers[0]).toEqual([0, false]);
+    expect(metas[0]).toEqual({ itemId: 'lp:syl:neo' });
+  });
+
+  it.each<HostMode>(['quest', 'check', 'review'])('the %s host: not asked, a right first answer carries no hinted mark', async (mode) => {
+    const r = await game(mode);
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
+  });
+
+  it('the ask belongs to its round: the next round, answered without it, says nothing', async () => {
+    const r = await game('quest');
+    await ask(r);
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    await tick(2500);
+    expect(hasId(r.root, 'cant-hear')).toBe(true);
+    await press(pressableById(r.root, 'listen-pick-option-na'));
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo', hinted: true }, { itemId: 'lp:syl:na' }]);
+  });
+
+  it('Sound off: text with no ask, no hinted mark (quest and Check hosts)', async () => {
+    useAudioStore.setState({ muted: true });
+    for (const mode of ['quest', 'check'] as const) {
+      const r = await game(mode);
+      await press(pressableById(r.root, 'listen-pick-option-neo'));
+    }
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }, { itemId: 'lp:syl:neo' }]);
+  });
+
+  it('no Korean voice: text with no ask, no hinted mark', async () => {
+    rig.current = createAudioRig({ voices: [] });
+    const r = await game('quest');
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
+  });
+
+  it('a failed play shows text with no ask: no hinted mark', async () => {
+    rig.current!.synth.speak = () => {
+      throw new Error('no speech');
+    };
+    const r = await game('quest');
+    await tick(2_000);
+    expect(byTestId(r.root, 'listen-pick-prompt-text').length + byTestId(r.root, 'listen-pick-prompt').length).toBeGreaterThan(0);
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
+  });
+
+  it('"Always show the letters" (CH-2) brings the text with no ask: no hinted mark', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await game('quest');
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(1);
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
+  });
+
+  it('the spelling round has no Show the letters (guidance only), so nothing is asked and nothing is marked', async () => {
+    const r = await game('quest', { rounds: [SPELLING], spelling: true });
+    await press(pressableById(r.root, 'listen-pick-option-a'));
+    expect(metas).toEqual([{ itemId: 'sp' }]);
   });
 });

@@ -124,7 +124,12 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
         const round = rounds[effect.roundIdx];
         // A hear round's first Done after the hint, or one letter off, is a hinted answer for the memory store (section 4.3).
         const h = heardRef.current;
-        const hinted = round !== undefined && h !== null && hear !== null && h.mode === 'hear' && hear.hearAnswerIsHinted(round, composeTyped(stateRef.current.keys), h.revealed);
+        // A right first Done in the `see` round the learner's own Show the letters made (`reason` 'asked', AMENDMENTS-AUDIO-CANT-HEAR
+        // CH-1c) is hinted too (CH-1f, section 3.13). A miss there stays a plain miss; Sound off, no voice, a failed play and
+        // "Always show the letters" give other reasons and stay unmarked.
+        const askedRight = effect.correct && h !== null && h.mode === 'see' && h.reason === 'asked';
+        const hinted =
+          askedRight || (round !== undefined && h !== null && hear !== null && h.mode === 'hear' && hear.hearAnswerIsHinted(round, composeTyped(stateRef.current.keys), h.revealed));
         hostRef.current.answer(effect.roundIdx, effect.correct, round ? { itemId: round.id, ...(hinted ? { hinted: true } : {}) } : undefined);
         return;
       }

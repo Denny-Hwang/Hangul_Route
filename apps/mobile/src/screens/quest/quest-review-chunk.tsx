@@ -198,7 +198,7 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
         key={round.key}
         round={round}
         first={roundIdx === 0}
-        onFirstTap={(optionId) => played.current.answers.push(firstTryAnswer(round, optionId))}
+        onFirstTap={(optionId, asked) => played.current.answers.push(firstTryAnswer(round, optionId, asked))}
         onRetry={() => {
           played.current.retries += 1;
         }}
@@ -267,8 +267,8 @@ interface PickRoundViewProps {
   round: PickRound;
   /** The plan's first round: its own sound waits for the screen (QS-3). */
   first: boolean;
-  /** The round's first tap: its answer. */
-  onFirstTap: (optionId: string) => void;
+  /** The round's first tap: its answer. `asked`: the learner asked for the letters in this round (CH-1f), so a right tap is hinted. */
+  onFirstTap: (optionId: string, asked: boolean) => void;
   onRetry: () => void;
   /** The right option was tapped and the beat is over. */
   onDone: () => void;
@@ -344,7 +344,7 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
     if (right) return;
     if (!answered.current) {
       answered.current = true;
-      onFirstTap(optionId);
+      onFirstTap(optionId, slot.asked);
     } else {
       onRetry();
     }

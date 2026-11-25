@@ -36,7 +36,8 @@ export function savedStageCheck(run: {
     .sort((a, b) => a - b)
     .forEach((index) => {
       const answer = run.answers.get(index) as RoundAnswer;
-      answers.push([index, { correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}) }]);
+      // `asked` (the learner's own Show the letters, CH-1f) is kept like `hinted`: a resumed round keeps what it was recorded as.
+      answers.push([index, { correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}), ...(answer.asked ? { asked: true } : {}) }]);
     });
   return {
     v: SAVED_CHECK_VERSION,
@@ -66,9 +67,9 @@ const ASKS: readonly unknown[] = ['spelling', 'meaning', 'sound', 'reply'];
 const TYPE_MODES: readonly unknown[] = ['see', 'picture', 'hear'];
 const ZONES: readonly unknown[] = ['first', 'vowel', 'final'];
 
-/** A first-try record of a round: `{ correct: boolean, hinted?: boolean }`. */
+/** A first-try record of a round: `{ correct: boolean, hinted?: boolean, asked?: boolean }`. */
 export function isRoundAnswer(v: unknown): v is RoundAnswer {
-  return isRecord(v) && typeof v.correct === 'boolean' && (v.hinted === undefined || typeof v.hinted === 'boolean');
+  return isRecord(v) && typeof v.correct === 'boolean' && (v.hinted === undefined || typeof v.hinted === 'boolean') && (v.asked === undefined || typeof v.asked === 'boolean');
 }
 
 function isPickOption(v: unknown): v is PickOption {
@@ -187,7 +188,7 @@ export function resumableStageCheck(saved: unknown, now: number, ctx: StageCheck
     if (!Array.isArray(entry) || entry.length !== 2) return null;
     const [index, answer] = entry as [unknown, unknown];
     if (typeof index !== 'number' || !Number.isInteger(index) || index < 0 || index >= rounds.length || restored.has(index) || !isRoundAnswer(answer)) return null;
-    restored.set(index, { correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}) });
+    restored.set(index, { correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}), ...(answer.asked ? { asked: true } : {}) });
   }
   let next = 0;
   while (next < rounds.length && restored.has(next)) next += 1;

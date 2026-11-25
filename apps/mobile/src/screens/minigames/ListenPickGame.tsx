@@ -236,6 +236,10 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
+  // The learner asked for this round's text (Show the letters): a right answer then reaches the memory store as hinted
+  // (AMENDMENTS-AUDIO-CANT-HEAR CH-1f, section 3.13).
+  const askedRef = useRef(slot.asked);
+  askedRef.current = slot.asked;
   const [helpOpen, setHelpOpen] = useState(false);
 
   const runEffect = useCallback((effect: FlowEffect): void => {
@@ -264,7 +268,12 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
       case 'answer': {
         const round = roundsRef.current[effect.roundKey];
         // The Hangul Check names the item a symbol round credits (`itemId`, M7); any other round credits its own id.
-        hostRef.current.answer(effect.roundKey, effect.correct, round ? { itemId: roundItemId(round) } : undefined);
+        // Hinted with a right answer only: a miss after the ask stays a plain miss, and the stars follow `correct`.
+        hostRef.current.answer(
+          effect.roundKey,
+          effect.correct,
+          round ? { itemId: roundItemId(round), ...(effect.correct && askedRef.current ? { hinted: true } : {}) } : undefined,
+        );
         return;
       }
       case 'haptic':

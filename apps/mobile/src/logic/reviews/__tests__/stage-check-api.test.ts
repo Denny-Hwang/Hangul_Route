@@ -259,6 +259,22 @@ describe('a Stage Check', () => {
     expect(f.latches).toEqual([{ stage: 'stage2', at }]);
   });
 
+  it('a right first answer after the learner\'s own ask is recorded as hinted, a miss after it as a plain miss, and the result is as without it (CH-1f)', async () => {
+    const f = fake();
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    const answers = new Map<number, RoundAnswer>(Array.from({ length: 20 }, (_, i) => [i, i < 17 ? { correct: true, ...(i % 2 === 0 ? { asked: true } : {}) } : { correct: false, asked: true }]));
+    const recorded = [...answers].map(([i, a]) => api.recordRound(w, plan, i, a));
+    await Promise.all(recorded);
+    const hinted = f.recorded.map((batch) => batch[0]?.hinted === true);
+    expect(hinted.slice(0, 17)).toEqual(Array.from({ length: 17 }, (_, i) => i % 2 === 0));
+    expect(hinted.slice(17)).toEqual([false, false, false]);
+    expect(f.recorded.slice(17).every((batch) => batch[0]?.correct === false)).toBe(true);
+    // 17 of 20 right first try: the stars are 3 with or without the ask.
+    expect(await api.finishSession(w, plan, answers, recorded, NOW)).toEqual({ stars: 3, passed: true, missed: true });
+  });
+
   it('a stopped check keeps the answers given and writes no entry and no latch', async () => {
     const f = fake();
     const api = createStageCheckApi(f.deps);
@@ -300,7 +316,7 @@ describe('resumeSession and savedRun (LR-3b)', () => {
     const api = createStageCheckApi(f.deps);
     const w = await world(f);
     const plan = (await api.startSession(w, 'stage3', locale))!;
-    const answers = new Map(Array.from({ length: answered }, (_, i): [number, RoundAnswer] => [i, i % 3 === 0 ? { correct: false } : { correct: true, ...(i % 4 === 0 ? { hinted: true } : {}) }]));
+    const answers = new Map(Array.from({ length: answered }, (_, i): [number, RoundAnswer] => [i, i % 3 === 0 ? { correct: false } : { correct: true, ...(i % 4 === 0 ? { hinted: true } : {}), ...(i % 5 === 1 ? { asked: true } : {}) }]));
     const run = api.savedRun(plan, { locale, answers, hideRomanization: true, startedAt: START });
     // The stored value is JSON, as the storage keeps it.
     const saved = JSON.parse(JSON.stringify(run)) as SavedStageCheck;
@@ -323,6 +339,16 @@ describe('resumeSession and savedRun (LR-3b)', () => {
     expect(found.run.plan).toEqual({ stage: 'stage3', rounds: plan.rounds, soundNotice: plan.soundNotice } satisfies PlannedStageCheck);
     expect(found.run.answers).toEqual(answers);
     expect(found.run).toMatchObject({ hideRomanization: true, startedAt: START, next: 8 });
+  });
+
+  it('a round answered after the learner\'s own ask keeps it through the stored value, and a stored `asked` that is not a boolean drops the run (CH-1f)', async () => {
+    const { api, w, saved, answers } = await stored();
+    expect([...answers.values()].some((a) => a.asked === true)).toBe(true);
+    expect(saved.answers.filter(([, a]) => a.asked === true).map(([i]) => i)).toEqual([...answers].filter(([, a]) => a.asked === true).map(([i]) => i));
+    const found = await api.resumeSession(w, saved, 'en', 'stage3', LATER);
+    expect(found.kind === 'run' && found.run.answers).toEqual(answers);
+    const bad = { ...saved, answers: saved.answers.map(([i, a]) => [i, { ...a, asked: 'yes' }]) };
+    expect((await api.resumeSession(w, bad, 'en', 'stage3', LATER)).kind).not.toBe('run');
   });
 
   it('the plans of every stage pass the shape check after JSON, and between them they hold several round types', async () => {

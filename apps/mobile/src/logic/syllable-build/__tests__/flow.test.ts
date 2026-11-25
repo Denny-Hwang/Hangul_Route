@@ -10,15 +10,15 @@ import { promptView, rowViews, zoneViews } from '../view';
  */
 const BAP = blockParts('밥') as BlockParts;
 const GA = blockParts('가') as BlockParts;
-const ctx = (target: BlockParts, voice = true) => ({ target, voice });
+const ctx = (target: BlockParts, voice = true, asked = false) => ({ target, voice, asked });
 
-function run(target: BlockParts, events: BuildEvent[], voice = true, fixed: 'first' | 'vowel' | 'final' | null = null) {
+function run(target: BlockParts, events: BuildEvent[], voice = true, fixed: 'first' | 'vowel' | 'final' | null = null, asked = false) {
   let state = startBuild(target, fixed);
   const effects: string[] = [];
   for (const e of events) {
-    const out = stepBuild(state, e, ctx(target, voice));
+    const out = stepBuild(state, e, ctx(target, voice, asked));
     state = out.state;
-    for (const f of out.effects) effects.push(f.type === 'answer' ? `answer:${f.correct}${f.hinted ? ':hinted' : ''}` : f.type === 'play' ? `play:${f.why}` : f.type === 'schedule-replay' ? `replay:${f.ms}` : f.type === 'haptic' ? `haptic:${f.kind}` : f.type);
+    for (const f of out.effects) effects.push(f.type === 'answer' ? `answer:${f.correct}${f.hinted ? ':hinted' : ''}${f.asked ? ':asked' : ''}` : f.type === 'play' ? `play:${f.why}` : f.type === 'schedule-replay' ? `replay:${f.ms}` : f.type === 'haptic' ? `haptic:${f.kind}` : f.type);
   }
   return { state, effects };
 }
@@ -99,6 +99,19 @@ describe('the round reducer', () => {
     expect(late.effects.filter((e) => e.startsWith('answer'))).toEqual(['answer:false']);
     const twice = run(BAP, [reveal]).state;
     expect(stepBuild(twice, reveal, ctx(BAP)).state).toBe(twice);
+  });
+
+  it('a right first block after the learner\'s own ask (CH-1f) carries `asked`, though the text it asked for ended the voice hint; a miss after it, or no ask, carries none', () => {
+    const right = [tile('first', 'ㅂ'), tile('vowel', 'ㅏ'), tile('final', 'ㅂ')];
+    // Show the letters turns `voice` off (the text is on screen), so the reveal alone would not be a hint; `asked` is the mark.
+    expect(run(BAP, right, false, null, true).effects).toContain('answer:true:asked');
+    expect(run(BAP, right, true, null, true).effects).toContain('answer:true:asked');
+    expect(run(BAP, right, false, null, false).effects).toContain('answer:true');
+    // `asked` and the game's own hint are separate marks: both may stand on one answer.
+    expect(run(BAP, [{ type: 'reveal' }, ...right], true, null, true).effects).toContain('answer:true:hinted:asked');
+    // A miss after the ask is a plain miss, and so is the block fixed right after it.
+    const miss = run(BAP, [tile('first', 'ㅂ'), tile('vowel', 'ㅓ'), tile('final', 'ㅂ'), tile('vowel', 'ㅏ')], false, null, true);
+    expect(miss.effects.filter((e) => e.startsWith('answer'))).toEqual(['answer:false']);
   });
 
   it('a fixed zone (a symbol item at the produce rung) is filled from the start and never changes', () => {

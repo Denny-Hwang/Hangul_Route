@@ -87,8 +87,12 @@ export interface SyllableBuildBoardProps {
   tiles: TileRows;
   /** A zone already filled and locked (a symbol item at the produce rung). */
   fixed?: SyllableZone;
-  /** The first full block: the scored answer. */
-  onFirst: (correct: boolean, hinted: boolean) => void;
+  /**
+   * The first full block: the scored answer. `asked` (a third argument, given only when true): a right block after the
+   * learner's own Show the letters, which the memory store records as hinted (AMENDMENTS-AUDIO-CANT-HEAR CH-1f). It is
+   * not `hinted`, so a review's stars are as without the ask.
+   */
+  onFirst: (correct: boolean, hinted: boolean, asked?: boolean) => void;
   /** The block is right and has been said: on to the next round. */
   onSolved: () => void;
   /** The block has just come right (before the pause): the Block Sprint holds its clock here. */
@@ -156,6 +160,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const { play: slotPlay } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
+  const askedRef = useRef(slot.asked);
+  askedRef.current = slot.asked;
   const noVoice = slot.view.textShown;
   const [helpOpen, setHelpOpen] = useState(false);
   const press = usePressLook();
@@ -198,7 +204,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     (effect: BuildEffect): void => {
       switch (effect.type) {
         case 'answer':
-          handlers.current.onFirst(effect.correct, effect.hinted);
+          if (effect.asked) handlers.current.onFirst(effect.correct, effect.hinted, true);
+          else handlers.current.onFirst(effect.correct, effect.hinted);
           return;
         case 'play':
           // With a screen reader on the sound is not replayed by itself after a miss: the learner taps Hear it (§3.4).
@@ -240,7 +247,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     (event: BuildEvent): void => {
       if (!parts) return;
       const before = stateRef.current;
-      const out = stepBuild(before, event, { target: parts, voice: !viewRef.current.textShown });
+      const out = stepBuild(before, event, { target: parts, voice: !viewRef.current.textShown || askedRef.current, asked: askedRef.current });
       stateRef.current = out.state;
       setState(out.state);
       const solved = out.effects.some((e) => e.type === 'solved');

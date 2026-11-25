@@ -9,7 +9,7 @@ import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { DeviceFamily } from '../../../logic/device-family';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { useAudioStore } from '../../../store/audio-store';
-import { useQuestRunStore } from '../../../store/quest-run-store';
+import { setFirstRoundAnswerListener, useQuestRunStore } from '../../../store/quest-run-store';
 import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { byTestId, press, render, resetPlatform, setPlatform, textOf, unmount } from '../../../test-support/render';
 import { MatchSoundGame } from '../MatchSoundGame';
@@ -280,7 +280,7 @@ describe('Show the letters (test 12)', () => {
     expect(reader.announced).toHaveLength(1);
   });
 
-  it('a right tap answers once, as a plain right answer; the next round opens with no text and the link back', async () => {
+  it('a right tap answers once (hinted, CH-1f, below); the next round opens with no text and the link back', async () => {
     const r = await open();
     await openSheet(r);
     await press(pressable(r.root, 'cant-hear-show-letters'));
@@ -580,5 +580,98 @@ describe('Always show the letters (CH-2, test 23)', () => {
     const r = await open();
     expect(textOf(host(r.root, 'prompt-panel'))).toContain(T.soundIsOff);
     expect(has(r.root, 'cant-hear')).toBe(false);
+  });
+});
+
+/**
+ * The hinted mark (AMENDMENTS-AUDIO-CANT-HEAR row CH-1f, section 3.13, test 22): a right first answer after the learner's own
+ * Show the letters reaches the memory store as hinted; a wrong first answer stays a plain miss; text from Sound off, no voice,
+ * a failed play or "Always show the letters" stays unmarked; the stars are what `correct` made them. The memory store listens
+ * to the run store's first-answer listener, which is read here.
+ */
+describe('the hinted mark (CH-1f, test 22)', () => {
+  const seen: Array<{ correct: boolean; hinted: boolean }> = [];
+  beforeEach(() => {
+    seen.length = 0;
+    useQuestRunStore.getState().beginQuest('q:ch-1f', 'ep:ch-1f');
+    setFirstRoundAnswerListener((a) => void seen.push({ correct: a.correct, hinted: a.hinted === true }));
+  });
+  afterEach(() => {
+    setFirstRoundAnswerListener(null);
+  });
+  const ask = async (r: ReactTestRenderer): Promise<void> => {
+    await openSheet(r);
+    await press(pressable(r.root, 'cant-hear-show-letters'));
+    await tick(400);
+  };
+
+  it('asked, then the right tile first: hinted; the quest counts it right', async () => {
+    const r = await open();
+    await ask(r);
+    await press(tile(r.root, 'jamo:nieun'));
+    expect(seen).toEqual([{ correct: true, hinted: true }]);
+    expect(useQuestRunStore.getState()).toMatchObject({ correctCount: 1, totalCount: 1 });
+  });
+
+  it('asked, then a wrong tile first: a plain miss, even when the right tile follows', async () => {
+    const r = await open();
+    await ask(r);
+    await press(tile(r.root, 'jamo:a'));
+    await press(tile(r.root, 'jamo:nieun'));
+    expect(seen).toEqual([{ correct: false, hinted: false }]);
+    expect(useQuestRunStore.getState()).toMatchObject({ correctCount: 0, totalCount: 1 });
+  });
+
+  it('not asked: a right first tap is an ordinary right answer', async () => {
+    const r = await open();
+    await press(tile(r.root, 'jamo:nieun'));
+    expect(seen).toEqual([{ correct: true, hinted: false }]);
+  });
+
+  it('the ask is for one round: the next round, answered without it, is unmarked', async () => {
+    const r = await open();
+    await ask(r);
+    await press(tile(r.root, 'jamo:nieun'));
+    await tick(RESULT_MARK_MIN_MS);
+    const second = NAME_OF.get(spoken().at(-1) ?? '');
+    expect(second).toBeDefined();
+    await press(tile(r.root, second as string));
+    expect(seen.map((a) => a.hinted)).toEqual([true, false]);
+  });
+
+  it('Sound off, no Korean voice, a failed play and "Always show the letters" show text without the ask: unmarked', async () => {
+    useAudioStore.setState({ muted: true });
+    const off = await open();
+    await press(tile(off.root, 'jamo:nieun'));
+    await unmount(off);
+    useAudioStore.setState({ muted: false });
+    rig.current = createAudioRig({ voices: [] });
+    useQuestRunStore.getState().beginQuest("q:ch-1f", "ep:ch-1f");
+    const none = await open();
+    await press(tile(none.root, 'jamo:nieun'));
+    await unmount(none);
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    rig.current.synth.speak = () => {
+      throw new Error('no speech');
+    };
+    useQuestRunStore.getState().beginQuest("q:ch-1f", "ep:ch-1f");
+    const failed = await open();
+    await tick(2_000);
+    expect(has(failed.root, 'prompt-panel-text')).toBe(true);
+    await press(tile(failed.root, 'jamo:nieun'));
+    await unmount(failed);
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    useAudioStore.setState({ showLetters: true });
+    useQuestRunStore.getState().beginQuest("q:ch-1f", "ep:ch-1f");
+    const always = await open();
+    expect(has(always.root, 'prompt-panel-text')).toBe(true);
+    await press(tile(always.root, 'jamo:nieun'));
+    useAudioStore.setState({ showLetters: false });
+    expect(seen).toEqual([
+      { correct: true, hinted: false },
+      { correct: true, hinted: false },
+      { correct: true, hinted: false },
+      { correct: true, hinted: false },
+    ]);
   });
 });

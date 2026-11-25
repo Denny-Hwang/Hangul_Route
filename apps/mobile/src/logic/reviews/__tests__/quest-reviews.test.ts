@@ -220,6 +220,15 @@ describe('what a session leaves behind', () => {
     expect(firstTryAnswer(round, 'lex:b')).toEqual({ itemId: 'lex:a', correct: false, rung: 'read' });
   });
 
+  it('after the learner\'s own ask a right first tap is hinted and a miss is a plain miss; the stars and the misses follow `correct` alone (CH-1f)', () => {
+    expect(firstTryAnswer(round, 'lex:a', true)).toEqual({ itemId: 'lex:a', correct: true, rung: 'read', hinted: true });
+    expect(firstTryAnswer(round, 'lex:b', true)).toEqual({ itemId: 'lex:a', correct: false, rung: 'read' });
+    expect(firstTryAnswer(round, 'lex:a', false)).toEqual({ itemId: 'lex:a', correct: true, rung: 'read' });
+    const answers = [firstTryAnswer(round, 'lex:a', true), firstTryAnswer(round, 'lex:a', false), firstTryAnswer(round, 'lex:b', true)];
+    expect(tryAgainStars(answers)).toBe(tryAgainStars([firstTryAnswer(round, 'lex:a'), firstTryAnswer(round, 'lex:a'), firstTryAnswer(round, 'lex:b')]));
+    expect(sessionEntry('again', '2026-11-10', answers, new Date('2026-11-10T09:30:00.000Z'))?.missedItemIds).toEqual(['lex:a']);
+  });
+
   it('one entry a kind and local day: the warm-up without stars, Try these again as `feedback` with stars and its misses', () => {
     const at = new Date('2026-11-10T09:30:00.000Z');
     const answers = [

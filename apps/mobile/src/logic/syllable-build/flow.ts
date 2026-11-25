@@ -13,6 +13,9 @@ import type { BlockParts, SyllableZone } from '@hangul-route/content-schema';
  *   rings the right tile of that row ("This one goes here.").
  * - Show how it sounds reveals the romanization; used before the scored answer, the answer is recorded as hinted (no
  *   promotion, no demotion, section 4.3). With no device voice the romanization shows from the start and is not a hint.
+ * - Show the letters ("Can't hear it?", AMENDMENTS-AUDIO-CANT-HEAR CH-1f, section 3.13) is the learner's own ask: a right
+ *   first block after it carries `asked`, which the memory store reads as hinted. A miss after it carries none (a plain
+ *   miss), and `asked` is not `hinted`: a review's stars count a hint against the round, an ask they leave alone.
  */
 
 /** The final zone's value when the learner picked No final. */
@@ -45,7 +48,7 @@ export type BuildEvent =
   | { type: 'replay-due' };
 
 export type BuildEffect =
-  | { type: 'answer'; correct: boolean; hinted: boolean }
+  | { type: 'answer'; correct: boolean; hinted: boolean; asked: boolean }
   | { type: 'play'; why: 'replay' | 'right' }
   | { type: 'schedule-replay'; ms: number }
   | { type: 'cancel-replay' }
@@ -56,6 +59,8 @@ export interface BuildContext {
   target: BlockParts;
   /** The device can say Korean: without it the romanization is shown from the start, so a reveal is no hint. */
   voice: boolean;
+  /** The learner asked for the letters in this round (the slot's `asked`): never Sound off, no voice, a failed play or the CH-2 switch. */
+  asked?: boolean;
 }
 
 const ZONES: readonly SyllableZone[] = ['first', 'vowel', 'final'];
@@ -75,7 +80,7 @@ function check(state: BuildState, ctx: BuildContext): { state: BuildState; effec
   const hinted = state.revealed && ctx.voice;
   if (wrong.length === 0) {
     const effects: BuildEffect[] = [{ type: 'cancel-replay' }];
-    if (first) effects.push({ type: 'answer', correct: true, hinted });
+    if (first) effects.push({ type: 'answer', correct: true, hinted, asked: ctx.asked === true });
     effects.push({ type: 'haptic', kind: 'success' }, { type: 'play', why: 'right' }, { type: 'solved' });
     return { state: { ...state, status: 'right', marked: [], ring: null, scored: true }, effects };
   }
@@ -83,7 +88,7 @@ function check(state: BuildState, ctx: BuildContext): { state: BuildState; effec
   for (const z of wrong) misses[z] += 1;
   const ring = state.ring !== null && wrong.includes(state.ring) ? state.ring : wrong.find((z) => misses[z] >= 2) ?? null;
   const effects: BuildEffect[] = [];
-  if (first) effects.push({ type: 'answer', correct: false, hinted });
+  if (first) effects.push({ type: 'answer', correct: false, hinted, asked: false });
   effects.push({ type: 'haptic', kind: 'nudge' }, { type: 'cancel-replay' }, { type: 'schedule-replay', ms: REPLAY_AFTER_MS });
   return { state: { ...state, status: 'marked', marked: wrong, misses, ring, scored: true }, effects };
 }
