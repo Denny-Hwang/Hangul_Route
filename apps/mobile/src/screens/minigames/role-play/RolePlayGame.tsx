@@ -205,7 +205,8 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             const turn = turnOf(scene, next);
             const tried = turn?.replies.find((r) => r.id === effect.reply);
             const parts = whyParts(scene, next);
-            const ring = lookHereOf(scene, next);
+            // The look-here line only when this miss turns the ring on (the second less natural reply of the turn).
+            const ring = next.locked.length === 2 ? lookHereOf(scene, next) : null;
             const natural = ring === null ? undefined : turn?.replies.find((r) => r.id === ring);
             const why = parts ? spokenParts(parts) : '';
             const hint = natural ? [why, lookHereLine(m.a11y, natural.text.romanization)].filter((x) => x !== '').join(' ') : why;

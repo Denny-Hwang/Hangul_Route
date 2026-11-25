@@ -140,7 +140,7 @@ describe('a pair round (tap every copy among look-alikes)', () => {
     expect(names).toEqual(['ㅂ, letter bieup', 'ㅍ, letter pieup', 'ㅍ, letter pieup', 'ㅂ, letter bieup', 'ㅍ, letter pieup', 'ㅂ, letter bieup']);
     for (const i of [0, 3, 5]) await tapId(r.root, `match-shape-tile-${i}`);
     expect(h.answers.at(-1)).toEqual(['ms:pair:bieup', true, { itemId: 'ms:pair:bieup' }]);
-    expect(byTestId(r.root, 'match-shape-tile-0')[0]?.props['aria-label']).toBe('Right answer: ㅂ, letter bieup, b or p, found');
+    expect(byTestId(r.root, 'match-shape-tile-0')[0]?.props['aria-label']).toBe('ㅂ, letter bieup, b or p, found');
     await act(async () => {
       vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });

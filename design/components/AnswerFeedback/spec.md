@@ -346,6 +346,7 @@ native OS font scale multiplies every size alike (`text-size.ts:85`), so 200 % h
   give it D10's `border.shape` track and whole-row target.
 - **F4** Marks that grow with the text size (capped near 1.5x), once AF-1 has landed `MARK_MIN`.
 - **F7** Match Shape's pair grid gap (8) is under two look-here rings (14): widen it, or draw the ring at `spacing.xxs` on a grid.
+- **F8** With a reader on, after the board's own Next in the review hosts (Daily Review, Cell/Stage Checks, Block Sprint) no header node takes focus: §3.6 does not list these hosts; follow-up row.
 - **F6** Seen in AF-4b's shots (`shots/af-4b/pic-word-320-largest-*`), not changed there: Pic-Word Match's two columns are
   about 123 dp wide at 320 with the Largest text step, so a word card's text column (the Korean chip, 65 dp, beside the 24
   mark column and the row gap) is 10 dp short, and the `check` or `replay` mark overlaps the chip's edge (the check is half

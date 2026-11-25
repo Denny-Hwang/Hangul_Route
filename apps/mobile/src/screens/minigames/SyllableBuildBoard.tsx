@@ -38,7 +38,7 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { afterMiss, afterRightAnswer, answerItem, answerOptionLabel, lookHereLine } from '../../logic/answer-feedback';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
-import { hoyaLine, startBuild, stepBuild, wantedLetter, type BuildEffect, type BuildEvent, type BuildState } from '../../logic/syllable-build/flow';
+import { hoyaLine, NO_FINAL, startBuild, stepBuild, wantedLetter, type BuildEffect, type BuildEvent, type BuildState } from '../../logic/syllable-build/flow';
 import { letterName } from '../../logic/syllable-build/letters';
 import { partsOf } from '../../logic/syllable-build/pool';
 import type { TileRows } from '../../logic/syllable-build/tiles';
@@ -267,7 +267,9 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
       if (missed) {
         // The letter of the first zone that did not fit; the miss that turns the look-here ring on carries its line (§3.2).
         const zone = (['first', 'vowel', 'final'] as const).find((z) => out.state.marked.includes(z));
-        const item = zone === undefined ? '' : letterName(out.state.zones[zone] ?? '');
+        const tried = zone === undefined ? null : out.state.zones[zone];
+        // No final is a tile with no letter: it is named, never left empty ("Not this one: . Listen again.").
+        const item = tried === null || tried === undefined ? '' : tried === NO_FINAL ? texts.minigame.syllableBuild.noFinal : letterName(tried);
         const ringed = out.state.ring !== null && before.ring === null;
         afterMiss({
           readerOn: speak.readerOn,

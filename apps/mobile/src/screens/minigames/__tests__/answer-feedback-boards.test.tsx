@@ -248,7 +248,7 @@ describe('Hidden Heritage answers (test 16, OD-AF7)', () => {
     await tap(r, spot(a!));
     expect(announced(r)).toEqual([line({ kind: 'missHint', item: meaning(a!), hint: m.learner.hiddenHeritage.again })]);
     await tap(r, spot(b!));
-    const lookHere = line({ kind: 'missHint', item: meaning(b!), hint: lookHereLine(m.a11y, thing(asked).word.romanization) });
+    const lookHere = line({ kind: 'missHint', item: meaning(b!), hint: lookHereLine(m.a11y, meaning(asked)) });
     expect(announced(r)).toEqual([lookHere]);
     await tap(r, spot(asked));
     const right = line({ kind: 'right', item: answerItem(m.a11y, thing(asked).word.romanization, thing(asked).word.en) });
@@ -380,6 +380,22 @@ describe('Syllable Build answers (test 16)', () => {
     expect(liveRegions(r)).toEqual(['answer-announcer']);
   });
 
+  it('a miss on the No final tile is named ("No final letter"), never left empty, for both the plain miss and the look-here miss', async () => {
+    const plain = await board();
+    await tap(plain, tile('first:ㅂ'));
+    await tap(plain, tile('vowel:ㅏ'));
+    await tap(plain, tile('final:none'));
+    expect(announced(plain)).toEqual([line({ kind: 'missListen', item: m.a11y.minigame.syllableBuild.noFinal })]);
+    expect(announced(plain)[0]).not.toMatch(/: \./);
+    // The second miss on the final zone (another final first, then No final) rings the right tile, and names No final.
+    const ringed = await board();
+    await tap(ringed, tile('first:ㅂ'));
+    await tap(ringed, tile('vowel:ㅏ'));
+    await tap(ringed, tile('final:ㅇ'));
+    await tap(ringed, tile('final:none'));
+    expect(announced(ringed)).toEqual([line({ kind: 'missHint', item: m.a11y.minigame.syllableBuild.noFinal, hint: m.learner.minigame.syllableBuild.lookHere })]);
+  });
+
   it('the miss that turns look-here on rings the right tile with the dashed ring, outside the tile; a plain miss draws none', async () => {
     const r = await board();
     await build(r, 'ㅓ');
@@ -479,7 +495,7 @@ describe('Match Shape answers (test 16)', () => {
     expect(disabled(r, tileId(1))).toBe(false);
     await tap(r, tileId(0));
     expect(marks(host(r, `match-shape-mark-${0}`))).toEqual(['check']);
-    expect(String(pressable(r, tileId(0)).props['aria-label'])).toBe('Right answer: ㅂ, letter bieup, b or p, found');
+    expect(String(pressable(r, tileId(0)).props['aria-label'])).toBe('ㅂ, letter bieup, b or p, found');
     expect(disabled(r, tileId(0))).toBe(false);
   });
 
@@ -493,7 +509,7 @@ describe('Match Shape answers (test 16)', () => {
     expect(bubbleLive(r)).toEqual([false]);
     expect(announced(r).join(' ')).not.toMatch(HANGUL);
     await tap(r, tileId(2));
-    expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'p', hint: `${missLine} ${lookHereLine(m.a11y, 'b or p')}` })]);
+    expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'p', hint: `${missLine} ${lookHereLine(m.a11y, 'b or p, letter bieup')}` })]);
     expect(sr.queued).toHaveLength(3);
     for (const said of sr.queued) expect(said).not.toMatch(HANGUL);
     expect(liveRegions(r)).toEqual(['answer-announcer']);
@@ -564,10 +580,13 @@ describe('Match Shape answers (test 16)', () => {
       expect(marks(host(r, 'match-shape-mark-jamo:giyeok'))).toEqual(['replay']);
       expect(String(pressable(r, origin('giyeok')).props['aria-label'])).toBe('Not this one: ㄱ, g or k');
       expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'g or k', hint: m.learner.minigame.matchShape.missOrigin })]);
+      // The second miss rings the right tile and adds the look-here line, naming it by its sound (its name is "ㄴ, n").
+      await tap(r, origin('mieum'));
+      expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'm', hint: `${m.learner.minigame.matchShape.missOrigin} ${lookHereLine(m.a11y, 'n')}` })]);
       await tap(r, origin('nieun'));
       expect(marks(host(r, 'match-shape-mark-jamo:nieun'))).toEqual(['check']);
       expect(announced(r)).toEqual([line({ kind: 'right', item: 'n' })]);
-      expect(sr.queued).toHaveLength(2);
+      expect(sr.queued).toHaveLength(3);
       expect(has(r, 'match-shape-continue')).toBe(true);
     });
 
@@ -707,6 +726,7 @@ describe('Role Play answers (test 16)', () => {
           { id: 'hello', text: { ko: '안녕하세요!', romanization: 'annyeonghaseyo', en: 'Hello!' }, kind: 'natural', next: 't2' },
           { id: 'meal', text: { ko: '잘 먹겠습니다!', romanization: 'jal meokgetseumnida', en: 'I will eat well.' }, kind: 'lessNatural', whyEn: 'That one is for a meal. Try {ko:안녕하세요}.' },
           { id: 'bye', text: { ko: '안녕히 가세요!', romanization: 'annyeonghi gaseyo', en: 'Goodbye!' }, kind: 'lessNatural', whyEn: 'That one is for leaving.' },
+          { id: 'late', text: { ko: '또 만나요!', romanization: 'tto mannayo', en: 'See you again!' }, kind: 'lessNatural', whyEn: 'That one is for saying goodbye.' },
         ],
       },
       {
@@ -763,6 +783,9 @@ describe('Role Play answers (test 16)', () => {
     expect(borderStyleOf(r, 'role-play-ring')).toBe('dashed');
     expect(String(pressable(r, reply('hello')).props['aria-label'])).toMatch(/^Look here: /);
     expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'annyeonghi gaseyo', hint: `That one is for leaving. ${lookHereLine(m.a11y, 'annyeonghaseyo')}` })]);
+    // The third miss does not say it again: the look-here line comes only with the miss that turns the ring on.
+    await tap(r, reply('late'));
+    expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'tto mannayo', hint: 'That one is for saying goodbye.' })]);
   });
 
   it('reader off: the partner answers after at least the 1000 ms floor (it was 900) and the reply', async () => {

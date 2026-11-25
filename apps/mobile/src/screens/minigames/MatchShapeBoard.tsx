@@ -260,7 +260,10 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
         const hint = round.shape === 'pair' ? [words.missPair, spokenParts(koTokenParts(round.diffNoteEn))].filter((x) => x !== '').join(' ') : words.missOrigin;
         // The miss that turns the look-here ring on adds the look-here line, naming what is ringed (§3.2).
         const ringed = out.state.status === 'asking' && out.state.ring && !before.ring;
-        const line = ringed ? `${hint} ${lookHereLine(texts, targetSound)}` : hint;
+        // The ringed copy is named by the words its own name uses, its Hangul swapped for its sound: a pair tile is "letter bieup"
+        // after its letter, an origin tile is its sound alone.
+        const ringedName = round.shape === 'pair' ? texts.minigame.matchShape.pairTile(targetSound, target.name) : targetSound;
+        const line = ringed ? `${hint} ${lookHereLine(texts, ringedName)}` : hint;
         afterMiss({ readerOn: speak.readerOn, announce: () => speak.announce({ kind: 'missHint', item: tapped(), hint: line }) });
       }
     },
@@ -278,8 +281,9 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const found = state.status === 'found';
   const line = shapeHoyaLine(state);
   /** A tile's name with its state first (§3.2): "Right answer: …", "Not this one: …", "Look here: …". */
-  const named = (look: ShapeTileLook, base: string): string =>
-    answerOptionLabel(look === 'found' ? 'correct' : look === 'marked' ? 'wrong' : look === 'ring' ? 'hint' : 'idle', base, m.a11y.minigame.option);
+  const named = (look: ShapeTileLook, base: string, saysFound = false): string =>
+    // A found pair tile's own name already ends "..., found": the state is not said twice.
+    answerOptionLabel(look === 'found' ? (saysFound ? 'idle' : 'correct') : look === 'marked' ? 'wrong' : look === 'ring' ? 'hint' : 'idle', base, m.a11y.minigame.option);
   /** The tile's decorations: the disc straddling its corner (`check` found, `replay` missed) and the look-here ring. */
   const decor = (look: ShapeTileLook, tid: string | number): ReactElement | null =>
     look === 'found' || look === 'marked' ? (
@@ -325,7 +329,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                 <TapTarget
                   key={t.index}
                   testID={`${testID}-tile-${t.index}`}
-                  accessibilityLabel={named(t.look, t.accessibilityLabel)}
+                  accessibilityLabel={named(t.look, t.accessibilityLabel, true)}
                   accessibilityState={{ selected: t.look === 'found' }}
                   // An answered tile is locked: inactive, still focusable, never disabled (§3.1).
                   inactive={off}

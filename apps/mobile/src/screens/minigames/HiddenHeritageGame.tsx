@@ -390,7 +390,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           const item = tappedThing ? thingName(tappedThing.word) : '';
           const answer = asked === null ? undefined : thing(asked);
           const ringed = asked !== null && (out.state.misses[asked] ?? 0) >= HINT_AFTER_MISSES && (before.misses[asked] ?? 0) < HINT_AFTER_MISSES;
-          const hint = ringed && answer ? lookHereLine(texts, answer.word.romanization) : words.again;
+          const hint = ringed && answer ? lookHereLine(texts, thingName(answer.word)) : words.again;
           afterMiss({ readerOn: speak.readerOn, announce: () => speak.announce({ kind: 'missHint', item, hint }) });
         }
         return;
