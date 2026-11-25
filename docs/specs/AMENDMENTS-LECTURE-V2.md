@@ -2,6 +2,8 @@ Status: ready (spec and wireframe pass LV-0; amends F-TCH-004, F-APP-001 entry p
 
 # Amendment: Lecture mode v2 — parents and teachers, easy to find, ready-made lessons, every stage on the big screen
 
+> **Amended 2026-11-24 by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]** (work order WO-09 of the 2026-11 review: show the class code, not the class) (§4.2, the console preset context): `revisitChars` and `rollupRevisit` (so the warm-up's letters and its "Revisit together" source) and the `recentWords` words of Word review come from a class only when at least 3 learners contribute to them (`togetherLists`); below that the warm-up keeps its default or plan letters. A family is never held back, and the presenter and the learner app read no roster, so nothing changes there. For a class this 3 replaces the "at least 2 learners with `summary.vocab`" of the W1 line (row CO-2d).
+
 > Basis: `origin/main` `3b52a3969` (2026-10-15). Every `file:line` below is at that commit. F-TCH-004 rows 0 to 12 are all merged; this amendment changes what they built and adds rows LV-0b to LV-7 and LV-S1 to LV-S4 (section 15).
 >
 > Wireframes (this PR): `design/wireframes/classroom/lecture-presets.md` (presenter home with presets at 320 / 768 / 1180, the preset preview, the console setup page presets-first), `design/wireframes/classroom/lecture-big-screen-v2.md` (the new slide families on the big screen), `design/wireframes/classroom/lecture-entry-points.md` (the entry cards, the nav item, the learner app's grown-up card, the site lines).

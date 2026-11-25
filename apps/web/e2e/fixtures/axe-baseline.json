@@ -1,0 +1,10 @@
+{
+  "note": "AMENDMENTS-A11Y-CI section 3.5 axe ratchet. Violations found today, per screen and rule, as node counts. Never add an entry or raise a count. A PR that lowers a count or clears a rule updates this file and the ceiling map in src/app/__tests__/axe-baseline.test.ts in the same PR, so the file only shrinks. Every screen is empty today: axe finds no violation on the site home, the sign-in or the class page.",
+  "axeCore": "4.14.1",
+  "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"],
+  "screens": {
+    "site-home": [],
+    "signin": [],
+    "class-page": []
+  }
+}

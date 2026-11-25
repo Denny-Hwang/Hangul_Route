@@ -7,6 +7,8 @@
 
 > **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (§3.4): a class row's count covers re-links, transfers and teacher moves, shown as "{n} need your OK" and linking to the class page's review sheet (row GX-3; a school admin's child classes counted through the school's new `GET /api/spaces/:id/attention`, row GX-W); counts only, never a name.
 
+> **Amended 2026-11-24 by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]** (work order WO-09 of the 2026-11 review: show the class code, not the class) (§3.5): the class page gains **Show the code** (a full-screen overlay with the code and no learner field), a student card's revisit jamo and words sit behind a closed **What to revisit** button, and a class's roll-up lines (jamo and words to revisit together, Stage 1 first-try answers) are drawn only when at least 3 learners contribute; a family roster is unchanged (rows CO-1, CO-2 and CO-2c).
+
 Parent: F-SPACE-001 (all routes exist) · F-AUTH-001 (bearer, dev fallback) · F-TCH-001 §3.2 (roster rules) · wireframes `design/wireframes/console/sign-in.md`, `onboarding-role.md`, `home.md`, `roster.md`
 
 ---

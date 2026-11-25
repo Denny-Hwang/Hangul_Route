@@ -2,6 +2,7 @@
 
 Spec: `docs/specs/F-TCH-001-teacher-classroom.md` §3.1–3.2, §3.6 · `docs/roadmap/multi-persona-sync-platform.md` §3.1 (teacher reads `summary_json` only), §3.3 (`ProgressSummary`), §4 (offline reach), §5 (re-link), §6 step 4, §7 (free cap)
 Code (F-CONSOLE-001, 2026-09-21): `apps/web/src/app/teach/space/[id]/page.tsx` — join code (copy · regenerate with confirm), cap banner from 80 %, this-week roll-up (`lib/console/rollup.ts`), student cards most-recent-first, empty state with the enlarged code panel. Not yet: plan CTA, re-link badge, settings, learner detail, anonymize mode, per-card rescue code (becomes "Issue a new code", §7 #24).
+Amended 2026-11-24 by `docs/specs/AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]: the class page's action bar gains **Show the code** (see `console/class-code-overlay.md`), and each learner card's revisit letters and words sit behind a closed **What to revisit** button (row CO-2).
 Audience: **teacher** (school admin reaches it per class, read-only)
 
 ## Scenario (Given-When-Then)

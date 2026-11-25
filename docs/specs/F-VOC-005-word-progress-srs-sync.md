@@ -7,6 +7,8 @@ Status: ready
 **Rollout**: **server first** (§3.3): PR P-1 ships and deploys before any client PR that writes the new field; the client PRs follow behind `flags.vocabTopicsEnabled`. PR order in §6.
 **Wireframes**: `wireframes/vocab-topics.md` section B (collection meter) and a Home card note in `wireframes/vocab-flashcards.md` section G; the caregiver rows are a copy change on existing screens (no new wireframe)
 
+> **Amended 2026-11-24 by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]** (work order WO-09 of the 2026-11 review: show the class code, not the class) (§3.8): on a class roster the card's "Words to revisit:" line sits behind the **What to revisit** button with the letters line (text, romanization and gloss unchanged; "Words: N collected · M strong" stays in view), and "Words to revisit together" (`vocabRevisit`) is drawn for a class only when at least 3 learners contribute; a family sees both as before (rows CO-2 and CO-2c).
+
 Parent / siblings: F-VOC-001 (ids, `senseGroup`) · F-VOC-003 (writes `introduced`, `self`, quick-check answers) · F-VOC-004 (writes speed answers, sessions) · F-SYNC-001 §3.3 (deterministic snapshot merge; "every collection only grows"), §3.4 (the summary is the only caregiver column), §3.5 (sync engine) · F-SYNC-002 (client) · F-RVW-001 §3.2 (Pools A/B/C/D, anti-staleness), §3.7 (anti-shame) · F-HW-001 §3.1 (Today's mission) · F-PAR-001 (parent dashboard) · F-TCH-001 §3.2 (no ranking, no per-student percentiles in the class roll-up) · F-CONSOLE-001 · blueprint 09 §2.3 (the simplified spaced-repetition algorithm), 02 N8 ("a word not reviewed for 3 days" nudge) · design input `topic-speed-quiz.md` §1, §5
 
 ---
