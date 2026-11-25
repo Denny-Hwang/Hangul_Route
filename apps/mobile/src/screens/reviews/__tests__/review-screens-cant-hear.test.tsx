@@ -14,6 +14,8 @@ import { byTestId, cleanup, press, render, resetPlatform } from '../../../test-s
  * `hidesRomanization`, and only while its "hide the romanization" switch is on (the asked text is then the romanization
  * only, section 3.12). `RoundView` is a stub that shows the props it got, so deleting or adding a prop at a screen turns a test red
  * (`ReviewRounds-cant-hear.test.tsx` covers what the prop does). This week in Korea is `week-drop-ui.test.tsx`.
+ * CH-1f: the stub also reports a right first answer after the ask (`asked`), and the screens must hand it whole to the
+ * memory recording and, in the Stage Check, to the stored run.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -39,8 +41,12 @@ vi.mock('../../stage-check/use-stage-offer', async (importOriginal) => ({ ...(aw
 vi.mock('../ReviewRounds', async () => {
   const { createElement } = await import('react');
   return {
-    RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
-      createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
+    RoundView: ({ cantHear, hidesRomanization, check, onFirst }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string; onFirst?: (a: object) => void }) =>
+      createElement(
+        'div',
+        { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' },
+        createElement('button', { 'data-testid': 'round-first-asked', onClick: () => onFirst?.({ correct: true, asked: true }) }, 'round'),
+      ),
   };
 });
 vi.mock('../DailyReviewRoute', async () => {
@@ -49,8 +55,12 @@ vi.mock('../DailyReviewRoute', async () => {
     dailyReviewChunk: async () => ({
       TopRow: () => createElement('div', { 'data-testid': 'top-row' }),
       DisplayHeadline: ({ children }: { children?: unknown }) => createElement('div', null, children as never),
-      RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
-        createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
+      RoundView: ({ cantHear, hidesRomanization, check, onFirst }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string; onFirst?: (a: object) => void }) =>
+        createElement(
+          'div',
+          { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' },
+          createElement('button', { 'data-testid': 'round-first-asked', onClick: () => onFirst?.({ correct: true, asked: true }) }, 'round'),
+        ),
     }),
   };
 });
@@ -66,6 +76,8 @@ const ROUND = {
   answer: { ko: { ko: '산', romanization: 'san' }, gloss: 'mountain' },
 };
 const WORLD = { kind: 'ready', world: {} };
+/** What the screens handed to the memory recording, and what the Stage Check stored. */
+const seen = vi.hoisted(() => ({ recorded: [] as unknown[], stored: [] as unknown[] }));
 vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   memoryChunk: async () => ({
@@ -74,7 +86,7 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       openingKind: () => 'daily',
       doneTodayOffer: () => 'empty',
       startSession: async () => ({ kind: 'daily', rounds: [ROUND], soundNotice: false }),
-      recordRound: async () => undefined,
+      recordRound: async (_w: unknown, _p: unknown, _i: number, answer: unknown) => void seen.recorded.push(answer),
       noteStopped: () => undefined,
       finishSession: async () => null,
       gradeTyped: () => 'miss',
@@ -83,7 +95,7 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       readWorld: async () => WORLD,
       startSession: async () => ({ cellId: 'episode:stage2-letters', mode: 'check', rounds: [ROUND], soundNotice: false }),
       started: () => undefined,
-      recordRound: async () => undefined,
+      recordRound: async (_w: unknown, _p: unknown, _i: number, answer: unknown) => void seen.recorded.push(answer),
       finishSession: async () => null,
       gradeTyped: () => 'miss',
     }),
@@ -91,7 +103,11 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       readWorld: async () => WORLD,
       startSession: async () => ({ stageKey: 'stage2', rounds: [ROUND], soundNotice: false }),
       begin: () => undefined,
-      recordRound: async () => undefined,
+      recordRound: async (_w: unknown, _p: unknown, _i: number, answer: unknown) => void seen.recorded.push(answer),
+      savedRun: (_p: unknown, run: { answers: ReadonlyMap<number, unknown> }) => {
+        seen.stored.push([...run.answers.values()]);
+        return { v: 1, kind: 'stage' };
+      },
       finishSession: async () => null,
       gradeTyped: () => 'miss',
     }),
@@ -122,6 +138,8 @@ const hidesOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub'
 const checkOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-check'];
 
 beforeEach(() => {
+  seen.recorded.length = 0;
+  seen.stored.length = 0;
   endVoiceCheckHold();
   resetRemoteConfigForTests();
   useProfileStore.setState({ profiles: [learner], activeId: ID, hydrated: true });
@@ -171,5 +189,35 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     expect(cantHearOf(r)).toBe(true);
     expect(hidesOf(r)).toBe(true);
     expect(checkOf(r)).toBe('stage-check');
+  });
+});
+
+describe('a right first answer after the ask reaches the recordings whole (CH-1f)', () => {
+  const answerAsked = async (r: ReactTestRenderer): Promise<void> => {
+    await press(byTestId(r.root, 'round-first-asked').find((n) => typeof n.props.onClick === 'function')!);
+    await settle();
+  };
+
+  it('the Daily Review records the answer with its ask', async () => {
+    const r = await draw(<DailyReviewScreen navigation={nav()} route={{ key: 'DailyReview', name: 'DailyReview' } as never} />);
+    await answerAsked(r);
+    expect(seen.recorded).toEqual([{ correct: true, asked: true }]);
+  });
+
+  it('the Cell Check records the answer with its ask', async () => {
+    const r = await draw(<CellCheckScreen navigation={nav()} route={{ key: 'CellCheck', name: 'CellCheck', params: { cellId: 'episode:stage2-letters', mode: 'check' } } as never} />);
+    await press(byTestId(r.root, 'cell-check-go').find((n) => typeof n.props.onClick === 'function')!);
+    await settle();
+    await answerAsked(r);
+    expect(seen.recorded).toEqual([{ correct: true, asked: true }]);
+  });
+
+  it('the Stage Check records the answer with its ask, and the run it stores keeps it, so a resumed round is as it was recorded', async () => {
+    const r = await draw(<StageCheckScreen navigation={nav()} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />);
+    await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onClick === 'function')!);
+    await settle();
+    await answerAsked(r);
+    expect(seen.recorded).toEqual([{ correct: true, asked: true }]);
+    expect(seen.stored.at(-1)).toEqual([{ correct: true, asked: true }]);
   });
 });

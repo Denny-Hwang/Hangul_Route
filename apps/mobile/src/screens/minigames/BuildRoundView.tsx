@@ -45,7 +45,7 @@ export function BuildRoundView({ round, onFirst, onSolved, cantHear = false, sou
         soundFirst={soundFirst}
         source="daily-review"
         testID="daily-review-build-board"
-        onFirst={(correct, hinted) => onFirst({ correct, ...(hinted ? { hinted: true } : {}) })}
+        onFirst={(correct, hinted, asked) => onFirst({ correct, ...(hinted ? { hinted: true } : {}), ...(asked === true ? { asked: true } : {}) })}
         onSolved={onSolved}
       />
     </View>

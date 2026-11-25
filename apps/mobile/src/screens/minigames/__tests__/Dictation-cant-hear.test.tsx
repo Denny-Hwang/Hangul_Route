@@ -20,7 +20,7 @@ import { TypeHangulGame } from '../TypeHangulGame';
  * speaker of a `hear` round and is inactive while the round holds (the voice list unknown, at most `HEAR_HOLD_MS`);
  * Show the letters turns the round into the `see` round that two failed plays already lead to (`HearSeeReason`
  * `'asked'`: the word, "No sound? Read it here.", no reason line), with focus on the word and nothing else announced;
- * it scores as a plain see round (the hinted mark is CH-1f); the next round opens as hear again.
+ * a right first Done there is hinted for the memory store (CH-1f); the next round opens as hear again.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -190,17 +190,67 @@ describe('Dictation, "Can\'t hear it?" (test 19)', () => {
     expect(hasId(r.root, 'dictation-asked-word')).toBe(true);
   });
 
-  it('scores as a plain see round (a right first Done carries no hinted mark: CH-1f), and the next round opens as hear with the link again', async () => {
+  it('a right first Done after Show the letters is hinted (CH-1f), and the next round opens as hear with the link again', async () => {
     const { r, answers } = await game([APPLE, MILK]);
     await showLetters(r);
     await typeKeys(r, 'ㅅㅏㄱㅗㅏ');
     await tap(r, 'type-hangul-done');
-    expect(answers).toEqual([[0, true, { itemId: 'd-apple' }]]);
+    expect(answers).toEqual([[0, true, { itemId: 'd-apple', hinted: true }]]);
     await tick(2000);
     expect(texts(r)).toContain(TH.hear.meaning('milk'));
     expect(texts(r)).not.toContain('우유');
     expect(hasId(r.root, 'cant-hear')).toBe(true);
     expect(hasId(r.root, 'dictation-notice')).toBe(false);
+  });
+
+  it('a wrong first Done after Show the letters is a plain miss (CH-1f): correct false, no hinted mark', async () => {
+    const { r, answers } = await game([APPLE]);
+    await showLetters(r);
+    await typeKeys(r, 'ㅇㅜㅇㅠ');
+    await tap(r, 'type-hangul-done');
+    expect(answers).toEqual([[0, false, { itemId: 'd-apple' }]]);
+  });
+
+  it('a right first Done in the hear round with no ask is not marked; Sound off, no Korean voice, two failed plays and "Always show the letters" are not asks either (CH-1f)', async () => {
+    const heard = await game([APPLE]);
+    await typeKeys(heard.r, 'ㅅㅏㄱㅗㅏ');
+    await tap(heard.r, 'type-hangul-done');
+    expect(heard.answers).toEqual([[0, true, { itemId: 'd-apple' }]]);
+
+    const done = async (g: { r: ReactTestRenderer; answers: Answer[] }): Promise<Answer[]> => {
+      await typeKeys(g.r, 'ㅅㅏㄱㅗㅏ');
+      await tap(g.r, 'type-hangul-done');
+      return g.answers;
+    };
+    useAudioStore.setState({ muted: true });
+    expect(await done(await game([APPLE]))).toEqual([[0, true, { itemId: 'd-apple' }]]);
+    useAudioStore.setState({ muted: false, tts: { state: 'none', reason: 'no_korean_voice' } });
+    expect(await done(await game([APPLE]))).toEqual([[0, true, { itemId: 'd-apple' }]]);
+    useAudioStore.setState({ tts: { state: 'ready', voiceId: 'com.apple.voice.Yuna', voiceName: 'Yuna', local: true, quality: 'standard' }, showLetters: true });
+    expect(await done(await game([APPLE]))).toEqual([[0, true, { itemId: 'd-apple' }]]);
+  });
+
+  it('two failed plays turn the round into the see round with reason error: a right Done there is not marked', async () => {
+    rig.current!.synth.speak = () => {
+      throw new Error('no speech');
+    };
+    const g = await game([APPLE]);
+    await tap(g.r, 'dictation-prompt-speaker');
+    await tap(g.r, 'dictation-prompt-speaker');
+    await tick(100);
+    expect(texts(g.r)).toContain('사과');
+    expect(hasId(g.r.root, 'cant-hear')).toBe(false);
+    await typeKeys(g.r, 'ㅅㅏㄱㅗㅏ');
+    await tap(g.r, 'type-hangul-done');
+    expect(g.answers).toEqual([[0, true, { itemId: 'd-apple' }]]);
+  });
+
+  it('a one-letter slip after Show the letters is a plain miss: the see round shows the word, so it is not help given', async () => {
+    const { r, answers } = await game([APPLE]);
+    await showLetters(r);
+    await typeKeys(r, 'ㅅㅏㄱㅗㅓ');
+    await tap(r, 'type-hangul-done');
+    expect(answers).toEqual([[0, false, { itemId: 'd-apple' }]]);
   });
 
   it('the asked text stays when the voice list later says there is no Korean voice', async () => {
@@ -285,6 +335,52 @@ describe('Dictation in a review round, "Can\'t hear it?"', () => {
     expect(notice).not.toContain(T.noKoreanVoiceSentence);
     expect(reader.log).toEqual(['focus:none', 'focus:dictation-asked-word']);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+  });
+
+  /** The first answer the review round reports, after the learner types `jamo` and taps Done. */
+  async function firstAnswer(r: ReactTestRenderer, onFirst: ReturnType<typeof vi.fn>, jamo: string): Promise<unknown> {
+    await typeKeys(r, jamo);
+    await tap(r, 'daily-review-type-done');
+    return onFirst.mock.calls[0]?.[0];
+  }
+  async function reviewWith(onFirst: ReturnType<typeof vi.fn>, check?: 'stage-check'): Promise<ReactTestRenderer> {
+    const r = await render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
+        <TypeRoundView round={ROUND} cantHear {...(check ? { check } : {})} reducedMotion onFirst={onFirst} onSolved={() => undefined} grade={(target, typed) => (typed === target ? 'right' : 'miss')} />
+      </LayoutProvider>,
+      { createNodeMock: focusNodes(FOCUS) as never },
+    );
+    mounted.push(r);
+    await tick(50);
+    return r;
+  }
+
+  it('the hinted mark (CH-1f): a right first Done after Show the letters says asked, a wrong one is a plain miss, no ask says nothing; the review keeps its stars (no `hinted`)', async () => {
+    const askedRight = vi.fn();
+    const a = await reviewWith(askedRight, 'stage-check');
+    await showLetters(a);
+    expect(await firstAnswer(a, askedRight, 'ㅅㅏㄱㅗㅏ')).toEqual({ correct: true, asked: true });
+
+    const askedWrong = vi.fn();
+    const b = await reviewWith(askedWrong);
+    await showLetters(b);
+    expect(await firstAnswer(b, askedWrong, 'ㅇㅜㅇㅠ')).toEqual({ correct: false });
+
+    const plain = vi.fn();
+    const c = await reviewWith(plain);
+    expect(await firstAnswer(c, plain, 'ㅅㅏㄱㅗㅏ')).toEqual({ correct: true });
+  });
+
+  it('the hinted mark (CH-1f): Sound off, no Korean voice and "Always show the letters" are not asks', async () => {
+    useAudioStore.setState({ muted: true });
+    const off = vi.fn();
+    expect(await firstAnswer(await reviewWith(off), off, 'ㅅㅏㄱㅗㅏ')).toEqual({ correct: true });
+    useAudioStore.setState({ muted: false, tts: { state: 'none', reason: 'no_korean_voice' } });
+    const none = vi.fn();
+    expect(await firstAnswer(await reviewWith(none), none, 'ㅅㅏㄱㅗㅏ')).toEqual({ correct: true });
+    useAudioStore.setState({ tts: { state: 'ready', voiceId: 'com.apple.voice.Yuna', voiceName: 'Yuna', local: true, quality: 'standard' }, showLetters: true });
+    const always = vi.fn();
+    expect(await firstAnswer(await reviewWith(always), always, 'ㅅㅏㄱㅗㅏ')).toEqual({ correct: true });
   });
 
   it('in a Stage or Cell Check (check) Always show the letters does not open the hear round as a see round: sound first, with the link', async () => {

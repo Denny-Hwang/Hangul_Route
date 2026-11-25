@@ -58,9 +58,15 @@ export interface QuestReviewPlan {
 
 // ---- what a session leaves behind ----------------------------------------------------------------------
 
-/** One first try: the option tapped first decides; a hint never shows before it, so none is hinted. */
-export function firstTryAnswer(round: Pick<PickRound, 'itemId' | 'answerId' | 'rung'>, optionId: string): MemoryAnswer {
-  return { itemId: round.itemId, correct: optionId === round.answerId, rung: round.rung };
+/**
+ * One first try: the option tapped first decides; no hint of the game's own shows before it. `asked`: the learner asked
+ * for the letters in this round (Show the letters, AMENDMENTS-AUDIO-CANT-HEAR CH-1f, section 3.13), so a right first try
+ * is hinted for the memory store (no promotion, no demotion) and a miss is a plain miss. The session's stars and its
+ * missed items follow `correct` alone.
+ */
+export function firstTryAnswer(round: Pick<PickRound, 'itemId' | 'answerId' | 'rung'>, optionId: string, asked = false): MemoryAnswer {
+  const correct = optionId === round.answerId;
+  return { itemId: round.itemId, correct, rung: round.rung, ...(asked && correct ? { hinted: true } : {}) };
 }
 
 /** Try these again's stars (F-RVW-001 section 3.1): right on the first try out of the rounds answered, never 0. */

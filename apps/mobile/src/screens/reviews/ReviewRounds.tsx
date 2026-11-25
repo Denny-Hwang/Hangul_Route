@@ -166,7 +166,9 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
     const right = option.id === round.answerId;
     if (!answered.current) {
       answered.current = true;
-      onFirst({ correct: right });
+      // A right first answer after the learner's own Show the letters reaches the memory store as hinted; a miss stays a
+      // plain miss and the stars are as without the ask (AMENDMENTS-AUDIO-CANT-HEAR CH-1f, section 3.13).
+      onFirst({ correct: right, ...(right && slot.asked ? { asked: true } : {}) });
     }
     if (right) {
       success();
@@ -357,7 +359,10 @@ function TypeRoundBody({
       answered.current = true;
       // A right answer after "Show how it sounds" is a hinted one too (section 4.3).
       const hinted = grade === 'hinted' || (grade === 'right' && heard !== null && heard.revealed);
-      onFirst({ correct: grade !== 'miss', ...(hinted ? { hinted: true } : {}) });
+      // An exact answer to the `see` round the learner's own Show the letters made is recorded as hinted for the memory
+      // store, with the stars as they were (CH-1f, section 3.13); Sound off, no voice, a failed play and "Always" are other reasons.
+      const asked = grade === 'right' && heard !== null && heard.mode === 'see' && heard.reason === 'asked';
+      onFirst({ correct: grade !== 'miss', ...(hinted ? { hinted: true } : {}), ...(asked ? { asked: true } : {}) });
     }
     if (grade === 'right') {
       success();

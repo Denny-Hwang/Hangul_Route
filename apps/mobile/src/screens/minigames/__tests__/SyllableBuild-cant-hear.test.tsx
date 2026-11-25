@@ -28,7 +28,7 @@ const BAP = { ko: '밥', romanization: 'bap', gloss: 'rice, a meal' };
 const TILES = { firstTiles: ['ㄱ', 'ㅂ', 'ㅁ', 'ㄷ'], vowelTiles: ['ㅏ', 'ㅓ', 'ㅗ', 'ㅜ'], finalTiles: ['ㅂ', 'ㄴ', 'ㅇ'] };
 const mounted: ReactTestRenderer[] = [];
 
-async function mount(props: { cantHear?: boolean; onFirst?: (c: boolean, h: boolean) => void } = {}): Promise<ReactTestRenderer> {
+async function mount(props: { cantHear?: boolean; onFirst?: (c: boolean, h: boolean, a?: boolean) => void } = {}): Promise<ReactTestRenderer> {
   let r!: ReactTestRenderer;
   await act(async () => {
     r = TestRenderer.create(
@@ -74,7 +74,7 @@ describe('Syllable Build, "Can\'t hear it?" (test 18)', () => {
     expect(hasId(off.root, 'cant-hear')).toBe(false);
   });
 
-  it('Show the letters: focus goes to the speaker, then the block\'s romanization comes up (never the block), and the round goes on without a hint', async () => {
+  it('Show the letters: focus goes to the speaker, then the block\'s romanization comes up (never the block), and the round goes on with the ask marked', async () => {
     const onFirst = vi.fn();
     const r = await mount({ cantHear: true, onFirst });
     expect(hasId(r.root, 'syllable-build-sound')).toBe(false);
@@ -88,12 +88,12 @@ describe('Syllable Build, "Can\'t hear it?" (test 18)', () => {
     expect(textOf(byTestId(r.root, 'syllable-build-sound')[0]!)).toBe('bap');
     expect(reader.announced).toEqual(['bap']);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
-    // The block is still the answer: nothing printed it, and the answer is scored as an ordinary right one.
+    // The block is still the answer: nothing printed it, and the answer is scored as a right one (marked asked, CH-1f).
     expect(byTestId(r.root, 'syllable-build-built')).toHaveLength(0);
     await tap(r.root, 'syllable-build-tile-first:ㅂ');
     await tap(r.root, 'syllable-build-tile-vowel:ㅏ');
     await tap(r.root, 'syllable-build-tile-final:ㅂ');
-    expect(onFirst).toHaveBeenCalledWith(true, false);
+    expect(onFirst).toHaveBeenCalledWith(true, false, true);
   });
 
   it('Always show the letters (CH-2): the round opens with the block\'s romanization (never the block) and no link; the Block Sprint is left alone', async () => {
@@ -130,5 +130,99 @@ describe('the quest step passes it (test 18)', () => {
     });
     mounted.push(r);
     expect(hasId(r.root, 'cant-hear')).toBe(true);
+  });
+});
+
+/**
+ * The hinted mark (AMENDMENTS-AUDIO-CANT-HEAR row CH-1f, section 3.13, test 22): a right first block after the learner's own
+ * Show the letters says `asked` (third argument), though `voice` is off then and the "Show how it sounds" reveal alone would
+ * not count; a wrong block after it is a plain miss; text with no ask says nothing.
+ */
+describe('Syllable Build, the hinted mark (CH-1f, test 22)', () => {
+  const build = async (r: ReactTestRenderer, vowel: string): Promise<void> => {
+    await tap(r.root, 'syllable-build-tile-first:ㅂ');
+    await tap(r.root, `syllable-build-tile-vowel:${vowel}`);
+    await tap(r.root, 'syllable-build-tile-final:ㅂ');
+  };
+  const ask = async (r: ReactTestRenderer): Promise<void> => {
+    await tap(r.root, 'cant-hear');
+    await tap(r.root, 'cant-hear-show-letters');
+    await tick(400);
+  };
+
+  it('asked, then the right block first: `onFirst(true, false, true)`', async () => {
+    const onFirst = vi.fn();
+    const r = await mount({ cantHear: true, onFirst });
+    await ask(r);
+    await build(r, 'ㅏ');
+    expect(onFirst.mock.calls).toEqual([[true, false, true]]);
+  });
+
+  it('asked, then a wrong block first: a plain miss, `onFirst(false, false)`, and the fixed block after it is not another first answer', async () => {
+    const onFirst = vi.fn();
+    const r = await mount({ cantHear: true, onFirst });
+    await ask(r);
+    await build(r, 'ㅓ');
+    await tap(r.root, 'syllable-build-tile-vowel:ㅏ');
+    expect(onFirst.mock.calls).toEqual([[false, false]]);
+  });
+
+  it('not asked: `onFirst(true, false)`, with no third argument', async () => {
+    const onFirst = vi.fn();
+    const r = await mount({ cantHear: true, onFirst });
+    await build(r, 'ㅏ');
+    expect(onFirst.mock.calls).toEqual([[true, false]]);
+  });
+
+  it('Show how it sounds first and Show the letters after it: the right block is still marked asked', async () => {
+    const onFirst = vi.fn();
+    const r = await mount({ cantHear: true, onFirst });
+    await tap(r.root, 'syllable-build-meaning');
+    await ask(r);
+    await build(r, 'ㅏ');
+    expect(onFirst.mock.calls.length).toBe(1);
+    expect(onFirst.mock.calls[0]?.[0]).toBe(true);
+    expect(onFirst.mock.calls[0]?.[2]).toBe(true);
+  });
+
+  it('Sound off and "Always show the letters" show the romanization with no ask: no mark', async () => {
+    const off = vi.fn();
+    useAudioStore.setState({ muted: true });
+    const muted = await mount({ cantHear: true, onFirst: off });
+    await build(muted, 'ㅏ');
+    expect(off.mock.calls).toEqual([[true, false]]);
+    useAudioStore.setState({ muted: false, showLetters: true });
+    const always = vi.fn();
+    const r = await mount({ cantHear: true, onFirst: always });
+    await build(r, 'ㅏ');
+    expect(always.mock.calls).toEqual([[true, false]]);
+  });
+
+  it('the quest step: asked, then the right block is hinted for the host; a wrong block is a plain miss; no ask says nothing', async () => {
+    const round = { id: 'sb:bap', target: { ko: '밥', romanization: 'bap', en: 'rice, a meal' }, ...TILES };
+    const seen: Array<[boolean, unknown]> = [];
+    const host: MinigameHost = { mode: 'quest', answer: (_k, correct, meta) => void seen.push([correct, meta]), complete: () => undefined };
+    const play = async (steps: (r: ReactTestRenderer) => Promise<void>, vowel: string): Promise<void> => {
+      let r!: ReactTestRenderer;
+      await act(async () => {
+        r = TestRenderer.create(
+          <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
+            <SyllableBuildGame scope={{ kind: 'syllable-build', syllableBuild: { rounds: [round] } }} host={host} />
+          </LayoutProvider>,
+          { createNodeMock: focusNodes(['syllable-build-speaker']) as never },
+        );
+      });
+      mounted.push(r);
+      await steps(r);
+      await build(r, vowel);
+    };
+    await play(ask, 'ㅏ');
+    await play(ask, 'ㅓ');
+    await play(async () => undefined, 'ㅏ');
+    expect(seen).toEqual([
+      [true, { itemId: 'sb:bap', hinted: true }],
+      [false, { itemId: 'sb:bap' }],
+      [true, { itemId: 'sb:bap' }],
+    ]);
   });
 });

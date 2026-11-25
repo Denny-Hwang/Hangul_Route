@@ -124,12 +124,24 @@ export function dailyReviewSummary(ctx: EngineContext, reviews: readonly ReviewE
 /** One round's first answer, the scored one (later taps or Dones are retries). */
 export interface RoundAnswer {
   correct: boolean;
+  /** Answered with a hint of the round's own (Show how it sounds, a one-letter slip): a hinted answer counts against the stars. */
   hinted?: boolean;
+  /**
+   * The learner asked for the letters in the round ("Can't hear it?" then Show the letters, AMENDMENTS-AUDIO-CANT-HEAR
+   * CH-1f, section 3.13) and the first answer is right: the memory store records it as hinted (no promotion, no demotion).
+   * Set on a right answer only, so a miss after the ask stays a plain miss. Unlike `hinted` it leaves the stars alone
+   * (`sessionResult`): the owner decision keeps the Check's result as it was.
+   */
+  asked?: boolean;
 }
 
-/** A round's first answer as the memory store records it (the round's rung, the engine's hinted rule). */
+/**
+ * A round's first answer as the memory store records it (the round's rung, the engine's hinted rule). A right answer
+ * after the learner's own ask is hinted for the store, whatever `hinted` says.
+ */
 export function memoryAnswerOf(round: ReviewRound, answer: RoundAnswer): MemoryAnswer {
-  return { itemId: round.question.itemId, rung: round.question.rung, correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}) };
+  const hinted = answer.hinted === true || (answer.asked === true && answer.correct);
+  return { itemId: round.question.itemId, rung: round.question.rung, correct: answer.correct, ...(hinted ? { hinted: true } : {}) };
 }
 
 export interface SessionResult {

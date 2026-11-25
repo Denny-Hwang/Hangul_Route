@@ -58,6 +58,7 @@ vi.mock('../../../store/remote-config-store', async (importOriginal) => ({
 }));
 vi.mock('../dictation-entry', () => ({ useSwitchedScope: (scope: unknown) => ({ kind: 'ready', scope, kit: null }) }));
 vi.mock('../TypeHangulGame', () => ({ TypeHangulGame: hosts.capture }));
+vi.mock('../ListenPickGame', () => ({ ListenPickGame: hosts.capture }));
 vi.mock('../story-order/StoryOrderStep', () => ({ StoryOrderStep: hosts.capture }));
 vi.mock('../role-play/role-play-entry', () => ({ RolePlayStep: hosts.capture }));
 vi.mock('../../../store/quest-run-store', () => {
@@ -102,11 +103,24 @@ describe('the quest host passes a hint to the run store by the game that showed 
     ]);
   });
 
-  it.each(['story-order', 'role-play'])('%s: the hint counts only with a right answer; a hinted miss is a plain miss', async (kind) => {
+  it.each(['story-order', 'role-play', 'listen-pick'])('%s: the hint counts only with a right answer; a hinted miss is a plain miss', async (kind) => {
     expect(await hintedOf(kind)).toEqual([
       [true, true],
       [false, false],
       [false, false],
+    ]);
+  });
+
+  // AMENDMENTS-AUDIO-CANT-HEAR CH-1f: Listen & Pick says `hinted: true` on a right first answer after the learner's own ask.
+  it('Listen & Pick in the quest Check: a right first answer after the ask reaches the run store hinted, with what it asked; the stars follow `correct`', async () => {
+    mounted = await render(<MinigameScreen route={route('listen-pick')} onBack={() => undefined} />);
+    const host = hosts.last;
+    expect(host?.mode).toBe('check');
+    host!.answer('r1', true, { itemId: 'i1', hinted: true });
+    host!.answer('r2', true, { itemId: 'i2' });
+    expect(runStore.answers.map((a) => [a[1], (a[2] as { itemId: string }).itemId, (a[2] as { hinted?: boolean }).hinted, a[3]])).toEqual([
+      [true, 'i1', true, true],
+      [true, 'i2', undefined, false],
     ]);
   });
 });
