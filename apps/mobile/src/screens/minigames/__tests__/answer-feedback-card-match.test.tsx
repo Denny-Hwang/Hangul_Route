@@ -3,7 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RESULT_MARK_MIN_MS, answerAnnouncement, answerItem, type AnswerResult } from '../../../logic/answer-feedback';
-import { cardTopPadding } from '../../../logic/card-match-style';
+import { cardTopPadding } from '../card-match-style';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { endVoiceCheckHold, useAudioStore } from '../../../store/audio-store';
 import { useLocaleStore } from '../../../store/locale-store';

@@ -35,7 +35,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { afterRightAnswer, answerItem, answerOptionLabel } from '../../logic/answer-feedback';
-import { CARD_MARK, PICK_RING, cardMatchStyle, cardTopPadding, type CardMatchState } from '../../logic/card-match-style';
+import { CARD_MARK, PICK_RING, cardMatchStyle, cardTopPadding, type CardMatchState } from './card-match-style';
 import type { MinigameScope } from '../../logic/minigame-config';
 import type { RoundAsked } from '../../logic/memory/asked';
 import { pairRoundKey } from '../../logic/round-keys';

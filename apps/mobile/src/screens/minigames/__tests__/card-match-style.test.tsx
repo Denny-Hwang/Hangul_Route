@@ -1,7 +1,6 @@
-import { borderWidth, colors, spacing } from '@hangul-route/design-system/tokens';
+import { MARK_MIN, borderWidth, colors, spacing } from '@hangul-route/design-system';
 import { describe, expect, it } from 'vitest';
-import { MARK_MIN } from '../../../../../packages/design-system/src/answer-mark';
-import { WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio } from '../../../../../packages/design-system/src/contrast';
+import { WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio } from '../../../../../../packages/design-system/src/contrast';
 import { CARD_MATCH_STATES, CARD_MARK, PICK_RING, cardMatchStyle, cardTopPadding } from '../card-match-style';
 
 /**

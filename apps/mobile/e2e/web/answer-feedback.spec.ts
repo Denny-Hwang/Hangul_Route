@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, passDiscover } from './helpers';
+import { journeyCellName, onboardChild, openPlaygroundWordsQuest, passDiscover } from './helpers';
 
 /**
  * F-A11Y-001 row AF-2 (§6 test 18): in the Culture Quiz, after a right answer, one `aria-live="polite"` region holds
@@ -61,4 +61,49 @@ test('Culture Quiz: a right answer is said once, in one polite live region, and 
   await expect(page.locator('[aria-live="assertive"]')).toHaveCount(0);
   // Still the answered round: the quiz has not moved on while it was read.
   await expect(page.getByText('1 / 4', { exact: true })).toBeVisible();
+});
+
+/**
+ * F-A11Y-001 row AF-3 (§6 test 13, e2e): in Card Match a wrong meaning stays marked (named "Not this one: ...", with no
+ * timer to let it go) while the Korean word is still picked, Hoya's try-another bubble is not a live region, the
+ * announcer says each result once in the one polite region, a right pair names both cards "Right answer: ...", and
+ * nothing on the page is `aria-live="assertive"`.
+ */
+test('Card Match: a miss stays marked, a right pair is named with its state first, each result is said once', async ({ page }) => {
+  await openPlaygroundWordsQuest(page, { largest: false });
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByTestId('card-match-ko-board')).toBeVisible();
+
+  // The first Korean word is geune (swing) and the second mikkeureomteul (slide); a pair shares its index across the columns.
+  const announcer = page.getByTestId('answer-announcer');
+  await expect(announcer).toHaveAttribute('aria-live', 'polite');
+  await expect(announcer).toHaveText('');
+  const swing = page.getByTestId('card-match-en-0');
+  const slide = page.getByTestId('card-match-en-1');
+  await expect(swing).toHaveText('swing');
+  await expect(slide).toHaveText('slide');
+
+  await page.getByTestId('card-match-ko-0').click();
+  await expect(page.getByTestId('card-match-ko-0')).toHaveAttribute('aria-selected', 'true');
+  await slide.click();
+  await expect(slide).toHaveAccessibleName('Not this one: English meaning slide');
+  await expect(announcer).toHaveText('Not a match: geune and slide. Try another.');
+  // The try-another line is on the page and is not a live region.
+  await expect(page.getByText('Not a match. Try another meaning.')).toBeVisible();
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: 'Try another meaning' })).toHaveCount(0);
+
+  // No timer lets the mark or the pick go.
+  await page.waitForTimeout(2500);
+  await expect(slide).toHaveAccessibleName('Not this one: English meaning slide');
+  await expect(page.getByTestId('card-match-ko-0')).toHaveAttribute('aria-selected', 'true');
+
+  // The right meaning at once: one result line, both cards named by their state first, the marks gone.
+  await swing.click();
+  await expect(swing).toHaveAccessibleName('Right answer: English meaning swing');
+  await expect(page.getByTestId('card-match-ko-0')).toHaveAccessibleName('Right answer: Korean word geune');
+  await expect(announcer).toHaveText('Right answer: geune, swing.');
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: 'Right answer:' })).toHaveCount(1);
+  await expect(page.locator('[aria-live="assertive"]')).toHaveCount(0);
+  await expect(slide).toHaveAccessibleName('English meaning slide');
 });

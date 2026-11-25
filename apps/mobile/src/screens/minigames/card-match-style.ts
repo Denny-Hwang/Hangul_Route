@@ -1,4 +1,4 @@
-import { borderWidth, colors, spacing } from '@hangul-route/design-system/tokens';
+import { MARK_MIN, borderWidth, colors, spacing } from '@hangul-route/design-system';
 
 /**
  * Card Match's card, as a pure style (F-A11Y-001 §3.1, §3.5; row AF-3; design/components/AnswerFeedback/spec.md D5).
@@ -56,9 +56,7 @@ export function cardMatchStyle(state: CardMatchState): CardMatchLook {
 }
 
 /** The mark: `MARK_MIN` (20) in the top-end corner, `spacing.xs` in from the border (AnswerFeedback D1, D5). */
-// `MARK_MIN` of the design system (`answer-mark.ts`: `spacing.lg + spacing.xs`), written as its sum so this logic file
-// loads without the component index; the test pins them equal.
-export const CARD_MARK = { size: spacing.lg + spacing.xs, inset: spacing.xs } as const;
+export const CARD_MARK = { size: MARK_MIN, inset: spacing.xs } as const;
 
 /**
  * The top band every card keeps: `max(spacing.xl, cardPadding)`. The mark ends 24 below the top (inset + size), so the
