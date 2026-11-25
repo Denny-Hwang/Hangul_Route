@@ -749,6 +749,7 @@ describe('precacheReport and its budget lines', () => {
     // [AF] AF-4a merged with AF-3 (Card Match) measures 4,633,012 B (release build, CI=1): 4,637,000 B.
     // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-4 (the save-failed page's en strings and failed-phase plumbing) on top of AF-3 measures 4,629,855 B (release build, CI=1): 4,633,900 B.
     // [AF] [LR] Rows LR-4 and AF-4a merged (main f31c6b313 with LR-4, AF-3 and AF-4a) measure 4,634,508 B (release build, CI=1): 4,638,500 B.
+    // [AF] AF-4b (the choice games on the announcer, +7,348 B raw) with Realia Read moved to a chunk of its own measures 4,634,003 B (release build, CI=1): the line stays 4,638,500 B.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_638_500);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown

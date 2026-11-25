@@ -225,7 +225,7 @@ test('Match Shape off (built-in pct 0): the same steps play Read Pick, and the q
     if (step === 1) await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(page.getByTestId('read-pick-game')).toBeVisible();
     await expect(page.getByTestId('match-shape-game')).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Which sound does this letter make?' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Which sound does this letter make?', exact: true })).toBeVisible();
     if (step === 0) {
       await expectNoHorizontalOverflow(page);
       await shot(page, 'match-shape-off-read-pick-320');

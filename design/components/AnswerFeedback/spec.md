@@ -324,6 +324,12 @@ native OS font scale multiplies every size alike (`text-size.ts:85`), so 200 % h
 - **F3** The level check's screen-reader switch (`OptionsScreen.tsx:189-198`): its `border.strong` off track is 1.95:1;
   give it D10's `border.shape` track and whole-row target.
 - **F4** Marks that grow with the text size (capped near 1.5x), once AF-1 has landed `MARK_MIN`.
+- **F6** Seen in AF-4b's shots (`shots/af-4b/pic-word-320-largest-*`), not changed there: Pic-Word Match's two columns are
+  about 123 dp wide at 320 with the Largest text step, so a word card's text column (the Korean chip, 65 dp, beside the 24
+  mark column and the row gap) is 10 dp short, and the `check` or `replay` mark overlaps the chip's edge (the check is half
+  hidden in "right"). The name, the fill and the pair's number badge still carry the state. Options: a word card in
+  `layout="tile"` (the mark on a corner disc, as ChoiceCard's picture options in a grid), or `paddingHorizontal` `md` for a card in a
+  column narrower than 140 dp.
 - **F5** Narrow text columns at 200 %: Card Match's meanings ("kimch/i"), HoyaBubble's text beside its 72 dp Hoya
   ("describin/g"); and break romanization at syllable boundaries ("annyeong-haseyo") rather than at any letter.
 
