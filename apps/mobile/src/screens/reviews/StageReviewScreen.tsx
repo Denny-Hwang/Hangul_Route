@@ -20,12 +20,13 @@ import { formatDate } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Modal, Pressable, View, type PressableStateCallbackType } from 'react-native';
+import { Modal, Platform, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll, stage1Cards } from '../../content';
 import { RomanizationModeOverride, useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
+import { resumableHangulCheck, type ResumableHangulCheck } from '../../logic/reviews/saved-check';
 import { buildHangulCheck } from '../../logic/stage1/hangul-check';
 import {
   guardsBack,
@@ -36,6 +37,7 @@ import {
   reviewResultView,
   reviewStartEvent,
   stageCertificateEntry,
+  stageCertificateId,
   startReviewFlow,
   stepReviewFlow,
   tallyReview,
@@ -43,8 +45,10 @@ import {
   type ReviewFlowEvent,
   type ReviewResultView,
 } from '../../logic/stage1/review-flow';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
+import { clearSavedCheck, keepReviewRunSaved, readSavedCheck, type ReviewRunSaveContext } from '../../store/check-run-saved';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { reviewHost, useReviewRunStore } from '../../store/review-run-store';
@@ -57,9 +61,12 @@ import { SaveLaterLine } from './SaveLaterLine';
  * F-QUEST-002 §3.9 — the Hangul Check (wireframe `design/wireframes/reviews/hangul-check.md`).
  * Intro with the per-attempt "hide the romanization" switch, 5 parts of 7 Listen & Pick items in
  * review mode with a Hoya pause between parts, then stars, Hoya, a certificate, the tip letters
- * and the Stage 1 cards. It never gates anything; stopping saves nothing. The behaviour lives in
- * `logic/stage1/review-flow.ts`; the run in `store/review-run-store.ts`; the one write is
- * `progress-store.recordReview` (the caregiver channel).
+ * and the Stage 1 cards. It never gates anything. The behaviour lives in `logic/stage1/review-flow.ts`; the run in
+ * `store/review-run-store.ts`; the one write to the progress is `progress-store.recordReview` (the caregiver channel).
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (section 3.4): a stopped or interrupted check goes on. Its first answers
+ * are kept on this device after each answer (`store/check-run-saved.ts`, `hr:check-run:<profileId>`, 24 hours, the
+ * answers only); the screen reads them before the intro (the `reading` phase, at most 800 ms) and offers "Pick up where
+ * you left off?". Stop keeps them (OD-LR1 (c)); the result and Let's go clear them.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StageReview'>;
@@ -98,6 +105,12 @@ export function StageReviewScreen({ route, navigation }: Props): ReactElement {
   return <HangulCheck navigation={navigation} />;
 }
 
+/** Whether the progress already holds the entry of the Hangul Check that began at `startedAt`. */
+function recordedCheck(profileId: string, startedAt: string): boolean {
+  const id = stageCertificateId(startedAt);
+  return (useProgressStore.getState().byProfile[profileId]?.reviews ?? []).some((r) => r.id === id);
+}
+
 function HangulCheck({ navigation }: { navigation: Props['navigation'] }): ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageReview;
@@ -106,10 +119,17 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   const profileMode = useRomanizationMode();
   const recordReview = useProgressStore((s) => s.recordReview);
   const ownedIds = useProgressStore((s) => (profile ? s.byProfile[profile.id]?.cards : undefined));
-  const [check] = useState(() => buildHangulCheck({ seed: Math.floor(Math.random() * 0x7fffffff) }));
-  const [flow, setFlow] = useState(() => startReviewFlow({ chunks: check.chunks.length, romanizationMode: profileMode }));
+  // The seed of this visit's check; a resumed check swaps in the stored seed (the check is deterministic by seed).
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const check = useMemo(() => buildHangulCheck({ seed }), [seed]);
+  const [flow, setFlow] = useState(() => startReviewFlow({ chunks: check.chunks.length, romanizationMode: profileMode, reading: true }));
   const flowRef = useRef(flow);
   const [result, setResult] = useState<{ view: ReviewResultView; at: string } | null>(null);
+  // [LR] The stored check this visit found (the resume page's Continue), and what the run is stored with while it is kept.
+  const offer = useRef<ResumableHangulCheck | null>(null);
+  const [kept, setKept] = useState<ReviewRunSaveContext | null>(null);
+  // The start time of the check in play (a resumed check keeps its own): the entry's identity, so a finish is once only.
+  const startedAtRef = useRef<string | null>(null);
 
   // Set before the flow's own exits, so the back guard below lets them through.
   const allowLeave = useRef(false);
@@ -126,15 +146,30 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
       switch (effect.type) {
         case 'started':
           useReviewRunStore.getState().begin(check.items.map((i) => i.id));
-          if (profile) void track(reviewStartEvent(profile.id, effect.hideRomanization));
+          if (profile) {
+            // A new check forgets the stored one, and from its first answer it is stored in its place (section 3.4).
+            void clearSavedCheck(profile.id);
+            const startedAt = new Date().toISOString();
+            startedAtRef.current = startedAt;
+            setKept({ seed, hideRomanization: effect.hideRomanization, startedAt });
+            void track(reviewStartEvent(profile.id, effect.hideRomanization));
+          }
           return;
         case 'finished': {
+          setKept(null);
+          if (profile) void clearSavedCheck(profile.id);
           const run = useReviewRunStore.getState();
           const tally = tallyReview(run.itemIds, run.answers);
           const now = new Date();
           if (profile) {
-            recordReview(profile.id, stageCertificateEntry({ itemIds: run.itemIds, tally, now }));
-            void track(reviewCompleteEvent(profile.id, tally));
+            // [LR] A finished check is recorded once: its entry is named by its start time, so a stored run that outlived
+            // its result (a kill before the clear, a clear that failed) and is continued records and reports nothing again.
+            const startedAt = startedAtRef.current ?? undefined;
+            const recorded = startedAt !== undefined && recordedCheck(profile.id, startedAt);
+            if (!recorded) {
+              recordReview(profile.id, stageCertificateEntry({ itemIds: run.itemIds, tally, now, startedAt }));
+              void track(reviewCompleteEvent(profile.id, tally));
+            }
           }
           setResult({ view: reviewResultView(tally), at: now.toISOString() });
           run.reset();
@@ -145,7 +180,7 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
           return;
       }
     },
-    [check, profile, recordReview, exit],
+    [check, seed, profile, recordReview, exit],
   );
 
   const dispatch = useCallback(
@@ -158,7 +193,60 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     [runEffect],
   );
 
-  // Leaving the screen any other way forgets the run too: nothing is saved, nothing is lost.
+  // [LR] Reading: the stored check, for at most the read's limit; a read that lands later offers the resume page only
+  // while the intro shows and nothing has started (the flow ignores it after Let's go).
+  const profileId = profile?.id;
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
+  useEffect(() => {
+    const send = (found: boolean): void => dispatchRef.current({ type: 'read', found });
+    if (!profileId) {
+      send(false);
+      return undefined;
+    }
+    let live = true;
+    const offered = (value: unknown): boolean => {
+      const found = resumableHangulCheck(value, Date.now(), (s) => buildHangulCheck({ seed: s }));
+      if (found === null) return false;
+      // A stored run whose check was already recorded (a kill before the clear after the result, or a clear that failed)
+      // is not offered; it goes.
+      if (recordedCheck(profileId, found.startedAt)) {
+        void clearSavedCheck(profileId);
+        return false;
+      }
+      offer.current = found;
+      return true;
+    };
+    void readSavedCheck(profileId, {
+      onLate: (value) => {
+        if (live) send(offered(value));
+      },
+    }).then((value) => {
+      if (live) send(offered(value));
+    });
+    return () => {
+      live = false;
+    };
+  }, [profileId]);
+
+  // [LR] While a check runs, each answer is kept on the device (OD-LR9 (b)); Stop and a reload leave it stored.
+  useEffect(() => (profileId && kept ? keepReviewRunSaved(profileId, kept) : undefined), [profileId, kept]);
+
+  const onContinue = useCallback((): void => {
+    const found = offer.current;
+    // A second tap on Continue, or one after the page has gone, does nothing.
+    if (!found || flowRef.current.phase !== 'resume') return;
+    startedAtRef.current = found.startedAt;
+    setSeed(found.seed);
+    setKept({ seed: found.seed, hideRomanization: found.hideRomanization, startedAt: found.startedAt });
+    useReviewRunStore.getState().restore(
+      found.check.items.map((i) => i.id),
+      found.answers,
+    );
+    dispatch({ type: 'continue', at: found.at, hideRomanization: found.hideRomanization });
+  }, [dispatch]);
+
+  // Leaving the screen any other way forgets the run in memory (the stored check stays: a Stop or a kill goes on later).
   useEffect(() => () => useReviewRunStore.getState().reset(), []);
 
   // Every back mid-check asks "Stop the check?" first (spec §3.9): the header's Close, the browser and the phone back
@@ -175,21 +263,25 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   );
 
   const host = useMemo(() => reviewHost(() => dispatch({ type: 'chunk-done' })), [dispatch]);
+  // [LR] OD-LR1 (c): Stop keeps the stored check, so the sheet says so; before the first answer nothing is stored yet.
+  const hasAnswers = useReviewRunStore((run) => Object.keys(run.answers).length > 0);
   const leaveSheet = (
     <LeaveSheet
       visible={flow.leaving}
       m={m.leave}
+      kept={hasAnswers}
       onStay={() => dispatch({ type: 'stay' })}
       onStop={() => dispatch({ type: 'confirm-leave' })}
     />
   );
 
   if (flow.phase === 'playing') {
-    const rounds = (check.chunks[flow.chunk] ?? []).map((i) => i.round);
+    // [LR] A resumed check opens in the middle of a part: the game plays only the items left in it.
+    const rounds = (check.chunks[flow.chunk] ?? []).slice(flow.from).map((i) => i.round);
     return (
       <>
         <RomanizationModeOverride mode={flow.hideRomanization ? 'tap' : 'always'}>
-          <ListenPickGame key={flow.chunk} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
+          <ListenPickGame key={`${flow.chunk}:${flow.from}`} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
         </RomanizationModeOverride>
         {leaveSheet}
       </>
@@ -321,6 +413,43 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     );
   }
 
+  // [LR] Reading: the intro's Hoya and title with no buttons, for at most the read's limit (wireframe reviews/check-resume.md, panel R).
+  if (flow.phase === 'reading') {
+    return (
+      <Screen tone="canvas" scrollable>
+        <View style={{ alignItems: 'center', paddingTop: spacing.lg }} testID="hangul-check-reading" aria-busy>
+          <Hoya pose="waving" size={120} accessibilityLabel={messages.a11y.hoya('waving')} />
+          <Spacer size="lg" />
+          <Heading level="display" align="center">
+            {m.title}
+          </Heading>
+        </View>
+      </Screen>
+    );
+  }
+
+  // [LR] The resume page (panel A): Continue goes on, Start again shows the normal intro and clears nothing yet.
+  if (flow.phase === 'resume') {
+    return (
+      <Screen tone="canvas" scrollable>
+        <View style={{ alignItems: 'center', paddingTop: spacing.lg }} testID="hangul-check-resume">
+          <Hoya pose="waving" size={120} accessibilityLabel={messages.a11y.hoya('waving')} />
+          <Spacer size="lg" />
+          <Heading level="display" align="center">
+            {m.title}
+          </Heading>
+          <Spacer size="md" />
+          <ResumeTitle>{m.resume.title}</ResumeTitle>
+        </View>
+        <Spacer size="xl" />
+        <Button label={messages.common.buttons.continue} tone="primary" size="hero" fullWidth onPress={onContinue} testID="hangul-check-continue" />
+        <Spacer size="md" />
+        <Button label={m.resume.startAgain.cta} tone="secondary" size="lg" fullWidth onPress={() => dispatch({ type: 'start-again' })} testID="hangul-check-start-again" />
+        <Spacer size="lg" />
+      </Screen>
+    );
+  }
+
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ alignItems: 'center', paddingTop: spacing.lg }} testID="hangul-check-intro">
@@ -342,6 +471,29 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
       <Button label={m.intro.later.cta} tone="ghost" size="md" fullWidth onPress={() => dispatch({ type: 'leave' })} />
       <Spacer size="lg" />
     </Screen>
+  );
+}
+
+/** The resume page's question: the page's heading, and the first thing a screen reader lands on (once, when the page opens). */
+function ResumeTitle({ children }: { children: string }): ReactElement {
+  const ref = useRef<View>(null);
+  const web = Platform.OS === 'web';
+  useEffect(() => {
+    // Native: on the next tick, once the view has settled (VoiceOver ignores a focus moved mid-mount).
+    const focus = (): void => focusForScreenReader(ref.current);
+    if (web) {
+      focus();
+      return undefined;
+    }
+    const timer = setTimeout(focus, 0);
+    return () => clearTimeout(timer);
+  }, [web]);
+  return (
+    <View ref={ref} {...(web ? { tabIndex: -1 as const, style: { outlineStyle: 'none' } as object } : { accessible: true, accessibilityRole: 'header' as const })}>
+      <Heading level="title" align="center" testID="hangul-check-resume-title">
+        {children}
+      </Heading>
+    </View>
   );
 }
 
@@ -390,15 +542,20 @@ function AttemptSwitch({ label, value, onChange }: { label: string; value: boole
   );
 }
 
-/** "Stop the check?": stay is the primary; stop goes back and saves nothing. */
+/**
+ * "Stop the check?": stay is the primary; stop goes back. [LR] With answers given Stop keeps the stored check for a day
+ * (OD-LR1 (c)) and the line says so; before the first answer there is nothing stored, and the old line stays true.
+ */
 function LeaveSheet({
   visible,
   m,
+  kept,
   onStay,
   onStop,
 }: {
   visible: boolean;
   m: ReturnType<typeof useMessages>['learner']['stageReview']['leave'];
+  kept: boolean;
   onStay: () => void;
   onStop: () => void;
 }): ReactElement {
@@ -417,7 +574,7 @@ function LeaveSheet({
           }}
         >
           <Heading level="prompt">{m.title}</Heading>
-          <Body tone="secondary">{m.body}</Body>
+          <Body tone="secondary">{kept ? m.bodyKept : m.body}</Body>
           <Spacer size="sm" />
           <Button label={m.stay.cta} tone="primary" size="md" fullWidth onPress={onStay} />
           <Button label={m.stop.cta} tone="ghost" size="md" fullWidth onPress={onStop} />

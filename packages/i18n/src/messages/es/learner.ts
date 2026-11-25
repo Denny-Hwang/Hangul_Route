@@ -1573,10 +1573,15 @@ export const learner = {
       fourth: 'Ya casi. ¡Una parte más!',
       keepGoing: { cta: 'Seguir' },
     },
+    resume: {
+      title: '¿Sigues donde te quedaste?',
+      startAgain: { cta: 'Empezar de nuevo' },
+    },
     leave: {
       close: 'Parar el repaso',
       title: '¿Parar el repaso?',
       body: 'Puedes hacerlo otra vez cuando quieras.',
+      bodyKept: 'Puedes seguir más tarde.',
       stop: { cta: 'Parar' },
       stay: { cta: 'Seguir' },
     },
