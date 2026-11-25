@@ -8,6 +8,8 @@ Code: `apps/mobile/src/screens/quest/DiscoverStep.tsx` (renders), `apps/mobile/s
 
 > **[SF] Amended 2026-11-25 by `docs/specs/AMENDMENTS-DISCOVER-SOUND-FIRST.md`** (owner decision 2026-11-22, OD-R2; row SF-0): a consonant card plays its **sound** first (**Hear it**: 가, with the line "가 = ㄱ + ㅏ · ga") and its **name** second (**Hear the name**: 기역, with "기역 · giyeok"). This reverses the name-first order of `AMENDMENTS-AUDIO-CLIPS.md` JV-A5 (AU-OD-2) and restores this wireframe's original intent. See "[SF] Sound first (consonant card)" below.
 
+> **[TC] Amended 2026-11-25 by `docs/specs/AMENDMENTS-STAGE1-TRACE-COVERAGE.md`** (work order WO-14 of the 2026-11 review; row TC-0): a Discover step that teaches letters gets one more page, **Trace the new letters**, right after its last letter page: each new letter is traced once on a canvas, unscored, with no Done and no miss; Continue stays enabled. See "[TC] Trace the new letters" below. Mock: row TC-0b (`design/screens/discover-trace/`).
+
 > **Promoted 2026-10-12 (F-QUEST-002 PR Q-11).** This file was the single drafted wireframe of the whole spec (screens S1 to S11). It now holds the Discover step only; the other screens live in their own files:
 >
 > | Drafted screen | File |
@@ -127,6 +129,42 @@ Final consonant page:                 Words page:
 - Largest text / 320 wide: the two buttons stack, each centred at its own width (sizes unchanged), each line under its own button; nothing sits side by side.
 - No sound (no clip and no Korean voice, sound off, a failed play): "Say it out loud: ga" under the card; the two lines are already printed, so nothing else is needed.
 
+## [TC] Trace the new letters (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.3, §3.4)
+
+Shown once per Discover step, right after the **last page that holds a letter card**, in quests 1–10 (every letter card whose letter has stroke data). Quest 1: ㅏ ㅓ · ㄱ ㄴ · **trace**. Quest 4: ㅈ ㅊ · **trace** · words. Quest 8: ㅑ ㅕ · ㅍ final ㅇ · **trace** · 추석.
+
+```
++----------------------------------+
+| [x leave]  o (*) . . . .         |  <- close header and step dots stay
+|  (Trace the new letters)         |  <- takes the step title's slot; the step pill
+|                                  |     and the step's Hoya line are hidden here
+|   page 3 of 3   (*) (*) (*)      |  <- Discover's page dots count this page
+|   [ㅏ*] [ㅓ] [ㄱ] [ㄴ]           |  <- letter row: decorative, not buttons; current
+|                                  |     ringed, traced ones get a filled mark (only
+|                                  |     fills); one summary label for screen readers
+|  (Trace the letter a)            |  <- heading with romanization; a final: "Trace the
+|                                  |     final n" + "Sits at the bottom of the block"
+|  +----------------------------+  |
+|  |      {ghost of ㅏ}         |  |  <- canvas: flex slot, >= 160, never inside a
+|  |      {learner's ink}       |  |     scroll view (it owns drags)
+|  +----------------------------+  |
+|  (Hoya) (Trace each line slowly.)|  <- strip: idle / praise / keep going / shape
+|  [Hear it][Show me][Clear][Next letter] <- one wrapping row of small buttons; this
+|                                  |     row scrolls if large text needs it
+|  [ Previous ]  [[ CONTINUE ]]    |  <- pinned; CONTINUE always enabled
++----------------------------------+
+```
+
+- **Finished**: the learner lifts every finger on a finished letter; 1.5 s later the ink takes the success look, Hoya cheers ("Beautiful! That looks like the letter."), the chip fills; for 1.1 s the canvas takes no ink and Next letter is off; then the next letter comes up on an empty canvas. On the last letter the praise stays; Clear lets the learner trace it again; CONTINUE moves on.
+- **Never a miss**: no Done, no fail look, no amber, no stars, nothing stored. Unfinished ink waits; after 3 s with no touch the line reads "Keep going, or tap Next letter." ("…or tap Continue." on the last letter).
+- **Next letter**: moves on at any time (not during the 1.1 s beat), records nothing; the chip it leaves stays plain (never marked as missed) and is not offered again on this visit.
+- **Show me**: the shape reveal and the "Shape guide" line while the letter's stroke order is untaught (every letter until SO-3); the ordered animation once taught. It says the letter's sound, as Hear it does (가 for ㄱ). No order, direction or loop tips on this page.
+- **No sound by itself** on this page; **Hear it** plays the current letter (the card's own sound). No "Can't hear it?" link here (the letter pages carry it); a silent play shows the status panel in the strip's place.
+- **Sizes** (spec §3.4): at 320 × 568, 375 × 553, 375 × 667, 844 × 390, 390 × 844, 768 × 1024, 1180 × 820 and Largest text on 390 × 844 the canvas is at least 160 and CONTINUE is on screen. Landscape: canvas left, band and controls right (Trace Stroke's side layout). If a size does not fit, first the chips and heading share a line, then the chips drop (the mock in TC-0b decides and measures).
+- **Screen reader / switch**: the letter row reads "0 of 4 letters traced"; CONTINUE is reachable at once; the heading reads the letter by its romanized name.
+- **Reduced motion**: Show me's still (unnumbered while untaught); no chip animation.
+- **Coming back** with Previous inside the step: the current letter and the filled chips stay. A new visit of the step starts plain. Reached by Previous from the practice step, the step opens on this page (its last page) in quests 1–3 and 9.
+
 ## [QB] Previous inside the step (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2)
 
 ```
@@ -163,10 +201,10 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail`
 
 - reads: `questById(id).steps[]` (`discover.pages`) · `jamoAll` (glyph, romanization, `soundHint`, `spokenKo`, `nameKo`) · `romanizationMode` (F-I18N-001) · `HeritageCardArt` / `WordArt` for pictures
 - writes: nothing (unscored)
-- telemetry: `quest.discover_completed { questId, pages, heard }`
+- telemetry: `quest.discover_completed { questId, pages, heard }` ([TC] TC-1b adds `written`, the letters traced to the end on the trace page, and `writeSeconds`)
 
 ## Open questions
 
-- Should Discover offer an optional "See how it is drawn" (existing stroke demo) on each letter? Recommend: later, behind the same Hear-it row; not v1.
+- Should Discover offer an optional "See how it is drawn" (existing stroke demo) on each letter? Recommend: later, behind the same Hear-it row; not v1. [TC] Answered 2026-11-25: the trace page's **Show me** (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.3), not a button on each card.
 - Spoken carrier for isolated consonants is F-AUDIO-004's call (decided: ㅏ, and ㅇ by its name); the wireframe does not depend on it.
 - [SF] The big button keeps the label "Hear it" (not "Hear the sound"): every Hoya line says "Tap Hear it" (open decision SF-OD-1 of the amendment, adopted provisionally).
