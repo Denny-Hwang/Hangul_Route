@@ -15,7 +15,8 @@ export interface AnswerMeta {
   itemId?: string;
   /**
    * The memory store records this first answer as a hinted right answer (no promotion, no demotion; section 4.3):
-   * Dictation's "Show how it sounds", or a typed answer one letter off (row CM-31). The stars still follow `correct`.
+   * Dictation's "Show how it sounds", or a typed answer one letter off (row CM-31), or a right answer after the learner's own
+   * "Can't hear it?" then Show the letters (AMENDMENTS-AUDIO-CANT-HEAR CH-1f; said with a right answer only). The stars still follow `correct`.
    */
   hinted?: boolean;
 }

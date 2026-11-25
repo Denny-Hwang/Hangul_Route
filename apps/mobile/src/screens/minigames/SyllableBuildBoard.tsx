@@ -247,7 +247,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     (event: BuildEvent): void => {
       if (!parts) return;
       const before = stateRef.current;
-      const out = stepBuild(before, event, { target: parts, voice: !viewRef.current.textShown, asked: askedRef.current });
+      const out = stepBuild(before, event, { target: parts, voice: !viewRef.current.textShown || askedRef.current, asked: askedRef.current });
       stateRef.current = out.state;
       setState(out.state);
       const solved = out.effects.some((e) => e.type === 'solved');

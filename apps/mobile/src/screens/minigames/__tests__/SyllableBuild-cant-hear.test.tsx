@@ -174,15 +174,22 @@ describe('Syllable Build, the hinted mark (CH-1f, test 22)', () => {
     expect(onFirst.mock.calls).toEqual([[true, false]]);
   });
 
-  it('Show how it sounds first and Show the letters after it: the right block is still marked asked', async () => {
+  it('Show how it sounds first and Show the letters after it: the right block keeps the reveal\'s own hint and is marked asked too', async () => {
     const onFirst = vi.fn();
     const r = await mount({ cantHear: true, onFirst });
     await tap(r.root, 'syllable-build-meaning');
     await ask(r);
     await build(r, 'ㅏ');
-    expect(onFirst.mock.calls.length).toBe(1);
-    expect(onFirst.mock.calls[0]?.[0]).toBe(true);
-    expect(onFirst.mock.calls[0]?.[2]).toBe(true);
+    // The reveal was made with a voice present, so the ask must not erase it (a review's stars count it).
+    expect(onFirst.mock.calls).toEqual([[true, true, true]]);
+  });
+
+  it('Show the letters without a reveal: asked, and not hinted', async () => {
+    const onFirst = vi.fn();
+    const r = await mount({ cantHear: true, onFirst });
+    await ask(r);
+    await build(r, 'ㅏ');
+    expect(onFirst.mock.calls).toEqual([[true, false, true]]);
   });
 
   it('Sound off and "Always show the letters" show the romanization with no ask: no mark', async () => {

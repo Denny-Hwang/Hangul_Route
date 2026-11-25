@@ -89,7 +89,8 @@ interface Actions {
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
    * `hinted`: answered with help (Dictation's hint or a one-letter slip, row CM-31; Story Order's Show meanings, row
-   * CM-34, which passes it with a right answer only): the memory store records it as a hinted right answer.
+   * CM-34, which passes it with a right answer only; Match Sound's right tap after the learner's own Show the letters,
+   * AMENDMENTS-AUDIO-CANT-HEAR CH-1f): the memory store records it as a hinted right answer.
    * [QB] On a step shown again after Previous (AMENDMENTS-QUEST-SOUND-BACK QB-3) an answer changes nothing: no right
    * answer, no miss, no retry, nothing for Try these again or the pacing rules, and no event for the memory store. The
    * step was scored when it was first played. The one exception is a step that was skipped: it was never played, so
