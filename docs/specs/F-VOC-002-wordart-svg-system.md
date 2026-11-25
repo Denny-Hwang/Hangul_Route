@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-11-25 by `AMENDMENTS-PLC-VALIDITY.md` [PV]** (work order WO-18 of the 2026-11 review) (§3.9 key grammar and registry): one more family, `act`, holds the level check's action pictures (`word:act-<predicate>-<noun>`, e.g. `act-swim-rabbit`: one animal or person doing one thing), drawn with the existing builders and the posed figure of `glyphs/pose.ts`; every `act` key is `reserved`, so it is outside the family plan and the vocabulary key test, like `sport-swing`. Row PV-1a; the budget of §3.8 applies.
+
 # F-VOC-002 — WordArt: hand-authored SVG word pictures from data, with design tokens only
 
 **Scope**: `packages/design-system` (`src/word-art/` pure data, builders, resolver and tests; `components/WordArt/` thin renderer; 12 new `colors.vocab.*` tokens; a pure `card-ids.ts` extraction) · `design/tokens/colors.v1.md` · `design/brief/illustrations/word-art.md` (new brief) · `apps/web` (`/design-preview/word-art` contact sheet) · `apps/mobile` (`screens/minigames/PictureArt.tsx` binding, shared with F-QUEST-002)
