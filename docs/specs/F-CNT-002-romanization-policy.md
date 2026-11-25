@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-11-25 by `AMENDMENTS-ROMANIZATION-FADE.md` [RF]** (work order WO-11 of the 2026-11 review; owner decision 2026-11-22, OD-R1, review-2026-11 README §4) (§2, the D2 binding line): romanization is visible by default while a learner is meeting the Stage 1 letters; after that, on the default reading choice **As I learn**, a word the learner can already read shows its romanization one tap away, and after Word Builder every surface outside the Checks does. No mode removes it: the data rule is unchanged (every taught Korean string carries its romanization, and the validator still requires it), and on screen a folded romanization is always reachable by a tap or shown at the answer (that spec's §3.8). Checks stay with AU-8 and `AMENDMENTS-STAGE1-DECODING-CHECK.md`.
+
 # F-CNT-002 — Romanization policy and validator: Revised Romanization, unhyphenated, checked against the shipped content
 
 **Scope**: `packages/content-schema` (RR converter, rules, schema fields) · `apps/mobile` (content modules, `minigame-config`, tests) · `apps/web` (landing data, preview pages, tests) · `packages/backend` (seed) · `content/**` · `.github/workflows/content-validation.yml` · `.claude/skills/content-skill/SKILL.md` (§3.3 wording only)
@@ -7,6 +9,8 @@ Status: ready
 **Rollout**: audit `audio-pass-2` findings F03, F04, F05, F07, F10, F11, F12, F14 (and F08, F15 for the jamo table). PR order in §7.
 
 Parent / siblings: F-CNT-001 (language policy validator; its §4 lists "romanization spelling accuracy" as this spec) · F-I18N-001 (locale overlays: romanization stays one RR string for every UI locale) · F-AUDIO-004 (what the voice says must match what the screen shows) · F-STORY-003 (adds `storySteps[].romanization`; this spec supplies the values and the rule) · F-LEARN-001 §3.6/L12 (avatar name `례이`) · D4 (JSON-first content, validator scans what ships) · D13 (this policy)
+
+> **Amended 2026-11-25 by `AMENDMENTS-ROMANIZER-GAPS.md` [RG]** (work order WO-17 of the 2026-11 review: the romanization lint stops freezing the converter's wrong answers): §3.2's converter learns three rule-determined patterns (ㄺ before ㄱ in a verb or adjective stem, `읽고 ilgo`; `밟-` and `넓죽-`/`넓둥-`, `밟다 bapda`; a stop before the suffix 히/혀, `좁히다 jopida`, `잡혀 japyeo`). The patterns that need a morpheme boundary or the part of speech (ㄴ-insertion, 사이시옷 before 이, the juncture before a content morpheme, a stop before a 하다 form) are detected by a new rule R9 `romanization-gap`, which fails until an entry in `ROMANIZATION_EXCEPTIONS` (now also per word, with a required `gap` and an article-citing `reason`) covers the word, even when the stored value equals the converter's. §3.3's R1 compares with one reviewed romanization (`romanizeReviewed`: the converter plus the reviewed entries, which now also exclude the converter's value), which the app's composed lines and the week-drop build use too, and R8 checks the new fields. Until row RG-3 rewrites §3.2 and §3.3, the amendment is authoritative where they differ.
 
 ---
 

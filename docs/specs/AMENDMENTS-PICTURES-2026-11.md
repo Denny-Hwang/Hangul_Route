@@ -1,5 +1,7 @@
 Status: done; rows PX-0 to PX-2 done (#1039), rows PX-3 to PX-5 done (the PR that adds this line)
 
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (PX-2, the kite): the card's words now match the shield-kite picture. `card:kite` blurb "A diamond kite painted with a tiger's face." becomes "A paper kite on bamboo sticks, with a red circle at the top.", in en, es and ko (row CF-1a).
+
 # Amendment: pictures a learner can name at a glance
 
 > **Owner request of 2026-11-17 (in chat, translated):** "Improve the pictures. Some are abstract and easy to understand; some are so abstract they are hard to recognise, kimchi for example. Review them all, write the improvement plan first, then do the work, step by step."
