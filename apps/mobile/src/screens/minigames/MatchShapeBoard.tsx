@@ -4,7 +4,6 @@ import {
   Button,
   Caption,
   HoyaBubble,
-  Icon,
   KOREAN_LANGUAGE,
   KOREAN_LINE_BREAK,
   TapBoard,
@@ -33,14 +32,20 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { findJamo } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerOptionLabel, lookHereLine, spokenParts } from '../../logic/answer-feedback';
 import { jamoVoice } from '../../logic/audio/jamo-voice';
 import { koTokenParts } from '../../logic/ko-tokens';
 import type { ShapeSource } from '../../logic/match-shape/facts';
 import { shapeHoyaLine, startShape, stepShape, type ShapeEffect, type ShapeEvent, type ShapeState } from '../../logic/match-shape/flow';
-import { originTiles, pairHeading, pairTiles, type ShapeTileLook } from '../../logic/match-shape/view';
+import { originTiles, pairHeading, pairTiles, soundSpoken, type ShapeTileLook } from '../../logic/match-shape/view';
+import { shapeLetter } from '../../logic/match-shape/letters';
 import { TRACE_CANVAS_MIN } from '../../logic/trace-layout';
 import { hasClipFor, playJamo, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { AnswerAnnouncer } from './answer-announcer';
+import { DiscMark, LookHereRing } from './answer-marks';
+import { useAnswerAnnouncement, type AnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * One Match Shape round (F-CURR-002 section 7.1 F4, row CM-33; design/wireframes/minigame/match-shape.md, the mock
@@ -53,8 +58,18 @@ import { nudge, success, tapLight } from '../../platform/haptics';
  *   for Continue, never a timer. "Where this comes from" expands the sources in place, plain text, never a link.
  * - **Pair**: six letter-only tiles, 3 x 2, at `touchTarget.hero` tall where the window allows; a found tile shows its
  *   sound and the check; after the last copy the round moves on by itself.
- * - A miss is amber with the mark, never red; Hoya's line and the status panel are polite live regions.
+ * - A miss is amber with the `replay` mark, never red; the status panel is a polite live region.
  * - Reduced motion: nothing moves; the pause after a pair round stays, so its sound is not cut off.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c; design/components/AnswerFeedback/spec.md D2, D4, D9): a found tile shows `check`
+ * and a missed one `replay`, each on a disc straddling its corner as `Tile`'s (the 16 dp check and the amber dot are
+ * gone), named with the state first; a locked tile is inactive, never disabled; the second miss rings the tiles to find
+ * with the dashed look-here ring. Each result is said once by the answer announcer (a found copy by its sound, a miss by
+ * the tile's sound, then Hoya's line and the difference note with its `{ko:}` read as romanization, never Hangul;
+ * the miss that turns the ring on adds the look-here line); Hoya's lines are not live. After a pair round the wait is the
+ * 1000 ms floor with a screen reader off, and with one on a right pair shows Next and waits for it (OD-AF9 (b)); an
+ * origin round's own Continue takes focus and the letter's sound starts after the line. A quest step passes its own
+ * `speech`, so its heading is the round's header node.
  */
 
 /** How long a found pair stays on screen, with its sound, before the next round. */
@@ -71,45 +86,23 @@ export interface MatchShapeBoardProps {
   onSolved: () => void;
   /** The surface id for the sound notice's telemetry (`audio.fallback_shown`). */
   source: string;
+  /** The quest step's announcement hook, when its heading is the round's header node (§3.4); else the board has its own. */
+  speech?: AnswerAnnouncement;
+  /** Which round of the step this is, for a pair round's header node (§3.4); absent in a review round. */
+  roundOf?: { n: number; total: number };
   testID?: string;
 }
 
-const MARK = spacing.md;
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 /** A jamo face is part of its tile's picture: half the tile, so it keeps its size at every text setting. */
 const JAMO_FACE = 0.5;
-
-function Mark({ look }: { look: ShapeTileLook }): ReactElement | null {
-  if (look === 'found') {
-    return (
-      <View style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-        <Icon name="check" size={MARK + spacing.xs} color={colors.feedback.success} />
-      </View>
-    );
-  }
-  if (look !== 'marked') return null;
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        top: spacing.xxs,
-        right: spacing.xxs,
-        width: MARK,
-        height: MARK,
-        borderRadius: radii.circle,
-        backgroundColor: colors.feedback.nudge,
-        borderWidth: borderWidth.thin,
-        borderColor: colors.text.primary,
-      }}
-    />
-  );
-}
 
 const TILE_LOOK: Record<ShapeTileLook, { backgroundColor: string; borderColor: string; borderWidth: number }> = {
   plain: { backgroundColor: colors.surface.paper, borderColor: colors.border.subtle, borderWidth: borderWidth.base },
   found: { backgroundColor: colors.feedback.successLight, borderColor: colors.feedback.success, borderWidth: borderWidth.thick },
   marked: { backgroundColor: colors.feedback.nudgeLight, borderColor: colors.feedback.nudge, borderWidth: borderWidth.thick },
-  ring: { backgroundColor: colors.surface.paper, borderColor: colors.border.focus, borderWidth: borderWidth.thick },
+  // The look-here ring is drawn outside the tile (`LookHereRing`, AnswerFeedback D4); the tile keeps its quiet look.
+  ring: { backgroundColor: colors.surface.paper, borderColor: colors.border.subtle, borderWidth: borderWidth.base },
 };
 
 /**
@@ -147,7 +140,7 @@ function TokenLine({ note, testID }: { note: string; testID?: string }): ReactEl
   );
 }
 
-export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source, testID = 'match-shape' }: MatchShapeBoardProps): ReactElement {
+export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source, speech, roundOf, testID = 'match-shape' }: MatchShapeBoardProps): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.matchShape;
   const a11y = m.a11y.minigame.matchShape;
@@ -170,6 +163,27 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const pacing = useSoundPacing();
   const handlers = useRef({ onFirst, onSolved });
   handlers.current = { onFirst, onSolved };
+  // F-A11Y-001 AF-4c: each result is said once by the answer announcer; with a screen reader on a right pair shows Next.
+  const ownSpeech = useAnswerAnnouncement();
+  const a = speech ?? ownSpeech;
+  const aRef = useRef(a);
+  aRef.current = a;
+  const nextButton = useRoundNext();
+  const nextRef = useRef(nextButton);
+  nextRef.current = nextButton;
+  const mounted = useRef(true);
+  /** The round has moved on (Next, Continue, or its wait): a second press, or a late wait or sound, does nothing. */
+  const moved = useRef(false);
+  const latest = useRef({ a11y: m.a11y, copy });
+  latest.current = { a11y: m.a11y, copy };
+
+  /** The round moves on once: Next, Continue, or the wait that follows a right pair with the reader off. */
+  const moveOn = useCallback((): void => {
+    if (moved.current || !mounted.current) return;
+    moved.current = true;
+    nextRef.current.hide();
+    handlers.current.onSolved();
+  }, []);
 
   const say = useCallback((): void => {
     // Said by its name (giyeok, nieun, ieung), every letter alike, never a carrier syllable (na, ba): the tiles name letters,
@@ -193,34 +207,86 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
           } else nudge();
           return;
         case 'solved':
-          // A pair moves on by itself after the pause; an origin round's Continue is the learner's own tap.
-          if (round.shape === 'pair') pacing.after(PAIR_SOLVED_PAUSE_MS, () => handlers.current.onSolved());
-          else handlers.current.onSolved();
+          // An origin round's Continue is the learner's own tap; a pair round's wait is `afterRightAnswer`'s (`dispatch`).
+          if (round.shape === 'origin') moveOn();
           return;
       }
     },
-    [say, round.shape, pacing],
+    [say, round.shape, moveOn],
   );
 
   const dispatch = useCallback(
     (event: ShapeEvent): void => {
-      const out = stepShape(stateRef.current, event, round);
+      const before = stateRef.current;
+      const out = stepShape(before, event, round);
       stateRef.current = out.state;
       setState(out.state);
+      const speak = aRef.current;
+      const { a11y: texts, copy: words } = latest.current;
+      const target = shapeLetter(round.target);
+      const targetSound = soundSpoken(target.sound, texts.minigame.matchShape);
+      const isTap = event.type === 'tap' || event.type === 'tap-tile';
+      const tapped = (): string => {
+        if (event.type === 'tap') return soundSpoken(shapeLetter(event.id).sound, texts.minigame.matchShape);
+        if (event.type === 'tap-tile' && round.shape === 'pair') return soundSpoken(shapeLetter(round.layout[event.index] === 't' ? round.target : round.lookAlike).sound, texts.minigame.matchShape);
+        return '';
+      };
+      const right = isTap && out.effects.some((e) => e.type === 'haptic' && e.kind === 'success');
+      const missed = isTap && out.effects.some((e) => e.type === 'haptic' && e.kind === 'nudge');
+      if (right && out.state.status === 'found') {
+        // The round is over: the letter's sound is the right answer's own, after the line and dropped if the round moved first.
+        const sound = out.effects.find((e) => e.type === 'play');
+        out.effects.filter((e) => e !== sound).forEach(run);
+        const say = (): Promise<void> => speak.announce({ kind: 'right', item: targetSound });
+        void afterRightAnswer({
+          readerOn: speak.readerOn,
+          gameMinMs: PAIR_SOLVED_PAUSE_MS,
+          announce: speak.readerOn ? () => nextRef.current.afterFocus(say) : say,
+          play: () => {
+            if (moved.current || !mounted.current) return;
+            if (sound) run(sound);
+          },
+          showNext: () => nextRef.current.show(),
+          // An origin round's Continue is the learner's own tap: no wait, the button takes focus (as Next does).
+          waitThenAdvance: (minMs) => {
+            if (round.shape === 'pair') void pacing.after(minMs, moveOn);
+          },
+        });
+        return;
+      }
       out.effects.forEach(run);
+      if (right) void speak.announce({ kind: 'right', item: tapped() });
+      if (missed) {
+        const hint = round.shape === 'pair' ? [words.missPair, spokenParts(koTokenParts(round.diffNoteEn))].filter((x) => x !== '').join(' ') : words.missOrigin;
+        // The miss that turns the look-here ring on adds the look-here line, naming what is ringed (§3.2).
+        const ringed = out.state.status === 'asking' && out.state.ring && !before.ring;
+        const line = ringed ? `${hint} ${lookHereLine(texts, targetSound)}` : hint;
+        afterMiss({ readerOn: speak.readerOn, announce: () => speak.announce({ kind: 'missHint', item: tapped(), hint: line }) });
+      }
     },
-    [round, run],
+    [round, run, pacing, moveOn],
   );
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       stop();
-    },
-    [],
-  );
+    };
+  }, []);
 
   const found = state.status === 'found';
   const line = shapeHoyaLine(state);
+  /** A tile's name with its state first (§3.2): "Right answer: …", "Not this one: …", "Look here: …". */
+  const named = (look: ShapeTileLook, base: string): string =>
+    answerOptionLabel(look === 'found' ? 'correct' : look === 'marked' ? 'wrong' : look === 'ring' ? 'hint' : 'idle', base, m.a11y.minigame.option);
+  /** The tile's decorations: the disc straddling its corner (`check` found, `replay` missed) and the look-here ring. */
+  const decor = (look: ShapeTileLook, tid: string): ReactElement | null =>
+    look === 'found' || look === 'marked' ? (
+      <DiscMark mark={look === 'found' ? 'right' : 'miss'} answerBorder={TILE_LOOK[look].borderWidth} testID={`${tid}-mark`} />
+    ) : look === 'ring' ? (
+      <LookHereRing radius={radii.lg} answerBorder={TILE_LOOK.ring.borderWidth} testID={`${tid}-ring`} />
+    ) : null;
   const status = found ? <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, say)} onHelp={() => setHelpOpen(true)} testID={`${testID}-prompt`} /> : null;
   const hoya =
     line === null ? null : (
@@ -228,6 +294,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
         testID={`${testID}-hoya`}
         tone={line === 'found' ? 'cheering' : 'thinking'}
         message={line === 'found' ? copy.found : line === 'missOrigin' ? copy.missOrigin : copy.missPair}
+        live={false}
       />
     );
 
@@ -236,7 +303,13 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
     const heading = pairHeading(round, a11y);
     return (
       <View testID={testID} style={{ gap: spacing.md }}>
-        <View accessible accessibilityRole="header" accessibilityLabel={heading.accessibilityLabel} testID={`${testID}-heading`} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: spacing.sm }}>
+        <View
+          ref={a.promptRef}
+          accessible
+          accessibilityRole="header"
+          // The step's round node names the round and the target's sound, never the letter's Hangul (§3.4).
+          accessibilityLabel={roundOf ? m.a11y.answer.round(roundOf.n, roundOf.total, `${copy.heading.pair} ${soundSpoken(heading.sound, a11y)}`) : heading.accessibilityLabel}
+          testID={`${testID}-heading`} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: spacing.sm }}>
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>{copy.heading.pair}</Text>
           <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: scale.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {heading.char}
@@ -252,9 +325,10 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                 <TapTarget
                   key={t.index}
                   testID={`${testID}-tile-${t.index}`}
-                  accessibilityLabel={t.accessibilityLabel}
+                  accessibilityLabel={named(t.look, t.accessibilityLabel)}
                   accessibilityState={{ selected: t.look === 'found' }}
-                  disabled={off}
+                  // An answered tile is locked: inactive, still focusable, never disabled (§3.1).
+                  inactive={off}
                   onCommit={() => dispatch({ type: 'tap-tile', index: t.index })}
                   style={{ flexBasis: '30%', flexGrow: 1 }}
                 >
@@ -264,7 +338,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                         {t.char}
                       </Text>
                       {t.sound !== null ? <Caption>{t.sound}</Caption> : null}
-                      <Mark look={t.look} />
+                      {decor(t.look, `${testID}-tile-${t.index}`)}
                     </View>
                   )}
                 </TapTarget>
@@ -272,12 +346,17 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
             })}
           </View>
         </TapBoard>
+        {nextButton.shown ? (
+          <Button pressableRef={nextButton.nextRef} label={m.learner.minigame.trace.next.cta} tone="primary" size="hero" fullWidth onPress={moveOn} testID={`${testID}-next`} />
+        ) : null}
         {status}
         {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}
-        <View accessibilityLiveRegion="polite" style={{ minHeight: touchTarget.min, gap: spacing.sm }}>
+        {/* The announcer says the result once, so Hoya's line and the difference note are not live regions too (§3.3). */}
+        <View style={{ minHeight: touchTarget.min, gap: spacing.sm }}>
           {hoya}
           {line === 'missPair' ? <TokenLine note={round.diffNoteEn} testID={`${testID}-diff`} /> : null}
         </View>
+        {speech === undefined ? <AnswerAnnouncer line={a.line} /> : null}
       </View>
     );
   }
@@ -342,9 +421,9 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
               <TapTarget
                 key={t.id}
                 testID={`${testID}-tile-${t.id}`}
-                accessibilityLabel={t.accessibilityLabel}
+                accessibilityLabel={named(t.look, t.accessibilityLabel)}
                 accessibilityState={{ selected: t.look === 'found' }}
-                disabled={off}
+                inactive={off}
                 onCommit={() => dispatch({ type: 'tap', id: t.id })}
                 style={{ flex: 1 }}
               >
@@ -354,7 +433,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                       {t.char}
                     </Text>
                     <Caption>{t.sound}</Caption>
-                    <Mark look={t.look} />
+                    {decor(t.look, `${testID}-tile-${t.id}`)}
                   </View>
                 )}
               </TapTarget>
@@ -362,12 +441,11 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
           })}
         </View>
       </TapBoard>
-      {found ? <Button label={copy.continue.cta} size="lg" fullWidth onPress={() => dispatch({ type: 'continue' })} testID={`${testID}-continue`} /> : null}
+      {found ? <Button pressableRef={nextButton.nextRef} label={copy.continue.cta} size="lg" fullWidth onPress={() => dispatch({ type: 'continue' })} testID={`${testID}-continue`} /> : null}
       {status}
       {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}
-      <View accessibilityLiveRegion="polite" style={{ minHeight: touchTarget.min }}>
-        {hoya}
-      </View>
+      <View style={{ minHeight: touchTarget.min }}>{hoya}</View>
+      {speech === undefined ? <AnswerAnnouncer line={a.line} /> : null}
     </View>
   );
 }

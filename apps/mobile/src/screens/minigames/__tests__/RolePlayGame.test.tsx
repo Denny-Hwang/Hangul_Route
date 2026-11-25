@@ -106,7 +106,8 @@ describe('Role Play (row CM-35)', () => {
     expect(byTestId(root(r), 'role-play-why')).toHaveLength(1);
     expect(byTestId(root(r), 'role-play-me')).toHaveLength(0);
     expect(reply(r, 'meal').props['aria-label']).toBe('Not this one: 잘 먹겠습니다!, jal meokgetseumnida');
-    expect(reply(r, 'meal').props['aria-disabled']).toBe(true);
+    // A locked reply is inactive, still focusable, never disabled (F-A11Y-001 §3.1, AF-4c).
+    expect(reply(r, 'meal').props['aria-disabled']).not.toBe(true);
     await press(reply(r, 'hello'));
     expect(h.answers).toEqual([['t1', false, { itemId: 't1/hello' }]]);
     expect(byTestId(root(r), 'role-play-me')).toHaveLength(1);

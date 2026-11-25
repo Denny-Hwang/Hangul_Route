@@ -36,17 +36,22 @@ import { VoiceHelpSheet } from '../../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../../components/use-prompt-slot';
 import { useSoundPacing } from '../../../components/use-sound-pacing';
 import { useMessages } from '../../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerItem, lookHereLine, resultLeastWait, spokenParts } from '../../../logic/answer-feedback';
 import { koSpeech } from '../../../logic/audio/ko-speech';
-import { afterReply } from '../../../logic/audio/reply-advance';
+import { ADVANCE_MAX_MS, ADVANCE_MIN_MS, afterSound } from '../../../logic/audio/reply-advance';
 import type { KoTokenPart } from '../../../logic/ko-tokens';
-import { startRolePlay, stepRolePlay, turnOf, type RpEffect, type RpEvent, type RpState } from '../../../logic/role-play/reducer';
-import { closingOf, logFollowY, logView, partsText, pinnedCap, progressOf, replyViews, titleJoinsLog, whyParts, type BubbleView, type ReplyView } from '../../../logic/role-play/view';
+import { lookHereOf, startRolePlay, stepRolePlay, turnOf, type RpEffect, type RpEvent, type RpState } from '../../../logic/role-play/reducer';
+import { closingOf, logFollowY, logView, pinnedCap, progressOf, replyViews, titleJoinsLog, whyParts, type BubbleView, type ReplyView } from '../../../logic/role-play/view';
 import { playPrompt, stop } from '../../../platform/audio';
 import { nudge, success, tapLight } from '../../../platform/haptics';
 import { useReducedMotion } from '../../../platform/motion';
-import { announceForScreenReader, focusForScreenReader } from '../../../platform/screen-reader';
+import { focusForScreenReader } from '../../../platform/screen-reader';
 import { useAudioStore } from '../../../store/audio-store';
+import { AnswerAnnouncer } from '../answer-announcer';
+import { CornerMark } from '../answer-marks';
 import type { MinigameHost } from '../host';
+import { useAnswerAnnouncement } from '../use-answer-announcement';
+import { useRoundNext } from '../use-round-next';
 import { useScrollViewScroller } from '../use-scroll-view-scroller';
 
 /**
@@ -59,6 +64,14 @@ import { useScrollViewScroller } from '../use-scroll-view-scroller';
  *
  * Reading and listening only: there is no microphone, no "say it" and no record control. The partner's line is
  * heard; the learner's reply is said by the device voice as it is sent, never asked of the learner.
+ *
+ * Answer feedback (F-A11Y-001 row AF-4c; design/components/AnswerFeedback/spec.md D4, D8, D9; OD-AF8): a locked reply shows
+ * `replay` (it was `dash`) in `text.primary` at 20, a reply being sent shows `check`, each named with the state first and
+ * inactive, never disabled; look-here is the one dashed ring outside the reply. Each result is said once by the answer
+ * announcer (a sent reply by its romanization and meaning; a less natural one by what was tapped and Hoya's why line with
+ * its `{ko:}` read as romanization, never Hangul); the why bubble is not live. The reply is sent after at least the 1000 ms
+ * floor with a screen reader off; with one on, Next shows (OD-AF9 (b)), the reply's sound starts after the line and is
+ * dropped if Next came first, and the turn moves on only when Next is pressed.
  */
 
 export interface RolePlayGameProps {
@@ -82,6 +95,10 @@ const LOG_PAD = spacing.xs;
 const CUE_HEIGHT = spacing.xxl + spacing.sm;
 /** The pinned area's top padding. */
 const PIN_PAD = spacing.xs;
+/** How far the look-here ring reaches outside a reply: its gap and its width (AnswerFeedback D4). */
+const RING_OUT = spacing.xs + borderWidth.thick;
+/** A reply's end padding in every state: the mark's room, `MARK_MIN` and its inset (AnswerFeedback, Role Play row). */
+const REPLY_END = spacing.xl + spacing.xs;
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants', 'aria-hidden': true } as const;
 
 type Focusable = { focus?: (options?: { preventScroll?: boolean }) => void };
@@ -120,6 +137,16 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
   const [state, setState] = useState<RpState>(first.state);
   const stateRef = useRef(state);
   stateRef.current = state;
+  // F-A11Y-001 AF-4c: each result is said once by the answer announcer; with a screen reader on a sent reply shows Next.
+  const speech = useAnswerAnnouncement();
+  const { clear, focusPrompt } = speech;
+  const speechRef = useRef(speech);
+  speechRef.current = speech;
+  const nextButton = useRoundNext();
+  const nextRef = useRef(nextButton);
+  nextRef.current = nextButton;
+  /** Counts the replies moved on from: a late wait, a second Next, or a sound that comes after the move does nothing. */
+  const sentTurn = useRef(0);
 
   const slot = usePromptSlot({ source: SOURCE, textOnScreen: true });
   const { play, reset } = slot;
@@ -173,8 +200,18 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             // Focus moves to the first reply still open (wireframe Accessibility).
             const open = replyViews(scene, next).find((r) => !r.disabled);
             if (open) focusNode(replyRefs.current.get(open.id) ?? null);
+            // The reply tried and Hoya's why line (its `{ko:}` as romanization, never Hangul); the miss that rings the first
+            // natural reply adds the look-here line (§3.2). Said once by the announcer, not by the why bubble.
+            const turn = turnOf(scene, next);
+            const tried = turn?.replies.find((r) => r.id === effect.reply);
             const parts = whyParts(scene, next);
-            if (parts) announceForScreenReader(partsText(parts));
+            const ring = lookHereOf(scene, next);
+            const natural = ring === null ? undefined : turn?.replies.find((r) => r.id === ring);
+            const why = parts ? spokenParts(parts) : '';
+            const hint = natural ? [why, lookHereLine(m.a11y, natural.text.romanization)].filter((x) => x !== '').join(' ') : why;
+            if (tried) {
+              afterMiss({ readerOn: speechRef.current.readerOn, announce: () => speechRef.current.announce({ kind: 'missHint', item: tried.text.romanization, hint }) });
+            }
             break;
           }
           case 'success':
@@ -186,12 +223,30 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             const reply = node?.replies.find((r) => r.id === effect.reply);
             if (!reply) break;
             replying.current = true;
+            const at = sentTurn.current;
+            const speak = speechRef.current;
             const spec = koSpeech(reply.text, 'sentence', SOURCE);
-            const said = pacing.track(play(() => playPrompt(spec), spec));
-            // The reply is said in full (at least 900 ms, at most 6 s) before the partner answers.
-            void afterReply(said).then(() => {
-              replying.current = false;
-              if (mounted.current) runRef.current({ type: 'sent' });
+            let said: Promise<unknown> | undefined;
+            const say = (): Promise<void> => speak.announce({ kind: 'right', item: answerItem(m.a11y, reply.text.romanization, reply.text.en) });
+            // The reply is said in full (at least the 1000 ms result floor, at most 6 s) before the partner answers; with a
+            // reader on it is said after the line, and the turn moves on only when Next is pressed.
+            void afterRightAnswer({
+              readerOn: speak.readerOn,
+              gameMinMs: ADVANCE_MIN_MS,
+              announce: speak.readerOn ? () => nextRef.current.afterFocus(say) : say,
+              play: () => {
+                if (sentTurn.current !== at || !mounted.current) return;
+                said = pacing.track(play(() => playPrompt(spec), spec));
+              },
+              showNext: () => nextRef.current.show(),
+              waitThenAdvance: () => {
+                void afterSound(said, { minMs: resultLeastWait(ADVANCE_MIN_MS), maxMs: ADVANCE_MAX_MS }).then(() => {
+                  if (sentTurn.current !== at || !mounted.current) return;
+                  sentTurn.current += 1;
+                  replying.current = false;
+                  runRef.current({ type: 'sent' });
+                });
+              },
             });
             break;
           }
@@ -209,7 +264,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
         }
       }
     },
-    [host, scene, play, reset, sayLine, slot.view.reason, pacing],
+    [host, scene, play, reset, sayLine, slot.view.reason, pacing, m.a11y],
   );
 
   const run = useCallback(
@@ -232,6 +287,22 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
     // Once per chat.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [first]);
+
+  /** Next (a reader on): the sent reply's turn moves on once; a second press, or one after it has moved, does nothing. */
+  const moveOn = useCallback((): void => {
+    if (!mounted.current || stateRef.current.sending === null) return;
+    sentTurn.current += 1;
+    replying.current = false;
+    nextRef.current.hide();
+    runRef.current({ type: 'sent' });
+  }, []);
+
+  // A new turn empties the announcer and, with a reader on, moves focus to the turn's header node (§3.4).
+  const turnKey = state.done ? -1 : state.turn;
+  useEffect(() => {
+    clear();
+    if (turnKey > 0) focusPrompt();
+  }, [turnKey, clear, focusPrompt]);
 
   const bubbles = logView(scene, state, m.a11y.minigame.rolePlay);
   const replies = replyViews(scene, state);
@@ -381,6 +452,8 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             </View>
           ) : (
             <Replies
+              roundLabel={m.a11y.answer.round(Math.min(progress.value, progress.max), progress.max, [newest ? [newest.romanization, newest.meaning].filter((x): x is string => x !== undefined && x !== '').join(', ') : '', copy.rolePlay.tapReply].filter((x) => x !== '').join('. '))}
+              promptRef={speech.promptRef}
               turn={state.node}
               whyId={state.why}
               replies={replies}
@@ -392,6 +465,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
               shownLabel={copy.rolePlay.meaningsShown}
               moreLabel={copy.rolePlay.moreReplies}
               wrongLabel={m.a11y.minigame.option.wrong}
+              rightLabel={m.a11y.minigame.option.correct}
               hintLabel={m.a11y.minigame.option.hint}
               reducedMotion={reducedMotion}
               onKeep={setKeepH}
@@ -400,9 +474,15 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
               refFor={(id, node) => replyRefs.current.set(id, node)}
             />
           )}
+          {nextButton.shown && closing === null ? (
+            <View style={{ paddingTop: spacing.sm }}>
+              <Button pressableRef={nextButton.nextRef} label={copy.trace.next.cta} tone="primary" size="hero" fullWidth onPress={moveOn} testID="role-play-next" />
+            </View>
+          ) : null}
         </View>
       </View>
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      <AnswerAnnouncer line={speech.line} />
     </Screen>
   );
 }
@@ -488,6 +568,9 @@ function MeBubble({ bubble, cap }: { bubble: BubbleView; cap: string }): ReactEl
 }
 
 interface RepliesProps {
+  /** The turn's header node (§3.4): its label and ref (the instruction line, never the Show meanings button). */
+  roundLabel: string;
+  promptRef: (node: unknown) => void;
   /** The turn on screen: each turn's replies open scrolled to their top. */
   turn: string;
   /** The less natural reply Hoya is explaining (its id), or null. */
@@ -501,6 +584,7 @@ interface RepliesProps {
   shownLabel: string;
   moreLabel: string;
   wrongLabel: (label: string) => string;
+  rightLabel: (label: string) => string;
   hintLabel: (label: string) => string;
   reducedMotion: boolean;
   onKeep: (height: number) => void;
@@ -526,7 +610,7 @@ function Replies(props: RepliesProps): ReactElement {
   // Kept in view whatever the window: the instruction row and the first reply whole, above the cue when one shows.
   const several = replies.length > 1;
   // `firstH` is the reply with its look-here ring, which sits in its negative margin: the reply itself is 2 rings less.
-  useEffect(() => onKeep(PIN_PAD + rowH + spacing.xs + Math.max(0, firstH - 2 * borderWidth.thick) + (several ? CUE_HEIGHT : spacing.xs)), [rowH, firstH, several, onKeep]);
+  useEffect(() => onKeep(PIN_PAD + rowH + RING_OUT + Math.max(0, firstH - 2 * RING_OUT) + (several ? CUE_HEIGHT : RING_OUT)), [rowH, firstH, several, onKeep]);
   const more = view.height > 0 && view.content - (view.offset + view.height) > 1;
   return (
     <View style={{ flexShrink: 1 }}>
@@ -534,9 +618,11 @@ function Replies(props: RepliesProps): ReactElement {
         onLayout={(e: LayoutChangeEvent) => setRowH(e.nativeEvent.layout.height)}
         style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, minHeight: touchTarget.min }}
       >
-        <Body tone="secondary" weight="semibold">
-          {props.tapLabel}
-        </Body>
+        <View ref={props.promptRef} accessible accessibilityRole="header" accessibilityLabel={props.roundLabel} testID="role-play-round">
+          <Body tone="secondary" weight="semibold">
+            {props.tapLabel}
+          </Body>
+        </View>
         <Button
           label={meanings ? props.shownLabel : props.showLabel}
           tone="secondary"
@@ -554,7 +640,8 @@ function Replies(props: RepliesProps): ReactElement {
           }}
           key={props.turn}
           style={{ flexShrink: 1 }}
-          contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.xs }}
+          // The look-here ring reaches `RING_OUT` outside a reply, so the replies keep that room on every side.
+          contentContainerStyle={{ gap: spacing.sm, paddingTop: RING_OUT, paddingBottom: RING_OUT, paddingHorizontal: RING_OUT }}
           onLayout={(e: LayoutChangeEvent) => {
             drive.measure.onLayout(e);
             const height = e.nativeEvent.layout.height;
@@ -582,6 +669,7 @@ function Replies(props: RepliesProps): ReactElement {
                     key={r.id}
                     reply={r}
                     wrongLabel={props.wrongLabel}
+                    rightLabel={props.rightLabel}
                     hintLabel={props.hintLabel}
                     onTap={() => props.onTap(r.id)}
                     refFor={(node) => props.refFor(r.id, node)}
@@ -605,29 +693,43 @@ function replyName(r: ReplyView): string {
 interface ReplyBubbleProps {
   reply: ReplyView;
   wrongLabel: (label: string) => string;
+  rightLabel: (label: string) => string;
   hintLabel: (label: string) => string;
   onTap: () => void;
   refFor: (node: Focusable | null) => void;
   onLayout?: (height: number) => void;
 }
 
-function ReplyBubble({ reply, wrongLabel, hintLabel, onTap, refFor, onLayout }: ReplyBubbleProps): ReactElement {
+function ReplyBubble({ reply, wrongLabel, rightLabel, hintLabel, onTap, refFor, onLayout }: ReplyBubbleProps): ReactElement {
   const textScale = useTypeScale();
   const press = usePressLook();
   const locked = reply.look === 'locked';
+  const sending = reply.look === 'sending';
   const ring = reply.look === 'lookHere';
-  const name = locked ? wrongLabel(replyName(reply)) : ring ? hintLabel(replyName(reply)) : replyName(reply);
+  // The state first (§3.2): a less natural reply is "Not this one", the reply being sent "Right answer", the ringed one "Look here".
+  const name = locked ? wrongLabel(replyName(reply)) : sending ? rightLabel(replyName(reply)) : ring ? hintLabel(replyName(reply)) : replyName(reply);
+  // A locked or sent reply is inactive, still focusable, never disabled (§3.1); the others wait while a reply is sent.
+  const answered = locked || sending;
   return (
     <View
       onLayout={onLayout ? (e: LayoutChangeEvent) => onLayout(e.nativeEvent.layout.height) : undefined}
-      // The look-here ring sits just outside the bubble (a negative margin), so it takes no room and nothing moves.
-      style={{ margin: -borderWidth.thick, borderRadius: radii.xl, borderWidth: borderWidth.thick, borderColor: ring ? colors.border.focus : 'transparent' }}
+      // The look-here ring is the one dashed shape, `spacing.xs` outside the bubble (a negative margin), so it takes no room
+      // and nothing moves (AnswerFeedback D4).
+      style={{
+        margin: -RING_OUT,
+        padding: spacing.xs,
+        borderRadius: radii.xl + RING_OUT,
+        borderWidth: borderWidth.thick,
+        borderStyle: 'dashed',
+        borderColor: ring ? colors.border.focus : 'transparent',
+      }}
       testID={ring ? 'role-play-ring' : undefined}
     >
       <TapTarget
         pressableRef={(node) => refFor(node as Focusable | null)}
         accessibilityLabel={name}
-        disabled={reply.disabled}
+        inactive={answered}
+        disabled={reply.disabled && !answered}
         onCommit={onTap}
         testID={`role-play-reply-${reply.id}`}
       >
@@ -639,7 +741,9 @@ function ReplyBubble({ reply, wrongLabel, hintLabel, onTap, refFor, onLayout }: 
               style={{
                 minHeight: touchTarget.child,
                 justifyContent: 'center',
-                paddingHorizontal: spacing.lg - pressInset(p, rest),
+                paddingLeft: spacing.lg - pressInset(p, rest),
+                // The end padding is the mark's room in every state, so a mark never covers the text and answering never rewraps it.
+                paddingRight: REPLY_END - pressInset(p, rest),
                 paddingVertical: Math.max(0, spacing.xs - pressInset(p, rest)),
                 borderRadius: radii.xl,
                 borderWidth: p?.borderWidth ?? rest,
@@ -653,11 +757,7 @@ function ReplyBubble({ reply, wrongLabel, hintLabel, onTap, refFor, onLayout }: 
               </Text>
               <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.romanization}</Text>
               {reply.meaning ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.meaning}</Text> : null}
-              {locked ? (
-                <View style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }} {...hidden}>
-                  <Icon name="dash" size={spacing.lg} color={colors.text.secondary} />
-                </View>
-              ) : null}
+              {answered ? <CornerMark mark={locked ? 'miss' : 'right'} inset={spacing.sm} testID={`role-play-reply-${reply.id}-mark`} /> : null}
             </View>
           );
         }}
@@ -671,7 +771,7 @@ function WhyBubble({ parts }: { parts: KoTokenPart[] }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
-      accessibilityLiveRegion="polite"
+      // Not a live region: the announcer says the why line once, `{ko:}` as romanization (§3.3).
       testID="role-play-why"
       style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, backgroundColor: colors.feedback.nudgeLight, borderRadius: radii.xl, borderWidth: borderWidth.base, borderColor: colors.feedback.nudge, padding: spacing.md }}
     >

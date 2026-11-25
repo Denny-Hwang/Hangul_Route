@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import {
   FOUND_ADVANCE_MS,
   MIN_SCENE_WIDTH,
-  MISS_RING_MS,
   askedId,
   canSkip,
   endView,
@@ -24,8 +23,10 @@ import {
   slotViews,
   spotHitRects,
   spotRect,
+  ringMarkOffset,
   spotViews,
   startFlow,
+  thingName,
   stepFlow,
   validRounds,
   type FlowEvent,
@@ -83,7 +84,7 @@ describe('the flow', () => {
   it('a right tap rings the thing, scores the word on its first try, plays it, shows its meaning and moves on', () => {
     const first = startFlow(ROUNDS, 1).order[0]![0]!;
     const { state, effects } = run([{ type: 'tap', id: first }]);
-    expect(effects).toEqual(['cancel-clear', `answer ${roundKeyOf(ROUNDS, 0, first)} true ${first}`, 'haptic', `play ${first}`, 'schedule-advance']);
+    expect(effects).toEqual([`answer ${roundKeyOf(ROUNDS, 0, first)} true ${first}`, 'haptic', `play ${first}`, 'schedule-advance']);
     expect(state.found).toEqual([first]);
     expect(promptView(ROUND, state)?.meaning).toBe(meaningOf(ROUND.targets.find((t) => t.id === first)!.word));
     expect(liveText(ROUND, state, en.a11y.hiddenHeritage, en.learner.hiddenHeritage)).toMatch(/^Found: /);
@@ -96,17 +97,58 @@ describe('the flow', () => {
   it('a tap on another thing is a soft nudge that ends nothing; the second miss rings the right spot', () => {
     const asked = startFlow(ROUNDS, 1).order[0]![0]!;
     const { state, effects } = run([{ type: 'tap', id: 'hangari' }]);
-    expect(effects).toEqual(['cancel-clear', `answer ${roundKeyOf(ROUNDS, 0, asked)} false ${asked}`, 'haptic', 'schedule-clear']);
-    expect(MISS_RING_MS).toBe(600);
+    expect(effects).toEqual([`answer ${roundKeyOf(ROUNDS, 0, asked)} false ${asked}`, 'haptic']);
     expect(state.status).toBe('playing');
     expect(askedId(state)).toBe(asked);
-    expect(spotViews(ROUND, state, en.a11y.hiddenHeritage).find((s) => s.id === 'hangari')?.ring).toBe('miss');
+    const miss = spotViews(ROUND, state, en.a11y.hiddenHeritage, en.a11y.minigame.option).find((s) => s.id === 'hangari');
+    expect(miss?.ring).toBe('miss');
+    // The missed spot is named with its state first (F-A11Y-001 §3.2).
+    expect(miss?.label).toBe('Not this one: jar');
     expect(showsHoya(state)).toBe(true);
     expect(liveText(ROUND, state, en.a11y.hiddenHeritage, en.learner.hiddenHeritage)).toBe('Look again');
-    const cleared = stepFlow(state, { type: 'clear-flash' }, ROUNDS).state;
-    expect(spotViews(ROUND, cleared, en.a11y.hiddenHeritage).every((s) => s.ring === null)).toBe(true);
-    const twice = run([{ type: 'tap', id: 'hangari' }, { type: 'clear-flash' }, { type: 'tap', id: 'baguni' }, { type: 'clear-flash' }]).state;
-    expect(spotViews(ROUND, twice, en.a11y.hiddenHeritage).filter((s) => s.ring !== null)).toEqual([expect.objectContaining({ id: asked, ring: 'hint' })]);
+    // OD-AF7: no timer clears the miss; it stays until the learner's next tap that changes the board (the next miss takes its place).
+    const twice = run([{ type: 'tap', id: 'hangari' }, { type: 'tap', id: 'baguni' }]).state;
+    const rings = spotViews(ROUND, twice, en.a11y.hiddenHeritage, en.a11y.minigame.option).filter((s) => s.ring !== null);
+    expect(rings).toHaveLength(2);
+    expect(rings).toEqual(expect.arrayContaining([expect.objectContaining({ id: asked, ring: 'hint', label: expect.stringMatching(/^Look here: /) }), expect.objectContaining({ id: 'baguni', ring: 'miss' })]));
+  });
+
+  it('the spot that shows its miss takes no tap: a second tap on it is not a second miss (OD-AF7, AF-4c)', () => {
+    const missed = run([{ type: 'tap', id: 'hangari' }]).state;
+    const again = stepFlow(missed, { type: 'tap', id: 'hangari' }, ROUNDS);
+    expect(again.effects).toEqual([]);
+    expect(again.state).toBe(missed);
+    // The right spot clears the miss.
+    const asked = askedId(missed)!;
+    expect(stepFlow(missed, { type: 'tap', id: asked }, ROUNDS).state.flash).toBeNull();
+  });
+
+  it('names a thing in a result line by its meaning, else its romanization, never its Hangul', () => {
+    const jar = ROUND.targets.find((t) => t.id === 'bap')!.word;
+    expect(thingName(jar)).toBe('cooked rice');
+    expect(thingName({ ...jar, en: jar.ko })).toBe(jar.romanization);
+    expect(thingName({ ...jar, en: ' ' })).toBe(jar.romanization);
+  });
+
+  it('a found or miss ring disc sits on the ring corner, moved in only where the scene edge would cut it (D6)', () => {
+    const disc = 26;
+    // Mid-scene: centred on the top-end corner of the spot.
+    const mid = { x: 100, y: 100, w: 60, h: 60 };
+    const k = 400 / 400;
+    expect(ringMarkOffset(mid, 400, disc)).toEqual({ left: mid.w * k - disc / 2, top: -disc / 2 });
+    // At the scene's top-end corner (real spots end at the right edge, 12 of 300 from the top): the disc stays whole.
+    const edge = { x: 340, y: 12, w: 60, h: 60 };
+    const moved = ringMarkOffset(edge, 400, disc);
+    expect(edge.x + moved.left).toBe(400 - disc);
+    expect(edge.y + moved.top).toBe(0);
+    // Scaled scene: the same rule in dp.
+    const small = ringMarkOffset(edge, 256, disc);
+    expect(edge.x * 0.64 + small.left).toBeCloseTo(256 - disc);
+    expect(edge.y * 0.64 + small.top).toBeCloseTo(0);
+    // A spot at the scene's bottom-end: the disc keeps inside along y as well.
+    const bottom = ringMarkOffset({ x: 350, y: 250, w: 50, h: 50 }, 400, disc);
+    expect(250 + bottom.top).toBeGreaterThanOrEqual(0);
+    expect(250 + bottom.top + disc).toBeLessThanOrEqual(300);
   });
 
   it('only taps on spots count: a found spot, or a tap while a word shows, does nothing', () => {
@@ -115,7 +157,6 @@ describe('the flow', () => {
     expect(stepFlow(found, { type: 'tap', id: order[1]! }, ROUNDS).effects).toEqual([]);
     const advanced = stepFlow(found, { type: 'advance' }, ROUNDS).state;
     expect(stepFlow(advanced, { type: 'tap', id: order[0]! }, ROUNDS).effects).toEqual([]);
-    expect(stepFlow(advanced, { type: 'clear-flash' }, ROUNDS).effects).toEqual([]);
     expect(stepFlow(advanced, { type: 'advance' }, ROUNDS).state).toBe(advanced);
   });
 
@@ -151,7 +192,7 @@ describe('the flow', () => {
     const missed = run([{ type: 'tap', id: 'hangari' }]);
     expect(canSkip(missed.state)).toBe(true);
     const skipped = stepFlow(missed.state, { type: 'skip' }, ROUNDS);
-    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-clear', 'cancel-advance', 'complete']);
+    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-advance', 'complete']);
     expect(skipped.effects.some((e) => e.type === 'answer')).toBe(false);
     expect(stepFlow(skipped.state, { type: 'skip' }, ROUNDS).effects).toEqual([]);
   });
@@ -163,7 +204,7 @@ describe('the flow', () => {
     expect(canSkip(found.state)).toBe(true);
     const skipped = stepFlow(found.state, { type: 'skip' }, ROUNDS);
     expect(skipped.state.status).toBe('done');
-    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-clear', 'cancel-advance', 'complete']);
+    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-advance', 'complete']);
     const late = stepFlow(skipped.state, { type: 'advance' }, ROUNDS);
     expect(late.state).toBe(skipped.state);
     expect(late.effects).toEqual([]);
@@ -183,11 +224,11 @@ describe('the flow', () => {
 describe('the views', () => {
   it('names every spot by its meaning, never the answer, in reading order; a found spot says so', () => {
     const state = startFlow(ROUNDS, 1);
-    const views = spotViews(ROUND, state, en.a11y.hiddenHeritage);
+    const views = spotViews(ROUND, state, en.a11y.hiddenHeritage, en.a11y.minigame.option);
     expect(views.map((v) => v.label)).toEqual(['jar', 'kimchi', 'rice cake', 'basket', 'cooked rice', 'soup', 'spoon', 'chopsticks']);
     const first = state.order[0]![0]!;
     const found = run([{ type: 'tap', id: first }]).state;
-    const label = spotViews(ROUND, found, en.a11y.hiddenHeritage).find((v) => v.id === first)!.label;
+    const label = spotViews(ROUND, found, en.a11y.hiddenHeritage, en.a11y.minigame.option).find((v) => v.id === first)!.label;
     expect(label).toMatch(/, found$/);
   });
 
@@ -207,7 +248,7 @@ describe('the views', () => {
     const state: FlowState = { ...startFlow([ko], 1), order: [['bap', 'gimchi', 'jeotgarak']] };
     const found = stepFlow(state, { type: 'tap', id: 'bap' }, [ko]).state;
     expect(liveText(ko, found, getMessages('ko').a11y.hiddenHeritage, getMessages('ko').learner.hiddenHeritage)).toBe('찾았어요: 밥');
-    expect(spotViews(ko, found, getMessages('ko').a11y.hiddenHeritage).find((s) => s.id === 'bap')!.label).toBe('밥, 찾았어요');
+    expect(spotViews(ko, found, getMessages('ko').a11y.hiddenHeritage, getMessages('ko').a11y.minigame.option).find((s) => s.id === 'bap')!.label).toBe('밥, 찾았어요');
     expect(liveText(ko, state, en.a11y.hiddenHeritage, en.learner.hiddenHeritage)).toBe('');
   });
 });

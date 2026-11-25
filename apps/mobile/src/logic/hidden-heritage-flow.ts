@@ -9,13 +9,13 @@ import { shuffleSeeded } from './story/seeded-order';
  * the game. Hoya names one thing in Korean (written with romanization, and heard); the learner taps it in the scene.
  * A right tap rings it, plays its word and shows its meaning, then the next word comes; a tap on another thing is a soft
  * amber nudge that ends nothing; after two misses the right spot gets a "look here" ring. The first tap on a spot for a
- * word scores that word (`w<n>`, `first-try.ts`); later taps are retries. Nothing here is timed: the two delays only
- * clear a ring and show the meaning before the next word. The screen (`HiddenHeritageGame.tsx`, in the lazy chunk)
+ * word scores that word (`w<n>`, `first-try.ts`); later taps are retries. The one delay shows the found word's meaning
+ * before the next word. A miss ring has no timer: it stays until the learner's next tap that changes the board, and the
+ * missed spot takes no tap meanwhile (F-A11Y-001 OD-AF7, AF-4c). The screen (`HiddenHeritageGame.tsx`, in the lazy chunk)
  * renders these views and runs the effects; it is the only importer, so this file is in that chunk too.
  */
 
-/** How long a miss ring stays, and how long a found word's meaning shows before the next word (wireframe "States"). */
-export const MISS_RING_MS = 600;
+/** How long a found word's meaning shows before the next word (wireframe "States"); the screen lifts it to the 1000 ms result floor. */
 export const FOUND_ADVANCE_MS = 700;
 /** Misses on one word before its spot gets the look-here ring. */
 export const HINT_AFTER_MISSES = 2;
@@ -37,7 +37,7 @@ export interface FlowState {
   found: string[];
   /** Taps on another thing, per target id of this round. */
   misses: Record<string, number>;
-  /** The spot with the amber miss ring, while it shows. */
+  /** The spot with the amber miss ring: it stays until the learner's next tap that changes the board (OD-AF7). */
   flash: string | null;
   /** A word just found: its meaning shows until the next word comes. */
   pending: string | null;
@@ -51,7 +51,6 @@ export type FlowEvent =
   | { type: 'start' }
   | { type: 'hear' }
   | { type: 'tap'; id: string }
-  | { type: 'clear-flash' }
   | { type: 'advance' }
   | { type: 'continue' }
   | { type: 'skip' };
@@ -60,8 +59,6 @@ export type FlowEffect =
   | { type: 'answer'; roundKey: string; correct: boolean; itemId: string }
   | { type: 'play'; targetId: string }
   | { type: 'haptic'; kind: 'success' | 'nudge' }
-  | { type: 'schedule-clear'; ms: number }
-  | { type: 'cancel-clear' }
   | { type: 'schedule-advance'; ms: number }
   | { type: 'cancel-advance' }
   | { type: 'complete' };
@@ -94,14 +91,14 @@ export function stepFlow(state: FlowState, event: FlowEvent, rounds: readonly Hi
     case 'hear':
       return asked === null ? same : { state, effects: [{ type: 'play', targetId: state.pending ?? asked }] };
     case 'tap': {
-      // Only taps on spots are answers; a found spot, or any tap while a found word shows, does nothing.
-      if (asked === null || state.pending !== null || state.found.includes(event.id)) return same;
+      // Only taps on spots are answers; a found spot, the spot that shows its miss ring (it is locked, so a tap on it is not
+      // a second miss), or any tap while a found word shows, does nothing.
+      if (asked === null || state.pending !== null || state.found.includes(event.id) || state.flash === event.id) return same;
       const roundKey = roundKeyOf(rounds, state.roundIdx, asked);
       if (event.id === asked) {
         return {
           state: { ...state, found: [...state.found, asked], pending: asked, flash: null, answered: state.answered + 1, live: 'found' },
           effects: [
-            { type: 'cancel-clear' },
             { type: 'answer', roundKey, correct: true, itemId: asked },
             { type: 'haptic', kind: 'success' },
             { type: 'play', targetId: asked },
@@ -111,11 +108,9 @@ export function stepFlow(state: FlowState, event: FlowEvent, rounds: readonly Hi
       }
       return {
         state: { ...state, misses: { ...state.misses, [asked]: (state.misses[asked] ?? 0) + 1 }, flash: event.id, answered: state.answered + 1, live: 'miss' },
-        effects: [{ type: 'cancel-clear' }, { type: 'answer', roundKey, correct: false, itemId: asked }, { type: 'haptic', kind: 'nudge' }, { type: 'schedule-clear', ms: MISS_RING_MS }],
+        effects: [{ type: 'answer', roundKey, correct: false, itemId: asked }, { type: 'haptic', kind: 'nudge' }],
       };
     }
-    case 'clear-flash':
-      return state.flash === null ? same : { state: { ...state, flash: null }, effects: [] };
     case 'advance': {
       // Only while playing: a Skip inside the found word's delay ends the step, and a late timer changes nothing.
       if (state.status !== 'playing' || state.pending === null) return same;
@@ -134,7 +129,7 @@ export function stepFlow(state: FlowState, event: FlowEvent, rounds: readonly Hi
     case 'skip':
       // Ends the step without marking the words not found (the shell's Skip), and drops a found word's pending advance.
       return state.status === 'playing' || state.status === 'end'
-        ? { state: { ...state, status: 'done', pending: null }, effects: [{ type: 'cancel-clear' }, { type: 'cancel-advance' }, { type: 'complete' }] }
+        ? { state: { ...state, status: 'done', pending: null }, effects: [{ type: 'cancel-advance' }, { type: 'complete' }] }
         : same;
   }
 }
@@ -166,7 +161,12 @@ export interface SpotView {
  * things are, never which one is the answer. A found spot keeps its ring; the miss ring flashes on the tapped spot;
  * the look-here ring sits on the asked word's spot after two misses.
  */
-export function spotViews(round: HiddenHeritageRound, state: FlowState, a11y: Messages['a11y']['hiddenHeritage']): SpotView[] {
+export function spotViews(
+  round: HiddenHeritageRound,
+  state: FlowState,
+  a11y: Messages['a11y']['hiddenHeritage'],
+  option: Messages['a11y']['minigame']['option'],
+): SpotView[] {
   const asked = askedId(state);
   const hint = asked !== null && state.pending === null && (state.misses[asked] ?? 0) >= HINT_AFTER_MISSES ? asked : null;
   const row = (s: HiddenHeritageSpot): number => Math.floor((s.y + s.h / 2) / HIDDEN_HERITAGE_SPOT.min);
@@ -175,9 +175,28 @@ export function spotViews(round: HiddenHeritageRound, state: FlowState, a11y: Me
       const name = meaningOf(thing.word) ?? thing.word.ko;
       const found = state.found.includes(thing.id);
       const ring: RingKind | null = found ? 'found' : state.flash === thing.id ? 'miss' : hint === thing.id ? 'hint' : null;
-      return { id: thing.id, spot: thing.spot, label: found ? a11y.spotFound(name) : name, ring, found };
+      // The state first (F-A11Y-001 §3.2): the missed spot is "Not this one", the ringed one "Look here".
+      const label = found ? a11y.spotFound(name) : ring === 'miss' ? option.wrong(name) : ring === 'hint' ? option.hint(name) : name;
+      return { id: thing.id, spot: thing.spot, label, ring, found };
     })
     .sort((a, b) => row(a.spot) - row(b.spot) || a.spot.x - b.spot.x);
+}
+
+/** What a result line calls a thing (F-A11Y-001 §3.2): its meaning, else its romanization, and never its Hangul (OD-AF5 (a)). */
+export const thingName = (word: KoText): string => meaningOf(word) ?? word.romanization;
+
+/**
+ * Where the disc of a found or miss ring sits (AnswerFeedback D6): its centre on the ring's top-end corner, moved in
+ * along each axis just far enough to stay whole inside the scene, which clips at its edge (real spots sit there, e.g.
+ * the leaf of `four-seasons`). Returns the disc's `left` and `top` from the spot's own top-left. Pure.
+ */
+export function ringMarkOffset(spot: HiddenHeritageSpot, sceneWidth: number, disc: number): { left: number; top: number } {
+  const rect = spotRect(spot, sceneWidth);
+  const sceneHeight = (sceneWidth * SCENE_UNITS.height) / SCENE_UNITS.width;
+  const clamp = (value: number, max: number): number => Math.min(Math.max(value, 0), Math.max(0, max));
+  const left = clamp(rect.left + rect.width - disc / 2, sceneWidth - disc);
+  const top = clamp(rect.top - disc / 2, sceneHeight - disc);
+  return { left: left - rect.left, top: top - rect.top };
 }
 
 /** The word being asked, and its meaning once it is found (it shows under the word until the next word). */
