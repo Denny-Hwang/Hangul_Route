@@ -257,13 +257,110 @@ describe('documented converter limits (known output, a fix is a conscious change
     expect(romanizeWord('색연필')).toBe('saegyeonpil');
     expect(romanizeWord('담요')).toBe('damyo');
   });
+});
 
-  it('does not know the special final of 밟-', () => {
-    expect(romanizeWord('밟다')).toBe('balda');
+/** AMENDMENTS-ROMANIZER-GAPS §3.2 / §3.8, row RG-1: the vectors are the spec's. */
+describe('RG-1 F1: ㄺ before ㄱ in a verb stem is heard [ㄹ]', () => {
+  const table: ReadonlyArray<readonly [string, string]> = [
+    ['읽고', 'ilgo'],
+    ['맑게', 'malge'],
+    ['맑고', 'malgo'],
+    ['밝고', 'balgo'],
+    ['늙고', 'neulgo'],
+    ['읽기', 'ilgi'],
+  ];
+  it.each(table)('%s -> %s', (ko, rr) => {
+    expect(romanizeWord(ko)).toBe(rr);
   });
 
-  it('keeps ㅎ after a simple stop even in a verb', () => {
-    expect(romanizeWord('잡혀')).toBe('japhyeo');
+  it('the ㄺ nouns keep [ㄱ] (닭 탉 흙 칡 삵 슭)', () => {
+    expect(romanizeWord('닭고기')).toBe('dakgogi');
+    expect(romanizeWord('흙과')).toBe('heukgwa');
+    expect(romanizeWord('칡과')).toBe('chikgwa');
+    expect(romanizeWord('닭과')).toBe('dakgwa');
+    expect(romanizeWord('수탉과')).toBe('sutakgwa');
+    expect(romanizeWord('삵과')).toBe('sakgwa');
+    expect(romanizeWord('기슭과')).toBe('giseukgwa');
+  });
+
+  it('before any other consonant, at the end, or before a vowel nothing changes', () => {
+    expect(romanizeWord('읽다')).toBe('ikda');
+    expect(romanizeWord('읽지')).toBe('ikji');
+    expect(romanizeWord('읽는')).toBe('ingneun');
+    expect(romanizeWord('읽어요')).toBe('ilgeoyo');
+    expect(romanizeWord('밝히다')).toBe('balkida');
+    expect(romanizeWord('읽')).toBe('ik');
+  });
+});
+
+describe('RG-1 F2: 밟- and 넓죽- / 넓둥- / 넓적- are heard [ㅂ]', () => {
+  const table: ReadonlyArray<readonly [string, string]> = [
+    ['밟다', 'bapda'],
+    ['밟고', 'bapgo'],
+    ['밟지', 'bapji'],
+    ['밟는', 'bamneun'],
+    ['넓둥글다', 'neopdunggeulda'],
+    ['넓적다리', 'neopjeokdari'],
+    ['넓죽하다', 'neopjukhada'],
+  ];
+  it.each(table)('%s -> %s', (ko, rr) => {
+    expect(romanizeWord(ko)).toBe(rr);
+  });
+
+  it('the general ㄼ form and every other 밟 / 넓 are unchanged', () => {
+    expect(romanizeWord('밟아')).toBe('balba');
+    expect(romanizeWord('밟히다')).toBe('balpida');
+    expect(romanizeWord('밟')).toBe('bal');
+    expect(romanizeWord('넓다')).toBe('neolda');
+    expect(romanizeWord('넓히다')).toBe('neolpida');
+    expect(romanizeWord('넓')).toBe('neol');
+    expect(romanizeWord('여덟')).toBe('yeodeol');
+    expect(romanizeWord('짧게')).toBe('jjalge');
+    expect(romanizeWord('넓고')).toBe('neolgo');
+  });
+});
+
+describe('RG-1 F3: a stop before the suffix 히 / 혀 / 혔 / 힌 / 힐 aspirates', () => {
+  const table: ReadonlyArray<readonly [string, string]> = [
+    ['좁히다', 'jopida'],
+    ['잡혀', 'japyeo'],
+    ['잡혔어요', 'japyeosseoyo'],
+    ['잡힌', 'japin'],
+    ['잡힐', 'japil'],
+    ['먹히다', 'meokida'],
+    ['굳히다', 'guchida'],
+    ['닫히다', 'dachida'],
+    ['맞히다', 'machida'],
+    ['꽂히다', 'kkochida'],
+    ['특히', 'teuki'],
+    ['급히', 'geupi'],
+    ['묻혀', 'muchyeo'],
+    ['잊혀', 'ichyeo'],
+    ['닦히다', 'dakida'],
+    ['낱히다', 'natida'],
+    ['았혀', 'atyeo'],
+    ['앞히다', 'apida'],
+  ];
+  it.each(table)('%s -> %s', (ko, rr) => {
+    expect(romanizeWord(ko)).toBe(rr);
+  });
+
+  it('the noun convention for every other ㅎ block is unchanged', () => {
+    expect(romanizeWord('집현전')).toBe('jiphyeonjeon');
+    expect(romanizeWord('묵호')).toBe('mukho');
+    expect(romanizeWord('입학')).toBe('iphak');
+    expect(romanizeWord('축하')).toBe('chukha');
+    expect(romanizeWord('북한산')).toBe('bukhansan');
+    expect(romanizeWord('금속활자')).toBe('geumsokhwalja');
+    expect(romanizeWord('낮하')).toBe('natha');
+    expect(romanizeWord('꽃한')).toBe('kkothan');
+    expect(romanizeWord('못해요')).toBe('mothaeyo');
+  });
+
+  it('a non-stop final or a compound final before 히 is unchanged', () => {
+    expect(romanizeWord('한히')).toBe('hanhi');
+    expect(romanizeWord('읽히')).toBe('ilki');
+    expect(romanizeWord('밟히')).toBe('balpi');
   });
 });
 
