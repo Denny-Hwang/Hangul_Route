@@ -288,6 +288,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,634,508 B raw / 1,276,063 B gzip, 608 B over the LR-4 line (4,633,900 B) and 2,492 B under the AF-4a line
   // (4,637,000 B). The line is the measurement plus a 3,992 B margin (one measured raise, 1,500 B over the AF-4a line and
   // 4,600 B over main's LR-4 line).
+  // [AF] F-A11Y-001 AF-4b (Listen & Pick, Pic-Word Match, Read Pick and Story Sequence import the announcer, the announcement
+  // rules and the Next hook, and their result code grows): on top of main (4,634,508 B raw / 1,276,063 B gzip) the release `build:web`
+  // (CI=1) measured 4,641,856 B raw / 1,278,538 B gzip (+7,348 B raw), 3,356 B over the line. Realia Read, played from Stage 4 on, then became
+  // a chunk of its own (`realia-read-chunk`, a screen chunk of 8,738 B raw), and the build measures 4,634,003 B raw / 1,276,409 B gzip
+  // (505 B raw under main, 4,497 B under the line). The line is unchanged: no raise.
   // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-1 (the web English twin's `console` is `console-app.ts`, the six subtrees a web
   // source reads, so `en/console.ts` leaves the start bundle): on main 5f453304d (4,634,508 B raw / 1,276,063 B gzip) the
   // release `build:web` (CI=1) measures 4,559,730 B raw / 1,253,422 B gzip (-74,778 B raw, -22,641 B gzip). The line stays
@@ -299,6 +304,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // [SB] SB-3: SB-1 and SB-2 together, on main b244e0de5 (4,636,329 B raw / 1,276,458 B gzip, with CH-2), measure
   // 4,533,869 B raw / 1,245,164 B gzip (-102,460 B raw, -31,294 B gzip; learner precache 156 files / 11,111,300 B -> 153
   // files / 10,998,783 B). The line comes down to the measurement plus a 4,131 B margin (-100,500 B).
+  // [SB] SB-3 merged with AF-4b (main 454adefa4, with SB-1 #1107 and SB-2 #1109): the release `build:web` (CI=1) measures
+  // 4,533,364 B raw / 1,245,521 B gzip, 4,636 B under the line. The line is unchanged.
   startBundleRaw: 4_538_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -589,6 +596,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   Object.freeze({ name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' }),
   Object.freeze({ name: 'join-space-chunk', marker: 'screen-chunk:join-space' }),
   Object.freeze({ name: 'placement-chunk', marker: 'screen-chunk:placement' }),
+  // [AF] F-A11Y-001 row AF-4b: Realia Read (`src/screens/minigames/realia-read-chunk.tsx`, reached only through the literal
+  // `import()` of `src/screens/minigames/realia-read-entry.tsx`): the answer feedback of the choice games took the start
+  // bundle over its line, and this game is only played from Stage 4 on.
+  Object.freeze({ name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' }),
 ]);
 
 /**

@@ -151,7 +151,7 @@ test('a wrong card is an amber nudge that moves nothing; two misses ring the rig
   await page.waitForTimeout(800);
   await pastTapLock(page);
   await card(page, 'Receive lucky money').click();
-  await expect(page.getByText('This one comes next.')).toBeVisible();
+  await expect(page.getByText('This one comes next.', { exact: true })).toBeVisible();
   const right = card(page, 'Wear hanbok');
   await expect(right).toHaveAccessibleName(/This one comes next\./);
 

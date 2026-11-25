@@ -277,6 +277,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' },
       { name: 'join-space-chunk', marker: 'screen-chunk:join-space' },
       { name: 'placement-chunk', marker: 'screen-chunk:placement' },
+      // [AF] F-A11Y-001 row AF-4b: Realia Read.
+      { name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -360,6 +362,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       ['src/screens/route/route-proposal-chunk.tsx', 'ROUTE_PROPOSAL_CHUNK', 'src/screens/route/route-proposal-entry.tsx'],
       ['src/screens/sync/join-space-chunk.tsx', 'JOIN_SPACE_CHUNK', 'src/screens/sync/join-space-entry.tsx'],
       ['src/screens/placement/placement-chunk.tsx', 'PLACEMENT_CHUNK', 'src/screens/placement/placement-entry.tsx'],
+      ['src/screens/minigames/realia-read-chunk.tsx', 'REALIA_READ_CHUNK', 'src/screens/minigames/realia-read-entry.tsx'],
     ];
     doors.forEach(([chunk, name, entry], i) => {
       const { marker } = SCREEN_CHUNKS[18 + i];
@@ -539,7 +542,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
       'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
-      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement'].map(
+      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement', 'realia-read'].map(
         (name) => `${name}-chunk has no web bundle: the chunk is missing from the build`,
       ),
     ]);
@@ -746,6 +749,7 @@ describe('precacheReport and its budget lines', () => {
     // [AF] AF-4a merged with AF-3 (Card Match) measures 4,633,012 B (release build, CI=1): 4,637,000 B.
     // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-4 (the save-failed page's en strings and failed-phase plumbing) on top of AF-3 measures 4,629,855 B (release build, CI=1): 4,633,900 B.
     // [AF] [LR] Rows LR-4 and AF-4a merged (main f31c6b313 with LR-4, AF-3 and AF-4a) measure 4,634,508 B (release build, CI=1): 4,638,500 B.
+    // [AF] AF-4b (the choice games on the announcer, +7,348 B raw) with Realia Read moved to a chunk of its own measures 4,634,003 B (release build, CI=1): the line stays 4,638,500 B.
     // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-1 (the web twin's console strings, 4,559,730 B alone) and SB-2 (no e2e code in a
     // release build, 4,606,826 B alone; both on main 5f453304d, 4,634,508 B) together, on main b244e0de5 (4,636,329 B with
     // CH-2), measure 4,533,869 B (release build, CI=1): 4,538,000 B. The measurements between FN-7 and SB held the line before
@@ -766,11 +770,11 @@ describe('precacheReport and its budget lines', () => {
     // 32,041 B above it.
     const fn7ToSb = [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387, 4_617_949, 4_625_094, 4_629_855, 4_630_569, 4_633_012, 4_634_508, 4_636_329];
     for (const measured of fn7ToSb) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(30_000);
-    for (const measured of [4_533_869]) {
+    for (const measured of [4_533_869, 4_533_364]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_533_869).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_533_364).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

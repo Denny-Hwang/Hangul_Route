@@ -31,7 +31,7 @@ import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { PicWordMatchGame } from './PicWordMatchGame';
-import { RealiaReadGame } from './RealiaReadGame';
+import { RealiaReadGame } from './realia-read-entry';
 import { SentenceBuilderGame } from './sentence-builder-entry';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
