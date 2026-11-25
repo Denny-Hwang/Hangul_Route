@@ -10,5 +10,5 @@ export const CLOZE_PICK_CHUNK = 'screen-chunk:cloze-pick';
 
 export { ClozePickGame } from './ClozePickGame';
 // The fixture build's e2e hook and step (row CM-30). They ship in every build's chunk, unmounted: only a fixture build
-// (`STORY_FIXTURES_BUILD`, navigation/root.tsx) mounts the hook and registers the screen.
+// (navigation/e2e-entry.tsx, through the generated e2e registry) mounts the hook and registers the screen.
 export { ClozePickE2eBody, ClozePickE2eHookBody } from '../../navigation/cloze-pick-e2e';

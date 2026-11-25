@@ -82,7 +82,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
   // Row CM-30: the Cloze Pick game's chunk (its fallback, Listen & Pick, is imported as usual).
   'screens/minigames/cloze-pick-entry.tsx#ClozePickGame': 'screens/minigames/ClozePickGame.tsx#ClozePickGame',
-  'screens/minigames/cloze-pick-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-2: the Cloze Pick e2e screen lives in the e2e entry, which loads the chunk.
+  'navigation/e2e-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
   // Row CM-34: Story Order's game, the minigame step's chunk while `game.story-order` is on.
   'screens/minigames/story-order/StoryOrderStep.tsx#StoryOrderGame': 'screens/minigames/story-order/StoryOrderGame.tsx#StoryOrderGame',
   // Row CM-35: Role Play's chunk (the game, and the fixture build's host).
@@ -411,7 +412,8 @@ function registered(path: string): { route: string; decl: Decl | null }[] {
   return out;
 }
 
-const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx', 'navigation/grown-up-stack.native.tsx', 'navigation/recover-stack.tsx'];
+// [SB] SB-2: root.tsx registers the e2e screens through `E2E_ENTRY.screens(Stack)` (navigation/e2e-entry.tsx).
+const NAVIGATORS = ['navigation/root.tsx', 'navigation/e2e-entry.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx', 'navigation/grown-up-stack.native.tsx', 'navigation/recover-stack.tsx'];
 /** Containers: the nested navigators, whose own routes are in the list. */
 const CONTAINERS = new Set(['Onboarding', 'Main', 'Guest']);
 
