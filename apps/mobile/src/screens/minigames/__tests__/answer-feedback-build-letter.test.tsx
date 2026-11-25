@@ -1,4 +1,4 @@
-import { HoyaBubble, Icon, LayoutProvider, TAP_LOCK_MS, TapLockProvider, layoutClassFor } from '@hangul-route/design-system';
+import { HoyaBubble, Icon, LayoutProvider, colors, TAP_LOCK_MS, TapLockProvider, layoutClassFor } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -295,6 +295,37 @@ describe('Build a Letter: a wrong build stays (OD-AF7 (i))', () => {
     expect(answers).toEqual([[0, false], [0, false]]);
     expect(has(r.root, 'build-letter-shape')).toBe(true);
     expect(announced(r)).toEqual([MISS_LINE(GA_SHAPE)]);
+  });
+});
+
+describe('Build a Letter: the slots of a wrong build take the nudge look (AnswerFeedback D7)', () => {
+  /** Every colour a slot's box draws (react-native-web resolves the style object into the host's `style`). */
+  const paint = (root: ReactTestInstance, i: number): string => {
+    const found = byTestId(root, `build-letter-slot-${i}`).flatMap((n) => hostNodes(n, () => true));
+    return JSON.stringify(found.map((n) => n.props.style));
+  };
+  const hex = (c: string): string => {
+    const n = Number.parseInt(c.slice(1), 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},1.00)`;
+  };
+
+  it('a wrong build draws amber slots (nudgeLight fill, nudge border), never the danger colour; a fresh build is back to the brand look', async () => {
+    const r = await open(GA2);
+    await click(r.root, tile(G));
+    await tick(TAP_LOCK_MS);
+    expect(paint(r.root, 0)).toContain(hex(colors.brand.primaryLight));
+    await click(r.root, 'build-letter-undo');
+    await tick(TAP_LOCK_MS);
+    await miss(r);
+    for (const i of [0, 1]) {
+      expect(paint(r.root, i)).toContain(hex(colors.feedback.nudgeLight));
+      expect(paint(r.root, i)).toContain(hex(colors.feedback.nudge));
+      expect(paint(r.root, i)).not.toContain(hex(colors.feedback.danger));
+      expect(paint(r.root, i)).not.toContain(hex(colors.brand.primaryLight));
+    }
+    await tick(TAP_LOCK_MS);
+    await click(r.root, 'build-letter-undo');
+    expect(paint(r.root, 0)).toContain(hex(colors.brand.primaryLight));
   });
 });
 

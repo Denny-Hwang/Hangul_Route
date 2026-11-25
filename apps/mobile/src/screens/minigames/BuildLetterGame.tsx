@@ -295,9 +295,11 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
                   height: slotSize,
                   borderRadius: radii.lg,
                   borderWidth: p?.borderWidth ?? borderWidth.base,
-                  borderColor: p?.borderColor ?? (filled ? colors.brand.primary : colors.border.subtle),
+                  // A wrong build takes the amber nudge look and no mark: the slots stay tappable, so `replay` would say "locked"
+                  // (F-A11Y-001 §3.5, AnswerFeedback D7).
+                  borderColor: p?.borderColor ?? (filled ? (feedback === 'wrong' ? colors.feedback.nudge : colors.brand.primary) : colors.border.subtle),
                   borderStyle: filled ? 'solid' : 'dashed',
-                  backgroundColor: filled ? colors.brand.primaryLight : colors.surface.paper,
+                  backgroundColor: filled ? (feedback === 'wrong' ? colors.feedback.nudgeLight : colors.brand.primaryLight) : colors.surface.paper,
                   alignItems: 'center',
                   justifyContent: 'center',
                   transform: pressTransform(p),
