@@ -281,11 +281,11 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const named = (look: ShapeTileLook, base: string): string =>
     answerOptionLabel(look === 'found' ? 'correct' : look === 'marked' ? 'wrong' : look === 'ring' ? 'hint' : 'idle', base, m.a11y.minigame.option);
   /** The tile's decorations: the disc straddling its corner (`check` found, `replay` missed) and the look-here ring. */
-  const decor = (look: ShapeTileLook, tid: string): ReactElement | null =>
+  const decor = (look: ShapeTileLook, tid: string | number): ReactElement | null =>
     look === 'found' || look === 'marked' ? (
-      <DiscMark mark={look === 'found' ? 'right' : 'miss'} answerBorder={TILE_LOOK[look].borderWidth} testID={`${tid}-mark`} />
+      <DiscMark mark={look === 'found' ? 'right' : 'miss'} answerBorder={TILE_LOOK[look].borderWidth} testID={`${testID}-mark-${tid}`} />
     ) : look === 'ring' ? (
-      <LookHereRing radius={radii.lg} answerBorder={TILE_LOOK.ring.borderWidth} testID={`${tid}-ring`} />
+      <LookHereRing radius={radii.lg} answerBorder={TILE_LOOK.ring.borderWidth} testID={`${testID}-ring-${tid}`} />
     ) : null;
   const status = found ? <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, say)} onHelp={() => setHelpOpen(true)} testID={`${testID}-prompt`} /> : null;
   const hoya =
@@ -338,7 +338,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                         {t.char}
                       </Text>
                       {t.sound !== null ? <Caption>{t.sound}</Caption> : null}
-                      {decor(t.look, `${testID}-tile-${t.index}`)}
+                      {decor(t.look, t.index)}
                     </View>
                   )}
                 </TapTarget>
@@ -433,7 +433,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
                       {t.char}
                     </Text>
                     <Caption>{t.sound}</Caption>
-                    {decor(t.look, `${testID}-tile-${t.id}`)}
+                    {decor(t.look, t.id)}
                   </View>
                 )}
               </TapTarget>

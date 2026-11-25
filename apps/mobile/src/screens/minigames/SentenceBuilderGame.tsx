@@ -251,8 +251,10 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
         out.effects.forEach(runEffect);
         const at = turn.current;
         const place = round.open[before.placed.length];
+        // The place and the word placed (a particle round's word is the stem and the piece: "chaegi", not "i").
+        const placedWord = (place === undefined ? undefined : round.words[place]?.romanization) ?? tile.romanization;
         const say = (): Promise<void> =>
-          speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, tile.romanization)) });
+          speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, placedWord)) });
         let heard: Promise<void> = Promise.resolve();
         void afterRightAnswer({
           readerOn: speak.readerOn,
@@ -285,7 +287,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
       } else if (before.placed.length < out.state.placed.length) {
         // A right tile that is not the last: its place and romanization.
         const place = round.open[before.placed.length];
-        void speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, tile.romanization)) });
+        const placedWord = (place === undefined ? undefined : round.words[place]?.romanization) ?? tile.romanization;
+        void speak.announce({ kind: 'right', item: texts.minigame.sentenceBuilder.slotFilled((place ?? 0) + 1, round.words.length, answerItem(texts, placedWord)) });
       }
     },
     [runEffect, hear, moveOn],

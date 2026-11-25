@@ -341,7 +341,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
                   </Text>
                 )
               ) : null}
-              {zone.look === 'marked' || zone.look === 'right' ? <CornerMark mark={zone.look === 'right' ? 'right' : 'miss'} inset={MARK_INSET} testID={`${testID}-zone-${zone.zone}-mark`} /> : null}
+              {zone.look === 'marked' || zone.look === 'right' ? <CornerMark mark={zone.look === 'right' ? 'right' : 'miss'} inset={MARK_INSET} testID={`${testID}-mark-zone-${zone.zone}`} /> : null}
             </View>
           );
         }}
@@ -480,7 +480,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
                               </Text>
                             )}
                             {t.look === 'ring' ? <LookHereRing radius={radii.lg} answerBorder={look.borderWidth} testID={`${testID}-ring`} /> : null}
-                            {t.look === 'marked' ? <CornerMark mark="miss" inset={MARK_INSET} testID={`${testID}-tile-${t.key}-mark`} /> : null}
+                            {t.look === 'marked' ? <CornerMark mark="miss" inset={MARK_INSET} testID={`${testID}-mark-tile-${t.key}`} /> : null}
                           </View>
                         );
                       }}

@@ -348,15 +348,15 @@ describe('Syllable Build answers (test 16)', () => {
   it('a zone and a tile that did not fit show replay (not a drawn dot), named "Not this one: …", never disabled; a right block shows check on each zone and is named "Right answer: …"', async () => {
     const r = await board();
     await build(r, 'ㅓ');
-    expect(marks(host(r, 'syllable-build-zone-vowel-mark'))).toEqual(['replay']);
-    expect(marks(host(r, 'syllable-build-tile-vowel:ㅓ-mark'))).toEqual(['replay']);
+    expect(marks(host(r, 'syllable-build-mark-zone-vowel'))).toEqual(['replay']);
+    expect(marks(host(r, 'syllable-build-mark-tile-vowel:ㅓ'))).toEqual(['replay']);
     expect(String(pressable(r, zone('vowel')).props['aria-label'])).toMatch(/^Not this one: Vowel, /);
     expect(String(pressable(r, tile('vowel:ㅓ')).props['aria-label'])).toMatch(/^Not this one: ㅓ, letter eo/);
     expect(pressable(r, tile('vowel:ㅓ')).props['aria-selected']).not.toBe(true);
     expect(disabled(r, tile('vowel:ㅓ'))).toBe(false);
     await tap(r, tile('vowel:ㅏ'));
     for (const z of ['first', 'vowel', 'final']) {
-      expect(marks(host(r, `${zone(z)}-mark`))).toEqual(['check']);
+      expect(marks(host(r, `syllable-build-mark-zone-${z}`))).toEqual(['check']);
       expect(String(pressable(r, zone(z)).props['aria-label'])).toMatch(/^Right answer: /);
       expect(disabled(r, zone(z))).toBe(false);
     }
@@ -474,11 +474,11 @@ describe('Match Shape answers (test 16)', () => {
   it('a found tile shows check and a missed one replay on a disc on its corner, named with the state first, never disabled; the amber dot is gone', async () => {
     const r = await board();
     await tap(r, tileId(1));
-    expect(marks(host(r, `${tileId(1)}-mark`))).toEqual(['replay']);
+    expect(marks(host(r, `match-shape-mark-${1}`))).toEqual(['replay']);
     expect(String(pressable(r, tileId(1)).props['aria-label'])).toBe('Not this one: ㅍ, letter pieup');
     expect(disabled(r, tileId(1))).toBe(false);
     await tap(r, tileId(0));
-    expect(marks(host(r, `${tileId(0)}-mark`))).toEqual(['check']);
+    expect(marks(host(r, `match-shape-mark-${0}`))).toEqual(['check']);
     expect(String(pressable(r, tileId(0)).props['aria-label'])).toBe('Right answer: ㅂ, letter bieup, b or p, found');
     expect(disabled(r, tileId(0))).toBe(false);
   });
@@ -502,13 +502,13 @@ describe('Match Shape answers (test 16)', () => {
   it('the second miss rings every copy still to find with the dashed look-here ring, and they are named "Look here: …"', async () => {
     const r = await board();
     await tap(r, tileId(1));
-    expect(has(r, `${tileId(3)}-ring`)).toBe(false);
+    expect(has(r, `match-shape-ring-${3}`)).toBe(false);
     await tap(r, tileId(2));
     for (const i of [0, 3, 5]) {
-      expect(has(r, `${tileId(i)}-ring`)).toBe(true);
+      expect(has(r, `match-shape-ring-${i}`)).toBe(true);
       expect(String(pressable(r, tileId(i)).props['aria-label'])).toMatch(/^Look here: ㅂ, letter bieup/);
     }
-    expect(borderStyleOf(r, `${tileId(0)}-ring`)).toBe('dashed');
+    expect(borderStyleOf(r, `match-shape-ring-${0}`)).toBe('dashed');
   });
 
   it('reader off: the pair round moves on after the 1000 ms floor (it was 900) and the letter\'s name', async () => {
@@ -561,11 +561,11 @@ describe('Match Shape answers (test 16)', () => {
       const r = await open(<MatchShapeGame scope={PLAY} host={h} />);
       expect(String(host(r, 'match-shape-round').props['aria-label'])).toMatch(/^Question 1 of \d+\. Which letter comes from this shape\?$/);
       await tap(r, origin('giyeok'));
-      expect(marks(host(r, `${origin('giyeok')}-mark`))).toEqual(['replay']);
+      expect(marks(host(r, 'match-shape-mark-jamo:giyeok'))).toEqual(['replay']);
       expect(String(pressable(r, origin('giyeok')).props['aria-label'])).toBe('Not this one: ㄱ, g or k');
       expect(announced(r)).toEqual([line({ kind: 'missHint', item: 'g or k', hint: m.learner.minigame.matchShape.missOrigin })]);
       await tap(r, origin('nieun'));
-      expect(marks(host(r, `${origin('nieun')}-mark`))).toEqual(['check']);
+      expect(marks(host(r, 'match-shape-mark-jamo:nieun'))).toEqual(['check']);
       expect(announced(r)).toEqual([line({ kind: 'right', item: 'n' })]);
       expect(sr.queued).toHaveLength(2);
       expect(has(r, 'match-shape-continue')).toBe(true);
@@ -645,6 +645,11 @@ describe('Sentence Builder answers (test 16)', () => {
     expect(said).toContain(m.learner.minigame.sentenceBuilder.missParticle);
     expect(said).toContain(spokenParts(koTokenParts(note)));
     expect(said).not.toMatch(HANGUL);
+    // The piece that fits is announced as the word it makes ("chaegi", not "i"): the place and the whole word's romanization.
+    await tick(1000);
+    const right = ['c0', 'c1'].find((id) => id !== tileId)!;
+    await tap(r, tile(right));
+    expect(announced(r, 'sentence-builder-live')).toEqual([line({ kind: 'right', item: place(1, 2, 'chaegi') })]);
   });
 
   it('reader off: the next sentence waits the 1000 ms floor (it was 600) and the sentence\'s sound', async () => {
@@ -725,11 +730,11 @@ describe('Role Play answers (test 16)', () => {
     const r = await play();
     await settle();
     await tap(r, reply('meal'));
-    expect(marks(host(r, `${reply('meal')}-mark`))).toEqual(['replay']);
+    expect(marks(host(r, 'role-play-mark-meal'))).toEqual(['replay']);
     expect(String(pressable(r, reply('meal')).props['aria-label'])).toBe('Not this one: 잘 먹겠습니다!, jal meokgetseumnida');
     expect(disabled(r, reply('meal'))).toBe(false);
     await tap(r, reply('hello'));
-    expect(marks(host(r, `${reply('hello')}-mark`))).toEqual(['check']);
+    expect(marks(host(r, 'role-play-mark-hello'))).toEqual(['check']);
     expect(String(pressable(r, reply('hello')).props['aria-label'])).toMatch(/^Right answer: /);
   });
 

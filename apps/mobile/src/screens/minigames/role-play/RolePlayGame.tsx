@@ -757,7 +757,7 @@ function ReplyBubble({ reply, wrongLabel, rightLabel, hintLabel, onTap, refFor, 
               </Text>
               <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.romanization}</Text>
               {reply.meaning ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.meaning}</Text> : null}
-              {answered ? <CornerMark mark={locked ? 'miss' : 'right'} inset={spacing.sm} testID={`role-play-reply-${reply.id}-mark`} /> : null}
+              {answered ? <CornerMark mark={locked ? 'miss' : 'right'} inset={spacing.sm} testID={`role-play-mark-${reply.id}`} /> : null}
             </View>
           );
         }}
