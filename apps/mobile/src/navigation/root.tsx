@@ -62,19 +62,8 @@ import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
 import { WhoIsUsingScreen } from '../screens/who/WhoIsUsingScreen';
 import { PersonOnDeviceScreen } from '../screens/parent/PersonOnDeviceScreen';
 import { cellStoriesRouteId } from '../logic/story/cell-stories';
-import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
-import { PlacementE2eHook } from './placement-e2e';
-import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
-import { SentenceBuilderE2eScreen, SentenceE2eHook } from './sentence-builder-e2e';
-import { RealiaE2eHook, RealiaReadE2eScreen } from './realia-read-e2e';
-import { TypeHangulE2eHook, TypeHangulE2eScreen } from './type-hangul-e2e';
-import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
-import { WriteFrameE2eHook, WriteFrameE2eScreen } from './write-frame-e2e';
-import { ClozePickE2eHook, ClozePickE2eScreen } from '../screens/minigames/cloze-pick-entry';
-import { StoryOrderE2eHook, StoryOrderE2eScreen } from './story-order-e2e';
-import { RolePlayE2eHook, RolePlayE2eScreen } from './role-play-e2e';
-import { HiddenHeritageE2eHook, HiddenHeritageE2eScreen } from './hidden-heritage-e2e';
-import { TapBoardE2eHook, TapBoardE2eScreen } from './tap-board-e2e';
+// [SB] The fixture build's e2e hooks and screens; null in every other build (AMENDMENTS-START-BUNDLE-2026-11 SB-2).
+import { E2E_ENTRY } from '../content/__generated__/e2e-registry';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -141,19 +130,7 @@ export function RootNavigator({ openChooser = false }: RootNavigatorProps = {}):
 
   return (
     <>
-      {STORY_FIXTURES_BUILD ? <StoryE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <PlacementE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <VocabE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <SentenceE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <RealiaE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <TypeHangulE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <TraceWordE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <ClozePickE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <StoryOrderE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <RolePlayE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <HiddenHeritageE2eHook /> : null}
-      {STORY_FIXTURES_BUILD ? <TapBoardE2eHook /> : null}
+      {E2E_ENTRY === null ? null : <E2E_ENTRY.Hooks />}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
@@ -242,17 +219,7 @@ export function RootNavigator({ openChooser = false }: RootNavigatorProps = {}):
         {/* The Speed Round (F-VOC-004 S-5): launched from a topic page, so also behind flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabSpeedRound" component={VocabSpeedRoundScreen} />
         <Stack.Screen name="VocabResults" component={VocabResultsScreen} />
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="SentenceBuilderE2e" component={SentenceBuilderE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="RealiaReadE2e" component={RealiaReadE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="ClozePickE2e" component={ClozePickE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="StoryOrderE2e" component={StoryOrderE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="RolePlayE2e" component={RolePlayE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="HiddenHeritageE2e" component={HiddenHeritageE2eScreen} /> : null}
-        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TapBoardE2e" component={TapBoardE2eScreen} /> : null}
+        {E2E_ENTRY === null ? null : E2E_ENTRY.screens(Stack)}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
         {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}

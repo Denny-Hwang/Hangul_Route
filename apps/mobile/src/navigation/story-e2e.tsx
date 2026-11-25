@@ -13,12 +13,12 @@ import type { RootStackParamList } from './types';
  * No learner can reach a story until F-STORY-004's shelf ships, so the reader
  * e2e opens it through `window.__hrStoryE2E.openReader(...)`. The switch is
  * the bundle itself: only an e2e bundle (`build-stories.mjs
- * --include-fixtures`) has fixture ids, so in a real build the flag is false,
- * the root navigator never renders the hook and nothing is installed. (Not an
+ * --include-fixtures`) writes the e2e registry that imports `e2e-entry.tsx`,
+ * which mounts this hook; a real build's registry is null and imports nothing,
+ * so this module is not in it (AMENDMENTS-START-BUNDLE-2026-11 SB-2). (Not an
  * env variable: Metro caches transforms across builds, and a cached
  * `process.env` value could survive into a later production build.)
  */
-export const STORY_FIXTURES_BUILD = storyFixtureIds.length > 0;
 
 export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;

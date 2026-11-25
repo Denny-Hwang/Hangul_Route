@@ -7,14 +7,14 @@ import { ClozePickStep, type ClozePickRendered } from '../screens/minigames/cloz
 import type { MinigameHost } from '../screens/minigames/host';
 
 /**
- * End-to-end entry to a Cloze Pick step (F-CURR-002 row CM-30), for fixture builds only (the switch of
- * `story-e2e.tsx`: only the e2e bundle has story fixture ids, so a real build never registers this screen or installs
+ * End-to-end entry to a Cloze Pick step (F-CURR-002 row CM-30), for fixture builds only (the generated e2e
+ * registry: only the fixture build's imports `e2e-entry.tsx`, so a real build never registers this screen or installs
  * the hook). No shipped cell plays `cloze-pick` until the re-authoring rows (CM-3A), so its e2e opens a step here,
  * through `window.__hrClozePickE2E.open(...)`, on the fixture rounds of `logic/cloze-pick/e2e-rounds.ts`, with a host
  * that records what the quest host would receive. The step is the real one: the game while `game.cloze-pick` is on,
  * its Listen & Pick fallback while it is off (the door `screens/minigames/cloze-pick-entry.tsx` decides, as in a
  * quest). This module is in the Cloze Pick chunk, so a release build's precached chunk carries it too, unmounted: only
- * a fixture build mounts the hook and registers the screen (`STORY_FIXTURES_BUILD`, `navigation/root.tsx`).
+ * a fixture build mounts the hook and registers the screen (`navigation/e2e-entry.tsx`).
  */
 
 export interface ClozePickE2eParams {
