@@ -2851,6 +2851,18 @@ export const learner = {
       stay: { cta: 'Back to it' },
       stop: { cta: 'Stop' },
     },
+    /**
+     * A finish that could not be saved (AMENDMENTS-QUEST-LEAVE-RESUME section 3.5, row LR-4): a calm page with Try again,
+     * in place of the untrue "All refreshed today". The Stage Check reuses these. No "failed" or "error", no score.
+     */
+    saveFailed: {
+      title: 'We could not save this yet.',
+      body: 'Your answers are still here.',
+      /** The stop sheet's line over that page: true whether or not a Stage Check run is kept. */
+      leaveBody: 'This is not saved yet. Your stars and cards stay.',
+      /** Shown after 3 tries in a row that did not save. */
+      stillStuck: 'It still did not save. You can stop for now and try another time.',
+    },
   },
   /**
    * Keep going (row CM-14; design/wireframes/reviews/keep-going.md): 10 more, optional, up to 3 times a day. Never a count
