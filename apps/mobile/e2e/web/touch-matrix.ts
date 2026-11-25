@@ -43,8 +43,8 @@ export const AFTER_LOCK = 500;
 export const AFTER_MISS = 1_200;
 /** How long a move that must commit nothing is watched: past the lock, the replay and a right answer's 700 ms advance. */
 export const WATCH_MS = 1_400;
-/** Longer than the result floor (`RESULT_MARK_MIN_MS`, 1000 ms) plus a slow dispatch: a solved round has moved on after it. */
-const RESULT_FLOOR_WAIT_MS = 1_300;
+/** The result floor (`RESULT_MARK_MIN_MS`, 1000 ms) plus 200 ms: a solved round has moved on after it. */
+const RESULT_FLOOR_WAIT_MS = 1_200;
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 export const PRESS_OUTLINE = 'rgb(133, 115, 96)';
 /**
@@ -336,7 +336,7 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
     const solved = settled.some((a) => SOLVED.test(a.label));
     // A right answer holds its look for the result floor (F-A11Y-001 OD-AF2 (b), 1000 ms) before the round moves on, which two
     // reads 350 ms apart can both fall inside: wait it out, a few times, before reading an empty board as the end of the run.
-    if (solved && o.onIdle === undefined && solvedWaits < 4) {
+    if (solved && o.onIdle === undefined && solvedWaits < 3) {
       solvedWaits += 1;
       await page.waitForTimeout(RESULT_FLOOR_WAIT_MS);
       continue;

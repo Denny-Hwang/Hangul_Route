@@ -148,6 +148,10 @@ answer can shrink to its text (Tile) or a mark inside would read as part of the 
   appearance there is the non-colour cue, and nothing moves when it appears (the `reserved` check; F1 and F2 are a
   two-row block, F3 a three-row one). The picture moves from under Hoya's bubble (today) to under the slots; the order
   is target, slots, shape picture, Undo, tray, Hoya's line (F-A11Y-001 §3.5 notes it).
+  - **As built (AF-4a):** the wrong build's slots are drawn amber (`nudgeLight` fill, `nudge` border). With a three-row
+    block at 320 x 568 and the Largest text size, Hoya's miss line (the last item) is below the fold: the kept picture is
+    the visible cue, and the line is said by the announcer. On a phone turned sideways (740 x 360) the kept place pushes
+    the tray below the fold for a three-row block (the cost of keeping the place in every state, Q2).
   - **First screen** (`first-screen` check, 360 x 740, measured from the game's own top, without the shell's header):
     the picture ends at 551 (two rows) and 679 (three rows), inside 740; Undo and the tray end at 856 and 984, so the
     screen scrolls to them, as it already does for a three-row block today. With the shell's header above, the

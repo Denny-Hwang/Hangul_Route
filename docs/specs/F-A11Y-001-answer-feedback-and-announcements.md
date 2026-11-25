@@ -358,7 +358,7 @@ The size, corner and inset of each new mark come from the design pass (AF-0b). T
 
 **Build a Letter (OD-AF7, sub-option).** Today the wrong build empties after 900 ms and the hint goes with it.
 
-- (i), recommended: the wrong build stays in the slots, with the miss look and the hint, until the learner takes a tile back (a slot tap), taps Undo, or taps a tray tile. A tray tile empties the slots and starts a new build with that tile. The 900 ms timer and its tap lock (`WRONG_RESET_MS`) go.
+- (i), recommended: the wrong build stays in the slots, with the miss look and the hint, until the learner takes a tile back (a slot tap), taps Undo, or taps an unused tray tile. An unused tray tile empties the slots and starts a new build with that tile; a tray tile that is in the build stays disabled (AMENDMENTS-TOUCH 6.5, R2: a tile comes back only from its filled slot). The 900 ms timer and its 900 ms tap lock (`WRONG_RESET_MS`) go; a `TAP_LOCK_MS` (400 ms) bounce guard follows the miss, as it follows a right block, so a bounce on the commit starts nothing (built in AF-4a).
   - Owner decision 2026-11-24 (AF-0b Q2): the block-shape picture moves from under Hoya's bubble to directly under the slots, in a place kept empty in every state at the round's own block height (rows x `HINT_CELL` + (rows - 1) x `spacing.sm`: 40, 88 or 136), so its appearance is the cue and nothing moves. The order is: target, slots, the shape picture, Undo, the tray, Hoya's line.
 - (ii): the slots still empty after 900 ms, but the hint stays until the next tile is placed.
 
@@ -524,7 +524,7 @@ If OD-AF7 is declined, only Card Match changes.
     - The right tile has `check` and is named "Right answer: {sound}". A locked tile is not `disabled`.
     - Match Sound, reader on: no replay after a miss.
     - Odd One Out's advance is dropped on unmount.
-15. Build a Letter: `check` on the target box after a right block. After a miss, per the OD-AF7 sub-option: (i) the wrong build and the hint stay until a slot tap, Undo or a tray tap; (ii) the hint stays past the 900 ms reset until the next tile.
+15. Build a Letter: `check` on the target box after a right block. After a miss, per the OD-AF7 sub-option: (i) the wrong build and the hint stay until a slot tap, Undo or an unused tray tap (a bounce within `TAP_LOCK_MS` of the miss is swallowed); (ii) the hint stays past the 900 ms reset until the next tile.
 16. One test per game in AF-4b and AF-4c:
     - Right and miss are each announced once (the region text plus one iOS call).
     - The §3.3 table's result regions are no longer live, and its status regions still are.
