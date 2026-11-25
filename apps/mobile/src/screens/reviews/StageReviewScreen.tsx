@@ -474,8 +474,11 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   );
 }
 
-/** The resume page's question: the page's heading, and the first thing a screen reader lands on (once, when the page opens). */
-function ResumeTitle({ children }: { children: string }): ReactElement {
+/**
+ * The resume page's question: the page's heading, and the first thing a screen reader lands on (once, when the page
+ * opens). The Stage Check's resume page draws it too (row LR-3b), with its own test id.
+ */
+export function ResumeTitle({ children, testID = 'hangul-check-resume-title' }: { children: string; testID?: string }): ReactElement {
   const ref = useRef<View>(null);
   const web = Platform.OS === 'web';
   useEffect(() => {
@@ -490,7 +493,7 @@ function ResumeTitle({ children }: { children: string }): ReactElement {
   }, [web]);
   return (
     <View ref={ref} {...(web ? { tabIndex: -1 as const, style: { outlineStyle: 'none' } as object } : { accessible: true, accessibilityRole: 'header' as const })}>
-      <Heading level="title" align="center" testID="hangul-check-resume-title">
+      <Heading level="title" align="center" testID={testID}>
         {children}
       </Heading>
     </View>
