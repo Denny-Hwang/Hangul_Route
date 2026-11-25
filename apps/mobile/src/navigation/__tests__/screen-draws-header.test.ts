@@ -112,6 +112,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/route/route-proposal-entry.tsx#RouteProposal': 'screens/route/RouteProposalScreen.tsx#RouteProposalScreen',
   'screens/sync/join-space-entry.tsx#JoinSpace': 'screens/sync/JoinSpaceScreen.tsx#JoinSpaceScreen',
   'screens/placement/placement-entry.tsx#Placement': 'screens/placement/PlacementScreen.tsx#PlacementScreen',
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-4: the Stage Check draws the save-failed page from the Daily Review chunk
+  // (`ui.SaveFailedPage`, a member of the loaded chunk, so no static import names it); the page is a `Screen` of its own.
+  'screens/stage-check/StageCheckScreen.tsx#ui.SaveFailedPage': 'screens/reviews/SaveFailedPage.tsx#SaveFailedPage',
 };
 
 /**
@@ -352,7 +355,8 @@ function jsxVerdict(node: ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragm
   if (tag === 'Screen' && importsDesignScreen(src)) return ok();
   if (/\.Navigator$/.test(tag)) return ok();
   if (LAYOUT_TAGS.has(tag) || /(^|\.)\w*Provider$/.test(tag)) return childrenVerdict(node, tag, src, scope, via);
-  if (/^[A-Z]/.test(tag) && !tag.includes('.')) {
+  // A component named by an import, or a member of a chunk the screen loaded (`ui.X`), which only the table names.
+  if (LAZY_SCREENS[`${src.path}#${tag}`] !== undefined || (/^[A-Z]/.test(tag) && !tag.includes('.'))) {
     const lazyScreen = LAZY_SCREENS[`${src.path}#${tag}`]?.split('#');
     const lazy = LAZY_COMPONENTS[tag];
     const decl = lazyScreen
