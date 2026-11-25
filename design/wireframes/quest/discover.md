@@ -6,6 +6,8 @@ Audience: **any learner, any age** (CLAUDE.md §1); same screens for everyone. W
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `{ x }` content-driven, `( ) ( ) (*)` dots (fill-only), `~~` taught Korean shown with romanization + gloss (`KoreanText`).
 Code: `apps/mobile/src/screens/quest/DiscoverStep.tsx` (renders), `apps/mobile/src/logic/stage1/discover-flow.ts` (decides)
 
+> **[SF] Amended 2026-11-25 by `docs/specs/AMENDMENTS-DISCOVER-SOUND-FIRST.md`** (owner decision 2026-11-22, OD-R2; row SF-0): a consonant card plays its **sound** first (**Hear it**: 가, with the line "가 = ㄱ + ㅏ · ga") and its **name** second (**Hear the name**: 기역, with "기역 · giyeok"). This reverses the name-first order of `AMENDMENTS-AUDIO-CLIPS.md` JV-A5 (AU-OD-2) and restores this wireframe's original intent. See "[SF] Sound first (consonant card)" below.
+
 > **Promoted 2026-10-12 (F-QUEST-002 PR Q-11).** This file was the single drafted wireframe of the whole spec (screens S1 to S11). It now holds the Discover step only; the other screens live in their own files:
 >
 > | Drafted screen | File |
@@ -59,7 +61,8 @@ Then: the **new letters (or the words of a reading quest) are shown and heard be
 ```
 
 - Hoya appears once, small, with the quest's English line (single Hoya per screen).
-- Audio never autoplays; first Hear it pulses once.
+- First Hear it pulses once. [AU] [QS] The page's first letter plays once by itself 350 ms after the page opens (`AMENDMENTS-AUDIT-2026-11.md` AU-10, `AMENDMENTS-QUEST-SOUND-BACK.md` QS-3): never with sound off or a screen reader on. [SF] It plays what that letter's **Hear it** plays, so on a consonant page it is the sound (가), not the name.
+- A consonant card has a second button under the first; see "[SF] Sound first (consonant card)".
 - Text scaling 200 %: the two cards stack and the page scrolls; CONTINUE stays pinned at the bottom.
 
 ## S2 — Discover page: a final consonant, then words
@@ -88,11 +91,41 @@ Final consonant page:                 Words page:
 
 ## Interaction points
 
-- **Hear it**: plays the symbol's sound or the word via `playPrompt` (never the letter name of a consonant; ㅇ by its name 이응); a result of `unavailable` / `muted` shows the line "Say it out loud: <spoken romanization>", no error. A tiny "heard" mark appears on the item (fill-only, never a gate).
-- **Letter name** (optional, second button): plays the letter's name.
+- **Hear it**: plays the symbol's sound or the word via `playPrompt` (never the letter name of a consonant; ㅇ by its name 이응; a final by its closed syllable); a result of `unavailable` / `muted` shows the line "Say it out loud: <spoken romanization>" (`ga` for ㄱ, never `giyeok`), no error. A tiny "heard" mark appears on the item (fill-only, never a gate).
+- **[SF] Hear the name** (consonant cards whose name differs from their sound; optional, second button): plays the letter's name (기역). Not on ㅇ, vowels or finals.
 - **CONTINUE**: next page; on the last page the step ends (`quest.discover_completed { questId, pages, heard }`). Always enabled.
 - **Previous**: the page before, or the step before on page 1; see "[QB] Previous inside the step" below.
 - **[x leave]**: the quest's leave sheet (run discarded after confirm), as on every step.
+
+## [SF] Sound first (consonant card) (AMENDMENTS-DISCOVER-SOUND-FIRST §3.1)
+
+```
++------------------------------+
+|        ~~ ㄱ ~~              |  <- big glyph
+|        (g/k)                 |  <- romanization (sound value)
+|  (a soft, light g ...)       |  <- sound hint, one line: it describes what Hear it plays
+|   [ (speaker) Hear it ]      |  <- big button, pulses once; plays the SOUND (가)
+|   ~~ 가 = ㄱ + ㅏ ~~ (ga)     |  <- taught line, content (KoreanText), not a UI string
+|   [ (speaker) Hear the name ]|  <- smaller, quiet button; plays the NAME (기역)
+|   ~~ 기역 ~~ (giyeok)         |  <- the name with its romanization
+|   (Can't hear it?)           |  <- first card of the page only (CH-1d), guidance only
+|  - - - - - - - - - - - -     |
+|   (example word) ~~ 가족 ~~   |
+|   (romanization) (gloss)     |
+|   [ (speaker) ]  {picture?}  |
++------------------------------+
+```
+
+| Card | Hear it | Line under it | Hear the name | Line under it |
+|---|---|---|---|---|
+| Consonant, name differs from sound (ㄱ-ㅎ but ㅇ; ㄲ ㄸ ㅃ ㅆ ㅉ) | sound: 가, 까 | 가 = ㄱ + ㅏ · ga | name: 기역, 쌍기역 | 기역 · giyeok |
+| Initial ㅇ | 이응 | 이응 · ieung (and the silent-letter hint) | none | — |
+| Vowel | 아 | 아 · a | none | — |
+| Final | 악 | the final line ("ㄱ at the bottom: 악 · ak") | none | — |
+
+- Screen-reader order is the visual order: glyph (with its hint), "Hear it. Korean letter g/k. ...", the taught line (read as "가, ga", never 기역), "Hear the name. Korean letter g/k", the name line.
+- Largest text / 320 wide: the two buttons stack, each centred at its own width (sizes unchanged), each line under its own button; nothing sits side by side.
+- No sound (no clip and no Korean voice, sound off, a failed play): "Say it out loud: ga" under the card; the two lines are already printed, so nothing else is needed.
 
 ## [QB] Previous inside the step (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2)
 
@@ -136,3 +169,4 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail`
 
 - Should Discover offer an optional "See how it is drawn" (existing stroke demo) on each letter? Recommend: later, behind the same Hear-it row; not v1.
 - Spoken carrier for isolated consonants is F-AUDIO-004's call (decided: ㅏ, and ㅇ by its name); the wireframe does not depend on it.
+- [SF] The big button keeps the label "Hear it" (not "Hear the sound"): every Hoya line says "Tap Hear it" (open decision SF-OD-1 of the amendment, adopted provisionally).

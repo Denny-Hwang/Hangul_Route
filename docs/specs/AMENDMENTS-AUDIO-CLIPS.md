@@ -1,8 +1,12 @@
 Status: ready (amends `F-AUDIO-004-korean-voice-quality.md`; also amends F-001 sections 3.2 and 3.3, F-QUEST-002 sections 3.2 and 3.10, F-PLC-001's sound-letter strand, F-STORY-002's keyword audio, `AMENDMENTS-LECTURE-V2.md`'s letter slide and sound quiz, and the open Match Shape PR #865)
 
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (M9): the `jamo.json` drift test also pins `en` to the letter's `soundHint` and the es / ko `gloss` to the overlay's `soundHint` (row CF-2); no speech change. Row CF-1b adds three spoken texts with no clip yet (고구마, 도토리, 한국어; they play through the device voice until the next clip round) and removes the say clips the regenerated manifest no longer lists (설 and 날, and 코코아 and 토스트 if no retired item keeps them), with their license and lock rows. The letter records' example words are not spoken texts of the manifest.
+
 > Basis: `origin/main` `524961dae` (#845). Every `file:line` below is at that commit unless it names an open PR. Paths under `apps/mobile/src/` are written from `src/`. Open PRs read for this amendment: #865 (Match Shape), #855 (Syllable Build, Decoding Sprint) and #850 (Dictation).
 >
 > Owner decisions do **not** gate the whole amendment. Each one gates only the rows named in section 12, and each has a default that applies until the owner answers.
+
+> **Amended 2026-11-25 by `AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF]** (work order WO-13 of the 2026-11 review; owner decision 2026-11-22, OD-R2: keep AU-OD-1, put the sound first in Discover) (JV-A5, AU-OD-2, the `startsWith` row of JV-A4, and the "Discover" and "Listen & Pick letter rounds" rows of section 6.1): Discover's **Hear it** plays a consonant's **sound** (가, with the line "가 = ㄱ + ㅏ · ga") and a second button, **Hear the name**, plays its name (기역, with "기역 · giyeok"); the sound that plays by itself as a page opens (AU-10) is therefore the sound. AU-OD-2 is reversed; AU-OD-1 and JV-A1's letter-question rule are not changed. Round 1 of the four Stage 1 quest Checks that ask a consonant (ㅊ ㅅ ㅋ ㅍ) becomes a sound question under "Which letter starts this sound?", with no option from the target's plain / aspirated / tense series. Rows SF-0 to SF-2.
 
 # Amendment to F-AUDIO-004: the voice says what the screen shows, and Korean audio is generated once and shipped as clips
 
@@ -117,6 +121,8 @@ Rules:
 
 ### JV-A4 Copy (en / es / ko in the same PR)
 
+> **[SF]** `learner.audio.heading.startsWith` is also the heading of the quest Check's consonant round (sound question); Discover's second button is `learner.quest.discover.hearName.cta` "Hear the name", and `soundWith.cta` stays for the presenter's letter slide only (`AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF] section 3.6).
+
 | Key | Today | New |
 |---|---|---|
 | `learner.audio.heading.listen` (Match Sound, letter question) | en "Tap the letter you hear" · es "Toca la letra que escuchas" · ko "들리는 글자를 눌러요" | unchanged (now true) |
@@ -129,6 +135,8 @@ Rules:
 
 
 ### JV-A5 Discover (F-QUEST-002 section 3.2, amended; AU-OD-2)
+
+> **[SF]** Reversed for consonant pages by `AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF] (OD-R2, 2026-11-22): **Hear it** plays the sound (나) with the line "나 = ㄴ + ㅏ · na", and the second button is **Hear the name** (니은) with "니은 · nieun". The vowel, initial ㅇ, final and example-word bullets below are unchanged. The first bullet and the spoken-line bullet below are kept as the 2026-10-29 record.
 
 - Consonant page: the main **Hear it** plays the name (니은). The second button, today's **Letter name**, becomes **Hear it with a vowel** and plays the carrier syllable (나) with its line "나 = ㄴ + ㅏ · na". The order follows the letter question rule: a lone letter on screen is first heard by its name.
 - **The spoken line under Hear it follows what it says (D2).** Today it is the sound's romanization (`spokenRomanization` "na", `discover-flow.ts:210-212`); on a consonant page it becomes the name and its romanization, "니은 · nieun", from `jamoVoice(j, 'letter')`. A vowel page keeps "아 · a"; a final page shows the `finalLine`.
@@ -239,14 +247,14 @@ Clip count for jamo: 30 Stage 1 sound clips, 16 Word Builder sound clips (11 com
 | Surface | File | Type | Voice for ㄴ | Change |
 |---|---|---|---|---|
 | Match Sound | `screens/minigames/MatchSoundGame.tsx:74,81,130-131`; scopes `logic/minigame-config.ts:183-367` | letter | 니은 | `playJamo(j, 'letter')`; bubble JV-A4; M6 |
-| Listen & Pick letter rounds | `logic/scope-builders.ts:60-79`, `logic/audio/listen-pick-speech.ts` | letter | 니은 | `lp.sym` builds its prompt from `jamoVoice(j, 'letter')`; prompt `audioRef` = the name clip for a consonant |
+| Listen & Pick letter rounds | `logic/scope-builders.ts:60-79`, `logic/audio/listen-pick-speech.ts` | letter | 니은 | `lp.sym` builds its prompt from `jamoVoice(j, 'letter')`; prompt `audioRef` = the name clip for a consonant **[SF]** Except round 1 of the four Stage 1 quest Checks that ask a consonant (ㅊ ㅅ ㅋ ㅍ): `lp.symSound`, a sound question (차) under `startsWith`, same `lp:sym:` id (`AMENDMENTS-DISCOVER-SOUND-FIRST.md` section 3.7) |
 | Hangul Check, letters | `logic/stage1/hangul-check.ts:77` | letter | 니은 | M7 |
 | Hangul Check, finals | `hangul-check.ts:78-80` (`lp.syl`, syllable options) | sound (syllable pick) | 안 | keeps its "which one did you hear" heading (not `endsWith`; JV-A3 rule 3); M7 keeps `lp:syl:` so it plays at the sound rate |
 | Trace Stroke, initials and vowels | `screens/minigames/TraceStrokeGame.tsx:156,321,406`; `minigame-config.ts:214-218` | letter | 니은 | M11 |
 | Trace Stroke, finals | same; `minigame-config.ts:506-510` | sound (end) | 안 | M11, `finalLine` |
 | Match Shape pair board (open PR #865) | `MatchShapeBoard.tsx:147` | letter | 니은 | the PR adopts `jamoVoice` before it merges, or JV-2 migrates it if #865 merges first |
 | Match Shape Read Pick (open PR #865) | `ReadPickGame.tsx:94` (see the letter, pick its sound among 3; options are sound values such as n, g/k) | sound | 나 | the confirmation after a correct pick plays `jamoVoice(j, 'sound')`: the options are sounds, so the name would put a name on a sound pick |
-| Discover | `logic/stage1/discover-flow.ts:198-213`, `DiscoverStep.tsx:176` | letter (Hear it), sound (second button) | 니은, then 나 | JV-A5 |
+| Discover | `logic/stage1/discover-flow.ts:198-213`, `DiscoverStep.tsx:176` | letter (Hear it), sound (second button) | 니은, then 나 | JV-A5 **[SF]** sound (Hear it), letter (Hear the name): 나, then 니은 (`AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF] section 3.1) |
 | Lecture letter slide, initial or vowel | `logic/lecture/deck-builder.ts:430`, `LetterSlide.tsx:86` | letter (main), sound (second) | 니은, then 나 | slide gets `name` and `sound` specs; ko name in Hangul (JV-A4) |
 | Lecture letter slide, final | `deck-builder.ts:897` (`discoverStep` on a Discover page with a final, quest 7 onward), `:499` (trace-stroke step on finals, `s1-nature-q3-apply`) | sound | 안 | one button plays the closed syllable; the slide shows the `finalLine` ("ㄴ at the bottom: 안 · an") and **no letter-name line** (finals have no `nameKo`; `jamoVoice(final, 'letter')` throws). The slide builder branches on `kind: 'batchim'` before it asks for a name |
 | Lecture sound quiz | `deck-builder.ts:458-466`, `:1253-1263` | letter; finals as sound (end) | 니은 | JV-A3 rule 4 |
@@ -543,7 +551,7 @@ Part A (JV-1 to JV-4) does not wait for Part B and ships first: it fixes the own
 | # | Decision | Default | Gates |
 |---|---|---|---|
 | AU-OD-1 | What a letter question says | **A: the letter name** (니은), as the owner asked. B: keep the sound (나) and only fix pools and copy. | JV-2 |
-| AU-OD-2 | Discover consonant page | **Name first (Hear it), then "Hear it with a vowel" (나) as the second button.** | JV-2 |
+| AU-OD-2 | Discover consonant page | **Name first (Hear it), then "Hear it with a vowel" (나) as the second button.** **[SF] Reversed by owner decision 2026-11-22 (OD-R2):** sound first (Hear it: 나), then **Hear the name** (니은); `AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF]. | JV-2 |
 | AU-OD-3 | Placement consonant items | **Keep the sound (나) with the copy "Which letter starts this sound?"**: Placement measures decoding. Alternative: names. | JV-3 |
 | AU-OD-4 | Vendor | **Done 2026-11-06: Amazon Polly Neural** (pilot result, section 13). Was: Amazon Polly Neural and Google Neural2 as co-primary, decided by the pilot; Polly on a tie (clearest output right); Azure S0 fallback; no generative voice (Chirp 3 HD, Gemini-TTS) because the audience includes under-18s. | AC-3, AC-5 |
 | AU-OD-5 | Voice | **Done 2026-11-06: Polly `Seoyeon` (ko-KR, female), locked for every clip.** Was: the pilot's winner among Polly `Seoyeon`, `Jihye` and Google `ko-KR-Neural2-A`, `-C`. Male or female: the owner's ear in the pilot, else the one with fewer QA flags (Polly has no male ko-KR voice). | AC-5 |
