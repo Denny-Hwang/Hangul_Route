@@ -39,8 +39,8 @@ vi.mock('../../stage-check/use-stage-offer', async (importOriginal) => ({ ...(aw
 vi.mock('../ReviewRounds', async () => {
   const { createElement } = await import('react');
   return {
-    RoundView: ({ cantHear, hidesRomanization }: { cantHear?: boolean; hidesRomanization?: boolean }) =>
-      createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true }, 'round'),
+    RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
+      createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
   };
 });
 vi.mock('../DailyReviewRoute', async () => {
@@ -49,8 +49,8 @@ vi.mock('../DailyReviewRoute', async () => {
     dailyReviewChunk: async () => ({
       TopRow: () => createElement('div', { 'data-testid': 'top-row' }),
       DisplayHeadline: ({ children }: { children?: unknown }) => createElement('div', null, children as never),
-      RoundView: ({ cantHear, hidesRomanization }: { cantHear?: boolean; hidesRomanization?: boolean }) =>
-        createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true }, 'round'),
+      RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
+        createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
     }),
   };
 });
@@ -119,6 +119,7 @@ async function draw(element: React.ReactElement): Promise<ReactTestRenderer> {
 }
 const cantHearOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-cant-hear'];
 const hidesOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-hides'];
+const checkOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-check'];
 
 beforeEach(() => {
   endVoiceCheckHold();
@@ -149,6 +150,7 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
     expect(cantHearOf(r)).toBe(true);
     expect(hidesOf(r)).toBe(false);
+    expect(checkOf(r)).toBe('cell-check');
   });
 
   it('the Stage Check passes it (CH-1e); the hide switch off gives the surface\'s own text', async () => {
@@ -158,6 +160,7 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
     expect(cantHearOf(r)).toBe(true);
     expect(hidesOf(r)).toBe(false);
+    expect(checkOf(r)).toBe('stage-check');
   });
 
   it('the Stage Check with its "hide the romanization" switch on passes hidesRomanization, so the asked text is the romanization only', async () => {
@@ -167,5 +170,6 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     await settle();
     expect(cantHearOf(r)).toBe(true);
     expect(hidesOf(r)).toBe(true);
+    expect(checkOf(r)).toBe('stage-check');
   });
 });

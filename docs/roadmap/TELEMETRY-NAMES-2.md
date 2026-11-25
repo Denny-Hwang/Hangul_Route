@@ -89,7 +89,7 @@ Seven names, none colliding with sections A-C (script over all three lists), all
 | 6 | `vocab.challenge_toggled` | F-VOC-004 §3.10 | `{ on, source: 'profile' \| 'start_sheet', clockScale }` | S-1 | S-6 |
 | 7 | `home.vocab_card.shown` | F-VOC-005 §3.9 | `{ topicKey, due }` | P-1 | P-3 |
 
-`source` values for `audio.fallback_shown` that the VOC specs add to the list in section C: `vocab-card` (F-VOC-003), `vocab-speed` (F-VOC-004).
+`source` values for `audio.fallback_shown` that the VOC specs add to the list in section C: `vocab-card` (F-VOC-003), `vocab-speed` (F-VOC-004). The learner's ask (`asked`) in a Check is counted under the Check's own surface: `quest-check`, `hangul-check`, `stage-check`, `cell-check` (AMENDMENTS-AUDIO-CANT-HEAR CH-1e, owner decision 2026-11-25).
 
 **Total after every spec above lands: 38 on `main` (section A had 32 before #103) + 21 (C) + 7 (G) = 66 names** (section B's six are already on `main` since #103).
 

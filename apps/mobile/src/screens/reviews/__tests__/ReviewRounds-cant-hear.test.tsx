@@ -220,12 +220,23 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
     expect(reader.announced).toEqual([getMessages('en').a11y.koreanItem({ ko: '나무', romanization: 'namu' })]);
   });
 
-  it('Always show the letters follows the same rule: the romanization only with the switch on, the own text with it off', async () => {
+  it('Always show the letters does not reach a Check round (owner decision 2026-11-25): sound only with the link; a practice round still opens with its text', async () => {
     useAudioStore.setState({ showLetters: true });
-    const hidden = await open(HEARD, { cantHear: true, hidesRomanization: true });
-    expect(textOf(byTestId(hidden.root, 'daily-review-prompt-panel-text')[0]!)).toBe('namu');
-    const shown = await open(HEARD, { cantHear: true });
-    expect(panelText(shown)).toContain('나무');
+    const check = await open(HEARD, { cantHear: true, check: 'stage-check', hidesRomanization: true });
+    expect(panelText(check)).not.toContain('namu');
+    expect(hasId(check.root, 'cant-hear')).toBe(true);
+    const cell = await open(HEARD, { cantHear: true, check: 'cell-check' });
+    expect(panelText(cell)).not.toContain('namu');
+    expect(hasId(cell.root, 'cant-hear')).toBe(true);
+    const practice = await open(HEARD, { cantHear: true });
+    expect(panelText(practice)).toContain('namu');
+    expect(hasId(practice.root, 'cant-hear')).toBe(false);
+  });
+
+  it('a Syllable Build round in a Check is not reached by Always show the letters either', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await open(BUILD, { cantHear: true, check: 'stage-check' });
+    expect(hasId(r.root, 'cant-hear')).toBe(true);
   });
 
   it('Sound off is not an ask: the surface keeps its own text (AD13) even with the switch on', async () => {
@@ -243,12 +254,50 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
 
   it('a right first answer after Show the letters is reported as a right one and the ask is counted once: identifiable as asked (CH-1f)', async () => {
     const first: Array<{ correct: boolean }> = [];
-    const r = await open(HEARD, { cantHear: true, hidesRomanization: true, onFirst: (a) => void first.push(a) });
+    const r = await open(HEARD, { cantHear: true, hidesRomanization: true, check: 'stage-check', onFirst: (a) => void first.push(a) });
     await ask(r);
-    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'daily-review', reason: 'asked' }]);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'stage-check', reason: 'asked' }]);
     await press(pressableById(r.root, 'daily-review-option-lex:namu'));
     expect(first).toEqual([{ correct: true }]);
     expect(events.filter((e) => e.name === 'audio.fallback_shown')).toHaveLength(1);
+  });
+
+  it.each([
+    ['stage-check', 'stage-check'],
+    ['cell-check', 'cell-check'],
+    [undefined, 'daily-review'],
+  ] as const)('a host with check=%s counts its ask under %s', async (check, source) => {
+    const r = await open(HEARD, { cantHear: true, ...(check === undefined ? {} : { check }) });
+    await ask(r);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source, reason: 'asked' }]);
+  });
+
+  it('with the hide switch on the heard options hold their romanization until the round is answered; the line keeps its room, the name keeps it, and the asked romanization matches no visible option text', async () => {
+    const r = await open(HEARD, { cantHear: true, hidesRomanization: true, check: 'stage-check' });
+    const card = (id: string) => byTestId(r.root, `daily-review-option-${id}`)[0]!;
+    const reserved = (id: string) => byTestId(card(id), 'korean-text-romanization-reserved');
+    expect(reserved('lex:namu')).toHaveLength(1);
+    expect(reserved('lex:nabi')).toHaveLength(1);
+    expect(card('lex:namu').props['aria-label']).toBe('나무, namu');
+    await ask(r);
+    const visible = ['lex:namu', 'lex:nabi'].map((id) => textOf(card(id)).replace(textOf(reserved(id)[0]!), '')).join(' ');
+    expect(visible).not.toMatch(/\bnamu\b/);
+    await press(pressableById(r.root, 'daily-review-option-lex:namu'));
+    // Answered: the lines come, the asked text is gone from the prompt (the Korean is the answer now).
+    expect(byTestId(card('lex:namu'), 'korean-text-romanization-reserved')).toHaveLength(0);
+    expect(textOf(card('lex:namu'))).toContain('namu');
+    expect(textOf(card('lex:nabi'))).toContain('nabi');
+  });
+
+  it('with the switch off the options show their romanization as before', async () => {
+    const r = await open(HEARD, { cantHear: true, check: 'stage-check' });
+    expect(byTestId(r.root, 'korean-text-romanization-reserved')).toHaveLength(0);
+    expect(textOf(byTestId(r.root, 'daily-review-option-lex:namu')[0]!)).toContain('namu');
+  });
+
+  it('a Daily Review round (no switch) never holds its options romanization', async () => {
+    const r = await open(HEARD, { cantHear: true });
+    expect(byTestId(r.root, 'korean-text-romanization-reserved')).toHaveLength(0);
   });
 
   it('a Syllable Build round in a Check has its link; Show the letters shows the block\'s romanization, as ever', async () => {

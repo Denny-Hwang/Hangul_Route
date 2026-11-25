@@ -146,12 +146,11 @@ describe('Listen & Pick, "Can\'t hear it?" (test 18)', () => {
     expect(hasId(spelling.root, 'cant-hear')).toBe(true);
   });
 
-  it('Always show the letters (CH-2) in a Check opens with the romanization only, as an ask would, and is not counted', async () => {
+  it.each<HostMode>(['check', 'review'])('Always show the letters (CH-2) does not reach the %s host: it opens sound-only with the link (owner decision 2026-11-25)', async (mode) => {
     useAudioStore.setState({ showLetters: true });
-    const r = await game('check');
-    const word = textOf(byTestId(r.root, 'listen-pick-prompt-text')[0]!);
-    expect(word).toBe('neo');
-    expect(hasId(r.root, 'cant-hear')).toBe(false);
+    const r = await game(mode);
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+    expect(hasId(r.root, 'cant-hear')).toBe(true);
     expect(events.filter((e) => e.name === 'audio.fallback_shown')).toEqual([]);
   });
 
@@ -218,24 +217,26 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     expect(hasId(r.root, 'cant-hear')).toBe(false);
   });
 
-  it('Always show the letters in the Hangul Check follows the same rule: tap hides, always shows', async () => {
-    useAudioStore.setState({ showLetters: true });
-    const hidden = await game('review', { romanization: 'tap' });
-    expect(promptText(hidden)).toBe('neo');
-    const shown = await game('review', { romanization: 'always' });
-    expect(promptText(shown)).toContain('너');
-  });
-
   it('a right first answer after Show the letters counts as it does today and is identifiable as asked (CH-1f): one audio.fallback_shown asked, then the answer', async () => {
     const r = await game('check');
     await showLetters(r);
-    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'listen-pick', reason: 'asked' }]);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'quest-check', reason: 'asked' }]);
     await press(pressableById(r.root, 'listen-pick-option-neo'));
     expect(answers).toEqual([[0, true]]);
     // The answer is known now, so the Korean shows with the meaning, as in any quest Check.
     expect(promptText(r)).toContain('너');
     // The ask is counted once per session and source.
     expect(events.filter((e) => e.name === 'audio.fallback_shown')).toHaveLength(1);
+  });
+
+  it.each<[HostMode, string]>([
+    ['check', 'quest-check'],
+    ['review', 'hangul-check'],
+    ['quest', 'listen-pick'],
+  ])('the %s host counts its ask under %s', async (mode, source) => {
+    const r = await game(mode);
+    await showLetters(r);
+    expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source, reason: 'asked' }]);
   });
 
   it('a wrong first answer after Show the letters is a plain miss; the text stays the romanization', async () => {

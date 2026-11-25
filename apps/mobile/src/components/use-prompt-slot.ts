@@ -53,11 +53,6 @@ export interface PromptSlot {
    * answer as hinted by (section 3.13). Not set by Sound off, no voice, a failed play or "Always show the letters".
    */
   asked: boolean;
-  /**
-   * "Always show the letters" (CH-2) applies to this prompt: it opted in with `cantHear` and is not a cue round. Not an
-   * ask (unmarked), but a Check treats its text as it does an ask (the romanization only, section 3.12).
-   */
-  alwaysShown: boolean;
 }
 
 export interface PromptSlotOptions {
@@ -89,6 +84,17 @@ export interface PromptSlotOptions {
    * up here either. Default `false`.
    */
   guidanceOnly?: boolean;
+  /**
+   * A Check (the quest Check, the Hangul Check, the Stage Check, the Cell Check) stays sound-first: "Always show the
+   * letters" (CH-2) does not apply to it, so the round opens with the sound and the link, and the learner can still ask
+   * (owner decision 2026-11-25). Default `false`.
+   */
+  soundFirst?: boolean;
+  /**
+   * The surface id the learner's ask is counted under (`audio.fallback_shown` `asked`), when it is not `source`: a
+   * Check reports its own (`quest-check`, `hangul-check`, `stage-check`, `cell-check`). Default `source`.
+   */
+  askSource?: string;
 }
 
 export function usePromptSlot({
@@ -98,14 +104,16 @@ export function usePromptSlot({
   reportFallback = true,
   cantHear = false,
   guidanceOnly = false,
+  soundFirst = false,
+  askSource,
 }: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
   // A pack chunk's clips arrive after the first render (AMENDMENTS-AUDIO-CLIPS AC-B6): the caller re-renders then, so
   // the `hasClip` it computes (`hasClipFor`) is never left saying "no clip" while the say clip will play.
   useSyncExternalStore(clipRegistry.subscribe, clipRegistry.version, clipRegistry.version);
   const muted = useAudioStore((s) => s.muted);
-  // "Always show the letters" (CH-2): the device switch applies to a surface that opted in, never to a cue round.
-  const alwaysShow = useAudioStore((s) => s.showLetters) && cantHear && !guidanceOnly;
+  // "Always show the letters" (CH-2): the device switch applies to a surface that opted in, never to a cue round or a Check.
+  const alwaysShow = useAudioStore((s) => s.showLetters) && cantHear && !guidanceOnly && !soundFirst;
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);
@@ -167,11 +175,11 @@ export function usePromptSlot({
   // The ask is counted once per session and source by the controller (AMENDMENTS-AUDIO-CANT-HEAR CH-4): a count of taps, no learner.
   const showLetters = useCallback((): void => {
     dispatch('show_text');
-    if (reportFallback) noteFallbackShown(source, 'asked');
-  }, [reportFallback, source]);
+    if (reportFallback) noteFallbackShown(askSource ?? source, 'asked');
+  }, [reportFallback, source, askSource]);
 
   const showLink = cantHear && !view.textShown;
-  return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters, asked: state.asked === true, alwaysShown: alwaysShow };
+  return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters, asked: state.asked === true };
 }
 
 function isLookupList(says: ClipLookup | readonly ClipLookup[]): says is readonly ClipLookup[] {

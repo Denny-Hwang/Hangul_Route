@@ -444,6 +444,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
                   round={round}
                   reducedMotion={reducedMotion}
                   cantHear
+                  check="stage-check"
                   hidesRomanization={hideRomanization}
                   onFirst={(answer) => onFirst(index, answer)}
                   onSolved={onSolved}

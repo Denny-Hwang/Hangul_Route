@@ -78,6 +78,11 @@ export interface RoundProps<R extends ReviewRound> {
    * Absent: the surface's own text, as with Sound off. Only the Stage Check passes it.
    */
   hidesRomanization?: boolean;
+  /**
+   * The Stage Check (`stage-check`) or the Cell Check (`cell-check`): a Check stays sound-first, so "Always show the
+   * letters" does not reach its rounds (owner decision 2026-11-25), and the learner's ask is counted under this id.
+   */
+  check?: 'stage-check' | 'cell-check';
 }
 
 /** The pause on the check mark before the next round. */
@@ -101,9 +106,17 @@ function useAdvance(onSolved: () => void, reduced: boolean): () => void {
 }
 
 /** The sound of a round, through the shared prompt slot (F-AUDIO-004 §3.8): text with why and one action when it cannot play. */
-function useRoundSound(text: string | null, heard: boolean, cantHear = false, guidanceOnly = false) {
+function useRoundSound(text: string | null, heard: boolean, cantHear = false, guidanceOnly = false, check?: RoundProps<PickRound>['check']) {
   // [FU] FU-3: the item's say clip (review pack) counts as sound, so a device with no Korean voice hears it.
-  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard, cantHear: cantHear && heard, guidanceOnly });
+  const slot = usePromptSlot({
+    source: 'daily-review',
+    hasClip: text !== null && hasClipFor({ text }),
+    textOnScreen: !heard,
+    cantHear: cantHear && heard,
+    guidanceOnly,
+    soundFirst: check !== undefined,
+    ...(check === undefined ? {} : { askSource: check }),
+  });
   const { play, reset } = slot;
   const hear = useCallback(() => {
     if (text === null) return;
@@ -124,7 +137,7 @@ function optionLabel(o: PickOption, showRomanization: boolean): string {
   return o.label ?? '';
 }
 
-export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false, hidesRomanization = false }: RoundProps<PickRound>): ReactElement {
+export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false, hidesRomanization = false, check }: RoundProps<PickRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const [wrong, setWrong] = useState<readonly string[]>([]);
@@ -133,12 +146,16 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
   const advance = useAdvance(onSolved, reducedMotion);
   const pictureSize = useMediaSize(touchTarget.hero);
   const lc = useLayoutClass();
-  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear, round.cue !== undefined);
+  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear, round.cue !== undefined, check);
   const hearAgainRef = useRef<View | null>(null);
-  // CH-1e: where the options hide their romanization, the asked text (Show the letters, or the Always switch) is the
-  // romanization only. A cue round is guidance only, so it never prints its prompt.
-  const romanizationOnly = hidesRomanization && round.cue === undefined && (slot.asked || slot.alwaysShown);
   const showOptionRomanization = round.ask !== 'sound';
+  // The Stage Check with its hide switch on holds a heard round's options' romanization until the round is answered
+  // (the AU-8 pattern: the line keeps its room, draws nothing, and the accessible name keeps it), so the switch does what
+  // it says and the asked text cannot be matched to an option by its Latin letters.
+  const heldRomanization = hidesRomanization && round.heard && !solved;
+  // CH-1e: where the options hide their romanization, the asked text (Show the letters) is the romanization only, while
+  // the question is open. A cue round is guidance only, so it never prints its prompt.
+  const romanizationOnly = hidesRomanization && round.cue === undefined && slot.asked && !solved;
   const tiles = round.options.every((o) => o.picture !== undefined);
 
   const heading =
@@ -231,7 +248,9 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
               <ChoiceCard
                 layout={tiles ? 'tile' : 'row'}
                 state={stateOf(option)}
-                {...(option.ko ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '' } : { label: option.label })}
+                {...(option.ko
+                  ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '', romanizationReserved: heldRomanization && showOptionRomanization }
+                  : { label: option.label })}
                 art={option.picture ? <PictureArt pictureRef={option.picture} gloss={option.label ?? ''} size={pictureSize} decorative /> : null}
                 onPress={() => tap(option)}
                 accessibilityLabel={optionLabel(option, showOptionRomanization)}
@@ -301,7 +320,7 @@ export function RoundWaiting(): ReactElement {
 
 function HeardTypeRound({ kit, ...props }: RoundProps<TypeRound> & { kit: DictationKit }): ReactElement {
   const { round } = props;
-  const heard = kit.useHearRound({ mode: 'hear', target: { ko: round.target, romanization: round.answer.ko.romanization, en: round.answer.gloss ?? '' } }, 1);
+  const heard = kit.useHearRound({ mode: 'hear', target: { ko: round.target, romanization: round.answer.ko.romanization, en: round.answer.gloss ?? '' } }, 1, props.check !== undefined);
   return <TypeRoundBody {...props} kit={kit} heard={heard} />;
 }
 
@@ -606,7 +625,7 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
  * The session has already chosen this round, so a chunk that fails to load (a stale cache, a dropped asset) shows
  * Hoya's oops line and Try again rather than leaving the round on its heading.
  */
-export function BuildRoundLoader({ round, onFirst, onSolved, cantHear }: RoundProps<BuildRound>): ReactElement {
+export function BuildRoundLoader({ round, onFirst, onSolved, cantHear, check }: RoundProps<BuildRound>): ReactElement {
   const m = useMessages();
   const { chunk, failed, retry } = useSyllableBuildChunk();
   if (chunk === null) {
@@ -622,7 +641,7 @@ export function BuildRoundLoader({ round, onFirst, onSolved, cantHear }: RoundPr
       </View>
     );
   }
-  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} cantHear={cantHear === true} />;
+  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} cantHear={cantHear === true} soundFirst={check !== undefined} />;
 }
 // ---- shape (row CM-33) -------------------------------------------------------------------------------------
 

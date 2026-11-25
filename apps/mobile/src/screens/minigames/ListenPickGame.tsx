@@ -65,7 +65,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { AnswerAnnouncer } from './answer-announcer';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
-import type { MinigameHost } from './host';
+import type { HostMode, MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { useAnswerAnnouncement } from './use-answer-announcement';
 import { useRoundNext } from './use-round-next';
@@ -134,6 +134,9 @@ interface Focusable {
 
 /** The spelling round's option name (letter names), or none. */
 type OptionItemLabel = ((text: { ko: string; romanization: string }) => string) | undefined;
+
+/** The surfaces a Check's ask is counted under (`audio.fallback_shown` `asked`); a practice host has none and keeps `listen-pick`. */
+const CHECK_ASK_SOURCE: Partial<Record<HostMode, string>> = { check: 'quest-check', review: 'hangul-check' };
 
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
@@ -215,6 +218,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   textModeRef.current = textMode;
   const current = rounds[state.roundIdx];
   const spellingNow = !textMode && spelling !== null && current !== undefined && isSpellingRound(current);
+  const checkSource = CHECK_ASK_SOURCE[host.mode];
   const slot = usePromptSlot({
     source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
     // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
@@ -224,6 +228,10 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     // prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
     cantHear: !textMode,
     guidanceOnly: spellingNow,
+    // A Check stays sound-first (owner decision 2026-11-25): "Always show the letters" does not reach it, and its ask is
+    // counted under its own surface id.
+    soundFirst: checkSource !== undefined,
+    ...(checkSource === undefined ? {} : { askSource: checkSource }),
   });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
@@ -411,11 +419,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     spellingKit === null ? state : { ...state, textPrompt: false },
     host.mode,
     spellingKit === null ? slot.view.textShown || textMode : false,
-    askedRomanizationOnly && (slot.asked || slot.alwaysShown),
+    askedRomanizationOnly && slot.asked,
   );
   const content = prompt.content;
   const resolved = state.status === 'resolved' || state.status === 'done';
-  const hear =(): void => dispatch({ type: 'hear' });
+  const hear = (): void => dispatch({ type: 'hear' });
   /** Next (a reader on): the round moves on once; a second press, or one after the round has moved, does nothing. */
   const advanceNow = (): void => {
     if (movedFrom.current === roundIdx) return;
