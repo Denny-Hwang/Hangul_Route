@@ -69,13 +69,23 @@ describe('SpeechLangSchema', () => {
 });
 
 describe('DeviceAudioPrefsSchema (§3.7)', () => {
-  it('defaults muted to false', () => {
-    expect(DeviceAudioPrefsSchema.parse({})).toEqual({ muted: false });
+  it('defaults muted and showLetters to false', () => {
+    expect(DeviceAudioPrefsSchema.parse({})).toEqual({ muted: false, showLetters: false });
   });
 
-  it('keeps an explicit value and rejects a non-boolean', () => {
-    expect(DeviceAudioPrefsSchema.parse({ muted: true })).toEqual({ muted: true });
+  it('keeps an explicit value and rejects a non-boolean mute', () => {
+    expect(DeviceAudioPrefsSchema.parse({ muted: true })).toEqual({ muted: true, showLetters: false });
     expect(DeviceAudioPrefsSchema.safeParse({ muted: 'yes' }).success).toBe(false);
+  });
+
+  it('a value saved before Always show the letters parses with it off (AMENDMENTS-AUDIO-CANT-HEAR CH-2)', () => {
+    expect(DeviceAudioPrefsSchema.parse({ muted: true })).toEqual({ muted: true, showLetters: false });
+  });
+
+  it('keeps showLetters when it is a boolean; a damaged one is off and never costs the saved mute', () => {
+    expect(DeviceAudioPrefsSchema.parse({ muted: false, showLetters: true })).toEqual({ muted: false, showLetters: true });
+    expect(DeviceAudioPrefsSchema.parse({ muted: true, showLetters: 'yes' })).toEqual({ muted: true, showLetters: false });
+    expect(DeviceAudioPrefsSchema.parse({ muted: true, showLetters: null })).toEqual({ muted: true, showLetters: false });
   });
 });
 

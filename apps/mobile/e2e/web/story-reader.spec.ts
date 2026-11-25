@@ -421,7 +421,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     const asked = await page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []);
     expect(asked.filter((t) => t.trim() !== '')).toEqual([]);
     await prompt.getByRole('button', { name: 'Turn sound on' }).click();
-    await expect.poll(() => readStored(page, 'device:audio')).toEqual({ muted: false });
+    await expect.poll(() => readStored(page, 'device:audio')).toEqual({ muted: false, showLetters: false });
   });
 
   test('read-along: the Korean line comes first, then the narration "In English"', async ({ page }) => {

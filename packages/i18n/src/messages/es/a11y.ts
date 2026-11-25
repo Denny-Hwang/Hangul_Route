@@ -64,7 +64,7 @@ export const a11y = {
   flipToBack: 'Toca para ver el reverso',
   flipToFront: 'Toca para ver el frente',
   shareCard: 'Compartir esta tarjeta',
-  soundSwitch: (muted: boolean, voice: string) => `Sonido, ${muted ? 'apagado' : 'encendido'}. ${voice}.`,
+  soundSwitch: (voice: string) => `Sonido. ${voice}.`,
   minigame: {
     hear: (romanization: string) => `Escuchar ${romanization}`,
     finalTile: (romanization: string) => `final ${romanization}`,

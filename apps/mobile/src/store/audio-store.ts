@@ -22,6 +22,11 @@ export type MuteSource = 'profile' | 'fallback_panel';
 
 interface State {
   muted: boolean;
+  /**
+   * "Always show the letters" (AMENDMENTS-AUDIO-CANT-HEAR CH-2, OD-CH1 (b)): a device preference kept with the mute in
+   * `device:audio`. A sound-only round that opts in then opens with its text; the sound still plays.
+   */
+  showLetters: boolean;
   hydrated: boolean;
   levelOrder: LevelOrder;
   tts: KoVoiceStatus;
@@ -40,6 +45,7 @@ interface State {
 interface Actions {
   hydrate: () => Promise<void>;
   setMuted: (muted: boolean, source: MuteSource) => void;
+  setShowLetters: (on: boolean) => void;
   setLevelOrder: (order: LevelOrder) => void;
   setCapability: (capability: AudioCapability) => void;
   reportFailure: (reason: FallbackReason) => void;
@@ -56,6 +62,7 @@ let voiceCheckCap: ReturnType<typeof setTimeout> | null = null;
 
 export const useAudioStore = create<State & Actions>((set, get) => ({
   muted: false,
+  showLetters: false,
   hydrated: false,
   levelOrder: null,
   tts: { state: 'unknown' },
@@ -68,15 +75,22 @@ export const useAudioStore = create<State & Actions>((set, get) => ({
   // before this key existed (the old switch was never saved). Never writes.
   hydrate: async () => {
     const parsed = DeviceAudioPrefsSchema.safeParse(await readJson<unknown>(AUDIO_PREFS_KEY));
-    set({ muted: parsed.success ? parsed.data.muted : false, hydrated: true });
+    set({ muted: parsed.success ? parsed.data.muted : false, showLetters: parsed.success ? parsed.data.showLetters : false, hydrated: true });
   },
 
   setMuted: (muted, source) => {
     if (get().muted === muted) return;
     set({ muted });
     // A storage failure must never reach a game.
-    writeJson(AUDIO_PREFS_KEY, { muted }).catch(() => undefined);
+    writeJson(AUDIO_PREFS_KEY, { muted, showLetters: get().showLetters }).catch(() => undefined);
     void track({ name: 'audio.mute_changed', payload: { muted, source } });
+  },
+
+  // A setting, not an event: nothing is tracked. A storage failure must never reach a game.
+  setShowLetters: (on) => {
+    if (get().showLetters === on) return;
+    set({ showLetters: on });
+    writeJson(AUDIO_PREFS_KEY, { muted: get().muted, showLetters: on }).catch(() => undefined);
   },
 
   setLevelOrder: (order) => set({ levelOrder: order }),

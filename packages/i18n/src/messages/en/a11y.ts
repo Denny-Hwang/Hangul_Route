@@ -100,8 +100,11 @@ export const a11y = {
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
   shareCard: 'Share this card',
-  /** The Profile Sound switch, its state and the voice line read as one group (`voice` has no colon). */
-  soundSwitch: (muted: boolean, voice: string) => `Sound, ${muted ? 'off' : 'on'}. ${voice}.`,
+  /**
+   * The Profile Sound switch and the voice line read as one group (`voice` has no colon). The on / off state is the
+   * switch's own (`checked`), so the name does not repeat it: it was said twice (AMENDMENTS-AUDIO-CANT-HEAR Q6, CH-2).
+   */
+  soundSwitch: (voice: string) => `Sound. ${voice}.`,
   /** The minigames' screen-reader labels (PR 7b); `romanization` is a sound value, never Hangul. */
   minigame: {
     hear: (romanization: string) => `Hear ${romanization}`,

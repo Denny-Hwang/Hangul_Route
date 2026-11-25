@@ -801,6 +801,7 @@ export const learner = {
       },
       showLetters: { cta: 'Mostrar las letras' },
     },
+    alwaysShowLetters: 'Mostrar siempre las letras',
     tapToReplay: 'Toca para repetir',
     action: {
       turn_on: { cta: 'Activar sonido' },

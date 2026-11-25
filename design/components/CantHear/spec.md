@@ -119,4 +119,4 @@ comes up is `motion.duration.slow` (a timing, not an animation).
 
 What "the letters" are on each surface: that is the surface's own text fallback (spec 3.1). The Checks (CH-1e, waits
 for OD-CH6). The hinted mark (CH-1f, waits for OD-CH7). The Always show the letters switch, which lives on Profile's
-Sound card (row CH-2, `design/screens/audio-cant-hear/README.md`).
+Sound card (row CH-2, built: `screens/profile/AlwaysShowLettersRow.tsx`, `design/screens/audio-cant-hear/README.md`).

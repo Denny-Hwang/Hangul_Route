@@ -62,6 +62,7 @@ import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-poi
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { MyNotesRow } from '../notes/MyNotesRow';
+import { AlwaysShowLettersRow } from './AlwaysShowLettersRow';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
 import { LicensesLink } from './LicensesLink';
 import { ChallengeCard } from '../vocab/ChallengeCard';
@@ -308,7 +309,9 @@ export function ProfileScreen(): ReactElement {
             }}
             accessibilityRole="switch"
             accessibilityState={{ checked: soundOn }}
-            accessibilityLabel={soundSwitchLabel(voice, !soundOn, m.learner.audio, m.a11y.soundSwitch)}
+            // react-native-web ignores `accessibilityState`; the name no longer says on or off (design pass Q6), so the web needs this.
+            aria-checked={soundOn}
+            accessibilityLabel={soundSwitchLabel(voice, m.learner.audio, m.a11y.soundSwitch)}
             style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
@@ -328,6 +331,8 @@ export function ProfileScreen(): ReactElement {
               <Button label={soundCard.howToLabel} tone="ghost" size="md" onPress={() => setVoiceHelpOpen(true)} testID="sound-how-to-add" />
             </>
           ) : null}
+          {/* Always show the letters (AMENDMENTS-AUDIO-CANT-HEAR CH-2): a second device switch under Sound and its how-to. */}
+          <AlwaysShowLettersRow />
         </Card>
         <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 

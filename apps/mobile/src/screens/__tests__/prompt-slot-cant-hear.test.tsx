@@ -17,8 +17,8 @@ vi.mock('../../platform/audio', async (importOriginal) => ({ ...(await importOri
 
 let slot: PromptSlot | null = null;
 
-function Probe({ cantHear = true }: { cantHear?: boolean }): ReactElement {
-  slot = usePromptSlot({ source: 'probe', cantHear });
+function Probe({ cantHear = true, guidanceOnly = false }: { cantHear?: boolean; guidanceOnly?: boolean }): ReactElement {
+  slot = usePromptSlot({ source: 'probe', cantHear, guidanceOnly });
   return <Text testID="probe">{`${String(slot.cantHear)}|${String(slot.cantHearActive)}|${String(slot.settled)}|${String(slot.view.textShown)}`}</Text>;
 }
 
@@ -27,7 +27,7 @@ const READY = { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local: true, qu
 
 beforeEach(() => {
   slot = null;
-  useAudioStore.setState({ muted: false, tts: { state: 'unknown' }, clips: false, unlocked: true, voiceCheckPending: true });
+  useAudioStore.setState({ muted: false, showLetters: false, tts: { state: 'unknown' }, clips: false, unlocked: true, voiceCheckPending: true });
 });
 
 afterEach(() => {
@@ -123,6 +123,67 @@ describe('slot.showLetters()', () => {
     });
     expect(slot!.view.textShown).toBe(false);
     expect(slot!.cantHear).toBe(true);
+    await unmount(r);
+  });
+});
+
+describe('slot with Always show the letters on (AMENDMENTS-AUDIO-CANT-HEAR CH-2, test 23)', () => {
+  it('opens with the text, settled while the voice check still runs, and no link', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await render(<Probe />);
+    expect(shown(r)).toBe('false|false|true|true');
+    expect(slot!.view.reason).toBeNull();
+    expect(slot!.view.statusShown).toBe(false);
+    expect(useAudioStore.getState().voiceCheckPending).toBe(true);
+    await unmount(r);
+  });
+
+  it('reaches a round that is already open when the switch turns on, and goes when it turns off', async () => {
+    const r = await render(<Probe />);
+    expect(shown(r)).toBe('true|false|false|false');
+    await act(async () => {
+      useAudioStore.getState().setShowLetters(true);
+    });
+    expect(slot!.view.textShown).toBe(true);
+    await act(async () => {
+      useAudioStore.getState().setShowLetters(false);
+    });
+    expect(slot!.view.textShown).toBe(false);
+    await unmount(r);
+  });
+
+  it('the text is there on the next round too: reset() does not take it away', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await render(<Probe />);
+    await act(async () => {
+      slot!.reset();
+    });
+    expect(slot!.view.textShown).toBe(true);
+    await unmount(r);
+  });
+
+  it('a surface that did not opt in keeps its sound-only round', async () => {
+    useAudioStore.setState({ showLetters: true, voiceCheckPending: false });
+    const r = await render(<Probe cantHear={false} />);
+    expect(shown(r)).toBe('false|false|true|false');
+    await unmount(r);
+  });
+
+  it('a guidance-only round (a cue settles it, the Korean is its answer) shows no text and keeps its link', async () => {
+    useAudioStore.setState({ showLetters: true, voiceCheckPending: false, tts: READY });
+    const r = await render(<Probe guidanceOnly />);
+    expect(shown(r)).toBe('true|true|true|false');
+    await unmount(r);
+  });
+
+  it('the sound still plays and the text stays: a successful play does not hide it', async () => {
+    useAudioStore.setState({ showLetters: true, tts: READY, voiceCheckPending: false });
+    const r = await render(<Probe />);
+    await act(async () => {
+      await slot!.play(async () => 'played');
+    });
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.view.reason).toBeNull();
     await unmount(r);
   });
 });

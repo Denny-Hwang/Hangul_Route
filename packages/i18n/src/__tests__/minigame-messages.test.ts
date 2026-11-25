@@ -319,10 +319,9 @@ describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', ()
       needsInternet: 'Korean voice needs the internet',
       looking: 'Looking for a Korean voice',
     });
-    expect(m.a11y.soundSwitch(false, 'Korean voice ready')).toBe('Sound, on. Korean voice ready.');
-    expect(m.a11y.soundSwitch(true, 'Korean voice needs the internet')).toBe(
-      'Sound, off. Korean voice needs the internet.',
-    );
+    // The state (on / off) is the switch's own, so the name never repeats it (Q6 of the can't-hear design pass).
+    expect(m.a11y.soundSwitch('Korean voice ready')).toBe('Sound. Korean voice ready.');
+    expect(m.a11y.soundSwitch('Korean voice needs the internet')).toBe('Sound. Korean voice needs the internet.');
   });
 
   it('keeps the voice help sheet, its three OS families and their steps', () => {

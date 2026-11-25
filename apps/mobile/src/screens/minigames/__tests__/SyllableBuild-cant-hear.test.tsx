@@ -52,7 +52,7 @@ const tick = async (ms: number): Promise<void> => {
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   endVoiceCheckHold();
-  useAudioStore.setState({ tts: { state: 'unknown' }, muted: false });
+  useAudioStore.setState({ tts: { state: 'unknown' }, muted: false, showLetters: false });
   clearReaderLog(reader);
 });
 afterEach(async () => {
@@ -94,6 +94,16 @@ describe('Syllable Build, "Can\'t hear it?" (test 18)', () => {
     await tap(r.root, 'syllable-build-tile-vowel:ㅏ');
     await tap(r.root, 'syllable-build-tile-final:ㅂ');
     expect(onFirst).toHaveBeenCalledWith(true, false);
+  });
+
+  it('Always show the letters (CH-2): the round opens with the block\'s romanization (never the block) and no link; the Block Sprint is left alone', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const on = await mount({ cantHear: true });
+    expect(textOf(byTestId(on.root, 'syllable-build-sound')[0]!)).toBe('bap');
+    expect(hasId(on.root, 'cant-hear')).toBe(false);
+    expect(byTestId(on.root, 'syllable-build-built')).toHaveLength(0);
+    const sprint = await mount();
+    expect(hasId(sprint.root, 'syllable-build-sound')).toBe(false);
   });
 
   it('is guidance for this device: one line, Show the letters and Hear it', async () => {

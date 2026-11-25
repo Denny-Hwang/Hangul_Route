@@ -90,7 +90,7 @@ describe('Sound on the gimbap word card speaks the word (owner report 2026-10-17
     await expect(audio.playPrompt(presenterPrompt())).resolves.toBe('played');
     expect(synth.spoken).toHaveLength(1);
     expect(synth.spoken[0]).toMatchObject({ text: '김밥', lang: 'ko-KR', rate: RATE_BASE.word });
-    expect(mem.get('device:audio')).toEqual({ muted: false });
+    expect(mem.get('device:audio')).toEqual({ muted: false, showLetters: false });
     audio.dispose();
   });
 });

@@ -14,7 +14,7 @@ import type { SpokenJamo } from './spoken';
  * What the shared prompt panel shows for one prompt slot (F-AUDIO-004 §3.8,
  * wireframe design/wireframes/minigame/audio-fallback.md W1-W4). Pure: the
  * hook feeds it the reducer state plus the store values and the `learner.audio`
- * messages, and the screen only renders what comes back.
+ * messages, and the screen only renders what comes back. `alwaysShowLetters` is the device switch (CH-2).
  */
 export interface PromptPanelView {
   /** The text prompt (spoken syllable + romanization) is up. */
@@ -56,8 +56,11 @@ export function promptPanelView(
   muted: boolean,
   hasClip: boolean,
   copy: AudioCopy,
+  alwaysShowLetters = false,
 ): PromptPanelView {
-  const textShown = showText(s, cap, muted, hasClip);
+  // "Always show the letters" (AMENDMENTS-AUDIO-CANT-HEAR CH-2) brings the text up with no reason: nothing failed, and
+  // nothing is asked, so a later reducer rule and the hinted mark of CH-1f can tell it from the learner's own ask.
+  const textShown = showText(s, cap, muted, hasClip) || alwaysShowLetters;
   const reason = textShown ? reasonOf(s, cap, muted, hasClip) : null;
   const action = fallbackAction(reason);
   const detail = panelDetail(reason, copy);

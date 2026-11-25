@@ -68,7 +68,7 @@ async function open(question: (typeof questions)[number], cantHear?: boolean, mo
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   endVoiceCheckHold();
-  useAudioStore.setState({ muted: false, unlocked: true });
+  useAudioStore.setState({ muted: false, showLetters: false, unlocked: true });
   clearReaderLog(reader);
 });
 afterEach(async () => {
@@ -99,6 +99,17 @@ describe('the Speed round\'s sound question, "Can\'t hear it?" (test 18)', () =>
   it('a word question (its Korean is already on screen) has no link even in Relaxed mode', async () => {
     const r = await open(WORD, true);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+  });
+
+  it('Always show the letters (CH-2): Relaxed opens with the word and its romanization and no link; Challenge is a clocked drill and is left alone', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const relaxed = await open(SOUND, true);
+    const word = textOf(byTestId(relaxed.root, 'vocab-question-word')[0]!);
+    expect(word).toContain(SOUND.prompt.ko!);
+    expect(word).toContain(SOUND.prompt.romanization!);
+    expect(hasId(relaxed.root, 'cant-hear')).toBe(false);
+    const challenge = await open(SOUND, false);
+    expect(hasId(challenge.root, 'vocab-question-word')).toBe(false);
   });
 
   it('Show the letters: focus goes to the large speaker, then the word comes up with its romanization', async () => {

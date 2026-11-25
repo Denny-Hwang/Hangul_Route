@@ -338,7 +338,7 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
             }),
         ),
       )
-      .toBe(JSON.stringify({ muted: false }));
+      .toBe(JSON.stringify({ muted: false, showLetters: false }));
   });
 });
 

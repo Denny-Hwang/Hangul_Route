@@ -18,8 +18,11 @@ export const SPEECH_LANGS = ['ko-KR', 'en-US', 'es-US'] as const;
 export const SpeechLangSchema = z.enum(SPEECH_LANGS);
 export type SpeechLang = z.infer<typeof SpeechLangSchema>;
 
-/** Persisted under `device:audio` (device-level, not per profile). */
-export const DeviceAudioPrefsSchema = z.object({ muted: z.boolean().default(false) });
+/**
+ * Persisted under `device:audio` (device-level, not per profile). `showLetters` is "Always show the letters"
+ * (AMENDMENTS-AUDIO-CANT-HEAR CH-2): off unless saved on, and a damaged value is off without costing the saved mute.
+ */
+export const DeviceAudioPrefsSchema = z.object({ muted: z.boolean().default(false), showLetters: z.boolean().catch(false) });
 export type DeviceAudioPrefs = z.infer<typeof DeviceAudioPrefsSchema>;
 
 /** The clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6): `AUDIO_PACKS`, kept in the leaf module `audio/packs.ts`. */

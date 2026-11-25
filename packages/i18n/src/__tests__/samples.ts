@@ -148,7 +148,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.story.sources.approximation': [['almost 600 years', '1443 to 2026 is 583 years, so the story rounds it.']],
   'learner.story.sources.openFailed': [['https://example.org/a']],
   'learner.story.sources.counts': [[1, 1], [12, 31]],
-  'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
+  'a11y.soundSwitch': [['Korean voice ready'], ['Looking for a Korean voice']],
   'console.capWarning': [[16, 20]],
   'console.schoolNoLicenceCaps': [[20, 50], [1, 1]],
   'console.codeExpiry.inDays': [[1], [18]],
