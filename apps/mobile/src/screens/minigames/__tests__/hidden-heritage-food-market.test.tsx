@@ -4,7 +4,7 @@ import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
 import { Pressable } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from '../../../content/__tests__/helpers/lesson-stages';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import { localizeScope } from '../../../logic/content-locale';
@@ -82,13 +82,25 @@ async function findAll(r: ReactTestRenderer): Promise<ReactTestInstance> {
   const targets = SCOPE.hiddenHeritage!.rounds[0]!.targets;
   const ended = (): boolean => r.root.findAll((n) => n.props.testID === 'hh-end').length > 0;
   const asked = (): string | undefined => r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]?.props.ko as string | undefined;
-  for (let i = 0; i < targets.length && !ended(); i += 1) {
-    const ko = asked()!;
-    const id = targets.find((t) => t.word.ko === ko)!.id;
-    const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
-    await act(async () => spot.props.onPress());
-    // The next word is asked, or the end panel shows after the last one.
-    await waitUntil(() => ended() || (asked() !== undefined && asked() !== ko));
+  // Each found word waits the 1000 ms result floor (F-A11Y-001 OD-AF2) and its sound: the clock is faked, so the test
+  // advances through the wait instead of sleeping through it.
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] });
+  try {
+    for (let i = 0; i < targets.length && !ended(); i += 1) {
+      const ko = asked()!;
+      const id = targets.find((t) => t.word.ko === ko)!.id;
+      const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
+      await act(async () => spot.props.onPress());
+      // The next word is asked, or the end panel shows after the last one.
+      for (let waited = 0; waited < 6000 && !(ended() || (asked() !== undefined && asked() !== ko)); waited += 250) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(250);
+        });
+      }
+      expect(ended() || (asked() !== undefined && asked() !== ko), `the word after ${ko}`).toBe(true);
+    }
+  } finally {
+    vi.useRealTimers();
   }
   return r.root;
 }

@@ -4,7 +4,7 @@ import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';
 import { Pressable } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALL_LESSON_SCOPES } from '../../../content/__tests__/helpers/lesson-stages';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import { sceneCardBack } from '../../../logic/hidden-heritage-card-back';
@@ -66,14 +66,24 @@ async function draw(): Promise<ReactTestRenderer> {
 /** Finds every asked word on its own spot, one after the other, until the end panel shows. */
 async function findAll(r: ReactTestRenderer): Promise<ReactTestInstance> {
   const targets = SCOPE.hiddenHeritage!.rounds[0]!.targets;
-  for (let i = 0; i < targets.length && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; i += 1) {
-    const ko = r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko as string;
-    const id = targets.find((t) => t.word.ko === ko)!.id;
-    const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
-    await act(async () => spot.props.onPress());
-    // [QS-4] The next word comes once the found one has been said (700 ms at least, the cap at most).
-    const asked = (): string | undefined => r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]?.props.ko as string | undefined;
-    for (let waited = 0; waited < ANSWER_SOUND_MAX_MS + 400 && asked() === ko && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; waited += 100) await wait(100);
+  // [QS-4] The next word comes once the found one has been said (the 1000 ms result floor at least, F-A11Y-001 OD-AF2, the cap
+  // at most): the clock is faked, so the test advances through the wait instead of sleeping through it.
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] });
+  try {
+    for (let i = 0; i < targets.length && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; i += 1) {
+      const ko = r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko as string;
+      const id = targets.find((t) => t.word.ko === ko)!.id;
+      const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
+      await act(async () => spot.props.onPress());
+      const asked = (): string | undefined => r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]?.props.ko as string | undefined;
+      for (let waited = 0; waited < ANSWER_SOUND_MAX_MS + 1400 && asked() === ko && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; waited += 100) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(100);
+        });
+      }
+    }
+  } finally {
+    vi.useRealTimers();
   }
   return r.root;
 }
