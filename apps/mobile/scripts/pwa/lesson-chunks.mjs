@@ -275,9 +275,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // over the previous line).
   // [AF] F-A11Y-001 AF-4a (Match Sound, Odd One Out and Build a Letter import the announcer, its hook, the announcement rules and the Next hook;
   // both tile games and Build a Letter are imported statically by MinigameScreen) on top of AF-2 (4,625,094 B raw / 1,273,518 B gzip) the release
-  // `build:web` (CI=1) measures 4,630,569 B raw / 1,274,804 B gzip (+5,475 B raw, +1,286 B gzip), 1,592 B over the previous line. The line is the
-  // measurement plus a 3,931 B margin (one measured raise, 5,600 B over the previous line).
-  startBundleRaw: 4_634_500,
+  // `build:web` (CI=1) measures 4,630,569 B raw / 1,274,804 B gzip (+5,475 B raw, +1,286 B gzip). Merged with AF-3 (Card Match, which imports the
+  // same announcer and Next hook; #1102) the tree measures 4,633,012 B raw / 1,275,605 B gzip, 1,488 B under the AF-4a line
+  // of 4,634,500 B. The line is that measurement plus a 3,988 B margin: 4,637,000 B (one measured raise, 2,500 B over the AF-4a line).
+  startBundleRaw: 4_637_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
