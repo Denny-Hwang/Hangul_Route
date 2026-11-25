@@ -8,6 +8,7 @@ import {
   buildReviewItems,
   identityOf,
   koSlug,
+  labelOfKey,
   senseFor,
   vocabIndex,
   type StableIdSnapshot,
@@ -91,6 +92,16 @@ describe('keys and derived ids', () => {
     expect(long.length).toBeLessThanOrEqual(48);
     expect(long.endsWith('-')).toBe(false);
     expect(koSlug('가'.repeat(30)).length).toBe(48);
+  });
+
+  it('slugs, labels and falls back to the reviewed romanization (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+    // The rule converter gives sorip; the reviewed entry for 솔잎 is sollip, and so is a sentence that holds it.
+    expect(koSlug('솔잎')).toBe('sollip');
+    expect(koSlug('송편은 솔잎을 깔고 쪄요.')).toBe('songpyeoneun-sollipeul-kkalgo-jjyeoyo');
+    expect(labelOfKey('lex|솔잎', [])).toEqual({ ko: '솔잎', romanization: 'sollip' });
+    expect(labelOfKey('lex|사과', [])).toEqual({ ko: '사과', romanization: 'sagwa' });
+    const { items } = buildReviewItems([occ({ kind: 'lex', ko: '솔잎', romanization: '', en: 'pine needle' })], EMPTY_SNAPSHOT, vocab);
+    expect(items[0]).toMatchObject({ id: 'lex:sollip', romanization: 'sollip' });
   });
 
   it('gives each kind its key and its id', () => {

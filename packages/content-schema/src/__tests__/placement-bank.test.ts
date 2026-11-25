@@ -16,7 +16,7 @@ import {
   checkRomanization,
   composeSyllable,
   decomposeSyllable,
-  romanize,
+  romanizeReviewed,
   ROMANIZATION_EXCEPTIONS,
   type PlacementBank,
   type PlacementGate,
@@ -204,14 +204,14 @@ describe('content/placement: romanization and the language policy', () => {
     };
     const spoken = source.templates.flatMap((t) => (t.question.spoken ? [t.question.spoken] : []));
     expect(spoken).toHaveLength(23);
-    for (const s of spoken) expect(romanize(s.ko).text).toBe(s.romanization);
+    for (const s of spoken) expect(romanizeReviewed(s.ko).text).toBe(s.romanization);
   });
 
   it('the sound-guide romanization of a word, syllable or sentence tag is the converter output', () => {
     for (const t of all.filter((x) => x.gate === 'vocab' || x.gate === 'sentence')) {
       const ko = t.question.promptKo;
       if (ko === undefined || t.question.format === 'reply-pick') continue;
-      expect(t.question.promptRomanization, t.id).toBe(romanize(ko).text);
+      expect(t.question.promptRomanization, t.id).toBe(romanizeReviewed(ko).text);
     }
   });
 
@@ -298,7 +298,7 @@ describe('content/placement: sound-letter (A.2)', () => {
       const carrier = VOWELS.includes(s)
         ? composeSyllable({ initial: 'ㅇ', medial: MEDIALS.indexOf(s), final: '' })
         : composeSyllable({ initial: s, medial: MEDIALS.indexOf('ㅏ'), final: '' });
-      expect(correctOf(t).sound, t.id).toBe(romanize(carrier as string).text);
+      expect(correctOf(t).sound, t.id).toBe(romanizeReviewed(carrier as string).text);
       expect(checkJamoRomanization(s, t.question.promptRomanization as string), t.id).toEqual([]);
     }
   });
@@ -344,7 +344,7 @@ describe('content/placement: syllable-reading (A.3)', () => {
     for (const t of syl.filter((x) => x.question.format === 'see-pick-sound')) {
       const chips = t.question.options.map((o) => o.sound as string);
       expect(new Set(chips).size, t.id).toBe(4);
-      expect(correctOf(t).sound, t.id).toBe(romanize(targetOf(t)).text);
+      expect(correctOf(t).sound, t.id).toBe(romanizeReviewed(targetOf(t)).text);
     }
   });
 
@@ -419,7 +419,7 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
 
   it('a word has the same ids in both forms where both exist, and tags word and topic', () => {
     for (const t of byGate('vocab')) {
-      expect(tagOf(t, 'word:'), t.id).toBe(romanize(t.question.promptKo as string).text);
+      expect(tagOf(t, 'word:'), t.id).toBe(romanizeReviewed(t.question.promptKo as string).text);
       expect(t.id.endsWith(tagOf(t, 'word:')), t.id).toBe(true);
       expect(tagOf(t, 'topic:'), t.id).not.toBe('');
     }

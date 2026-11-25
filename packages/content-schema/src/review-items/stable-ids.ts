@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { hasSoundChange, normalizeKo, pronunciationKey } from '../lesson-lint-items';
-import { romanize } from '../romanization/rr';
+import { romanizeReviewed } from '../romanization/reviewed';
 import { SLOT_MARKER } from '../schemas/quest';
 import { ThemeKeySchema } from '../schemas/heritage-card';
 import type { ItemOccurrence, KoLine, ReviewSymbol } from './extract';
@@ -147,7 +147,7 @@ const MAX_SLUG = 48;
 /** The F-CNT-002 romanization of Korean as an id slug: a frame's `___` reads `n`, `을/를` both forms. */
 export function koSlug(ko: string): string {
   const text = ko.split(SLOT_MARKER).join(' n ').replace(/\//g, ' ');
-  const slug = romanize(text)
+  const slug = romanizeReviewed(text)
     .text.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -341,7 +341,7 @@ export function labelOfKey(key: string, symbols: readonly ReviewSymbol[]): { ko:
   }
   if (kind === 'rea' || text === '') return { ko: text || key, romanization: text || key };
   const ko = text.replace(/~[a-z0-9-]+$/, '');
-  return { ko, romanization: romanize(ko).text };
+  return { ko, romanization: romanizeReviewed(ko).text };
 }
 
 export interface ReviewItemsBuild {
@@ -519,7 +519,7 @@ function mergeGroup(id: string, identity: Identity, all: readonly ItemOccurrence
     id,
     kind: identity.kind,
     ko: lead.ko,
-    romanization: lead.romanization !== '' ? lead.romanization : (list.find((o) => o.romanization !== '')?.romanization ?? romanize(lead.ko).text),
+    romanization: lead.romanization !== '' ? lead.romanization : (list.find((o) => o.romanization !== '')?.romanization ?? romanizeReviewed(lead.ko).text),
     home: first.home,
     stage: Math.min(...teaching.filter((o) => o.volume === first.volume).map((o) => o.stage)),
     volume: first.volume,

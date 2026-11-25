@@ -284,6 +284,13 @@ describe('searchChooser', () => {
     expect(visible(searchChooser(groupsIn('es'), 'horangi'))).toContain('episode:stage1-nature');
   });
 
+  it('searches the reviewed romanization of a Korean title (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+    // 솔잎 has a reviewed entry: the learner sees sollip, so sollip must find it (the rule converter gives sorip).
+    const reviewed = groupsIn('en', { koTitle: (id) => (id === 'story:hangeul-day' ? '솔잎' : koTitle(id)) });
+    expect(visible(searchChooser(reviewed, 'sollip'))).toContain('story:hangeul-day');
+    expect(visible(searchChooser(reviewed, 'sorip'))).not.toContain('story:hangeul-day');
+  });
+
   it('finds the lessons that teach a letter, and the letter sets by their letters', () => {
     const hit = searchChooser(en, 'ㄱ');
     const taught = CATALOG.quests.filter((q) => q.teaches.some((t) => t.split('/')[0] === 'ㄱ')).map((q) => q.id);

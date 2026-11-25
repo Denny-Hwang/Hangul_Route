@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { VocabTopicFileSchema, romanizeWord } from '../index';
+import { VocabTopicFileSchema, romanizeReviewed, romanizeWord } from '../index';
 
 /**
  * F-VOC-001 PR V-2b: the Food topic as the spec's section 3.4 Food table defines it.
@@ -72,7 +72,7 @@ describe('content/vocab/food.json (F-VOC-001 V-2b)', () => {
   });
 
   it.each(TABLE)('$id romanization equals the converter output', (row) => {
-    expect(romanizeWord(row.ko)).toBe(row.romanization);
+    expect(romanizeReviewed(row.ko).text).toBe(row.romanization);
   });
 
   it('declares the Food topic ready after the production review (V12)', () => {
