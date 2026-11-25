@@ -80,6 +80,11 @@ export interface HearRound {
   cantHear: boolean;
   /** `cantHear` and the round is open: while it holds (`HEAR_HOLD_MS`) the link is drawn but takes no tap. */
   cantHearActive: boolean;
+  /**
+   * A Check's hear round (CH-1g): the `see` round prints the word the learner has to type, so the sheet is guidance only
+   * (the device line and Hear it, no Show the letters), by the cue rule's reasoning.
+   */
+  guidanceOnly: boolean;
   /** Show the letters: the round becomes the `see` round with reason `asked`; focus then goes to its word. */
   showLetters: () => void;
   /** The `see` round's word after Show the letters: where focus goes (`AskedWord`). */
@@ -93,7 +98,11 @@ interface ForRound<T> {
   value: T;
 }
 
-/** One hear round's opening, sound and hint (a round that is not `hear` is `see`, untouched). */
+/**
+ * One hear round's opening, sound and hint (a round that is not `hear` is `see`, untouched). `soundFirst` is a Check's
+ * round: "Always show the letters" does not reach it, and its "Can't hear it?" is guidance only, since Show the letters
+ * would print the word it asks the learner to type (CH-1g).
+ */
 export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 'target'> | undefined, roundIdx: number, soundFirst = false): HearRound {
   const isHear = round !== undefined && typeHangulMode(round) === 'hear';
   const speech = round === undefined ? null : hearSpeech(round);
@@ -141,11 +150,12 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   const wordRef = useRef<View | null>(null);
   const focusWord = useRef(false);
   const showLetters = useCallback((): void => {
-    if (!isHear) return;
+    // A Check offers no Show the letters (guidance only): nothing here can open its `see` round or count an ask.
+    if (!isHear || soundFirst) return;
     focusWord.current = true;
     setOpened({ round: roundIdx, value: { kind: 'see', reason: 'asked' } });
     slotShowLetters();
-  }, [isHear, roundIdx, slotShowLetters]);
+  }, [isHear, soundFirst, roundIdx, slotShowLetters]);
   useEffect(() => {
     if (reason !== 'asked' || !focusWord.current) return;
     focusWord.current = false;
@@ -186,6 +196,7 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
     round: roundIdx,
     cantHear: isHear && mode !== 'see' && slot.cantHear,
     cantHearActive: isHear && mode === 'hear' && slot.cantHear,
+    guidanceOnly: soundFirst,
     showLetters,
     wordRef,
     helpOpen,
@@ -263,8 +274,13 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
   );
 
   // "Can't hear it?" (CH-1c): after the speaker, before the answer field; inactive while the round holds.
+  // In a Check the link is guidance only (CH-1g): the `see` round would print the word the learner has to type.
   const link = hear.cantHear ? (
-    <CantHear round={hear.round} active={hear.cantHearActive} onHear={hear.play} onShowLetters={hear.showLetters} focusAfter={hear.wordRef} testID="cant-hear" />
+    hear.guidanceOnly ? (
+      <CantHear guidanceOnly round={hear.round} active={hear.cantHearActive} onHear={hear.play} testID="cant-hear" />
+    ) : (
+      <CantHear round={hear.round} active={hear.cantHearActive} onHear={hear.play} onShowLetters={hear.showLetters} focusAfter={hear.wordRef} testID="cant-hear" />
+    )
   ) : null;
 
   if (compact) {

@@ -352,7 +352,7 @@ Amended 2026-11-25 by `docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md` [CH]. The W1 to
 - **A fourth way into the text states** (W8). Besides `muted`, `no_voice` and `error` / `blocked`, the learner can ask: a **Can't hear it?** link in the speaker row (W1; W5 under the card's buttons), its sheet (`audio-cant-hear.md` C2) with one line for this device and **Show the letters**. The state machine gets the `'show_text'` event and an `asked` flag that is not a reason: the panel shows the text of W2 without a reason line or action, and the text stays for the round (`audio-cant-hear.md` C3, C4).
 - **W5 and W6 (Discover)** keep their text and get a guidance-only link once per page (`audio-cant-hear.md` C6).
 - **W7 (Profile)**: the Sound card gets a second switch, **Always show the letters**; the help sheet shows this device's steps only (`audio-cant-hear.md` C7).
-- **W11 (Dictation)**: **Show the letters** opens the `see` round of W11; with **Always show the letters** the `hear` round opens as a `see` round. A Check's Dictation round is to get no **Show the letters** (row CH-1g, PR #1124, open).
+- **W11 (Dictation)**: **Show the letters** opens the `see` round of W11; with **Always show the letters** the `hear` round opens as a `see` round. In a Check (quest Check, Stage Check, Cell Check) the Dictation round's sheet is guidance only, with no **Show the letters**, and **Always show the letters** does not apply there (rows CH-1e and CH-1g, merged #1121 and #1124).
 - Telemetry: `audio.fallback_shown { source, reason: 'asked' }`, once per session and source, no profile id.
 
 ## Interaction points
