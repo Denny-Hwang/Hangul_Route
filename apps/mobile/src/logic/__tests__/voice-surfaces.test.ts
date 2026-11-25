@@ -200,16 +200,18 @@ const SURFACES: readonly Surface[] = [
         ),
   },
   {
-    name: 'Discover, every page: Hear it',
+    // AMENDMENTS-DISCOVER-SOUND-FIRST SF-1: Discover teaches; Hear it says the sound (가), for a vowel, ㅇ and a final the
+    // same text as their lone-letter voice. The name is the second button.
+    name: 'Discover, every page: Hear it (the sound)',
     files: ['logic/stage1/discover-flow.ts', 'screens/quest/DiscoverStep.tsx'],
-    type: letterOrFinal,
+    type: () => 'sound',
     said: () => discoverSaid('hear'),
   },
   {
-    name: 'Discover, every consonant page: Hear it with a vowel',
+    name: 'Discover, every consonant page: Hear the name',
     files: ['logic/stage1/discover-flow.ts'],
-    type: () => 'sound',
-    said: () => discoverSaid('soundWith'),
+    type: () => 'letter',
+    said: () => discoverSaid('nameButton'),
   },
   {
     name: 'Lecture letter slide, main speaker (an initial or a vowel by name; a final by its closed syllable)',
@@ -283,7 +285,7 @@ const SURFACES: readonly Surface[] = [
 ];
 
 /** The two Discover buttons of every symbol page of every quest and lesson. */
-function discoverSaid(button: 'hear' | 'soundWith'): Said[] {
+function discoverSaid(button: 'hear' | 'nameButton'): Said[] {
   const m = getMessages('en');
   return everyQuest().flatMap((quest) =>
     quest.steps.flatMap((step) => {
@@ -292,7 +294,7 @@ function discoverSaid(button: 'hear' | 'soundWith'): Said[] {
         page.items.flatMap((item): Said[] => {
           if (item.kind !== 'symbol') return [];
           const target = jamoOf(item.key.split('#')[0]!);
-          const action = button === 'hear' ? item.hear : item.soundWith?.action;
+          const action = button === 'hear' ? item.hear : item.nameButton?.action;
           return action ? [{ where: `${quest.id} ${item.key}`, target, spoken: action.spec.text }] : [];
         }),
       );

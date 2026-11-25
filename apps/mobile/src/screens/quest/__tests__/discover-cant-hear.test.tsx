@@ -98,7 +98,7 @@ describe('Discover, "Can\'t hear it?" (test 20)', () => {
     expect(count(r, 'cant-hear')).toBe(1);
     // Inside the first card, after the Hear it and Letter name buttons, before the next card.
     const order = r.root.findAll(
-      (n) => typeof n.type === 'string' && ['discover-hear-jamo:a|sound', 'discover-hear-jamo:a|vowel', 'cant-hear', 'discover-item-jamo:eo'].includes(String(n.props['data-testid'])),
+      (n) => typeof n.type === 'string' && ['discover-hear-jamo:a|sound', 'discover-hear-jamo:a|name', 'cant-hear', 'discover-item-jamo:eo'].includes(String(n.props['data-testid'])),
     );
     const ids = order.map((n) => n.props['data-testid']);
     expect(ids.indexOf('cant-hear')).toBeGreaterThan(ids.indexOf('discover-hear-jamo:a|sound'));

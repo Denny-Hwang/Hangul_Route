@@ -1,6 +1,12 @@
 import { localize, type DiscoverPage, type Overlays } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { questsAll } from '../../../content';
+import { AUDIO_ASSETS } from '../../../content/__generated__/audio-assets';
+import { AUDIO_PACK as JAMO_WB_PACK } from '../../../content/__generated__/audio-packs/audio-pack-jamo-wb';
+import { findJamo } from '../../../content/jamo';
+import { lessonQuests } from '../../../content/lessons';
+import { jamoVoice } from '../../audio/jamo-voice';
 import {
   DISCOVER_AUDIO_SOURCE,
   autoHearAllowed,
@@ -133,22 +139,24 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(g.kind).toBe('symbol');
     expect(g.glyph).toBe('ㄱ');
     expect(g.romanization).toBe('g/k');
-    // AMENDMENTS-AUDIO-CLIPS JV-A5: a lone letter is first heard by its NAME (기역), shown under Hear it with its
-    // romanization; the second button, Hear it with a vowel, plays its sound (가) with the taught line 가 = ㄱ + ㅏ.
-    expect(g.hear.spec.text).toBe('기역');
-    expect(g.spokenRomanization).toBe('giyeok');
-    expect(g.spokenLine).toEqual({ ko: '기역', romanization: 'giyeok' });
+    // AMENDMENTS-DISCOVER-SOUND-FIRST SF-1: Hear it plays the SOUND (가) with the carrier line 가 = ㄱ + ㅏ · ga;
+    // the second button, Hear the name, plays the name (기역) with its own line.
+    expect(g.hear.id).toBe('jamo:giyeok|sound');
+    expect(g.hear.spec).toEqual({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(g.spokenRomanization).toBe('ga');
+    expect(g.spokenLine).toEqual({ ko: '가 = ㄱ + ㅏ', romanization: 'ga' });
     expect(g.finalLine).toBeUndefined();
-    expect(g.soundWith).toMatchObject({ ko: '가 = ㄱ + ㅏ', romanization: 'ga' });
-    expect(g.soundWith?.action.spec.text).toBe('가');
+    expect(g.nameButton).toMatchObject({ ko: '기역', romanization: 'giyeok' });
+    expect(g.nameButton?.action.id).toBe('jamo:giyeok|name');
+    expect(g.nameButton?.action.spec).toEqual({ text: '기역', audioRef: 'audio/jamo/giyeok-name.mp3' });
     expect(g.example).toMatchObject({ ko: '가구', romanization: 'gagu', gloss: 'furniture' });
     expect(g.example?.hear.spec.text).toBe('가구');
     // ids of the three buttons are distinct
-    const ids = [g.hear.id, g.soundWith?.action.id, g.example?.hear.id];
+    const ids = [g.hear.id, g.nameButton?.action.id, g.example?.hear.id];
     expect(new Set(ids).size).toBe(3);
-    // ㄴ: 니은 · nieun, then 나 = ㄴ + ㅏ · na.
+    // ㄴ: 나 = ㄴ + ㅏ · na first, then the name 니은 · nieun.
     const n = page.items[1]!;
-    expect([n.hear.spec.text, n.spokenLine, n.soundWith?.action.spec.text, n.soundWith?.ko]).toEqual(['니은', { ko: '니은', romanization: 'nieun' }, '나', '나 = ㄴ + ㅏ']);
+    expect([n.hear.spec.text, n.spokenLine, n.nameButton?.action.spec.text, n.nameButton?.ko, n.nameButton?.romanization]).toEqual(['나', { ko: '나 = ㄴ + ㅏ', romanization: 'na' }, '니은', '니은', 'nieun']);
   });
 
   it('example audio uses spokenKo when the content has one, and an audioRef when present', () => {
@@ -158,12 +166,12 @@ describe('buildDiscover: the view model of the pages', () => {
 
   it('vowels and the silent initial have one Hear it and no second button', () => {
     const vowel = buildDiscover([pageOne]).pages[0]!.items[0]!;
-    expect(vowel.soundWith).toBeUndefined();
+    expect(vowel.nameButton).toBeUndefined();
     // A vowel's name is its sound: one Hear it (아 · a).
     expect(vowel.hear.spec.text).toBe('아');
     expect(vowel.spokenLine).toEqual({ ko: '아', romanization: 'a' });
     const silent = buildDiscover([{ items: [{ type: 'jamo', jamoId: 'jamo:ieung', example: ko('아이', 'ai', 'child') }] }]).pages[0]!.items[0]!;
-    expect(silent.soundWith).toBeUndefined();
+    expect(silent.nameButton).toBeUndefined();
     // ㅇ is spoken by its name, and shows "silent", never the empty-set sign
     expect(silent.hear.spec.text).toBe('이응');
     expect(silent.spokenLine).toEqual({ ko: '이응', romanization: 'ieung' });
@@ -176,7 +184,7 @@ describe('buildDiscover: the view model of the pages', () => {
     const item = buildDiscover([batchimPage]).pages[0]!.items[0]!;
     expect(item.glyph).toBe('ㄴ');
     expect(item.hear.spec.text).toBe('안');
-    expect(item.soundWith).toBeUndefined();
+    expect(item.nameButton).toBeUndefined();
     // A final is never said by name: its closed syllable, shown as the finalLine (ㄴ at the bottom: 안 · an).
     expect(item.spokenLine).toBeUndefined();
     expect(item.finalLine).toEqual({ letter: 'ㄴ', syllable: '안 · an' });
@@ -249,7 +257,7 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(b).toMatchObject({ romanization: 'agi', note: 'Also a pet name' });
     expect(b!.hear.spec).toEqual({ text: '아기' });
     expect(a!.example).toBeUndefined();
-    expect(a!.soundWith).toBeUndefined();
+    expect(a!.nameButton).toBeUndefined();
     expect(a!.spokenLine).toBeUndefined();
     expect(a!.accessibilityLabel).toBe('아버지, abeoji, father');
   });
@@ -341,11 +349,11 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(out.state.played).toEqual([id]);
   });
 
-  it('the text line says the romanization of what Hear it says (the name, giyeok), not the tile value', () => {
+  it('the text line says the romanization of what Hear it says (the sound, ga), not the name or the tile value', () => {
     const pageG = buildDiscover([pageTwo]);
     const g = pageG.pages[0]!.items[0]!;
     const out = run(startDiscover(pageG), { type: 'audio', id: g.hear.id, result: 'unavailable' });
-    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('giyeok')]);
+    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('ga')]);
     const batchim = buildDiscover([batchimPage]);
     const k = batchim.pages[0]!.items[0]!;
     const out2 = run(startDiscover(batchim), { type: 'audio', id: k.hear.id, result: 'muted' });
@@ -365,11 +373,11 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(pageRender(words, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('abeoji')]);
   });
 
-  it('Hear it with a vowel plays the sound on its own id and counts as heard', () => {
+  it('Hear the name plays the name on its own id and counts as heard', () => {
     const g = model.pages[1]!.items[0]!;
-    const out = run(startDiscover(model), { type: 'next' }, { type: 'hear', id: g.soundWith!.action.id }, { type: 'audio', id: g.soundWith!.action.id, result: 'played' });
+    const out = run(startDiscover(model), { type: 'next' }, { type: 'hear', id: g.nameButton!.action.id }, { type: 'audio', id: g.nameButton!.action.id, result: 'played' });
     expect(out.effects).toEqual([]);
-    expect(out.state.tapped).toEqual([g.soundWith!.action.id]);
+    expect(out.state.tapped).toEqual([g.nameButton!.action.id]);
     expect(pageRender(model, out.state, 'always').items[0]!.heard).toBe(true);
   });
 
@@ -636,7 +644,7 @@ describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views'
   it('a symbol and its name are sounds, its example and a word item are words', () => {
     const [symbols] = buildDiscover([pageTwo]).pages;
     const g = symbols!.items[0]!;
-    expect([g.hear.kind, g.soundWith?.action.kind, g.example?.hear.kind]).toEqual(['sound', 'sound', 'word']);
+    expect([g.hear.kind, g.nameButton?.action.kind, g.example?.hear.kind]).toEqual(['sound', 'sound', 'word']);
     const [words] = buildDiscover([{ items: [{ type: 'word', word: ko('나무', 'namu', 'tree') }] }]).pages;
     expect(words!.items[0]!.hear.kind).toBe('word');
     expect(DISCOVER_AUDIO_SOURCE).toBe('discover');
@@ -871,5 +879,86 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     const words = buildDiscover([{ items: [...exchangePage('가', '나').items, { type: 'word', word: ko('책', 'chaek', 'book') }] }]);
     expect(pageRender(model, startDiscover(model), 'always').items).toEqual([]);
     expect(pageRender(words, startDiscover(words), 'always').items[0]!.pulse).toBe(false);
+  });
+});
+
+describe('[SF] Discover plays the sound first (AMENDMENTS-DISCOVER-SOUND-FIRST row SF-1)', () => {
+  const everyQuest = [...new Map([...questsAll, ...lessonQuests].map((q) => [q.id, q])).values()];
+  const clipMap: Readonly<Record<string, unknown>> = { ...AUDIO_ASSETS, ...JAMO_WB_PACK.clips };
+
+  it("quest 1's own page 2 opens on the sound: autoHearId is the ㄱ sound, 가", () => {
+    const quest = questsAll.find((q) => q.id === 'quest:stage1-letters-q1')!;
+    const step = quest.steps.find((s) => s.kind === 'discover')!;
+    const model = buildDiscoverWith(step.discover!.pages, COPY, messages.a11y);
+    const id = autoHearId(model, 1);
+    expect(id).toBe('jamo:giyeok|sound');
+    const first = model.pages[1]!.items[0]!;
+    expect(first.hear.id).toBe(id);
+    expect(first.hear.spec.text).toBe('가');
+    expect(first.nameButton?.action.spec.text).toBe('기역');
+  });
+
+  it('a tense consonant says its sound (까) first and its name (쌍기역) on the second button', () => {
+    const [item] = buildDiscover([{ items: [{ type: 'jamo', jamoId: 'jamo:ssanggiyeok', example: ko('까치', 'kkachi', 'magpie') }] }]).pages[0]!.items;
+    expect(item!.hear.spec.text).toBe('까');
+    expect(item!.spokenLine).toEqual({ ko: '까 = ㄲ + ㅏ', romanization: 'kka' });
+    expect(item!.nameButton).toMatchObject({ ko: '쌍기역', romanization: 'ssanggiyeok' });
+    expect(item!.nameButton?.action.id).toBe('jamo:ssanggiyeok|name');
+  });
+
+  it('the carrier line has no name in it, so its screen-reader label is only the syllable and its romanization', () => {
+    const [item] = buildDiscover([pageTwo]).pages[0]!.items;
+    expect(item!.spokenLine!.ko).not.toContain('기역');
+  });
+
+  it('every symbol page of every shipped quest and lesson opens on the sound; no main Hear it plays a name clip', () => {
+    const wrong: string[] = [];
+    let consonants = 0;
+    for (const quest of everyQuest) {
+      for (const step of quest.steps) {
+        if (step.kind !== 'discover' || !step.discover) continue;
+        const model = buildDiscover(step.discover.pages);
+        model.pages.forEach((page, p) => {
+          const id = autoHearId(model, p);
+          const first = page.items[0];
+          if (first?.kind !== 'symbol') {
+            if (id !== undefined) wrong.push(`${quest.id} page ${p}: autoplay on a non-symbol`);
+            return;
+          }
+          if (id !== first.hear.id) wrong.push(`${quest.id} page ${p}: autoHearId is not item.hear`);
+          const jamo = findJamo(first.key.split('#')[0]!)!;
+          if (jamo.kind === 'consonant' && jamo.id !== 'jamo:ieung') {
+            consonants += 1;
+            if (first.hear.spec.text !== jamoVoice(jamo, 'sound').text) wrong.push(`${quest.id} ${first.key}: not the sound`);
+            if (first.hear.spec.audioRef?.endsWith('-name.mp3')) wrong.push(`${quest.id} ${first.key}: a name clip on Hear it`);
+          }
+        });
+      }
+    }
+    expect(consonants).toBeGreaterThan(0);
+    expect(wrong).toEqual([]);
+  });
+
+  it('every consonant on a shipped Discover page has its sound clip and, with a name button, its name clip in the clip map', () => {
+    const missing: string[] = [];
+    for (const quest of everyQuest) {
+      for (const step of quest.steps) {
+        if (step.kind !== 'discover' || !step.discover) continue;
+        for (const page of buildDiscover(step.discover.pages).pages) {
+          for (const item of page.items) {
+            if (item.kind !== 'symbol') continue;
+            const jamo = findJamo(item.key.split('#')[0]!)!;
+            if (jamo.kind !== 'consonant') continue;
+            const sound = item.hear.spec.audioRef;
+            if (sound === undefined || !(sound in clipMap)) missing.push(`${quest.id} ${item.key} sound`);
+            if (item.nameButton) {
+              const name = item.nameButton.action.spec.audioRef;
+              if (name === undefined || !(name in clipMap)) missing.push(`${quest.id} ${item.key} name`);
+            }
+          }
+        }
+      }
+    }
+    expect(missing).toEqual([]);
   });
 });
