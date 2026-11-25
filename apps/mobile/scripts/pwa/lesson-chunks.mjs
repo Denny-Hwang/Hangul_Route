@@ -209,7 +209,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // [QS] AMENDMENTS-QUEST-SOUND-BACK rows QS-1 to QS-5 (sounds get room at both ends): the web clip player's gain node and
   // fades, the screen wait and the answer's sound wait are audio code every quest uses, so they are in the start bundle.
   // On top of the QB rows the release `build:web` (CI=1) measures 4,957,992 B raw, 592 B over the line. The line is the
-  // measurement plus a 4,008 B margin (one measured raise, 4,600 B over the previous line).
+  // measurement plus a 3,931 B margin (one measured raise, 4,600 B over the previous line).
   // [PX] AMENDMENTS-PICTURES-2026-11 rows PX-4 and PX-5 (scenes, props, realia and Hoya): the story-scene registry,
   // the realia dressings, Hoya's figure and the scene-art renderer (which now draws the vocab tones of the hidden-heritage
   // things) are in the start bundle, and the redrawn settings and props carry more shapes. The release `build:web`
@@ -275,8 +275,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // over the previous line).
   // [AF] F-A11Y-001 AF-4a (Match Sound, Odd One Out and Build a Letter import the announcer, its hook, the announcement rules and the Next hook;
   // both tile games and Build a Letter are imported statically by MinigameScreen) on top of AF-2 (4,625,094 B raw / 1,273,518 B gzip) the release
-  // `build:web` (CI=1) measures 4,630,492 B raw / 1,274,792 B gzip (+5,398 B raw, +1,274 B gzip), 1,592 B over the previous line. The line is the
-  // measurement plus a 4,008 B margin (one measured raise, 5,600 B over the previous line).
+  // `build:web` (CI=1) measures 4,630,569 B raw / 1,274,804 B gzip (+5,475 B raw, +1,286 B gzip), 1,592 B over the previous line. The line is the
+  // measurement plus a 3,931 B margin (one measured raise, 5,600 B over the previous line).
   startBundleRaw: 4_634_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
