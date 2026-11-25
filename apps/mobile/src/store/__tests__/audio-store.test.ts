@@ -25,7 +25,7 @@ beforeEach(() => {
   mem.clear();
   tracked.length = 0;
   vi.mocked(writeJson).mockClear();
-  useAudioStore.setState({ ...initial, muted: false, hydrated: false, levelOrder: null, lastFailure: null, unlocked: false, clips: false, tts: { state: 'unknown' } });
+  useAudioStore.setState({ ...initial, muted: false, showLetters: false, hydrated: false, levelOrder: null, lastFailure: null, unlocked: false, clips: false, tts: { state: 'unknown' } });
 });
 
 describe('audio-store: device:audio (F-AUDIO-004 AD7, §3.7)', () => {
@@ -77,7 +77,7 @@ describe('audio-store: device:audio (F-AUDIO-004 AD7, §3.7)', () => {
   it('setMuted persists, and a restart reads it back', async () => {
     useAudioStore.getState().setMuted(true, 'profile');
     expect(useAudioStore.getState().muted).toBe(true);
-    expect(writeJson).toHaveBeenCalledWith('device:audio', { muted: true });
+    expect(writeJson).toHaveBeenCalledWith('device:audio', { muted: true, showLetters: false });
     // restart: a fresh store state reads the saved value
     useAudioStore.setState({ muted: false, hydrated: false });
     await useAudioStore.getState().hydrate();
@@ -111,6 +111,55 @@ describe('audio-store: device:audio (F-AUDIO-004 AD7, §3.7)', () => {
     s.reportFailure('no_voice');
     expect(useAudioStore.getState().lastFailure).toEqual({ reason: 'no_voice', at: 1234 });
     vi.restoreAllMocks();
+  });
+});
+
+describe('audio-store: Always show the letters (AMENDMENTS-AUDIO-CANT-HEAR CH-2)', () => {
+  it('is off until saved on, and a saved value is read back', async () => {
+    await useAudioStore.getState().hydrate();
+    expect(useAudioStore.getState().showLetters).toBe(false);
+    mem.set('device:audio', { muted: false, showLetters: true });
+    await useAudioStore.getState().hydrate();
+    expect(useAudioStore.getState()).toMatchObject({ muted: false, showLetters: true });
+  });
+
+  it('a value saved before the switch existed reads as off, and a damaged one never costs the mute', async () => {
+    mem.set('device:audio', { muted: true });
+    await useAudioStore.getState().hydrate();
+    expect(useAudioStore.getState()).toMatchObject({ muted: true, showLetters: false });
+    mem.set('device:audio', { muted: true, showLetters: 'yes' });
+    await useAudioStore.getState().hydrate();
+    expect(useAudioStore.getState()).toMatchObject({ muted: true, showLetters: false });
+  });
+
+  it('setShowLetters persists with the mute, and a restart reads both back', async () => {
+    useAudioStore.getState().setMuted(true, 'profile');
+    useAudioStore.getState().setShowLetters(true);
+    expect(useAudioStore.getState().showLetters).toBe(true);
+    expect(writeJson).toHaveBeenLastCalledWith('device:audio', { muted: true, showLetters: true });
+    useAudioStore.setState({ muted: false, showLetters: false, hydrated: false });
+    await useAudioStore.getState().hydrate();
+    expect(useAudioStore.getState()).toMatchObject({ muted: true, showLetters: true });
+  });
+
+  it('turning the mute on or off keeps the switch', () => {
+    useAudioStore.getState().setShowLetters(true);
+    useAudioStore.getState().setMuted(true, 'profile');
+    expect(writeJson).toHaveBeenLastCalledWith('device:audio', { muted: true, showLetters: true });
+  });
+
+  it('writes nothing when the value does not change, and a failing write never throws into a game', async () => {
+    useAudioStore.getState().setShowLetters(false);
+    expect(writeJson).not.toHaveBeenCalled();
+    vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));
+    expect(() => useAudioStore.getState().setShowLetters(true)).not.toThrow();
+    await Promise.resolve();
+    expect(useAudioStore.getState().showLetters).toBe(true);
+  });
+
+  it('sends no telemetry: a setting is not a count of anyone', () => {
+    useAudioStore.getState().setShowLetters(true);
+    expect(tracked).toEqual([]);
   });
 });
 
