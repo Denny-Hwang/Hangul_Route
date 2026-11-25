@@ -10,7 +10,7 @@
       { "rule": "region", "nodes": 3, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
     ],
     "culture-quiz-correct": [
-      { "rule": "region", "nodes": 4, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
+      { "rule": "region", "nodes": 2, "impact": "moderate", "expectedFix": "WO-39 SS-3" }
     ],
     "pin-entry": [
       { "rule": "region", "nodes": 3, "impact": "moderate", "expectedFix": "WO-39 SS-3" }

@@ -220,7 +220,7 @@ describe('the baseline file', () => {
     home: { region: 8 },
     discover: { region: 11 },
     'match-sound-round-1': { 'label-content-name-mismatch': 4, region: 3 },
-    'culture-quiz-correct': { region: 4 },
+    'culture-quiz-correct': { region: 2 },
     'pin-entry': { region: 3 },
   };
 
