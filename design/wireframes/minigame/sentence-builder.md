@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1); the same screen for everyone
 Mock: `design/screens/minigame-sentence-builder/v1/` (HTML on tokens, shots at 320 px and tablet).
 Code (G-1, to build): `apps/mobile/src/screens/minigames/SentenceBuilderGame.tsx` (paint) · pure rules in `apps/mobile/src/logic/sentence-builder/` (`reducer`, `scoring`, `progression`, `view`; 100 % covered) · kind `order-it` (`MinigameKindSchema`, existing member, no renderer until G-1) · round schema `OrderItRoundSchema` (C-1)
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean drawn with `KoreanText` (Korean + romanization), `{ x }` content-driven, `[ n ]` an empty slot, `[+n]` an attached (particle) slot, `( ) (*)` fill-only dots, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: the tried tile keeps `dash`, now in `text.primary` on a disc (it still reads as a badge, not as a hyphen), a placed tile's check is 20, the placed line is said as its place and the word's romanization, and the hint and the built panel are not live (row AF-4c).
 
 ## Scenario (Given-When-Then)
 

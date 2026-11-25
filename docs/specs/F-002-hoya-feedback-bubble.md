@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) (§3.3, Accessibility): `HoyaBubble` gains a `live` prop (default `true`, so every existing use keeps its live region). A game passes `live={false}` on the bubble that follows a result, because the result is already said once by the answer announcer and a bubble that mounts with its text is not reliably read (and iOS has no live regions); the games' selection captions and prompt panels stay live (row AF-1).
+
 ## 1. Context
 
 HoyaBubble is the *voice* of Hoya — the speech-bubble component that

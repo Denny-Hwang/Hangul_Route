@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1); the same screen for everyone
 Mock: `design/screens/minigame-variety/` (`mock/syllable-build.html`, `mock/states.html` board S; shots at 320 and 768)
 Code (planned, CM-32): renderer `apps/mobile/src/screens/minigames/SyllableBuildGame.tsx`; pure rules `apps/mobile/src/logic/syllable-build/` (round view, reducer, scoring, `syllableBuildToListenPick`); round schema `SyllableBuildRoundSchema` in `packages/content-schema` (the kind is already in `MinigameKindSchema`); block drawing `design/components/SyllableBlock` (its `layout.ts` decides beside / under, with the final zone at the bottom)
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean with romanization (`KoreanText`), `[ _ ]` an empty zone of the block, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: the miss mark is `replay` at 20 inside the corner of a zone and a tile (it was a drawn dot), a right block draws `check` on its zones, the second miss rings the right tile with the dashed look-here ring, and a reader on hears no replay by itself after a miss; each result is said once (row AF-4c).
 
 ## Scenario (Given-When-Then)
 
