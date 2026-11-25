@@ -70,6 +70,9 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       readWorld: async () => ({ kind: 'ready', world: {} }),
       startSession: async () => ({ stage: 'stage2', rounds: Array.from({ length: api.rounds }, () => ROUND), soundNotice: false }),
       begin: () => undefined,
+      // [LR] Row LR-3b: nothing is stored here (the resume tests are in stage-check-resume.test.tsx).
+      resumeSession: async () => ({ kind: 'none' }),
+      savedRun: () => ({ v: 1, kind: 'stage' }),
       recordRound: async (_w: unknown, _p: unknown, index: number) => {
         api.recordLog.push(index);
         if (api.recordHold !== null) await api.recordHold;
