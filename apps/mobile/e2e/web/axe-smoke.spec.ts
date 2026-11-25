@@ -69,18 +69,19 @@ async function auditScreen(page: Page, screen: AxeScreen): Promise<void> {
 }
 
 /**
- * The Culture Quiz moves on 700 ms after a right answer (`afterSound(..., { minMs: 700 })`, CultureQuizGame), which is
- * shorter than a settled scan. `page.clock` cannot hold it: a paused clock hangs axe-core, which runs on the page's
- * timers, and a stepped one still lets the 700 ms through now and then. So the page's own `setTimeout` is wrapped once,
- * before the first script runs: while `window.__axeHold` is set, a 700 ms timer is never scheduled. Every other delay
- * runs as usual, and the flag is off until the spec turns it on, just before the tap.
+ * The Culture Quiz moves on 1000 ms after a right answer (`afterSound(..., { minMs: 1000 })`: the result floor
+ * `RESULT_MARK_MIN_MS`, F-A11Y-001 OD-AF2 (b), CultureQuizGame), which is shorter than a settled scan. `page.clock`
+ * cannot hold it: a paused clock hangs axe-core, which runs on the page's timers, and a stepped one still lets the
+ * 1000 ms through now and then. So the page's own `setTimeout` is wrapped once, before the first script runs: while
+ * `window.__axeHold` is set, a 1000 ms timer is never scheduled. Every other delay runs as usual, and the flag is off
+ * until the spec turns it on, just before the tap.
  */
 async function installAdvanceHold(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const w = window as Window & { __axeHold?: boolean };
     const real = window.setTimeout.bind(window);
     window.setTimeout = ((handler: TimerHandler, delay?: number, ...args: unknown[]) =>
-      w.__axeHold && delay === 700 ? 0 : real(handler, delay, ...args)) as typeof window.setTimeout;
+      w.__axeHold && delay === 1000 ? 0 : real(handler, delay, ...args)) as typeof window.setTimeout;
   });
 }
 

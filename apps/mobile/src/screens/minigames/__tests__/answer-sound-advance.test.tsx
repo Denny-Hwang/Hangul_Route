@@ -1,6 +1,7 @@
 import { motion } from '@hangul-route/design-system';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
 import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
@@ -246,7 +247,7 @@ describe('[QS-4] Card Match: the step ends once the word that is being said has 
   });
 });
 
-describe('[QS-4] Culture Quiz: a word that is still sounding ends before the next round', () => {
+describe('[QS-4] Culture Quiz: a word that is still sounding ends before the next round (and the result floor of F-A11Y-001 OD-AF2 (b) is the least wait)', () => {
   const PAIRS = [
     { ko: '그네', en: 'swing', romanization: 'geune' },
     { ko: '모래', en: 'sand', romanization: 'morae' },
@@ -268,10 +269,10 @@ describe('[QS-4] Culture Quiz: a word that is still sounding ends before the nex
     const r = await open(<CultureQuizGame scope={scope} onFinish={finish} />);
     audio.hold = true;
     const first = await answer(r);
-    await heldUntilTheSoundEnds(700 - 500, () => asked(r) !== first);
+    await heldUntilTheSoundEnds(RESULT_MARK_MIN_MS - 500, () => asked(r) !== first);
     await tick(500);
     await answer(r);
-    await releasedAtTheCap(700, () => finish.mock.calls.length === 1);
+    await releasedAtTheCap(RESULT_MARK_MIN_MS, () => finish.mock.calls.length === 1);
   });
 });
 

@@ -3,6 +3,7 @@ import {
   Button,
   Caption,
   Card,
+  ChoiceCard,
   Heading,
   HoyaBubble,
   Icon,
@@ -22,14 +23,18 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
+import { afterMiss, afterRightAnswer, answerItem, answerOptionLabel } from '../../logic/answer-feedback';
 import { replyOptionLabel } from '../../logic/korean-labels';
 import { koSpeech } from '../../logic/audio/ko-speech';
-import { afterReply } from '../../logic/audio/reply-advance';
+import { ADVANCE_MAX_MS, ADVANCE_MIN_MS, afterSound } from '../../logic/audio/reply-advance';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useAudioStore } from '../../store/audio-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { AnswerAnnouncer } from './answer-announcer';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 interface Props {
   scope: MinigameScope;
@@ -54,7 +59,13 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
   const slot = usePromptSlot({ source: 'tap-respond', textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
+  // F-A11Y-001 AF-2: each result is said once, by the answer announcer; with a screen reader on a right reply shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const next = useRoundNext();
   const mounted = useRef(false);
+  /** The turn last moved on from: a second Next for the same turn does nothing, and a reply is not started after it (reader on). */
+  const movedFrom = useRef(-1);
   // While a right reply is being said, nothing may start the NPC line again (it would cut the reply off).
   const replying = useRef(false);
   useEffect(() => {
@@ -84,6 +95,12 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
     else hearLine();
   }, [hearLine, reset, turnIdx, pacing]);
 
+  // A new turn empties the announcer and, with a reader on, moves focus to the turn's header node (§3.4).
+  useEffect(() => {
+    clear();
+    if (turnIdx > 0) focusPrompt();
+  }, [turnIdx, clear, focusPrompt]);
+
   if (!turn) {
     return (
       <Screen>
@@ -92,7 +109,27 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
     );
   }
 
-  const handleTap = (option: { ko: string; spokenKo?: string; audioRef?: string }, isCorrect: boolean): void => {
+  const last = turnIdx >= turns.length - 1;
+  const advance = (): void => {
+    if (movedFrom.current === turnIdx) return;
+    movedFrom.current = turnIdx;
+    replying.current = false;
+    next.hide();
+    if (last) {
+      markStepComplete();
+      onFinish();
+    } else {
+      setTurnIdx(turnIdx + 1);
+      setFeedback('idle');
+      setLockedWrong([]);
+    }
+  };
+
+  /** A reply is named by romanization and meaning, never its Hangul (§3.2); with no romanization, by its meaning alone. */
+  const replyItem = (option: { romanization?: string; en: string }): string =>
+    option.romanization ? answerItem(m.a11y, option.romanization, option.en) : option.en;
+
+  const handleTap = (option: { ko: string; romanization?: string; en: string; spokenKo?: string; audioRef?: string }, isCorrect: boolean): void => {
     const { ko } = option;
     if (feedback === 'correct') return;
     if (isCorrect) {
@@ -102,27 +139,38 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       setFeedback('correct');
       replying.current = true;
       const said = koSpeech(option, 'sentence', 'tap-respond');
-      const reply = pacing.track(play(() => playPrompt(said), said));
-      // The reply is said in full before the next line starts (a newer prompt would cut it off).
-      void afterReply(reply).then(() => {
-        replying.current = false;
-        if (!mounted.current) return;
-        if (turnIdx >= turns.length - 1) {
-          markStepComplete();
-          onFinish();
-        } else {
-          setTurnIdx(turnIdx + 1);
-          setFeedback('idle');
-          setLockedWrong([]);
-        }
+      let reply: Promise<unknown> | null = null;
+      const say = (): Promise<void> => a.announce({ kind: 'right', item: replyItem(option) });
+      // The reply is said in full before the next line starts (a newer prompt would cut it off); OD-AF2 (b): at least the
+      // result floor. A reader on hears the line first, then the reply, and waits for Next (OD-AF9 (b)).
+      void afterRightAnswer({
+        readerOn: a.readerOn,
+        gameMinMs: ADVANCE_MIN_MS,
+        announce: a.readerOn ? () => next.afterFocus(say) : say,
+        play: () => {
+          // A reader on may press Next before the line ends: the turn has moved on, so its reply is not started.
+          if (movedFrom.current === turnIdx || !mounted.current) return;
+          reply = pacing.track(play(() => playPrompt(said), said));
+        },
+        showNext: next.show,
+        waitThenAdvance: (minMs) =>
+          void afterSound(reply, { minMs, maxMs: ADVANCE_MAX_MS }).then(() => {
+            replying.current = false;
+            if (mounted.current) advance();
+          }),
       });
     } else {
       nudge();
       answerRound(turnIdx, false, { texts: [turn.npcKo], rung: 'read' });
       setFeedback('wrong');
       setLockedWrong([...lockedWrong, ko]);
+      afterMiss({ readerOn: a.readerOn, announce: () => a.announce({ kind: 'miss', item: replyItem(option) }) });
     }
   };
+
+  // The turn's header node (§3.4): "Someone says" and the line, by romanization and meaning; Hear it stays outside it.
+  const npcItem = turn.npcRomanization ? answerItem(m.a11y, turn.npcRomanization, turn.npcEn) : turn.npcEn;
+  const turnLabel = m.a11y.answer.round(turnIdx + 1, turns.length, `${copy.tapRespond.someoneSays} ${npcItem}`);
 
   return (
     <Screen tone="canvas" scrollable>
@@ -138,12 +186,14 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       <Spacer size="md" />
 
       <Card padding="md">
-        <Caption tone="muted">{copy.tapRespond.someoneSays}</Caption>
-        <Spacer size="xs" />
-        <Heading level="title">{turn.npcKo}</Heading>
-        {turn.npcRomanization ? <Body tone="muted">{turn.npcRomanization}</Body> : null}
-        <Spacer size="xxs" />
-        <Body tone="secondary">{turn.npcEn}</Body>
+        <View ref={a.promptRef} testID="tap-respond-round" accessible accessibilityRole="header" accessibilityLabel={turnLabel}>
+          <Caption tone="muted">{copy.tapRespond.someoneSays}</Caption>
+          <Spacer size="xs" />
+          <Heading level="title">{turn.npcKo}</Heading>
+          {turn.npcRomanization ? <Body tone="muted">{turn.npcRomanization}</Body> : null}
+          <Spacer size="xxs" />
+          <Body tone="secondary">{turn.npcEn}</Body>
+        </View>
         <Spacer size="sm" />
         <View style={{ alignSelf: 'flex-start' }}>
           <Button
@@ -174,30 +224,46 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
         {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
         <View style={{ gap: spacing.md }}>
           {turn.options.map((opt) => {
-            const isWrongLocked = lockedWrong.includes(opt.ko);
-            const showCorrect = feedback === 'correct' && opt.isCorrect;
-            const tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary';
+            const state = feedback === 'correct' && opt.isCorrect ? 'correct' : lockedWrong.includes(opt.ko) ? 'wrong' : 'idle';
             return (
-              <Button
+              <ChoiceCard
                 key={opt.ko}
-                label={replyOptionLabel(opt)}
-                tone={tone}
-                size="lg"
-                fullWidth
-                disabled={isWrongLocked}
+                state={state}
+                ko={opt.ko}
+                romanization={opt.romanization ?? ''}
+                gloss={opt.en}
+                accessibilityLabel={answerOptionLabel(state, replyOptionLabel(opt), m.a11y.minigame.option)}
                 onPress={() => handleTap(opt, opt.isCorrect)}
+                testID={`tap-respond-option-${opt.ko}`}
               />
             );
           })}
         </View>
       </TapBoard>
 
+      {next.shown ? (
+        <>
+          <Spacer size="lg" />
+          <Button
+            pressableRef={next.nextRef}
+            label={copy.trace.next.cta}
+            tone="primary"
+            size="hero"
+            fullWidth
+            onPress={advance}
+            testID="tap-respond-next"
+          />
+        </>
+      ) : null}
+
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message={copy.tapRespond.tryAnother} />
+          {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
+          <HoyaBubble tone="thinking" message={copy.tapRespond.tryAnother} live={false} />
         </>
       ) : null}
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
     </Screen>
   );
