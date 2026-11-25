@@ -49,7 +49,7 @@
     },
     "jamo:chieut": {
       "soundHint": "como la ch de «chocolate», con un soplo de aire",
-      "exampleWord.gloss": "libro",
+      "exampleWord.gloss": "falda",
       "gloss": "CH: como la ch de «chocolate», con un soplo de aire"
     },
     "jamo:kieuk": {
@@ -59,7 +59,7 @@
     },
     "jamo:tieut": {
       "soundHint": "como la t de «taza», con un soplo de aire",
-      "exampleWord.gloss": "conejo",
+      "exampleWord.gloss": "tomate",
       "gloss": "T: como la t de «taza», con un soplo de aire"
     },
     "jamo:pieup": {
@@ -74,7 +74,7 @@
     },
     "jamo:a": {
       "soundHint": "como la a de «casa»",
-      "exampleWord.gloss": "papá",
+      "exampleWord.gloss": "bebé",
       "gloss": "A: suena como la a de «casa»"
     },
     "jamo:ya": {
@@ -114,7 +114,7 @@
     },
     "jamo:eu": {
       "soundHint": "di «u» con los labios estirados, sin redondear",
-      "exampleWord.gloss": "lo mejor, lo primero",
+      "exampleWord.gloss": "dibujo",
       "gloss": "EU: un sonido suave entre la u y la i"
     },
     "jamo:i": {

@@ -62,7 +62,7 @@ export const stage1Cards: HeritageCard[] = [
   // Play & Crafts
   make('yutnori', 'Yut Game', '윷놀이', 'yunnori', 'Throw the four sticks — yut!', 'Yunnori, also written yutnori, is played on New Year\'s Day.', 'crafts', 'stage1', 'rare', 'episode:stage1-crafts'),
   make('jegi', 'Foot Shuttlecock', '제기', 'jegi', 'Kick the feathered weight as many times as you can.', 'Jegichagi is a winter playground favorite.', 'crafts', 'stage1', 'uncommon', 'episode:stage1-crafts'),
-  make('kite', 'Kite', '연', 'yeon', 'A diamond kite painted with a tiger\'s face.', 'Bangpaeyeon — shield kite — has a hole in the middle for steering.', 'crafts', 'stage1', 'uncommon', 'episode:stage1-crafts'),
+  make('kite', 'Kite', '연', 'yeon', 'A paper kite on bamboo sticks, with a red circle at the top.', 'Bangpaeyeon — shield kite — has a hole in the middle for steering.', 'crafts', 'stage1', 'uncommon', 'episode:stage1-crafts'),
   make('top', 'Spinning Top', '팽이', 'paengi', 'A wooden top that spins on ice.', 'Spinning tops on frozen ponds is a winter tradition.', 'crafts', 'stage1', 'common', 'episode:stage1-crafts'),
   make('pottery', 'Celadon Pottery', '청자', 'cheongja', 'A jade-green Korean pot, 1000 years old.', 'Goryeo cheongja is famous worldwide for its color.', 'crafts', 'stage1', 'rare', 'episode:stage1-crafts'),
   make('gayageum', 'Gayageum Zither', '가야금', 'gayageum', 'A 12-string Korean zither — soft as rain.', 'The gayageum is over 1,400 years old.', 'crafts', 'stage1', 'legendary', 'stage1-complete'),
