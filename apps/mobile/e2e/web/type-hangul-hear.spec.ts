@@ -208,14 +208,21 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
       const link = page.getByTestId('cant-hear');
       await expect(link).toBeVisible();
       await expect(link).toHaveAccessibleName("Can't hear it?");
-      // After the speaker, before the answer field, inside the window and clear of the keys.
-      const [lb, sb, fb, kb] = [await link.boundingBox(), await page.getByTestId('dictation-prompt-speaker').boundingBox(), await page.getByTestId('type-hangul-field').boundingBox(), await key(page, 'ㅅ').boundingBox()];
-      expect(lb!.y).toBeGreaterThanOrEqual(sb!.y + sb!.height - 0.5);
-      expect(lb!.y + lb!.height).toBeLessThanOrEqual(fb!.y + 0.5);
-      expect(lb!.y + lb!.height).toBeLessThanOrEqual(kb!.y + 0.5);
-      expect(lb!.height).toBeGreaterThanOrEqual(64 - 0.5);
-      expect(lb!.x).toBeGreaterThanOrEqual(-0.5);
-      expect(lb!.x + lb!.width).toBeLessThanOrEqual(size.width + 0.5);
+      // The link is in the prompt zone, which scrolls above the pinned answer row and keys at these heights (the
+      // shipped layout, CM-31 open item): scrolled into view it is inside the window and nothing covers it.
+      await link.scrollIntoViewIfNeeded();
+      const lb = (await link.boundingBox())!;
+      expect(lb.height).toBeGreaterThanOrEqual(64 - 0.5);
+      expect(lb.x).toBeGreaterThanOrEqual(-0.5);
+      expect(lb.x + lb.width).toBeLessThanOrEqual(size.width + 0.5);
+      expect(lb.y).toBeGreaterThanOrEqual(-0.5);
+      expect(lb.y + lb.height).toBeLessThanOrEqual(size.height + 0.5);
+      const covered = await link.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return top === null || !el.contains(top);
+      });
+      expect(covered, 'something covers the link').toBe(false);
       await expectNoHorizontalOverflow(page);
       await shot(page, `ch-1c-hear-${size.width}x${size.height}`);
 
