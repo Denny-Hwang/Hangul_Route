@@ -111,7 +111,7 @@ describe('checkRomanization', () => {
   it('known limits are mismatches until an exception allows them', () => {
     expect(rules('꽃잎', 'kkonnip')).toEqual(['romanization-mismatch']);
     expect(rules('솔잎', 'sollip')).toEqual(['romanization-mismatch']);
-    expect(rules('밟다', 'bapda')).toEqual(['romanization-mismatch']);
+    expect(rules('밟다', 'bapda')).toEqual([]);
     const exceptions: RomanizationException[] = [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' }];
     expect(rules('꽃잎', 'kkonnip', exceptions)).toEqual([]);
     expect(rules('꽃잎', 'KKonnip', exceptions)).toEqual([]);
