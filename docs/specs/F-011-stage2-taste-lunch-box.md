@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) (Card Match, "Games with a renderer"): a matched pair draws `check` on both cards at full opacity and the matched cards are `inactive`, not `disabled`; a wrong meaning keeps `replay` and its "Not this one" name while the same Korean word stays picked, with no 600 ms timer letting the pick go (OD-AF6 (a); `AMENDMENTS-TOUCH.md` §6.2); Hoya shows `thinking` on a bubble that is not live; the picked card has a non-colour cue (a solid ring outside its hit area); each result is said once; the last pair's 800 ms and the 1000 ms floor apply only with the reader off, and with a reader on Next shows after the last pair (row AF-3).
+
 ## 1. Context
 
 CLAUDE.md §1 MVP scope: "Stage 2 / Stage 4 — taste only". Until now only

@@ -4,6 +4,7 @@ Spec: `docs/specs/F-QUEST-002-discover-check-stage1-complete.md` §3.7 (PR Q-7a)
 Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, flow, interaction points. No colours, fonts or final copy; text in (parentheses) is a placeholder.
 Code: `apps/mobile/src/screens/minigames/BuildLetterGame.tsx` + the design-system `SyllableBlock` (`design/components/SyllableBlock/spec.md`); pure rules in `apps/mobile/src/logic/build-letter-view.ts` and `round-builder.ts`
 Notation: `[ X ]` secondary action, `( x )` text placeholder, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a right build draws `check` on the target box; a wrong build and its hint stay until a slot tap, Undo or a tray tile (no 900 ms auto-clear); the block's shape picture is kept under the slots at the block's height; each result is said once; the floor is 1000 ms (was 900) with the reader off (row AF-4a).
 
 ## Scenario (Given-When-Then)
 

@@ -3,6 +3,7 @@
 Spec: `docs/blueprints/06-mini-game-catalog.md` §0.3 (5 common rules: ≤ 3 min, 5–7 rounds, fail-but-advance, touch only, sound + visual) · `.claude/skills/minigame-skill/SKILL.md` · `docs/specs/F-HOYA-001-hoya-character-system.md` (bubble tones)
 Audience: **any learner, any age** (CLAUDE.md §1; this line said a child age range before the 2026-10-09 audience rule, corrected in row CM-D2)
 Code (back-filled): `apps/mobile/src/screens/minigames/MinigameScreen.tsx` (router by `scope.kind`) + one component per game; run state `store/quest-run-store.ts`
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: rule 7 (a miss) is amber with a mark, a `replay` on the tapped option (a `check` on a right one), and now also stays until the learner acts, with the look-here ring dashed (`border.focus`) and the miss said once through the answer announcer; rule 12 (screen readers): the option's name starts with its state, a result is said once by the hidden polite region, Hoya's result bubble is not live, and "nothing steals focus" gains the round-focus exception of F-A11Y-001 §3.4 (with a reader on, Next and the next round's header node take focus). Details: `design/components/AnswerFeedback/spec.md` (rows AF-1 to AF-4c).
 
 ## Scenario (Given-When-Then)
 

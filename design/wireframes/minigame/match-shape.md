@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, 
 Mock: `design/screens/minigame-variety/` (`mock/match-shape.html`, `mock/states.html` board M; shots at 320 and 768)
 Code (planned, CM-33): renderer `apps/mobile/src/screens/minigames/MatchShapeGame.tsx`; pure rules `apps/mobile/src/logic/match-shape/` (view, reducer, scoring, `matchShapeToReadPick`); round schema `MatchShapeRoundSchema` in `packages/content-schema`; origin pictures as scene-art props `prop:shape-origin-*` (`packages/design-system/src/scene-art/props/`), drawn to `design/brief/illustrations/scene-art-style.md`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean with romanization (`KoreanText`), `(art)` a drawn picture, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: the tiles' miss mark is `replay` on a disc straddling the tile's corner (it was a dot), the look-here ring is dashed, each found copy is announced, and Next follows the last copy with a reader on (row AF-4c).
 
 ## Scenario (Given-When-Then)
 

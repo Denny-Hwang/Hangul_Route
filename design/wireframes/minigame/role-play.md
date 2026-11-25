@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, 
 Mock: `design/screens/minigame-variety/` (`mock/role-play.html`, `mock/states.html` board R; shots at 320 and 768)
 Code (planned, CM-35): renderer `apps/mobile/src/screens/minigames/RolePlayGame.tsx`; pure rules `apps/mobile/src/logic/role-play/` (branch reducer, path length, scoring, `rolePlayToTapRespond`); round schema `RolePlaySceneSchema` in `packages/content-schema` with the refinements below
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean with romanization (`KoreanText`), `<partner>` / `<me>` chat bubbles, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a locked reply shows `replay` (it was `dash`) and the reply being sent `check`, both inactive and named state first; the dashed look-here ring replaces the solid ring and the replies keep room for it on every side; the why line is said once, its Korean read as romanization (row AF-4c).
 
 ## Scenario (Given-When-Then)
 

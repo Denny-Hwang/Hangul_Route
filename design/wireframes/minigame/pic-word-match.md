@@ -4,6 +4,7 @@ Spec: `docs/specs/F-QUEST-002-discover-check-stage1-complete.md` §3.11 (PR Q-4)
 Audience: **any learner, any age** (CLAUDE.md §1); the same screen for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts, art or final copy; text in (parentheses) is a placeholder.
 Code: `apps/mobile/src/screens/minigames/PicWordMatchGame.tsx`; pure rules in `apps/mobile/src/logic/pic-word-flow.ts`; tile card: `design/components/ChoiceCard`, taught Korean: `design/components/KoreanText`, picture: `apps/mobile/src/screens/minigames/PictureArt.tsx`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean shown with romanization (`KoreanText`), `{ x }` content-driven, `<state>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a miss stays marked ("Not this one", `replay`) until the learner's next tap that changes the board, one miss at a time (the 600 ms timer is gone); each result is said once, by the word's romanization or by the pair's word and meaning; with a reader on, Next shows after the last pair of a board (rows AF-4b; the word cards' tile layout and the pair number's corner are follow-up F6, PR #1118).
 
 ## Scenario (Given-When-Then)
 

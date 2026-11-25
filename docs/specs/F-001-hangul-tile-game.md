@@ -10,6 +10,8 @@
 
 > **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): §3.4: the 50 ms multi-touch rule is replaced by one forgiving tap (commit on release within 24 px of the tile or 32 px of travel, gaps filled to the nearest tile), the latest finger on a tile owning the board (an earlier resting finger never commits; a finger on nothing is ignored, never cancelling) and a 400 ms lock after a commit that survives a round remount; a locked wrong tile is disabled (rows KT-1 to KT-3).
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) (Match Sound, the right and wrong feedback): a right tile shows a `check` and a missed tile `replay` on a corner disc, so neither is colour alone; each tile is named with its state first ("Right answer: …", "Not this one: …"); a locked miss is `inactive`, never announced as disabled, and stays marked until the next tap; each result is said once through the answer announcer (the hidden polite region, plus one queued call on iOS), and Hoya's miss bubble is not a live region; with the reader off the next round waits at least 1000 ms after a right answer (was 700 ms); with a screen reader on, Next shows after a right answer and takes focus, and a miss does not replay the sound (row AF-4a).
+
 ## 1. Context
 
 Stage 1 Anchor Skill is **jamo recognition** — 24 자모 + 6 받침 at ≥ 90 % accuracy (`docs/blueprints/05-episode-learning-goals.md` §1). The catalog (`06-mini-game-catalog.md`) prescribes "Match Sound" as the foundational Recognition game: child hears a jamo, taps the matching tile.

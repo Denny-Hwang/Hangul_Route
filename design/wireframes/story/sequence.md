@@ -4,6 +4,7 @@ Spec: `docs/specs/F-STORY-003-story-checks-sequence-v2.md` §3.2 (scoring), §3.
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). Pictures and big cards carry the task; the Korean always comes with romanization and a caption.
 Code (built, PR 3.5a): `apps/mobile/src/screens/minigames/StorySequenceGame.tsx` (one component for legacy `storySteps` scopes and story scopes), pure rules `apps/mobile/src/logic/story/sequence-player.ts`, `sequence-cards.ts`, `sequence-view.ts`, `seeded-order.ts`; scene art on the cards and the picture replay (built, PR 3.5b): `apps/mobile/src/logic/story/sequence-art.ts`. Brief: `design/brief/screens/12-minigame-story-sequence.md` (revised).
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko ~~` taught Korean drawn with `KoreanText`, `(art)` a `StoryScene` picture (the full variant, 4:3), `[ n ]` a numbered slot.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a miss stays until the next tap that changes the board (the 600 ms flash is gone), a filled slot draws its `check` at 20, and each result is said once through the answer announcer (row AF-4b).
 
 Promoted by F-STORY-003 PR 3.0 from panels F and G of the one-file draft (`story/check.md`); the letters are kept.
 
