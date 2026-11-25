@@ -5,6 +5,8 @@
 **Owner**: solo dev
 **Rollout**: MVP (foundational)
 
+> **Amended 2026-11-24 by `AMENDMENTS-A11Y-CI.md` [AC]** (work order WO-08 of the 2026-11 review: accessibility checks in CI): section 1's "CI gate is a lie" risks gain two more closed gates. The `lint` task runs an accessibility ESLint gate in `apps/mobile`, `apps/web` and `packages/design-system` (`eslint --no-inline-config --max-warnings=0`, so no `eslint-disable` comment covers a violation; today's hits sit in an `eslint-suppressions.json` per workspace that only shrinks), and an axe smoke compares each scan with a baseline file that only shrinks (a new rule or a higher count fails; a lower count or a gone rule fails locally and is a warning in CI): the learner PWA screens in the `main` e2e shards, the site and sign-in in the e2e step of `preview-deploy.yml`, the teacher class page in the billing lane of `web-app.yml` (rows AC-1, AC-2 and AC-3). The coverage rules of this spec are unchanged.
+
 ---
 
 ## 1. Context
