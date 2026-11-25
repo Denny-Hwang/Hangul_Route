@@ -244,11 +244,11 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
       await expectNoHorizontalOverflow(page);
       await shot(page, `ch-1c-see-${size.width}x${size.height}`);
 
-      // It scores as a plain see round; the next round opens heard, with the link again.
+      // The learner asked for the word, so the right answer is recorded hinted (CH-1f); the next round opens heard, with the link again.
       await typeKeys(page, 'ㅅㅏㄱㅗㅏ');
       await page.getByTestId('type-hangul-done').click();
       await expect(page.getByText('You typed it!')).toBeVisible();
-      expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-hear-apple' }]);
+      expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-hear-apple', hinted: true }]);
       await expect(page.getByTestId('dictation-prompt-speaker')).toBeVisible({ timeout: 5_000 });
       await expect(page.getByTestId('cant-hear')).toBeVisible();
       await expect(page.getByTestId('type-hangul-prompt')).toHaveCount(0);

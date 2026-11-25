@@ -114,7 +114,8 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   const fieldFont = lc.mediaScale > 1 ? textScale.size.display : textScale.size.title;
   // Dictation (row CM-31): how this round opens, its sound and its hint, from the chunk; null with no chunk.
   const useHear = hear?.useHearRound ?? useNoHear;
-  const heard = useHear(rounds[state.roundIdx], state.roundIdx);
+  // A Check stays sound first and its "Can't hear it?" is guidance only (AMENDMENTS-AUDIO-CANT-HEAR CH-1g).
+  const heard = useHear(rounds[state.roundIdx], state.roundIdx, check);
   const heardRef = useRef(heard);
   heardRef.current = heard;
 
