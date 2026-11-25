@@ -218,6 +218,27 @@ answer can shrink to its text (Tile) or a mark inside would read as part of the 
   - **Next** (reader on) is D9's button in the answers column of each game: under the ChoiceCard stack (Listen & Pick,
     Realia Read, Cloze Pick, Read Pick, Pic-Word Match's last pair of a board). Story Sequence and Story Order have none.
 
+- **D14. As built (AF-4c)**, the board games (`shots/af-4c/`):
+  - **Marks**: Syllable Build's zones and keys draw `check` and `replay` at 20 inside the corner (inset `spacing.xs`); Match
+    Shape's letter tiles, Hidden Heritage's rings and Sentence Builder's tried tile draw a 26 disc (`MarkDisc`); Role Play's
+    replies draw 20 inside the corner (inset `spacing.sm`). One shared module, `screens/minigames/answer-marks.tsx`.
+  - **Hidden Heritage**: the disc is placed by the pure `ringMarkOffset` (centre on the ring's top-end corner, moved in per
+    axis to stay whole in the scene); the miss has no timer, the missed spot is inactive until the next tap that changes the
+    board; look-here stays the dashed ring inside the spot with no mark.
+  - **Look-here ring**: `LookHereRing` (`choiceCardRingStyle`) on Syllable Build's and Match Shape's tiles and Sentence
+    Builder's tile; Role Play's reply keeps its negative-margin wrapper, now dashed and `spacing.xs` outside, so the replies'
+    scroller keeps `RING_OUT` (7) of room on every side (the replies are 14 narrower).
+  - **Seen in the shots, not changed**: Match Shape's pair grid has an 8 gap, so the look-here rings of two neighbouring
+    copies (14 each) run into each other and touch the next tile's border (`shots/af-4c/match-shape-pair-360-look-here.png`).
+    They still read as dashed rings; a wider grid gap is follow-up F7. At 320 wide with the Largest text, Role Play's pinned
+    area has room for the instruction row and the first reply only, so Hoya's why line and the replies scroll
+    (`role-play-320-largest-*.png`; as before this row, the pinned cap is unchanged).
+  - **Role Play's reply being sent** draws `check` (the drawn mock showed only the miss): without it a right reply on its
+    secondary fill was the one answer told by colour alone.
+  - **Next** (reader on) sits under the answers (Syllable Build: under the tiles; Match Shape: under the pair board, the
+    origin round's own Continue takes focus; Hidden Heritage: under the found slots; Sentence Builder: under the built
+    sentence; Role Play: under the replies in the pinned area).
+
 ## Greyscale (spec §3.1 "Greyscale", §3.8)
 
 Open the `-grey` shots. In greyscale `feedback.successLight` (relative luminance 0.81) and `feedback.nudgeLight`
@@ -324,6 +345,7 @@ native OS font scale multiplies every size alike (`text-size.ts:85`), so 200 % h
 - **F3** The level check's screen-reader switch (`OptionsScreen.tsx:189-198`): its `border.strong` off track is 1.95:1;
   give it D10's `border.shape` track and whole-row target.
 - **F4** Marks that grow with the text size (capped near 1.5x), once AF-1 has landed `MARK_MIN`.
+- **F7** Match Shape's pair grid gap (8) is under two look-here rings (14): widen it, or draw the ring at `spacing.xxs` on a grid.
 - **F6** Seen in AF-4b's shots (`shots/af-4b/pic-word-320-largest-*`), not changed there: Pic-Word Match's two columns are
   about 123 dp wide at 320 with the Largest text step, so a word card's text column (the Korean chip, 65 dp, beside the 24
   mark column and the row gap) is 10 dp short, and the `check` or `replay` mark overlaps the chip's edge (the check is half
