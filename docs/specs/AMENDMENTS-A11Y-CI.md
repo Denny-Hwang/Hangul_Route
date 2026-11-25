@@ -1,6 +1,6 @@
 # AMENDMENTS-A11Y-CI — accessibility checks in CI: a lint gate on pull requests, an axe ratchet on main
 
-Status: ready (owner decisions 2026-11-24, §10; revision 2 of 2026-11-24). Row AC-0 of work order WO-08 (`docs/roadmap/review-2026-11/phase-1-safety.md`, "WO-08 CI 에 접근성 검사를 넣는다").
+Status: in-progress (AC-3b, AC-3c open); rows AC-0, AC-3, AC-1 and AC-2 merged (#1076, #1084, #1091 with #1096, #1098) and AC-4 done 2026-11-24; the status becomes `shipped` when the last of AC-3b and AC-3c merges (owner decisions 2026-11-24, §10; revision 2 of 2026-11-24). Row AC-0 of work order WO-08 (`docs/roadmap/review-2026-11/phase-1-safety.md`, "WO-08 CI 에 접근성 검사를 넣는다").
 - The WO was written on `d5ba0217c`. Revision 1 (2026-11-23) re-read every citation on main `e72336a7d` and again on `d679cc8a7`; neither of the two commits between them touches a cited line.
 - Revision 2 takes the two-lens multi-agent review of 2026-11-24 (§12). That review ran ESLint and the plugins on the real source, so the lint counts in §3.2 are measured, not estimated.
 - The owner decided OD-AC1 to OD-AC9 on 2026-11-24, all as recommended ("전부 권고대로 승인", §10).
@@ -502,11 +502,11 @@ Next release.
 
 | Row | Model | Contents | Tests | Depends on | Branch |
 |---|---|---|---|---|---|
-| AC-0 | Opus 5.5 | This spec; multi-agent review; `ready` 2026-11-24 with §10 decided | doc checks | — | `docs/a11y-ci-spec` |
-| AC-3 **built 2026-11-24** (As built below) | Sonnet 5.5 | §3.2 configs and scripts, OD-AC1/OD-AC2 devDependencies, the peer exception; §3.3 with OD-AC5's method, each hit classified, the ceiling maps; OD-AC7's rule if taken, with its `exports` entry; local probes recorded. If 9.39.5 fails the per-rule tests, AC-3 may switch to 10.15.0 and records why. Any later change of major goes back to the owner | §6 AC-3 1–6 | AC-0 `ready`; OD-AC1, 2, 5, 6, 7 | `ci/a11y-lint` |
-| AC-1 **built 2026-11-24** (As built below) | Sonnet 5.5 | §3.4 PWA screens, `axe-audit.ts`, `axe-baseline.json` measured on a release build of `main` with `expectedFix`, devDependency; under (a) also the §3.1 PR steps, the shard listing and their test pins | §6 AC-1 1–4 | AC-0 `ready`; OD-AC3, 4, 9; merges after AC-3 (same `package.json` and lockfile) | `ci/a11y-axe-pwa` |
-| AC-2 **built 2026-11-24** (As built below) | Sonnet 5.5 | §3.4 web screens, `axe-audit.ts`, `axe-baseline.json`, devDependency; under OD-AC8 = lane, the "Console axe (merged dist)" step in the billing lane | §6 AC-2 1–5 | AC-0 `ready`; OD-AC3, 8, 9; merges after AC-3 and AC-1 (same lockfile) | `ci/a11y-axe-web` |
-| AC-4 | Sonnet 5.5 | "Amended YYYY-MM-DD by AMENDMENTS-A11Y-CI" in F-COV-001; the `docs/specs/README.md` index line; status `in-progress (AC-3b, AC-3c open)`; a proposed CLAUDE.md §4/§8 line for the owner's approval: "lint is real (accessibility rules); `eslint-disable` does nothing; never raise an ESLint suppression or an axe baseline line" | — | AC-1, AC-2, AC-3 | `docs/a11y-ci-amended` |
+| AC-0 **merged #1076** | Opus 5.5 | This spec; multi-agent review; `ready` 2026-11-24 with §10 decided | doc checks | — | `docs/a11y-ci-spec` |
+| AC-3 **merged #1084**, built 2026-11-24 (As built below) | Sonnet 5.5 | §3.2 configs and scripts, OD-AC1/OD-AC2 devDependencies, the peer exception; §3.3 with OD-AC5's method, each hit classified, the ceiling maps; OD-AC7's rule if taken, with its `exports` entry; local probes recorded. If 9.39.5 fails the per-rule tests, AC-3 may switch to 10.15.0 and records why. Any later change of major goes back to the owner | §6 AC-3 1–6 | AC-0 `ready`; OD-AC1, 2, 5, 6, 7 | `ci/a11y-lint` |
+| AC-1 **merged #1091** (shrunk by #1096), built 2026-11-24 (As built below) | Sonnet 5.5 | §3.4 PWA screens, `axe-audit.ts`, `axe-baseline.json` measured on a release build of `main` with `expectedFix`, devDependency; under (a) also the §3.1 PR steps, the shard listing and their test pins | §6 AC-1 1–4 | AC-0 `ready`; OD-AC3, 4, 9; merges after AC-3 (same `package.json` and lockfile) | `ci/a11y-axe-pwa` |
+| AC-2 **merged #1098**, built 2026-11-24 (As built below) | Sonnet 5.5 | §3.4 web screens, `axe-audit.ts`, `axe-baseline.json`, devDependency; under OD-AC8 = lane, the "Console axe (merged dist)" step in the billing lane | §6 AC-2 1–5 | AC-0 `ready`; OD-AC3, 8, 9; merges after AC-3 and AC-1 (same lockfile) | `ci/a11y-axe-web` |
+| AC-4 **done 2026-11-24** (this docs PR; the status stays `in-progress`; As built below) | Sonnet 5.5 | "Amended YYYY-MM-DD by AMENDMENTS-A11Y-CI" in F-COV-001; the `docs/specs/README.md` index line; status `in-progress (AC-3b, AC-3c open)`; a proposed CLAUDE.md §4/§8 line for the owner's approval: "lint is real (accessibility rules); `eslint-disable` does nothing; never raise an ESLint suppression or an axe baseline line" | — | AC-1, AC-2, AC-3 | `docs/a11y-ci-amended` |
 | AC-3b | Sonnet 5.5 | apps/mobile and design-system: fix the remaining hits (today 4: the two descriptors hits, `apps/mobile/src/screens/minigames/role-play/RolePlayGame.tsx:377`, `apps/mobile/src/screens/account/AccountCover.tsx:25`, plus any in the entry roots). No disables; a new label means en, es and ko strings. Then delete the suppressions file (B) or flip `warn` to `error` (A) | AC-3's tests; `pnpm exec turbo run lint` | AC-3; the owner starts it | `fix/a11y-lint-mobile` |
 | AC-3c | Sonnet 5.5 | apps/web: the same for its 3 real hits (28 raw at AC-3; 25 are false positives handled in `apps/web/eslint.config.mjs`, see As built); the last of AC-3b and AC-3c sets the status `shipped` | same | AC-3; the owner starts it | `fix/a11y-lint-web` |
 
@@ -598,6 +598,29 @@ The spec's web count was 29; its own breakdown (18 + 5 + 4 + 1) sums to 28, and 
 - AC-1, AC-2 and AC-3 all change `pnpm-lock.yaml`. AC-1 and AC-3 change `apps/mobile/package.json`; AC-2 and AC-3 change `apps/web/package.json`. Merge them one after another, and rebuild the lockfile with `pnpm install`, never by hand.
 - AC-3b and AC-3c may touch files in README §6's serial table (the plan's). They certainly touch `packages/i18n/src/messages/en/*.ts` if a label is added. They check that table before starting.
 - WO-04's AF rows and WO-39's rows change AC-1's `culture-quiz-correct` and `home` entries (§3.5).
+
+**AC-4 as built (2026-11-24, branch `docs/a11y-ci-amended`; docs only).**
+
+- **F-COV-001.** One "Amended 2026-11-24 by `AMENDMENTS-A11Y-CI.md` [AC]" line in its header (after the Rollout line): two more "CI gate is a lie" risks closed, the accessibility lint gate and the axe ratchet, and where each axe scan runs. The coverage rules are unchanged, so no other F-COV spec gets a line (F-COV-002 and F-COV-003 are about targets and the mobile lanes).
+- **README index.** An "Amendment 2026-11-24 (2026-11 review, work order WO-08: accessibility checks in CI)" entry in `docs/specs/README.md`, after the class-code-overlay entry, with `· **in-progress**` and the rows still open.
+- **Status.** `in-progress (AC-3b, AC-3c open)`; AC-3b or AC-3c, whichever merges last, sets `shipped` (§7).
+- **Facts checked on `main` `eb5995c63` before writing the lines above.**
+  - "`eslint-disable` does nothing" is the CLI flag, not a config key: `lint` in `apps/mobile/package.json:13`, `apps/web/package.json:10` and `packages/design-system/package.json:46` is `eslint --no-inline-config --max-warnings=0 ...`; none of the three `eslint.config.mjs` sets `noInlineConfig` or `reportUnusedDisableDirectives`. `scripts/__tests__/ci-workflows.test.mjs` pins the flag in all three scripts and that no script passes `--fix`, `--suppress-all`, `--prune-suppressions` or `--pass-on-unpruned-suppressions`; each workspace's `eslint-a11y-config.test.ts` shows a disable comment naming an enabled rule does not silence it. Running ESLint directly on a file (without the script) would honour a comment, so the statement is about `pnpm lint` and CI, which is what gates.
+  - "Never raise a suppression or a baseline line": `apps/mobile/eslint-suppressions.json` (4) and `apps/web/eslint-suppressions.json` (3) only shrink (ESLint fails on an unpruned entry); each `axe-baseline.json` (`apps/mobile/e2e/web/fixtures/`, `apps/web/e2e/fixtures/`) is held by a ceiling map in its `axe-baseline.test.ts`, so a higher count is a visible test change.
+- **Proposed CLAUDE.md line (proposed, awaiting owner; this PR does not edit CLAUDE.md).** The row's wording: "lint is real (accessibility rules); `eslint-disable` does nothing; never raise an ESLint suppression or an axe baseline line". Drafted in CLAUDE.md's style for the owner to place in section 4 (Coding Rules) and section 8 (Do NOT):
+  - §4 (Coding Rules), a new bullet:
+
+    ```
+    - **Lint 는 진짜다 (접근성 규칙).** `pnpm lint` 는 `apps/mobile`·`apps/web`·`packages/design-system` 에서 접근성 규칙을 실제로 검사하고 CI 에서 실패시킨다 (`--no-inline-config`). `eslint-disable` 주석은 아무 효과가 없다 — 위반은 코드로 고친다.
+    ```
+
+  - §8 (Do NOT), a new bullet:
+
+    ```
+    - ❌ ESLint suppression 줄(`eslint-suppressions.json`) 또는 axe baseline 줄(`axe-baseline.json`)을 **늘리지 말 것** — 둘 다 줄어들기만 한다. `eslint-disable` 로 가리지 말 것.
+    ```
+
+  - If the owner approves, the §4 sentence on PR e2e is untouched (option (b) kept it); only these two lines are added.
 
 ## 10. Owner decisions (all taken 2026-11-24, as recommended)
 
