@@ -51,13 +51,15 @@ const insideWindow = (target: Locator): Promise<boolean> =>
 
 const PROFILES = [
   { name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true, tilesWithUndo: false },
-  { name: 'phone sideways 740 x 360', viewport: { width: 740, height: 360 }, largest: false, tilesWithUndo: true },
+  { name: 'phone sideways 740 x 360', viewport: { width: 740, height: 360 }, largest: false, tilesWithUndo: false },
   { name: 'phone sideways 740 x 360, largest text', viewport: { width: 740, height: 360 }, largest: true, tilesWithUndo: false },
   { name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false, tilesWithUndo: true },
 ] as const;
 // tilesWithUndo: the board is the slots, Undo, then the tray. At the largest text the tray sits below Undo and needs a scroll
 // (a phone 320 high 640 shows the slots and Undo; a phone turned sideways with the largest text, 360 high, cannot hold the
 // slots, Undo and the tray at once). That is how the board was before Undo; Undo sits next to the slots it acts on.
+// F-A11Y-001 AF-4a (AnswerFeedback D7, owner Q2): the shape picture's place now sits under the slots in every state, at the
+// block's own height (136 for 달, three rows), so a phone turned sideways (360 high) also needs a scroll to the tray.
 
 const largestText = (page: Page): Promise<void> =>
   seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
@@ -202,19 +204,19 @@ for (const profile of PROFILES) {
         await touch.graze(centre(await inView(tile)), 0, 16, { steps: 4 });
         await page.waitForTimeout(AFTER_LOCK);
       }
-      await expect(page.getByText(/Not quite/)).toBeVisible();
+      await expect(page.getByTestId('build-letter-hoya')).toBeVisible();
       await expect(page.getByTestId('build-letter-shape'), 'the shape picture shows in its kept place').toBeAttached();
       expect(await placedCount(page), 'the wrong block shows').toBe(3);
       await expect(undo, 'Undo is on while the wrong block shows').not.toHaveAttribute('aria-disabled', 'true');
       // No timer empties it: it is still there well past the old 900 ms reset, with Hoya's line.
       await page.waitForTimeout(AFTER_RESET);
       expect(await placedCount(page), 'the wrong block stays').toBe(3);
-      await expect(page.getByText(/Not quite/)).toBeVisible();
+      await expect(page.getByTestId('build-letter-hoya')).toBeVisible();
       // Undo takes the last tile back, and that ends the miss: the picture and Hoya's line go.
       await touch.tap(centre(await inView(undo)));
       await expect.poll(() => placedCount(page)).toBe(2);
       await expect(page.getByTestId('build-letter-shape')).toHaveCount(0);
-      await expect(page.getByText(/Not quite/)).toHaveCount(0);
+      await expect(page.getByTestId('build-letter-hoya')).toHaveCount(0);
       // The same block can be tried again at once.
       await page.waitForTimeout(AFTER_LOCK);
       await touch.graze(centre(await inView(page.getByRole('button', { name: 'final l', exact: true }))), 0, 16, { steps: 4 });
