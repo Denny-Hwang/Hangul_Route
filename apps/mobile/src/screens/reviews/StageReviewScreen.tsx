@@ -51,6 +51,7 @@ import { reviewHost, useReviewRunStore } from '../../store/review-run-store';
 import { ListenPickGame } from '../minigames/ListenPickGame';
 import { CardArtThumb } from '../results/CardArtThumb';
 import { DecodingSprintOffer } from '../minigames/syllable-build-entry';
+import { SaveLaterLine } from './SaveLaterLine';
 
 /**
  * F-QUEST-002 §3.9 — the Hangul Check (wireframe `design/wireframes/reviews/hangul-check.md`).
@@ -226,6 +227,8 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
           </Heading>
           <Spacer size="sm" />
           <StarRow stars={view.stars} size={48} accessibilityLabel={messages.a11y.stars(view.stars)} />
+          {/* Row LR-4 (OD-LR8): one quiet line while the progress write is waiting, as Results shows it. */}
+          <SaveLaterLine testID="hangul-check-save-later" />
         </View>
         <Spacer size="lg" />
         <HoyaBubble tone="cheering" message={m.result.cheer} />
