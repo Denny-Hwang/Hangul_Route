@@ -78,7 +78,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   vi.setSystemTime(new Date('2026-11-24T09:00:00Z'));
   rig.current = createAudioRig({ voices: [KO_VOICE] });
-  useAudioStore.setState({ muted: false, voiceCheckPending: false });
+  useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false });
   clearReaderLog(reader);
 });
 
@@ -131,6 +131,24 @@ describe('RoundView, "Can\'t hear it?" (test 18)', () => {
     expect(hasId(r.root, 'cant-hear')).toBe(false);
     // The options keep their place: they were held only while the voice check ran.
     expect(hasId(r.root, 'daily-review-option-lex:namu')).toBe(true);
+  });
+
+  it('Always show the letters (CH-2): a heard round opens with the prompt Korean and no link; with a cue it prints nothing and keeps its link', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const plain = await open(HEARD, { cantHear: true });
+    const panel = textOf(byTestId(plain.root, 'daily-review-prompt-panel')[0]!);
+    expect(panel).toContain('나무');
+    expect(panel).toContain('namu');
+    expect(hasId(plain.root, 'cant-hear')).toBe(false);
+    const cued = await open(CUED, { cantHear: true });
+    expect(textOf(byTestId(cued.root, 'daily-review-prompt-panel')[0]!)).not.toContain('namu');
+    expect(hasId(cued.root, 'cant-hear')).toBe(true);
+  });
+
+  it('Always show the letters does not reach a host that did not opt in (the Stage Check and the Cell Check, until CH-1e)', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await open(HEARD);
+    expect(textOf(byTestId(r.root, 'daily-review-prompt-panel')[0]!)).not.toContain('namu');
   });
 
   it('a heard round with a cue gets the guidance-only sheet: the cue settles it, so the prompt is not printed', async () => {

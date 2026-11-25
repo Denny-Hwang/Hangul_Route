@@ -62,7 +62,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   vi.setSystemTime(new Date('2026-11-24T09:00:00Z'));
   rig.current = createAudioRig({ voices: [KO_VOICE] });
-  useAudioStore.setState({ muted: false, voiceCheckPending: false });
+  useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false });
   clearReaderLog(reader);
 });
 
@@ -124,6 +124,24 @@ describe('Listen & Pick, "Can\'t hear it?" (test 18)', () => {
     expect(word).toContain('neo');
     expect(textOf(byTestId(r.root, 'listen-pick-prompt')[0]!)).toContain(T.readHere);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+  });
+
+  it('Always show the letters (CH-2): the practice round opens with the prompt word and no link; the spelling round keeps its link and prints nothing', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await game('quest');
+    const word = textOf(byTestId(r.root, 'listen-pick-prompt-text')[0]!);
+    expect(word).toContain('너');
+    expect(word).toContain('neo');
+    expect(hasId(r.root, 'cant-hear')).toBe(false);
+    const spelling = await game('quest', { rounds: [SPELLING], spelling: true });
+    expect(byTestId(spelling.root, 'listen-pick-prompt-text')).toHaveLength(0);
+    expect(hasId(spelling.root, 'cant-hear')).toBe(true);
+  });
+
+  it('Always show the letters is not applied to a Check (no opt-in until CH-1e)', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await game('check');
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
   });
 
   it('the spelling round gets the guidance-only sheet: the line and Hear it, no Show the letters', async () => {

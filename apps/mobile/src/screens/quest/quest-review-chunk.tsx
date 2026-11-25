@@ -310,7 +310,7 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
   const speech = useMemo(() => koSpeech({ ko: round.ko }, round.instruction === 'hearPick' && round.itemId.startsWith('syl:') ? 'sound' : promptKindOf(round.ko), AUDIO_SOURCE), [round]);
   // [FU] FU-3: the round's word has a say clip (review pack), so a device with no Korean voice hears it, not the text.
   // `cantHear`: a heard round offers "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b); a read round has no sound to miss.
-  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor(speech), cantHear: heard });
+  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor(speech), cantHear: heard, guidanceOnly: round.cue !== undefined });
   const speakerRef = useRef<View | null>(null);
   const { play: slotPlay } = slot;
   const pacing = useSoundPacing();

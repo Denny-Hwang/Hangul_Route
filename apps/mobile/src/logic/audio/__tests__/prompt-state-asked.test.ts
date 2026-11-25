@@ -144,3 +144,45 @@ describe('promptPanelView on an asked text (test 4)', () => {
     expect(shouldAutoReplay(view)).toBe(true);
   });
 });
+
+describe('promptPanelView with Always show the letters on (AMENDMENTS-AUDIO-CANT-HEAR CH-2, test 23)', () => {
+  const COPY = getMessages('en').learner.audio;
+
+  it('opens with the text, the text heading and no reason, action or help, before any play', () => {
+    const view = promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false, COPY, true);
+    expect(view.textShown).toBe(true);
+    expect(view.reason).toBeNull();
+    expect(view.detail).toBeNull();
+    expect(view.actionLabel).toBeNull();
+    expect(view.helpLabel).toBeNull();
+    expect(view.statusShown).toBe(false);
+    expect(view.heading).toBe(COPY.heading.text);
+    expect(view.readLine).toBe(COPY.readHere);
+    expect(view.speakerLabel).toBe(COPY.speaker.on);
+  });
+
+  it('is not a fallback to report and the replay after a miss still plays: the sound is not off or missing', () => {
+    const view = promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false, COPY, true);
+    expect(fallbackVisible(view, false)).toBe(false);
+    expect(fallbackVisible(view, true)).toBe(false);
+    expect(shouldAutoReplay(view)).toBe(true);
+  });
+
+  it('leaves the state alone: nothing is asked, so a later reducer rule cannot mistake it for the learner asking', () => {
+    expect(promptReducer(INITIAL_PROMPT_STATE, 'play')).not.toHaveProperty('asked');
+  });
+
+  it('a real reason still wins: sound off and no Korean voice keep their own panel', () => {
+    const muted = promptPanelView(INITIAL_PROMPT_STATE, readyCap, true, false, COPY, true);
+    expect(muted.reason).toBe('muted');
+    const noVoice = promptPanelView(INITIAL_PROMPT_STATE, noneCap, false, false, COPY, true);
+    expect(noVoice.reason).toBe('no_voice');
+    const failed = promptPanelView(run(['play', { result: 'unavailable', failure: 'blocked' }]), readyCap, false, false, COPY, true);
+    expect(failed.reason).toBe('blocked');
+  });
+
+  it('is the old view with the switch off or left out', () => {
+    expect(promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false, COPY, false)).toEqual(promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false, COPY));
+    expect(promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false, COPY).textShown).toBe(false);
+  });
+});

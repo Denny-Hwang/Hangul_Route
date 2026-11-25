@@ -526,3 +526,59 @@ describe('the step after the sheet waits for the modal to go (iOS and the web), 
     expect(reader.log).toEqual(['focus:cant-hear']);
   });
 });
+
+describe('Always show the letters (CH-2, test 23)', () => {
+  beforeEach(() => {
+    useAudioStore.setState({ showLetters: true });
+  });
+  afterEach(() => {
+    useAudioStore.setState({ showLetters: false });
+  });
+
+  it('every round opens with the letter name and its romanization, the text heading and no link, and the sound still plays', async () => {
+    const r = await open();
+    const panel = textOf(host(r.root, 'prompt-panel'));
+    expect(panel).toContain('nieun');
+    expect(panel).toContain(T.readHere);
+    expect(panel).not.toContain(T.soundIsOff);
+    expect(textOf(r.root)).toContain(T.heading.text);
+    expect(has(r.root, 'cant-hear')).toBe(false);
+    expect(has(r.root, 'prompt-panel-detail')).toBe(false);
+    expect(has(r.root, 'prompt-panel-action')).toBe(false);
+    // Not the tile: no option is printed by the switch.
+    expect(spoken().length).toBeGreaterThan(0);
+  });
+
+  it('the answers are not held: nothing comes in above them while the voice check runs', async () => {
+    useAudioStore.setState({ voiceCheckPending: true });
+    const r = await open(2, false);
+    expect(has(r.root, 'match-sound-tiles')).toBe(true);
+    expect(has(r.root, 'prompt-panel-text')).toBe(true);
+  });
+
+  it('a right tap is a plain right answer and the next round opens with the text again', async () => {
+    const r = await open();
+    await press(tile(r.root, 'jamo:nieun'));
+    expect(useQuestRunStore.getState().answersGiven).toBe(1);
+    await tick(RESULT_MARK_MIN_MS);
+    expect(has(r.root, 'prompt-panel-text')).toBe(true);
+    expect(has(r.root, 'cant-hear')).toBe(false);
+  });
+
+  it('turned off, the next round is sound-only again with the link', async () => {
+    const r = await open();
+    expect(has(r.root, 'cant-hear')).toBe(false);
+    await act(async () => {
+      useAudioStore.getState().setShowLetters(false);
+    });
+    expect(has(r.root, 'cant-hear')).toBe(true);
+    expect(has(r.root, 'prompt-panel-text')).toBe(false);
+  });
+
+  it('Sound off still shows its own panel with Turn sound on', async () => {
+    useAudioStore.setState({ muted: true });
+    const r = await open();
+    expect(textOf(host(r.root, 'prompt-panel'))).toContain(T.soundIsOff);
+    expect(has(r.root, 'cant-hear')).toBe(false);
+  });
+});

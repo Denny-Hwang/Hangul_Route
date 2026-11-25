@@ -73,6 +73,12 @@ export interface PromptSlotOptions {
    * whether the link shows (`slot.cantHear`) and takes the learner's ask (`slot.showLetters()`). Default `false`.
    */
   cantHear?: boolean;
+  /**
+   * The round settles without the sound (a picture or a meaning, the cue rule of AMENDMENTS-AUDIO-CANT-HEAR section 3.1),
+   * so its Korean is the answer: the surface draws a guidance-only link, and "Always show the letters" brings no text
+   * up here either. Default `false`.
+   */
+  guidanceOnly?: boolean;
 }
 
 export function usePromptSlot({
@@ -81,12 +87,15 @@ export function usePromptSlot({
   textOnScreen = false,
   reportFallback = true,
   cantHear = false,
+  guidanceOnly = false,
 }: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
   // A pack chunk's clips arrive after the first render (AMENDMENTS-AUDIO-CLIPS AC-B6): the caller re-renders then, so
   // the `hasClip` it computes (`hasClipFor`) is never left saying "no clip" while the say clip will play.
   useSyncExternalStore(clipRegistry.subscribe, clipRegistry.version, clipRegistry.version);
   const muted = useAudioStore((s) => s.muted);
+  // "Always show the letters" (CH-2): the device switch applies to a surface that opted in, never to a cue round.
+  const alwaysShow = useAudioStore((s) => s.showLetters) && cantHear && !guidanceOnly;
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);
@@ -100,9 +109,10 @@ export function usePromptSlot({
 
   const capability = { tts, clips, unlocked };
   const clip = (said !== null ? recorded(said) : hasClip) && clips;
-  const view = promptPanelView(state, capability, muted, clip, copy);
-  // A text the learner asked for is already up, so nothing can come in above the answers: they are not held for the voice check.
-  const settled = revealed.current || muted || clip || !voiceCheckPending || state.asked === true;
+  const view = promptPanelView(state, capability, muted, clip, copy, alwaysShow);
+  // A text the learner asked for, or the switch's, is already up, so nothing can come in above the answers: they are not
+  // held for the voice check.
+  const settled = revealed.current || muted || clip || !voiceCheckPending || state.asked === true || alwaysShow;
   revealed.current = settled;
 
   // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker). An item whose

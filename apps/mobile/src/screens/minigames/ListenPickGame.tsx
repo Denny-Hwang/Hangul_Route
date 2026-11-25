@@ -197,6 +197,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): on the practice hosts only (the Checks wait for CH-1e), never
     // on a text prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
     cantHear: !textMode && PRACTICE_HOSTS.includes(host.mode),
+    guidanceOnly: spellingNow,
   });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);

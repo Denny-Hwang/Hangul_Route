@@ -95,9 +95,9 @@ function useAdvance(onSolved: () => void, reduced: boolean): () => void {
 }
 
 /** The sound of a round, through the shared prompt slot (F-AUDIO-004 §3.8): text with why and one action when it cannot play. */
-function useRoundSound(text: string | null, heard: boolean, cantHear = false) {
+function useRoundSound(text: string | null, heard: boolean, cantHear = false, guidanceOnly = false) {
   // [FU] FU-3: the item's say clip (review pack) counts as sound, so a device with no Korean voice hears it.
-  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard, cantHear: cantHear && heard });
+  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard, cantHear: cantHear && heard, guidanceOnly });
   const { play, reset } = slot;
   const hear = useCallback(() => {
     if (text === null) return;
@@ -127,7 +127,7 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
   const advance = useAdvance(onSolved, reducedMotion);
   const pictureSize = useMediaSize(touchTarget.hero);
   const lc = useLayoutClass();
-  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear);
+  const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear, round.cue !== undefined);
   const hearAgainRef = useRef<View | null>(null);
   const showOptionRomanization = round.ask !== 'sound';
   const tiles = round.options.every((o) => o.picture !== undefined);

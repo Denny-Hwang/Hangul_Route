@@ -61,7 +61,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] });
   vi.setSystemTime(new Date('2026-11-24T09:00:00Z'));
   rig.current = createAudioRig({ voices: [KO_VOICE] });
-  useAudioStore.setState({ muted: false, voiceCheckPending: false });
+  useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false });
   useProgressStore.setState({ byProfile: {} });
   clearReaderLog(reader);
 });
@@ -111,6 +111,18 @@ describe('quest warm-up and Try these again, "Can\'t hear it?" (test 18)', () =>
     expect(word).toContain('바');
     expect(word).toContain('ba');
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+  });
+
+  it('Always show the letters (CH-2): a heard syllable round opens with the prompt Korean and no link; with a cue it prints nothing and keeps its link', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const plain = await open(heard());
+    const word = textOf(byTestId(plain.root, 'quest-review-prompt-text')[0]!);
+    expect(word).toContain('바');
+    expect(word).toContain('ba');
+    expect(hasId(plain.root, 'cant-hear')).toBe(false);
+    const cued = await open(heard({ cue: { gloss: 'Father' } }));
+    expect(byTestId(cued.root, 'quest-review-prompt-text')).toHaveLength(0);
+    expect(hasId(cued.root, 'cant-hear')).toBe(true);
   });
 
   it('a heard round with a cue gets the guidance-only sheet: the cue settles it', async () => {
