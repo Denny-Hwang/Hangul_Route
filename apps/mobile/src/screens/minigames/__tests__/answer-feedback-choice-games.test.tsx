@@ -1,4 +1,4 @@
-import { HoyaBubble, Icon } from '@hangul-route/design-system';
+import { ChoiceCard, HoyaBubble, Icon, Pill } from '@hangul-route/design-system';
 import { a11yRomanization, type ListenPickRound } from '@hangul-route/content-schema';
 import type { ReadPickRound } from '../../../logic/match-shape/fallback';
 import { getMessages } from '@hangul-route/i18n';
@@ -683,6 +683,28 @@ describe('Pic-Word Match answers (test 16, OD-AF7)', () => {
     await tap(r, word('c'));
     expect(marks(pressable(r, word('b')))).toEqual([]);
     expect(marks(pressable(r, word('c')))).toEqual(['replay']);
+  });
+
+  it('a word card uses the tile layout: its mark sits on the corner disc, never in a column beside the Korean (F-A11Y-001 F6)', async () => {
+    const r = await play();
+    const layoutOf = (id: string): unknown => r.root.findAllByType(ChoiceCard).find((c) => c.props.testID === id)?.props.layout;
+    for (const id of ['a', 'b', 'c']) expect(layoutOf(word(id))).toBe('tile');
+  });
+
+  it('a matched word card puts its number on the start corner, so it never covers the check on the end corner (F6)', async () => {
+    const r = await play();
+    await pair2(r, 'a');
+    // The number is on both tiles of the pair: the picture column's (end corner) and the word column's (start corner).
+    const corners = r.root
+      .findAllByType(Pill)
+      .filter((p) => p.props.label === '1')
+      .map((p) => {
+        let at: ReactTestInstance | null = p.parent;
+        while (at && (at.props.style as { position?: string } | undefined)?.position !== 'absolute') at = at.parent;
+        const style = (at?.props.style ?? {}) as { left?: number; right?: number };
+        return style.left !== undefined ? 'start' : style.right !== undefined ? 'end' : 'none';
+      });
+    expect(corners).toEqual(['end', 'start']);
   });
 
   it('a matched pair shows check on both tiles and is named with the pair\'s number; each result is said once, a pair by its word and meaning', async () => {

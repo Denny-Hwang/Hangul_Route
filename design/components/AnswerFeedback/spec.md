@@ -211,6 +211,7 @@ answer can shrink to its text (Tile) or a mark inside would read as part of the 
     between the two columns, so the mark never covers it and answering never rewraps it. The look-here ring is as ChoiceCard's.
   - **Pic-Word Match** keeps one miss: the latest wrong second tile, amber with `replay` and named "Not this one",
     until the learner's next tap that changes the board (OD-AF7). A second wrong tile takes the amber from the first.
+    Its word cards are tiles (F6): the mark on the end corner disc, the pair's number on the start corner.
   - **Story Sequence's filled slot** draws its `check` at `MARK_MIN` (20, was 16), in the flow after the number.
   - **Story Order's placement** is a result and goes through the announcer: "Right answer: Place 2 of 4: {romanization},
     {meaning}." with no Hangul (it said the line's Hangul only, through a hidden live line and its own iOS call). The
@@ -347,12 +348,14 @@ native OS font scale multiplies every size alike (`text-size.ts:85`), so 200 % h
 - **F4** Marks that grow with the text size (capped near 1.5x), once AF-1 has landed `MARK_MIN`.
 - **F7** Match Shape's pair grid gap (8) is under two look-here rings (14): widen it, or draw the ring at `spacing.xxs` on a grid.
 - **F8** With a reader on, after the board's own Next in the review hosts (Daily Review, Cell/Stage Checks, Block Sprint) no header node takes focus: §3.6 does not list these hosts; follow-up row.
-- **F6** Seen in AF-4b's shots (`shots/af-4b/pic-word-320-largest-*`), not changed there: Pic-Word Match's two columns are
-  about 123 dp wide at 320 with the Largest text step, so a word card's text column (the Korean chip, 65 dp, beside the 24
-  mark column and the row gap) is 10 dp short, and the `check` or `replay` mark overlaps the chip's edge (the check is half
-  hidden in "right"). The name, the fill and the pair's number badge still carry the state. Options: a word card in
-  `layout="tile"` (the mark on a corner disc, as ChoiceCard's picture options in a grid), or `paddingHorizontal` `md` for a card in a
-  column narrower than 140 dp.
+- **F6** (done, owner decision 2026-11-24, option (a); fixed by the F6 PR, shots `shots/af-6/pic-word-*`.) Seen in AF-4b's
+  shots (`shots/af-4b/pic-word-320-largest-*`, kept as the before): Pic-Word Match's two columns are about 123 dp wide at 320
+  with the Largest text step, so a word card's text column (the Korean chip, 65 dp, beside the 24 mark column and the row
+  gap) was 10 dp short, and the `check` or `replay` mark overlapped the chip's edge (the check half hidden in "right"). A word
+  card is now `layout="tile"`, the layout of a picture tile: the mark sits on the corner disc, drawn over the card, whole,
+  and clear of the Korean glyphs (it covers only the chip's rounded corner, as a tile's mark covers the art's corner). The pair's
+  number, which used to share the end corner, takes the word card's start corner, so the two never stack. The picture card keeps
+  its row layout and its number on the end corner. The `e2e` check holds it at 320 x 568 with the Largest text.
 - **F5** Narrow text columns at 200 %: Card Match's meanings ("kimch/i"), HoyaBubble's text beside its 72 dp Hoya
   ("describin/g"); and break romanization at syllable boundaries ("annyeong-haseyo") rather than at any letter.
 
