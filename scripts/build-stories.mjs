@@ -24,6 +24,9 @@
 //       STORY_OVERLAYS (when it has any: the es / ko text of its scenes, narration, caption and alt, which the
 //       learner PWA's locale chunks leave out; the app lays it into OVERLAYS when the chunk loads. Row CM-8b's
 //       overlay half, F-CURR-002 §10; `isStoryChunkField` of build-overlays.mjs)
+//   e2e-registry.ts                      E2E_ENTRY: null (a type-only import), or with --include-fixtures the
+//                                        fixture build's e2e hooks and screens (navigation/e2e-entry.tsx),
+//                                        so a release build has no e2e code (AMENDMENTS-START-BUNDLE-2026-11 SB-2)
 //
 // The shelf episodes and quests (F-STORY-001 §3.9 "derived, not hand-written") are derived from
 // the shelf in the app (`content/stories.ts`); `buildBundle` below is their reference and
@@ -80,6 +83,27 @@ export const INDEX_MODULE = "stories-index.ts";
 /** The shelf chunk's module and the name of its web bundle (row CM-8b). */
 export const SHELF_MODULE = "stories-shelf.ts";
 export const SHELF_CHUNK = "stories-shelf";
+/**
+ * The e2e registry (AMENDMENTS-START-BUNDLE-2026-11 SB-2): the root navigator's only way to the e2e hooks and screens
+ * (`navigation/e2e-entry.tsx`). A plain run writes it null with a type-only import, so a release build carries no e2e
+ * code; `--include-fixtures` (the fixture build) writes it with the entry, beside `STORY_FIXTURE_IDS`.
+ */
+export const E2E_MODULE = "e2e-registry.ts";
+const E2E_DOC =
+  "/**\n" +
+  " * The e2e hooks and screens of a fixture build (AMENDMENTS-START-BUNDLE-2026-11 SB-2), read by navigation/root.tsx.\n" +
+  " * Null in every other build: `build:web:fixtures` alone runs build-stories.mjs --include-fixtures, and restores this.\n" +
+  " */\n";
+
+function e2eModule(fixtures) {
+  return fixtures
+    ? GENERATED_HEADER +
+        "// E2E FIXTURE MODULES (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
+        "import { e2eEntry, type E2eEntry } from '../../navigation/e2e-entry';\n\n" +
+        E2E_DOC +
+        "export const E2E_ENTRY: E2eEntry | null = e2eEntry;\n"
+    : GENERATED_HEADER + "import type { E2eEntry } from '../../navigation/e2e-entry';\n\n" + E2E_DOC + "export const E2E_ENTRY: E2eEntry | null = null;\n";
+}
 /** The one-file bundle of F-STORY-001 (before CM-8); a run removes it and --check fails while it is there. */
 export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.generated.ts");
 
@@ -480,6 +504,7 @@ export function buildModules({ stories, held = [], overlays = NO_OVERLAYS }) {
       `export const CHUNK_HASH = ${q(shelf.hash)};\n\n` +
       `export const STORY_SHELF: StoryShelfEntry[] = ${shelf.shelf};\n\n` +
       `export const HELD_STORY_CARDS: HeldStoryCard[] = ${shelf.cards};\n`,
+    [E2E_MODULE]: e2eModule(false),
     ...chunkModules(plan.chunks),
   };
 }
@@ -513,6 +538,7 @@ export function buildFixtureModules({ stories, fixtures, held = [], overlays = N
       `export const HELD_STORY_CARDS: HeldStoryCard[] = ${shelf.cards};\n\n` +
       "/** Only an e2e build has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
       `export const STORY_FIXTURE_IDS: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`,
+    [E2E_MODULE]: e2eModule(true),
     ...chunkModules(plan.chunks),
   };
 }
