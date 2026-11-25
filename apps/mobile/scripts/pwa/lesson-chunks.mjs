@@ -266,7 +266,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // so they are in the start bundle. On top of AF-1 (4,611,387 B raw / 1,268,989 B gzip) the release `build:web` (CI=1) of
   // the merged CH-1a branch measures 4,617,949 B raw / 1,271,150 B gzip (+6,562 B raw, +2,161 B gzip over AF-1), 2,549 B over the previous
   // line. The line is the measurement plus a 3,951 B margin (one measured raise, 6,500 B over the previous line).
-  startBundleRaw: 4_621_900,
+  // [AF] F-A11Y-001 AF-2 (Culture Quiz and Tap & Respond on the answer announcer): both games are imported statically by
+  // MinigameScreen, so they are in the start bundle, and the announcer, its hook, `logic/answer-feedback.ts` (the announcement builder,
+  // `afterRightAnswer` and the wait helpers), the Next button's focus hook and the games' own changes now come with them; AF-1 left the announcer
+  // out because no game imported it yet. On top of CH-1a (4,617,949 B raw / 1,271,150 B gzip)
+  // the release `build:web` (CI=1) of the AF-2 branch measures 4,624,867 B raw / 1,273,405 B gzip (+6,918 B raw, +2,255 B
+  // gzip), 2,967 B over the previous line. The line is the measurement plus a 4,033 B margin (one measured raise, 7,000 B
+  // over the previous line).
+  startBundleRaw: 4_628_900,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
