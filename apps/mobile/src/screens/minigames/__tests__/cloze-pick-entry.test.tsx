@@ -1,5 +1,6 @@
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { clozeFixtureScope } from '../../../logic/cloze-pick/e2e-rounds';
 import { tileId } from '../../../logic/cloze-pick/round';
@@ -107,13 +108,13 @@ describe('game.cloze-pick off: the Listen & Pick fallback with a text prompt', (
     expect(audio.playPrompt).toHaveBeenCalledTimes(1);
     expect(audio.playPrompt.mock.calls[0]?.[0]).toMatchObject({ text: '책을 읽어요.' });
     await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     // Round 2 opens with no autoplay.
     expect(audio.playPrompt).toHaveBeenCalledTimes(1);
     await tapId(r, `listen-pick-option-${tileId('e2e-cloze-particle', 0)}`);
     await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     expect(h.answers).toEqual([
       [0, false, 'e2e-cloze-word'],

@@ -1,5 +1,6 @@
-import type { ListenPickRound, RomanizationMode } from '@hangul-route/content-schema';
+import { a11yRomanization, type ListenPickRound, type RomanizationMode } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { answerItem } from './answer-feedback';
 import type { PlayResult, PlaySpec } from '../platform/audio';
 import type { HostMode } from '../screens/minigames/host';
 
@@ -324,6 +325,25 @@ export function optionView(
 
   const announced = cardState === 'correct' || cardState === 'wrong' || cardState === 'hint' ? a11y.option[cardState](base) : base;
   return { ...view, accessibilityLabel: announced };
+}
+
+export interface OptionItemContext {
+  /** The meaning goes with a Korean option's name: after a right answer (it is shown then), never on a miss. */
+  gloss: boolean;
+  /** The spelling round's name for a text option (spelled with letter names); used as is. */
+  labelOf?: (text: { ko: string; romanization: string }) => string;
+}
+
+/**
+ * What a result line calls an option (F-A11Y-001 §3.2): a picture by its name, a Korean option by its romanization
+ * (a sound value read "g or k") and, after a right answer, its meaning; never its Hangul (OD-AF5 (a)). The spelling
+ * round's options go by their letter names, since two of them may sound the same.
+ */
+export function optionItem(option: ListenPickOption, a11y: Messages['a11y'], context: OptionItemContext): string {
+  if (option.pictureRef !== undefined) return option.labelEn ?? option.text?.en ?? a11y.minigame.picture;
+  const text = option.text!;
+  if (context.labelOf) return context.labelOf(text);
+  return answerItem(a11y, a11yRomanization(text.romanization, a11y.romanizationOr), context.gloss ? text.en : undefined);
 }
 
 /** Narrow phones (below this width, dp) get one column. */

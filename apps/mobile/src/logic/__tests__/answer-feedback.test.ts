@@ -11,6 +11,7 @@ import {
   answerAnnouncement,
   answerItem,
   answerOptionLabel,
+  lookHereLine,
   readerPath,
   resultLeastWait,
   segmentsText,
@@ -88,6 +89,15 @@ describe('answerOptionLabel (§3.2, test 2)', () => {
     expect(answerOptionLabel('correct', 'apple', option)).toBe('Right answer: apple');
     expect(answerOptionLabel('wrong', 'pear', option)).toBe('Not this one: pear');
     expect(answerOptionLabel('hint', 'Moon', option)).toBe('Look here: Moon');
+  });
+});
+
+describe('lookHereLine (§3.2: the line a miss that turns the hint on carries)', () => {
+  it('names the answer to look at by its option name, in every locale, and takes no second full stop', () => {
+    expect(lookHereLine(a11y, 'sagwa, apple')).toBe('Look here: sagwa, apple.');
+    expect(lookHereLine(a11y, 'Hola!')).toBe('Look here: Hola!');
+    expect(lookHereLine(getMessages('es').a11y, 'manzana')).toBe(`${getMessages('es').a11y.minigame.option.hint('manzana')}.`);
+    expect(lookHereLine(a11y, 'sagwa')).not.toMatch(HANGUL);
   });
 });
 

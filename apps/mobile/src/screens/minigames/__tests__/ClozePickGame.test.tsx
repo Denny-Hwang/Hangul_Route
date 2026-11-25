@@ -3,7 +3,7 @@ import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
-import { CLOZE_ADVANCE_MS } from '../../../logic/cloze-pick/flow';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { clozeFixtureScope, type ClozeFixture } from '../../../logic/cloze-pick/e2e-rounds';
 import { tileId } from '../../../logic/cloze-pick/round';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
@@ -124,7 +124,7 @@ describe('Cloze Pick', () => {
     await press(hear!);
     expect(audio.playPrompt).toHaveBeenCalledTimes(2);
     await act(async () => {
-      vi.advanceTimersByTime(CLOZE_ADVANCE_MS);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     // Round 2, a particle gap: its own instruction, and Sentence Builder's line on a miss.
     expect(texts(r)).toContain('Pick the piece that fits.');
@@ -134,7 +134,7 @@ describe('Cloze Pick', () => {
     await tap(r, tileId('e2e-cloze-particle', 0));
     expect(texts(r)).toContain('mureul masyeoyo.');
     await act(async () => {
-      vi.advanceTimersByTime(CLOZE_ADVANCE_MS);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     expect(h.completes).toBe(1);
   });
@@ -171,7 +171,7 @@ describe('Cloze Pick', () => {
     await tap(r, tileId('e2e-cloze-word', 0));
     expect(textsOf(r, 'cloze-pick-gap')).toContain('읽어요');
     await act(async () => {
-      vi.advanceTimersByTime(CLOZE_ADVANCE_MS);
+      vi.advanceTimersByTime(RESULT_MARK_MIN_MS);
     });
     expect(h.completes).toBe(1);
   });
@@ -204,7 +204,7 @@ describe('[QS-4] the next round waits for the sentence', () => {
     audio.playPrompt.mockImplementationOnce(() => new Promise((resolve) => (end = () => resolve('played' as const))));
     const { r } = await play(['word', 'particle']);
     await tap(r, tileId('e2e-cloze-word', 0));
-    await advance(CLOZE_ADVANCE_MS + 2_500); // past the word cap too: a sentence gets the long one
+    await advance(RESULT_MARK_MIN_MS + 2_500); // past the word cap too: a sentence gets the long one
     expect(texts(r)).not.toContain('Pick the piece that fits.');
     end();
     await advance(0);

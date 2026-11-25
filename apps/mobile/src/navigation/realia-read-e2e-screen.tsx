@@ -5,7 +5,7 @@ import type { MinigameScope } from '../logic/minigame-config';
 import { minigameFinishedEvent } from '../logic/minigame-finished';
 import { track } from '../platform/telemetry';
 import type { MinigameHost } from '../screens/minigames/host';
-import { RealiaReadGame } from '../screens/minigames/RealiaReadGame';
+import { RealiaReadGame } from '../screens/minigames/realia-read-entry';
 import { REALIA_KIND_FIXTURES } from './realia-kinds-e2e-fixture';
 import { REALIA_FIXTURES } from './realia-read-e2e-fixture';
 import { e2eLog as log } from './realia-read-e2e';

@@ -9,6 +9,7 @@ import {
   headerView as headerViewWith,
   listenPickSpeech,
   optionColumns,
+  optionItem,
   optionView as optionViewWith,
   promptView,
   startFlow,
@@ -631,5 +632,23 @@ describe('optionColumns', () => {
     expect(optionColumns(textRound, 339)).toBe(1);
     expect(optionColumns(pictureRound, 320)).toBe(1);
     expect(optionColumns(textRound, 340)).toBe(2);
+  });
+});
+
+describe('optionItem (F-A11Y-001 §3.2: what a result line calls an option)', () => {
+  const a11y = messages.a11y;
+  const slashed = { id: 's', text: text('ㄱ', 'g/k', 'giyeok') };
+  it('names a Korean option by its romanization read as sounds, with its meaning only after a right answer, never its Hangul', () => {
+    expect(optionItem(slashed, a11y, { gloss: false })).toBe('g or k');
+    expect(optionItem(slashed, a11y, { gloss: true })).toBe('g or k, giyeok');
+    expect(optionItem(textRound.options[0]!, a11y, { gloss: true })).toBe('ga, 가');
+  });
+  it('names a picture by its label, then its text meaning, then "Picture"', () => {
+    expect(optionItem(pictureRound.options[0]!, a11y, { gloss: true })).toBe('rice');
+    expect(optionItem({ id: 'p', pictureRef: 'card:x', text: text('밥', 'bap', 'rice') }, a11y, { gloss: false })).toBe('rice');
+    expect(optionItem({ id: 'p', pictureRef: 'card:x' }, a11y, { gloss: false })).toBe(a11y.minigame.picture);
+  });
+  it("uses the spelling round's own name for a text option, as it is", () => {
+    expect(optionItem(slashed, a11y, { gloss: true, labelOf: (t) => `spelled ${t.romanization}` })).toBe('spelled g/k');
   });
 });
