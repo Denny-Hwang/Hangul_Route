@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MinigameScope } from '../../logic/minigame-config';
-import type { RootStackParamList } from '../../navigation/types';
 import { abandonPendingChunk } from '../../platform/lesson-chunk-abandon';
 import { useCurrFlagDecided } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
@@ -49,8 +47,11 @@ function loadChunk(): Promise<Chunk> {
   return loading;
 }
 
-/** The chunk, loaded only while `wanted`; `failed` once it rejected or timed out. */
-function useChunk(wanted: boolean): { chunk: Chunk | null; failed: boolean } {
+/**
+ * The chunk, loaded only while `wanted`; `failed` once it rejected or timed out. Also the fixture build's e2e hook and
+ * step (`navigation/e2e-entry.tsx`, AMENDMENTS-START-BUNDLE-2026-11 SB-2), so the door's one literal `import()` stays the only one.
+ */
+export function useClozePickChunk(wanted: boolean): { chunk: Chunk | null; failed: boolean } {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -103,7 +104,7 @@ export function ClozePickStep({ onRendered, ...props }: ClozePickStepProps): Rea
     const timer = setTimeout(() => setUndecidedTooLong(true), FLAG_DECIDE_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [deciding]);
-  const { chunk, failed } = useChunk(on.current === true);
+  const { chunk, failed } = useClozePickChunk(on.current === true);
   const rendered: ClozePickRendered | null = on.current === null ? null : on.current && !failed ? (chunk === null ? null : 'cloze-pick') : 'listen-pick';
   useEffect(() => {
     if (rendered !== null) onRendered?.(rendered);
@@ -112,20 +113,4 @@ export function ClozePickStep({ onRendered, ...props }: ClozePickStepProps): Rea
   if (rendered === 'listen-pick' || chunk === null) return <ClozePickFallback {...props} />;
   const { ClozePickGame } = chunk;
   return <ClozePickGame {...props} />;
-}
-
-/** Fixture builds only (`navigation/cloze-pick-e2e.tsx`, in the chunk): the `window.__hrClozePickE2E` hook. */
-export function ClozePickE2eHook(): ReactElement | null {
-  const { chunk } = useChunk(true);
-  if (chunk === null) return null;
-  const { ClozePickE2eHookBody } = chunk;
-  return <ClozePickE2eHookBody />;
-}
-
-/** Fixture builds only: a Cloze Pick step on the fixture rounds. */
-export function ClozePickE2eScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'ClozePickE2e'>): ReactElement {
-  const { chunk } = useChunk(true);
-  if (chunk === null) return <LessonWaiting />;
-  const { ClozePickE2eBody } = chunk;
-  return <ClozePickE2eBody key={route.key} rounds={route.params.rounds} onBack={() => navigation.goBack()} />;
 }
