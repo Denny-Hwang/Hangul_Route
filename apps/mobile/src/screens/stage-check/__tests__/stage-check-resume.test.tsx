@@ -23,6 +23,8 @@ const rig = vi.hoisted(() => ({
   failRemove: false,
   mem: new Map<string, unknown>(),
   stall: null as Promise<void> | null,
+  /** What a read answers after the stall, instead of the stored value (a late read of a value that is gone by then). */
+  readOverride: undefined as unknown,
   rounds: 7,
   /** Holds each recording started after it is set until the test lets it go. */
   recordHold: null as null | Promise<void>,
@@ -54,7 +56,7 @@ vi.mock('../../../platform/storage', () => ({
   readJsonStrict: vi.fn(async () => null),
   readJsonExact: vi.fn(async (k: string) => {
     if (rig.stall) await rig.stall;
-    return rig.mem.get(k) ?? null;
+    return rig.readOverride !== undefined ? rig.readOverride : (rig.mem.get(k) ?? null);
   }),
   readJsonExactFresh: vi.fn(async (k: string) => rig.mem.get(k) ?? null),
   keepRawCopy: vi.fn(async () => true),
@@ -255,6 +257,7 @@ beforeEach(async () => {
   rig.right = true;
   rig.failRemove = false;
   rig.stall = null;
+  rig.readOverride = undefined;
   rig.rounds = 7;
   rig.recordHold = null;
   rig.recordFails.clear();
@@ -531,19 +534,29 @@ describe('[LR] the run is stored with every answer before the finish runs', () =
 });
 
 describe('[LR] a finished check is recorded once', () => {
-  it('kill after the progress write: a stored run whose entry already exists is not offered, is cleared, and records nothing again', async () => {
+  const OLDER = { id: 'stage-check:stage2', kind: 'stage-certificate', generatedAt: '2026-09-01T10:00:00.000Z', scope: 'stage2', itemIds: [], resultStars: 3, missedItemIds: [] };
+
+  it('the finish marks the stored run finished after the entry and the latch, before the clear', async () => {
+    rig.failRemove = true;
+    const { r } = await open();
+    await tapId(r, 'stage-check-go');
+    await answerRounds(r, 7);
+    await settleSavedChecksForTests();
+    expect(byTestId(r.root, 'stage-check-result')).toHaveLength(1);
+    // The clear did not happen: the run is there, whole, with its marker.
+    expect(stored()!.answers).toHaveLength(7);
+    expect(typeof (stored() as unknown as { finishedAt?: string }).finishedAt).toBe('string');
+  });
+
+  it('kill after the progress write (the clear never ran): a marked run is not offered, is cleared, and records nothing again', async () => {
+    rig.failRemove = true;
     const first = await open();
     await tapId(first.r, 'stage-check-go');
-    await answerRounds(first.r, 3);
+    await answerRounds(first.r, 7);
     await settleSavedChecksForTests();
-    const midRun = JSON.parse(JSON.stringify(stored()));
-    await answerRounds(first.r, 4);
-    await settleSavedChecksForTests();
-    expect(byTestId(first.r.root, 'stage-check-result')).toHaveLength(1);
     expect(rig.reviews).toHaveLength(1);
-    // The app was killed between the entry and the clear: the stored run is still there.
-    rig.mem.set(CHECK_RUN_KEY(ID), { ...midRun, answers: Array.from({ length: 7 }, (_, i) => [i, { correct: true }]) });
     await cleanup();
+    rig.failRemove = false;
     const events = rig.events.length;
 
     const { r } = await open();
@@ -553,24 +566,104 @@ describe('[LR] a finished check is recorded once', () => {
     expect(stored()).toBeNull();
     expect(rig.reviews).toHaveLength(1);
     expect(rig.events).toHaveLength(events);
+    expect(rig.finishes).toBe(1);
   });
 
-  it('the clear after the result is rejected: the next open drops the run when it sees the entry, and nothing is recorded twice', async () => {
+  it('an equal-stars retake whose clear rejects: the earlier entry is kept, yet the run is not offered again and no second complete event is sent', async () => {
+    rig.reviews.push({ ...OLDER });
     rig.failRemove = true;
     const first = await open();
     await tapId(first.r, 'stage-check-go');
     await answerRounds(first.r, 7);
     await settleSavedChecksForTests();
     expect(byTestId(first.r.root, 'stage-check-result')).toHaveLength(1);
-    expect(stored()).not.toBeNull();
+    // Equal stars: the merge keeps the earliest copy, so the entry's stamp says nothing about this run.
+    expect(rig.reviews).toHaveLength(1);
+    expect(rig.reviews[0]!.generatedAt).toBe(OLDER.generatedAt);
+    expect(completeEvents()).toBe(1);
+    await cleanup();
+
+    // The clear keeps failing: the next opens each show the intro, never the resume page, and send nothing.
+    for (let visit = 0; visit < 2; visit += 1) {
+      const { r } = await open();
+      expect(byTestId(r.root, 'stage-check-resume')).toHaveLength(0);
+      expect(byTestId(r.root, 'stage-check-intro')).toHaveLength(1);
+      await cleanup();
+    }
+    expect(completeEvents()).toBe(1);
+    expect(rig.finishes).toBe(1);
+  });
+
+  it('kill between the entry and the marker: the unmarked run is offered, and its finish writes the entry again as a merge (one entry)', async () => {
+    const first = await open();
+    await tapId(first.r, 'stage-check-go');
+    await answerRounds(first.r, 3);
+    await settleSavedChecksForTests();
+    const midRun = JSON.parse(JSON.stringify(stored()));
+    await answerRounds(first.r, 4);
+    await settleSavedChecksForTests();
+    expect(rig.reviews).toHaveLength(1);
+    rig.mem.set(CHECK_RUN_KEY(ID), { ...midRun, answers: Array.from({ length: 7 }, (_, i) => [i, { correct: true }]) });
     await cleanup();
 
     const { r } = await open();
-    expect(byTestId(r.root, 'stage-check-resume')).toHaveLength(0);
-    expect(byTestId(r.root, 'stage-check-intro')).toHaveLength(1);
+    expect(byTestId(r.root, 'stage-check-resume')).toHaveLength(1);
+    await tap(r, EN.common.buttons.continue);
+    await settleSavedChecksForTests();
+    expect(byTestId(r.root, 'stage-check-result')).toHaveLength(1);
     expect(rig.reviews).toHaveLength(1);
-    expect(completeEvents()).toBe(1);
-    expect(rig.finishes).toBe(1);
+    expect(stored()).toBeNull();
+  });
+
+  it('a late read of a finished run, landing after Let us go, is ignored: it clears nothing of the new check', async () => {
+    let release: () => void = () => undefined;
+    rig.stall = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    rig.readOverride = { v: 1, kind: 'stage', stage: 'stage2', startedAt: new Date().toISOString(), finishedAt: new Date().toISOString() };
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const r = await render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 640 })}>
+        <StageCheckScreen navigation={fakeNav() as never} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />
+      </LayoutProvider>,
+    );
+    await flush();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(800);
+    });
+    expect(byTestId(r.root, 'stage-check-intro')).toHaveLength(1);
+    await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onPress === 'function' || typeof n.props.onClick === 'function')!);
+    await flush();
+    await answerRounds(r, 2);
+    await settleSavedChecksForTests();
+    expect(stored()!.answers).toHaveLength(2);
+    release();
+    await flush();
+    await settleSavedChecksForTests();
+    expect(stored()!.answers).toHaveLength(2);
+    expect(round(r)).toBeDefined();
+    // And a finished run read late while the intro still shows is cleared, as the early read does.
+    await cleanup();
+    rig.mem.clear();
+    rig.stall = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const again = await render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 640 })}>
+        <StageCheckScreen navigation={fakeNav() as never} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />
+      </LayoutProvider>,
+    );
+    await flush();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(800);
+    });
+    rig.mem.set(CHECK_RUN_KEY(ID), rig.readOverride);
+    release();
+    await flush();
+    await settleSavedChecksForTests();
+    expect(byTestId(again.root, 'stage-check-intro')).toHaveLength(1);
+    expect(byTestId(again.root, 'stage-check-resume')).toHaveLength(0);
+    expect(stored()).toBeNull();
   });
 });
 

@@ -151,9 +151,12 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
       const s2 = await session.catch(() => null);
       const value = lateValue;
       lateValue = null;
-      if (!alive || !introUp || s2 === null || value === null) return;
+      // Only while the intro shows and nothing has started: after Let's go the late read is ignored, and it never clears
+      // (the stored run is then the new check's own).
+      const intro = (): boolean => alive && introUp && !starting.current && phaseRef.current.kind === 'intro';
+      if (!intro() || s2 === null || value === null) return;
       const found = await s2.a.resumeSession(s2.w, value, locale, stageKey);
-      if (!alive) return;
+      if (!intro()) return;
       if (found.kind === 'recorded' && profileId !== null) void clearSavedCheck(profileId);
       if (found.kind === 'run') setPhase((p) => (p.kind === 'intro' ? { kind: 'resume', run: found.run, plan: p.plan } : p));
     };
@@ -216,12 +219,15 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   const seeCards = (): void => leaveTo(() => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } }));
 
   // [LR] What is stored: the plan's rounds and the answers whose recording settled (OD-LR9 (b)). A failed write is dropped.
-  const persist = (plan: PlannedStageCheck): Promise<void> => {
+  const persist = (plan: PlannedStageCheck, finishedAt?: string): Promise<void> => {
     const a = api.current;
     const startedAt = startedAtRef.current;
     if (profileId === null || a === null || startedAt === null || settled.current.size === 0) return Promise.resolve();
-    return saveCheck(profileId, a.savedRun(plan, { locale, answers: settled.current, hideRomanization: hideRef.current, startedAt }));
+    return saveCheck(profileId, a.savedRun(plan, { locale, answers: settled.current, hideRomanization: hideRef.current, startedAt, ...(finishedAt !== undefined ? { finishedAt } : {}) }));
   };
+  // The result is in the progress: the stored run is marked finished (ordered before the complete event, and after the
+  // entry and the latch), so a clear that does not happen never leaves a run that is offered or finished again.
+  const markFinished = (plan: PlannedStageCheck): Promise<void> => persist(plan, new Date().toISOString());
   const markSettled = (plan: PlannedStageCheck, index: number, answer: RoundAnswer): void => {
     settled.current.set(index, answer);
     if (mounted.current) setKept(true);
@@ -267,7 +273,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     finishing.current = true;
     setPhase({ kind: 'loading' });
     void storeBeforeFinish(plan)
-      .then(() => a.finishSession(w, plan, answers.current, [...recorded.current.values()]))
+      .then(() => a.finishSession(w, plan, answers.current, [...recorded.current.values()], undefined, () => markFinished(plan)))
       .then(
         // Null: the check was switched off or the stage closed while it played; nothing was written (the calm page).
         (done) => setPhase(finished(done)),
@@ -359,7 +365,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
       // [LR] The rounds recorded now are stored with the rest before the finish runs again.
       await storeBeforeFinish(p.plan);
       if (stopped.current) return true;
-      const done = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]);
+      const done = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()], undefined, () => markFinished(p.plan));
       if (stopped.current) return true;
       setLeaving(false);
       setPhase(finished(done));

@@ -60,6 +60,13 @@ export interface SavedStageCheck {
   hideRomanization: boolean;
   /** ISO time the check began (a resumed check keeps it). */
   startedAt: string;
+  /**
+   * ISO time the check's result was written into the progress (the entry and the latch): set by the finish right after
+   * them and before the complete event. A stored run that carries it is a finished check whose clear did not happen (a
+   * kill, a removal that failed): it is not offered again and records nothing a second time. No clock comparison is
+   * involved, so a skewed clock or another device's entry cannot mark a run finished.
+   */
+  finishedAt?: string;
 }
 
 /** Every kind of check run that can be stored. */

@@ -10,7 +10,7 @@ import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 import { finishOnce, stepsOnce } from './save-retry';
 import type { SavedStageCheck } from './saved-check';
-import { resumableStageCheck, savedStageCheck, stageCheckRecorded, type ResumableStageCheck } from './saved-stage-check';
+import { finishedStageCheck, resumableStageCheck, savedStageCheck, type ResumableStageCheck } from './saved-stage-check';
 import {
   planStageCheck,
   stageCheckCompleteEvent,
@@ -108,7 +108,7 @@ export interface StageCheckApi {
    */
   resumeSession(world: StageCheckWorld, saved: unknown, locale: UiLocale, stage: StageKey, now?: Date): Promise<StageCheckResume>;
   /** [LR] The value to store for a check in progress: the answers given whose recording has settled. */
-  savedRun(plan: PlannedStageCheck, run: { locale: UiLocale; answers: ReadonlyMap<number, RoundAnswer>; hideRomanization: boolean; startedAt: string }): SavedStageCheck;
+  savedRun(plan: PlannedStageCheck, run: { locale: UiLocale; answers: ReadonlyMap<number, RoundAnswer>; hideRomanization: boolean; startedAt: string; finishedAt?: string }): SavedStageCheck;
   /** The learner starts the first part: `review.start`. */
   begin(world: StageCheckWorld, plan: PlannedStageCheck, hideRomanization: boolean): void;
   /** Records a round's first answer now (the spacing rule). */
@@ -124,6 +124,12 @@ export interface StageCheckApi {
     answers: ReadonlyMap<number, RoundAnswer>,
     recorded: readonly Promise<void>[],
     now?: Date,
+    /**
+     * [LR] Row LR-3b: awaited once the entry and the latch are written and before the complete event is sent; the screen
+     * marks its stored run finished there (`finishedAt`), so a stored run that outlives its result is never offered or
+     * finished again. A rejection is ignored: the finish is done, the marker is best effort.
+     */
+    afterRecorded?: () => Promise<void>,
   ): Promise<StageCheckFinished | null>;
   gradeTyped(target: string, typed: string): TypedGrade;
 }
@@ -228,10 +234,11 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
 
     async resumeSession(world, saved, locale, stage, now = new Date()) {
       try {
+        // A finished run (the finish marked it) whose clear did not happen: not offered again, whatever else changed.
+        if (finishedStageCheck(saved, now.getTime(), stage)) return { kind: 'recorded' };
         const index = await deps.items();
         const found = resumableStageCheck(saved, now.getTime(), { stage, locale, itemsHash: deps.itemsHash(), index });
-        if (found === null) return { kind: 'none' };
-        return stageCheckRecorded(deps.snapshot(world.profileId), stage, found.startedAt) ? { kind: 'recorded' } : { kind: 'run', run: found };
+        return found === null ? { kind: 'none' } : { kind: 'run', run: found };
       } catch {
         return { kind: 'none' };
       }
@@ -251,7 +258,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       return deps.recordAnswers(world.profileId, checkAnswers([round], new Map([[0, answer]])));
     },
 
-    finishSession(world, plan, answers, recorded, now = new Date()) {
+    finishSession(world, plan, answers, recorded, now = new Date(), afterRecorded) {
       return finishPlanOnce(plan, async () => {
         const { profileId } = world;
         await Promise.all(recorded);
@@ -262,6 +269,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
         const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
         writeOnce(plan, 'entry', () => deps.recordReview(profileId, stageCheckEntry({ stage: plan.stage, result, at })));
         if (result.passed) writeOnce(plan, 'latch', () => deps.latch(profileId, plan.stage, at));
+        await afterRecorded?.().catch(() => undefined);
         writeOnce(plan, 'event', () => deps.track(stageCheckCompleteEvent(profileId, plan.stage, result.stars)));
         return { stars: result.stars, passed: result.passed, missed: result.missedItemIds.length > 0 };
       });

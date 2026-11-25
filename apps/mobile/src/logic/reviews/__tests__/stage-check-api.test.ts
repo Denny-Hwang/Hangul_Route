@@ -288,7 +288,7 @@ describe('in Spanish or Korean', () => {
 /**
  * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3b (test 22): `resumeSession` gives a stored Stage Check back as stored, and
  * nothing for a run that is not this stage, this language, this build's review items, within a day, or whose rounds do not
- * pass their shape check; a run whose result is already in the progress is `recorded`.
+ * pass their shape check; a run marked finished is `recorded`.
  */
 describe('resumeSession and savedRun (LR-3b)', () => {
   const START = '2026-10-22T09:00:00.000Z';
@@ -444,19 +444,38 @@ describe('resumeSession and savedRun (LR-3b)', () => {
     expect(await kindOf((s) => ({ ...s, startedAt: 'yesterday' }))).toBe('none');
   });
 
-  it('a run whose result is already in the progress is recorded, not offered again; an older, other-stage or unlatched entry is not', async () => {
-    const { f, saved } = await stored();
-    const entry = (over: Partial<ReviewEntry>): ReviewEntry => ({ id: 'stage-check:stage3', kind: 'stage-certificate', generatedAt: '2026-10-22T09:30:00.000Z', scope: 'stage3', itemIds: [], resultStars: 2, ...over });
-    const ask = async (snap: Partial<ProgressSnapshot> | undefined) =>
-      (await createStageCheckApi({ ...f.deps, snapshot: () => snap as ProgressSnapshot | undefined }).resumeSession(await world(f), saved, 'en', 'stage3', LATER)).kind;
-    expect(await ask({ reviews: [entry({})] })).toBe('recorded');
-    expect(await ask({ reviews: [entry({ generatedAt: START })] })).toBe('recorded');
-    expect(await ask({ reviews: [entry({ generatedAt: '2026-10-22T08:59:59.000Z' })] })).toBe('run');
-    expect(await ask({ reviews: [entry({ id: 'stage-check:stage2', scope: 'stage2' })] })).toBe('run');
-    expect(await ask({ reviews: [] })).toBe('run');
-    expect(await ask(undefined)).toBe('run');
-    // A 3-star entry whose latch was not written is not a finished check: the finish runs again (the latch is earliest-wins).
-    expect(await ask({ reviews: [entry({ resultStars: 3 })] })).toBe('run');
-    expect(await ask({ reviews: [entry({ resultStars: 3 })], stageCheckAt: { stage3: '2026-10-22T09:30:00.000Z' } })).toBe('recorded');
+  it('a run marked finished (the finish wrote the result) is recorded, whatever the progress holds: no entry, stamp or clock is read', async () => {
+    const { api, w, saved } = await stored();
+    const marked = { ...saved, finishedAt: '2026-10-22T09:30:00.000Z' };
+    expect((await api.resumeSession(w, marked, 'en', 'stage3', LATER)).kind).toBe('recorded');
+    // Not for another stage, past 24 hours, another kind, or a marker that is not a time: those are not this run's.
+    expect((await api.resumeSession(w, marked, 'en', 'stage2', LATER)).kind).toBe('none');
+    expect((await api.resumeSession(w, marked, 'en', 'stage3', new Date(Date.parse(START) + SAVED_RUN_MAX_AGE_MS + 1))).kind).toBe('none');
+    expect((await api.resumeSession(w, { ...marked, kind: 'hangul' }, 'en', 'stage3', LATER)).kind).toBe('none');
+    expect((await api.resumeSession(w, { ...marked, finishedAt: 'later' }, 'en', 'stage3', LATER)).kind).toBe('run');
+    expect((await api.resumeSession(w, { ...marked, finishedAt: 7 }, 'en', 'stage3', LATER)).kind).toBe('run');
+    // An unmarked run is offered, whatever the progress holds (no entry stamp is read).
+    expect((await api.resumeSession(w, saved, 'en', 'stage3', LATER)).kind).toBe('run');
+  });
+
+  it('savedRun carries finishedAt only when given', async () => {
+    const { api, plan, answers } = await stored();
+    expect(api.savedRun(plan, { locale: 'en', answers, hideRomanization: false, startedAt: START })).not.toHaveProperty('finishedAt');
+    expect(api.savedRun(plan, { locale: 'en', answers, hideRomanization: false, startedAt: START, finishedAt: LATER.toISOString() }).finishedAt).toBe(LATER.toISOString());
+  });
+
+  it('finishSession awaits afterRecorded after the entry and the latch and before the complete event; a rejection is ignored', async () => {
+    const f = fake();
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    const seen: string[] = [];
+    const done = await api.finishSession(w, plan, all(20, 20), [], NOW, async () => {
+      seen.push(`entry:${f.reviews.length} latch:${f.latches.length} events:${f.events.length}`);
+      throw new Error('storage full');
+    });
+    expect(seen).toEqual(['entry:1 latch:1 events:0']);
+    expect(done).toMatchObject({ stars: 3 });
+    expect(f.events.at(-1)?.name).toBe('review.complete');
   });
 });

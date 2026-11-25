@@ -1,4 +1,4 @@
-import type { ProgressSnapshot, StageKey, UiLocale } from '@hangul-route/content-schema';
+import type { StageKey, UiLocale } from '@hangul-route/content-schema';
 import type { RoundAnswer } from './daily-review';
 import type { ReviewItemIndex } from './review-items-store';
 import type { KoText, PickOption, ReviewRound } from './review-rounds';
@@ -27,6 +27,8 @@ export function savedStageCheck(run: {
   answers: ReadonlyMap<number, RoundAnswer>;
   hideRomanization: boolean;
   startedAt: string;
+  /** Set by the finish once the result is in the progress (see `finishedStageCheck`). */
+  finishedAt?: string;
 }): SavedStageCheck {
   const answers: Array<[number, RoundAnswer]> = [];
   [...run.answers.keys()]
@@ -46,6 +48,7 @@ export function savedStageCheck(run: {
     answers,
     hideRomanization: run.hideRomanization,
     startedAt: run.startedAt,
+    ...(run.finishedAt !== undefined ? { finishedAt: run.finishedAt } : {}),
   };
 }
 
@@ -193,18 +196,15 @@ export function resumableStageCheck(saved: unknown, now: number, ctx: StageCheck
 }
 
 /**
- * Whether the learner's progress already holds this run's result: the stage's one entry (`stage-check:<stage>`) is
- * stamped at or after the run's start, and a 3-star result (which latches `stageCheckAt`) has its latch. A stored run that
- * outlived its result (a kill between the entry and the clear, a clear that failed) is then not offered again, and its
- * finish is not run a second time. An older, better entry (a retake that did not beat it) is not seen as this run's: that
- * run is finished again, which writes nothing a second time but the complete event (the entry merges, the latch keeps its
- * earliest).
+ * Whether a stored value is a finished Stage Check of `stage` whose clear did not happen (a kill, a removal that failed):
+ * a run of this stage, within 24 hours, carrying `finishedAt`, which the finish writes right after the result is in the
+ * progress (the entry and the latch). Such a run is not offered again and its finish is not run a second time. It reads
+ * the run's own marker, never the stage's merged entry (an equal-stars retake keeps the earlier copy, so the entry's
+ * stamp says nothing about this run) and never a clock comparison (a clock set back, or another device's entry syncing
+ * in, cannot mark a run finished). A kill between the entry and the marker leaves the run unmarked: it is offered, and its
+ * finish writes the entry again (a merge, the earliest latch kept), the only repeat being the complete event.
  */
-export function stageCheckRecorded(snapshot: Pick<ProgressSnapshot, 'reviews' | 'stageCheckAt'> | undefined, stage: StageKey, startedAt: string): boolean {
-  const entry = (snapshot?.reviews ?? []).find((r) => r.id === `stage-check:${stage}`);
-  if (entry === undefined) return false;
-  const at = Date.parse(entry.generatedAt);
-  const started = Date.parse(startedAt);
-  if (!Number.isFinite(at) || !Number.isFinite(started) || at < started) return false;
-  return entry.resultStars !== 3 || snapshot?.stageCheckAt?.[stage] !== undefined;
+export function finishedStageCheck(saved: unknown, now: number, stage: StageKey): boolean {
+  if (!isRecord(saved) || saved.v !== SAVED_CHECK_VERSION || saved.kind !== 'stage' || saved.stage !== stage) return false;
+  return isFreshCheckRun(saved.startedAt, now) && typeof saved.finishedAt === 'string' && Number.isFinite(Date.parse(saved.finishedAt));
 }
