@@ -35,23 +35,25 @@ import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { afterMiss, afterRightAnswer } from '../../logic/answer-feedback';
 import { afterSound } from '../../logic/audio/reply-advance';
 import { jamoAll } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
-import { blockShape, removeLastTile, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
+import { blockShape, removeLastTile, shapeHint, shapePlaceHeight, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
 import { hasClipFor, playPrompt } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { AnswerAnnouncer } from './answer-announcer';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 // Phone sizes; a tablet multiplies them by its media scale (F-LAYOUT-001 §3.6).
 const TARGET = 160;
 const TARGET_GLYPH = 80;
 const SLOT = 72;
 const HINT_CELL = 40;
-/** The wrong attempt shows its hint this long, then the slots empty (the board is locked meanwhile, AMENDMENTS-TOUCH 6.5). */
-const WRONG_RESET_MS = 900;
 
 interface Props {
   scope: MinigameScope;
@@ -94,12 +96,28 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   const tapLock = useTapLock();
   const press = usePressLook();
   const bodySize = useTypeScale().size.body;
+  // F-A11Y-001 AF-4a: each result is said once, by the answer announcer; with a screen reader on a right block shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const roundNext = useRoundNext();
+  const mounted = useRef(false);
+  /** The round last moved on from: a second Next (or a late wait) for the same round does nothing (the last round ends the step once). */
+  const movedFrom = useRef(-1);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     setSelected([]);
     setFeedback('idle');
     reset();
-  }, [roundIdx, reset]);
+    // A new round empties the announcer and, with a reader on, moves focus to the round's header node (§3.4).
+    clear();
+    if (roundIdx > 0) focusPrompt();
+  }, [roundIdx, reset, clear, focusPrompt]);
 
   if (!round) {
     return (
@@ -108,6 +126,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
       </Screen>
     );
   }
+
+  const roundLabel = m.a11y.answer.round(roundIdx + 1, rounds.length, `${copy.buildLetter.heading} ${round.romanization}`);
 
   const hear = (): void => {
     sounding.current = play(() => playPrompt({ text: round.targetSyllable, kind: 'sound', source: 'build-letter' }));
@@ -118,13 +138,29 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
     return sel.every((id, i) => id === round.componentJamoIds[i]);
   };
 
+  const last = roundIdx >= rounds.length - 1;
+  const advance = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
+    roundNext.hide();
+    if (last) {
+      markStepComplete();
+      onFinish();
+    } else {
+      setRoundIdx(roundIdx + 1);
+    }
+  };
+
   // AMENDMENTS-TOUCH 6.5 (R2): a used tray tile stays disabled, so a second tap on it never takes it back; a tile comes
-  // back only from its filled slot (`takeBack`). Nothing is taken while the right block shows or the wrong one resets.
+  // back only from its filled slot (`takeBack`). Nothing is taken while the right block shows. A wrong build stays
+  // (F-A11Y-001 OD-AF7 (i)): an unused tray tile empties the slots and starts a new build with that tile.
   const handleTile = (jamoId: string): void => {
-    if (feedback !== 'idle' || selected.includes(jamoId)) return;
-    const next = [...selected, jamoId];
+    if (feedback === 'correct' || selected.includes(jamoId)) return;
+    // A tap on a tray tile while the wrong build shows starts over with that tile; otherwise it adds to the build.
+    const next = feedback === 'wrong' ? [jamoId] : [...selected, jamoId];
     if (next.length > round.componentJamoIds.length) return;
     setSelected(next);
+    if (feedback === 'wrong') setFeedback('idle');
     tapLight();
 
     if (next.length === round.componentJamoIds.length) {
@@ -134,46 +170,49 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         setFeedback('correct');
         // The round-ending commit locks the app clock, so the next round's board mounts locked (KT-D5).
         tapLock.lock(TAP_LOCK_MS);
+        const say = (): Promise<void> => a.announce({ kind: 'right', item: round.romanization });
         // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a prompt that is still sounding.
-        void afterSound(sounding.current, { minMs: 900 }).then(() => {
-          if (roundIdx >= rounds.length - 1) {
-            markStepComplete();
-            onFinish();
-          } else {
-            setRoundIdx(roundIdx + 1);
-          }
+        // OD-AF2 (b): at least the result floor. A reader on waits for Next instead (OD-AF9 (b)), the last round included.
+        void afterRightAnswer({
+          readerOn: a.readerOn,
+          gameMinMs: 900,
+          announce: a.readerOn ? () => roundNext.afterFocus(say) : say,
+          showNext: roundNext.show,
+          waitThenAdvance: (minMs) =>
+            void afterSound(sounding.current, { minMs }).then(() => {
+              if (mounted.current) advance();
+            }),
         });
       } else {
         nudge();
         answerRound(roundIdx, false, { texts: [round.targetSyllable], rung: 'produce' });
         setFeedback('wrong');
-        // Taps during the reset are swallowed, not accepted and then wiped.
-        tapLock.lock(WRONG_RESET_MS);
-        setTimeout(() => {
-          setSelected([]);
-          setFeedback('idle');
-        }, WRONG_RESET_MS);
+        // The wrong build stays until the learner acts, so nothing is locked for long: only the bounce guard of any commit.
+        tapLock.lock(TAP_LOCK_MS);
+        afterMiss({ readerOn: a.readerOn, announce: () => a.announce({ kind: 'line', text: copy.buildLetter.notQuite(shapeHint(shape, copy.buildLetter.shape)) }) });
       }
     }
   };
 
-  /** A tap on a filled slot: that tile goes back to the tray, and the tiles after it shift left. */
+  /** A tap on a filled slot: that tile goes back to the tray, and the tiles after it shift left. A wrong build ends. */
   const takeBack = (slot: number): void => {
-    if (feedback !== 'idle' || selected[slot] === undefined) return;
+    if (feedback === 'correct' || selected[slot] === undefined) return;
     setSelected(selected.filter((_, i) => i !== slot));
+    setFeedback('idle');
     tapLight();
   };
 
   /**
    * Undo (OW-1-undo): a backspace for the last placed tile, one tap one tile. It is a take-back, not an attempt, so it scores
-   * nothing and shows nothing of the answer; it waits like a slot tap while the right block shows or a wrong one resets.
+   * nothing and shows nothing of the answer; it waits while the right block shows, and it ends a wrong build.
    */
   const undoLast = (): void => {
-    if (feedback !== 'idle' || selected.length === 0) return;
+    if (feedback === 'correct' || selected.length === 0) return;
     setSelected(removeLastTile(selected));
+    setFeedback('idle');
     tapLight();
   };
-  const canUndo = feedback === 'idle' && selected.length > 0;
+  const canUndo = feedback !== 'correct' && selected.length > 0;
 
   return (
     <Screen tone="canvas">
@@ -185,7 +224,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">{copy.buildLetter.heading}</Heading>
+      {/* The round's header node (§3.4): the heading and the target's romanization, never a button and never the raw Hangul. */}
+      <View ref={a.promptRef} testID="build-letter-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
+        <Heading level="prompt">{copy.buildLetter.heading}</Heading>
+      </View>
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
@@ -208,6 +250,19 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         >
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
           <Caption tone="secondary">{round.romanization}</Caption>
+          {feedback === 'correct' ? (
+            // A right block is not told by the green box alone (F-A11Y-001 §3.1): a `check` inside the box's corner (24, inset
+            // `spacing.sm`, AnswerFeedback D1). Decorative: the target keeps its "Hear …" name.
+            <View
+              aria-hidden
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+              pointerEvents="none"
+              style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}
+            >
+              <Icon name="check" size={spacing.xl} color={colors.feedback.success} />
+            </View>
+          ) : null}
         </GuardedPressable>
       </View>
       <Spacer size="sm" />
@@ -257,15 +312,50 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
                 key={i}
                 testID={`build-letter-slot-${i}`}
                 gapFill={false}
-                disabled={feedback !== 'idle'}
+                disabled={feedback === 'correct'}
                 accessibilityLabel={copy.buildLetter.takeBack(tileAccessibilityLabel(j, m.a11y.minigame.finalTile) ?? j.romanization)}
                 onCommit={() => takeBack(i)}
               >
-                {({ pressed }) => slotBox(pressed && feedback === 'idle' ? press : null)}
+                {({ pressed }) => slotBox(pressed && feedback !== 'correct' ? press : null)}
               </TapTarget>
             );
           }}
         />
+
+        {/* The shape picture's place, kept under the slots in every state at the block's own height, so the picture appearing
+            after a miss is the cue and nothing moves (F-A11Y-001 §3.5; AnswerFeedback D7). */}
+        <Spacer size="sm" />
+        <View testID="build-letter-shape-place" style={{ height: shapePlaceHeight(shape, hintCell, spacing.sm), alignItems: 'center', justifyContent: 'center' }}>
+          {feedback === 'wrong' ? (
+            <View
+              testID="build-letter-shape"
+              accessible
+              accessibilityLabel={m.a11y.minigame.blockShape(shapeHint(shape, copy.buildLetter.shape))}
+            >
+              <SyllableBlock
+                vowel={shape.vowel}
+                hasFinal={shape.hasFinal}
+                renderCell={({ index: i }) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: hintCell,
+                      height: hintCell,
+                      borderRadius: radii.md,
+                      borderWidth: 2,
+                      borderColor: colors.brand.primary,
+                      backgroundColor: colors.brand.primaryLight,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Caption tone="secondary">{String(i + 1)}</Caption>
+                  </View>
+                )}
+              />
+            </View>
+          ) : null}
+        </View>
 
         <Spacer size="sm" />
         {/* Always on screen so it is found at once; dimmed and inert while there is nothing to take back. One more target of
@@ -339,40 +429,20 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         </View>
       </TapBoard>
 
+      {roundNext.shown ? (
+        <>
+          <Spacer size="lg" />
+          <Button pressableRef={roundNext.nextRef} label={copy.trace.next.cta} tone="primary" size="hero" fullWidth onPress={advance} testID="build-letter-next" />
+        </>
+      ) : null}
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message={copy.buildLetter.notQuite(shapeHint(shape, copy.buildLetter.shape))} />
-          <Spacer size="md" />
-          <View
-            style={{ alignItems: 'center' }}
-            accessible
-            accessibilityLabel={m.a11y.minigame.blockShape(shapeHint(shape, copy.buildLetter.shape))}
-          >
-            <SyllableBlock
-              vowel={shape.vowel}
-              hasFinal={shape.hasFinal}
-              renderCell={({ index: i }) => (
-                <View
-                  key={i}
-                  style={{
-                    width: hintCell,
-                    height: hintCell,
-                    borderRadius: radii.md,
-                    borderWidth: 2,
-                    borderColor: colors.brand.primary,
-                    backgroundColor: colors.brand.primaryLight,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Caption tone="secondary">{String(i + 1)}</Caption>
-                </View>
-              )}
-            />
-          </View>
+          {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
+          <HoyaBubble testID="build-letter-hoya" tone="thinking" message={copy.buildLetter.notQuite(shapeHint(shape, copy.buildLetter.shape))} live={false} />
         </>
       ) : null}
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
       <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
       <Spacer size="lg" />

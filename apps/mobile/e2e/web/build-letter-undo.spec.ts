@@ -11,7 +11,7 @@ import { Touchscreen, type TouchPoint } from './touch';
  * text, on a phone turned sideways and on a tablet.
  *
  * The English cases play Holidays quest 7 (the Seollal greeting): its first block is 달, three slots (initial, vowel, final),
- * so Undo is pressed twice in a row on a real touch screen, and a wrong full fill is reset by the board while Undo waits. The
+ * so Undo is pressed twice in a row on a real touch screen, and a wrong full fill stays (with its shape picture) until the learner acts. The
  * Spanish and Korean cases use the guest quest's first block (가, two slots) at 320 x 640 with the largest text: the label
  * must neither wrap nor push the page sideways. In every case Undo is at least 64 x 64, named for a screen reader, dimmed and
  * inert while nothing is placed, and is on screen together with the slots (and the tray too where the window is tall enough, see tilesWithUndo).
@@ -21,7 +21,7 @@ import { Touchscreen, type TouchPoint } from './touch';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 /** Past the 400 ms lock, with room for a busy machine's slow event dispatch. */
 const AFTER_LOCK = 700;
-/** The wrong block shows its hint this long, then the slots empty (BuildLetterGame WRONG_RESET_MS), plus slow dispatch. */
+/** Past the old 900 ms reset (F-A11Y-001 OD-AF7 (i): a wrong block now stays), plus slow dispatch. */
 const AFTER_RESET = 1500;
 const en = getMessages('en');
 
@@ -189,7 +189,7 @@ for (const profile of PROFILES) {
       await expect.poll(() => placedCount(page)).toBe(0);
     });
 
-    test('a wrong full block still resets by itself after 900 ms, and Undo waits meanwhile', async ({ page }) => {
+    test('a wrong full block stays with its shape picture until the learner acts (OD-AF7 (i)); Undo is on and takes the last tile back', async ({ page }) => {
       test.setTimeout(150_000);
       await openClosedBlock(page, profile.largest);
       const undo = page.getByTestId('build-letter-undo');
@@ -203,19 +203,22 @@ for (const profile of PROFILES) {
         await page.waitForTimeout(AFTER_LOCK);
       }
       await expect(page.getByText(/Not quite/)).toBeVisible();
-      expect(await placedCount(page), 'the wrong block shows for a moment').toBe(3);
-      await expect(undo, 'Undo waits while the wrong block shows').toHaveAttribute('aria-disabled', 'true');
-      await touch.tap(centre(await inView(undo)));
+      await expect(page.getByTestId('build-letter-shape'), 'the shape picture shows in its kept place').toBeAttached();
+      expect(await placedCount(page), 'the wrong block shows').toBe(3);
+      await expect(undo, 'Undo is on while the wrong block shows').not.toHaveAttribute('aria-disabled', 'true');
+      // No timer empties it: it is still there well past the old 900 ms reset, with Hoya's line.
       await page.waitForTimeout(AFTER_RESET);
-      expect(await placedCount(page), 'the board emptied itself').toBe(0);
-      await expect(undo).toHaveAttribute('aria-disabled', 'true');
-      // The same block can be tried again at once, and Undo works on the new attempt.
-      await page.waitForTimeout(AFTER_LOCK);
-      await touch.graze(centre(await inView(page.getByRole('button', { name: 'Korean letter ㄷ, tap to select', exact: true }))), 0, 16, { steps: 4 });
-      await expect.poll(() => placedCount(page)).toBe(1);
-      await page.waitForTimeout(AFTER_LOCK);
+      expect(await placedCount(page), 'the wrong block stays').toBe(3);
+      await expect(page.getByText(/Not quite/)).toBeVisible();
+      // Undo takes the last tile back, and that ends the miss: the picture and Hoya's line go.
       await touch.tap(centre(await inView(undo)));
-      await expect.poll(() => placedCount(page)).toBe(0);
+      await expect.poll(() => placedCount(page)).toBe(2);
+      await expect(page.getByTestId('build-letter-shape')).toHaveCount(0);
+      await expect(page.getByText(/Not quite/)).toHaveCount(0);
+      // The same block can be tried again at once.
+      await page.waitForTimeout(AFTER_LOCK);
+      await touch.graze(centre(await inView(page.getByRole('button', { name: 'final l', exact: true }))), 0, 16, { steps: 4 });
+      await expect.poll(() => placedCount(page)).toBe(3);
     });
   });
 }
