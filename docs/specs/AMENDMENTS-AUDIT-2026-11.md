@@ -2,6 +2,8 @@ Status: ready; rows AU-1 to AU-17 done (stage 1 in #1034, stage 2 in the PR that
 
 > **Amended 2026-11-23 by `AMENDMENTS-DURABLE-PROGRESS.md` [DP]** (work order WO-01 of the 2026-11 review: a failed read is never "nothing saved"; a failed write is never silent): AU-3's unread set becomes store state (`loadFailedFor`), so boot, the chooser and Home can show it; a write that failed after its step ran (`unsaved`) is told apart from a failed read (`unread`) and from a step that threw (`step-failed`), a record started fresh answers `fresh`, and a failed save is retried and said (`saveFailedFor`) (sections 3.2 and 3.7; rows DP-1a and DP-2).
 
+> **Amended 2026-11-25 by `AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]** (work order WO-06 and WO-07 of the 2026-11 review: a game is never left by accident; a quest or a long check goes on where it stopped; a finish that was not saved never looks done) (AU-12, "No new screen and no new string"): Home now says that the hero's lesson goes on: the button reads Continue, a caption says "You can go on from step 3 of 5." and a quiet Start again asks first, then opens the first step; the saved run is read through `durableRead`, and a failed read means no resume (row LR-2, #1089). Everything else in AU-12 stands: Leave still clears the saved run, and the quest's own leave line, "Stars from this try will not be saved.", is unchanged (OD-LR1 (c), owner decision 2026-11-24); only the comment at `QuestPlayerView.tsx:132` changed, to name the device copy (row LR-5).
+
 # Amendment: fixes from the 2026-11-15 readiness audit
 
 > **Owner decision of 2026-11-15 (in chat, translated):** "Do stage 1 and stage 2 of the code-fix list and merge."

@@ -4,6 +4,7 @@ Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.3 (one prize
 Supersedes for Stages 2-7: `reviews/stage-review.md` (F-RVW-001 §3.4's 4-6 item review and its certificate)
 Audience: **learner, any age** (P4 / P5 / P6). No grown-up control on this screen; reports show the result to grown-ups (F-REPORT-001).
 Mock: `design/screens/stage-check/` (shots at 320 and 768) · Built by row **CM-22** (behind `stageChecks`); stage cards by CM-23
+Amended 2026-11-25 by `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]: an interrupted check goes on, as the Hangul Check does (the planned rounds are stored; Continue goes on at the first round without an answer; `reviews/check-resume.md`); Stop keeps the stored check and its sheet (H) says "You can keep going later." with Keep going filled; a finish that could not be saved shows a save-failed page with Try again on the same answers instead of the not-ready line (`reviews/save-failed.md`) (rows LR-3b #1117, LR-4 #1103, LR-6 #1119).
 
 ## Scenario (Given-When-Then)
 
