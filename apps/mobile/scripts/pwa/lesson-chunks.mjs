@@ -578,6 +578,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   Object.freeze({ name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' }),
   Object.freeze({ name: 'join-space-chunk', marker: 'screen-chunk:join-space' }),
   Object.freeze({ name: 'placement-chunk', marker: 'screen-chunk:placement' }),
+  // [AF] F-A11Y-001 row AF-4b: Realia Read (`src/screens/minigames/realia-read-chunk.tsx`, reached only through the literal
+  // `import()` of `src/screens/minigames/realia-read-entry.tsx`): the answer feedback of the choice games took the start
+  // bundle over its line, and this game is only played from Stage 4 on.
+  Object.freeze({ name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' }),
 ]);
 
 /**

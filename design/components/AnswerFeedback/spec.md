@@ -204,6 +204,19 @@ answer can shrink to its text (Tile) or a mark inside would read as part of the 
   "Tap to replay" (E1, E2).
 - **D12. Taught Korean** keeps its romanization and gloss everywhere (CLAUDE.md §1). The announcer names Korean by
   romanization and gloss only (OD-AF5 (a)); the `said` check holds it.
+- **D13. As built (AF-4b)**, the choice games (`shots/af-4b/`):
+  - **Cloze Pick's tile** is a row of three columns in every state: a 24 balancing column, the word and its romanization
+    (centred, `flex: 1`), and a 24 mark column that holds `check` or `replay` or nothing. The mark used to sit absolutely
+    at the tile's end, over the word at 320 wide with 200 % text (the defect of AF-1's shots); the word now has the width
+    between the two columns, so the mark never covers it and answering never rewraps it. The look-here ring is as ChoiceCard's.
+  - **Pic-Word Match** keeps one miss: the latest wrong second tile, amber with `replay` and named "Not this one",
+    until the learner's next tap that changes the board (OD-AF7). A second wrong tile takes the amber from the first.
+  - **Story Sequence's filled slot** draws its `check` at `MARK_MIN` (20, was 16), in the flow after the number.
+  - **Story Order's placement** is a result and goes through the announcer: "Right answer: Place 2 of 4: {romanization},
+    {meaning}." with no Hangul (it said the line's Hangul only, through a hidden live line and its own iOS call). The
+    replay line is not a result and is as it was.
+  - **Next** (reader on) is D9's button in the answers column of each game: under the ChoiceCard stack (Listen & Pick,
+    Realia Read, Cloze Pick, Read Pick, Pic-Word Match's last pair of a board). Story Sequence and Story Order have none.
 
 ## Greyscale (spec §3.1 "Greyscale", §3.8)
 

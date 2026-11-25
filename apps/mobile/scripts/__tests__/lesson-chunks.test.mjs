@@ -277,6 +277,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' },
       { name: 'join-space-chunk', marker: 'screen-chunk:join-space' },
       { name: 'placement-chunk', marker: 'screen-chunk:placement' },
+      // [AF] F-A11Y-001 row AF-4b: Realia Read.
+      { name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -360,6 +362,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       ['src/screens/route/route-proposal-chunk.tsx', 'ROUTE_PROPOSAL_CHUNK', 'src/screens/route/route-proposal-entry.tsx'],
       ['src/screens/sync/join-space-chunk.tsx', 'JOIN_SPACE_CHUNK', 'src/screens/sync/join-space-entry.tsx'],
       ['src/screens/placement/placement-chunk.tsx', 'PLACEMENT_CHUNK', 'src/screens/placement/placement-entry.tsx'],
+      ['src/screens/minigames/realia-read-chunk.tsx', 'REALIA_READ_CHUNK', 'src/screens/minigames/realia-read-entry.tsx'],
     ];
     doors.forEach(([chunk, name, entry], i) => {
       const { marker } = SCREEN_CHUNKS[18 + i];
@@ -539,7 +542,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
       'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
-      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement'].map(
+      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement', 'realia-read'].map(
         (name) => `${name}-chunk has no web bundle: the chunk is missing from the build`,
       ),
     ]);
