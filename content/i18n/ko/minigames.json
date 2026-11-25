@@ -15,11 +15,11 @@
       "listenPick.rounds.1.prompt": "걸을 때 쓰는 몸의 부분, 또는 강 위를 건너는 길"
     },
     "minigame:s1-life-q1-check": {
-      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "글자 chieut",
+      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "글자 chieut의 소리",
       "listenPick.rounds.1.prompt": "우유로 만든 고소한 음식"
     },
     "minigame:s1-life-q2-check": {
-      "listenPick.rounds.lp-sym-jamo-siot.prompt": "글자 siot",
+      "listenPick.rounds.lp-sym-jamo-siot.prompt": "글자 siot의 소리",
       "listenPick.rounds.1.prompt": "아빠를 높여 부르는 말"
     },
     "minigame:s1-life-q3-apply": {
@@ -30,7 +30,7 @@
       "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식"
     },
     "minigame:s1-life-q3-check": {
-      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk",
+      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk의 소리",
       "listenPick.rounds.1.prompt": "빨갛고 동그란 열매 채소"
     },
     "minigame:s1-rites-q1-play": {
@@ -172,7 +172,7 @@
       "matchShape.rounds.ms-pair-rieul.diffNote": "{ko:ㄹ}은 가로줄 세 개가 지그재그로 이어져요. {ko:ㄷ}은 가로줄이 두 개이고 지그재그가 없어요."
     },
     "minigame:s1-crafts-q4-check": {
-      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "글자 pieup",
+      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "글자 pieup의 소리",
       "listenPick.rounds.lp-sym-jamo-o.prompt": "글자 o"
     }
   }

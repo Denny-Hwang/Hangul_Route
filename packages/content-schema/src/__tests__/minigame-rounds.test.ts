@@ -20,6 +20,28 @@ function fixture<T>(name: string): T {
 
 const kText = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
 
+describe('Listen & Pick round frame (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)', () => {
+  const base = {
+    id: 'lp:sym:jamo:chieut',
+    prompt: kText('차', 'cha', 'the sound of the letter chieut'),
+    options: [
+      { id: 'jamo:chieut', text: kText('ㅊ', 'ch', 'the letter chieut') },
+      { id: 'jamo:nieun', text: kText('ㄴ', 'n', 'the letter nieun') },
+    ],
+    answerId: 'jamo:chieut',
+  };
+
+  it("accepts frame 'startsWith', and a round without a frame still parses", () => {
+    expect(ListenPickRoundSchema.parse({ ...base, frame: 'startsWith' }).frame).toBe('startsWith');
+    expect(ListenPickRoundSchema.parse(base).frame).toBeUndefined();
+  });
+
+  it('rejects any other frame', () => {
+    expect(ListenPickRoundSchema.safeParse({ ...base, frame: 'endsWith' }).success).toBe(false);
+    expect(ListenPickRoundSchema.safeParse({ ...base, frame: '' }).success).toBe(false);
+  });
+});
+
 describe('minigame kinds', () => {
   it('adds listen-pick and pic-word-match without removing any kind', () => {
     expect(MinigameKindSchema.options).toEqual(

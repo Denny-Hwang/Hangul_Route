@@ -81,7 +81,7 @@ export interface DiscoverItemView {
   spokenRomanization: string;
   /**
    * An initial or a vowel: the line under Hear it (D2). A consonant whose name differs from its sound shows the carrier
-   * line "가 = ㄱ + ㅏ" with its romanization (ga); ㅇ and a vowel show what Hear it says (이응 · ieung, 아 · a).
+   * line "ga = ㄱ + ㅏ" (in Hangul) with its romanization; ㅇ and a vowel show what Hear it says (ieung, a), with it.
    */
   spokenLine?: { ko: string; romanization: string };
   /**
@@ -90,7 +90,7 @@ export interface DiscoverItemView {
    */
   finalLine?: { letter: string; syllable: string };
   /**
-   * A consonant's second button, Hear the name (SF-1): the letter's name (니은), with the name as the line `ko` and
+   * A consonant's second button, Hear the name (SF-1): the letter's name (nieun), with the name as the line `ko` and
    * its romanization (nieun), drawn as content. Only a consonant whose name differs from its sound has one.
    */
   nameButton?: { action: HearAction; ko: string; romanization: string };

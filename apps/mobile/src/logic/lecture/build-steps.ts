@@ -50,8 +50,10 @@ export type QuizPrompt =
    * `speech`: the rate Sound plays it at, as the learner's game (a letter or syllable round is a `sound`).
    * `reply`: the room heard a line and picks the reply that fits it (a word or sentence round whose answer
    * is not the line itself, as the Stage 4 Checks): the question is "Which answer fits?", not "Which one did you hear?".
+   * `frame: 'startsWith'` (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1): a quest Check's consonant round, which plays the sound
+   * of a letter: the question is "Which letter starts this sound?".
    */
-  | { ask: 'listen'; line: SpokenLine; speech: 'sound' | 'word' | 'sentence'; reply?: true }
+  | { ask: 'listen'; line: SpokenLine; speech: 'sound' | 'word' | 'sentence'; reply?: true; frame?: 'startsWith' }
   /** Tap to Respond (LV-S2): the other speaker's line, drawn from the start; the room picks the reply that fits. */
   | { ask: 'reply'; line: SpokenLine }
   /**

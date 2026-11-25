@@ -171,7 +171,19 @@ const SURFACES: readonly Surface[] = [
     said: () =>
       everyScope().flatMap(([ref, scope]) =>
         (scope.listenPick?.rounds ?? [])
-          .filter((round) => round.id.startsWith('lp:sym:'))
+          .filter((round) => round.id.startsWith('lp:sym:') && round.frame !== 'startsWith')
+          .map((round): Said => ({ where: `${ref} ${round.id}`, target: jamoOf(round.answerId), spoken: listenPickSpeech(round).text })),
+      ),
+  },
+  {
+    // AMENDMENTS-DISCOVER-SOUND-FIRST SF-1: the four quest Check consonant rounds ask "Which letter starts this sound?".
+    name: "Listen & Pick consonant rounds framed 'startsWith' (a sound question, `lp.symSound`)",
+    files: ['logic/scope-builders.ts'],
+    type: () => 'sound',
+    said: () =>
+      everyScope().flatMap(([ref, scope]) =>
+        (scope.listenPick?.rounds ?? [])
+          .filter((round) => round.id.startsWith('lp:sym:') && round.frame === 'startsWith')
           .map((round): Said => ({ where: `${ref} ${round.id}`, target: jamoOf(round.answerId), spoken: listenPickSpeech(round).text })),
       ),
   },
@@ -332,13 +344,13 @@ describe('voice surfaces: every surface says what its question asks (AMENDMENTS-
       expect(s.nameKo, s.key).toBeUndefined();
       expect(s.sound, s.key).toBeUndefined();
     }
-    const trace = SURFACES[3]!.said().filter((s) => s.where === 'minigame:s1-nature-q3-apply');
+    const trace = SURFACES.find((s) => s.name.startsWith('Trace Stroke'))!.said().filter((s) => s.where === 'minigame:s1-nature-q3-apply');
     expect(trace.map((s) => s.spoken).sort()).toEqual(['알', '암', '압', '앙']);
     const mieumFinal = jamoOf('jamo:mieum-batchim');
     expect(finalLine(mieumFinal, getMessages('en').learner.audio)).toBe('ㅁ at the bottom: 암 · am');
     expect(loneLetterQuestion(mieumFinal)).toBe('sound');
     // ㅁ and ㅇ in the same trace game: both by name now (M11).
-    const q2 = SURFACES[3]!.said().filter((s) => s.where === 'minigame:s1-letters-q2-apply');
+    const q2 = SURFACES.find((s) => s.name.startsWith('Trace Stroke'))!.said().filter((s) => s.where === 'minigame:s1-letters-q2-apply');
     expect(Object.fromEntries(q2.map((s) => [s.target.char, s.spoken]))).toMatchObject({ ㅁ: '미음', ㅇ: '이응' });
   });
 

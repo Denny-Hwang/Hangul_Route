@@ -2040,6 +2040,36 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
   const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
 
+  it("a Check round framed 'startsWith' keeps its frame on its listen slide; a round with none does not (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)", () => {
+    const check = quest('starts-with', [['check', 'mg:starts-with']], { rewardCardId: undefined });
+    const letter = (id: string, ko: string, romanization: string) => ({ id, text: kt(ko, romanization, `the letter ${id}`) });
+    const scope: MinigameScope = {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'lp:sym:jamo:chieut',
+            frame: 'startsWith',
+            prompt: kt('차', 'cha', 'the sound of the letter chieut'),
+            options: [letter('jamo:chieut', 'ㅊ', 'ch'), letter('jamo:nieun', 'ㄴ', 'n')],
+            answerId: 'jamo:chieut',
+          },
+          {
+            id: 'lp:sym:jamo:eo',
+            prompt: kt('어', 'eo', 'the letter eo'),
+            options: [letter('jamo:eo', 'ㅓ', 'eo'), letter('jamo:a', 'ㅏ', 'a')],
+            answerId: 'jamo:eo',
+          },
+        ],
+      },
+    };
+    const bun = b({ scopeFor: (ref) => (ref === 'mg:starts-with' ? scope : undefined), questById: (id) => (id === check.id ? check : undefined) });
+    const [first, second] = quizzes(run(check.id, {}, VOICE, bun).slides, 'listen');
+    expect(first!.prompt).toMatchObject({ ask: 'listen', speech: 'sound', frame: 'startsWith' });
+    expect(second!.prompt).toMatchObject({ ask: 'listen', speech: 'sound' });
+    expect(second!.prompt).not.toHaveProperty('frame');
+  });
+
   it('Read Pick Meaning (row CM-3A S2): a meaning question on the shown Korean, nothing said before the answer, the pictures as options', () => {
     const read = quest('read-pick', [['check', 'mg:read-pick']], { rewardCardId: undefined });
     const scope: MinigameScope = {
