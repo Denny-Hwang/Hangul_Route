@@ -23,6 +23,7 @@ import {
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
+import { finishOnce } from './save-retry';
 
 /**
  * The Daily Review's side of the stores (F-CURR-002 row CM-14). It reads the learner's memory store and the review
@@ -93,6 +94,11 @@ export interface DailyReviewApi {
   recordRound(world: ReviewWorld, plan: PlannedSession, index: number, answer: RoundAnswer): Promise<void>;
   /** A stopped Daily Review writes no entry; the due items it drew still count toward the day's 20. */
   noteStopped(world: ReviewWorld, plan: PlannedSession, answered: Iterable<number>): void;
+  /**
+   * Waits for every recording, then writes the `daily` entry and the complete event. Once per plan (section 3.5 of
+   * AMENDMENTS-QUEST-LEAVE-RESUME): a second call for a plan whose entry is written answers its result and writes
+   * nothing; a call that rejected before the entry is run again by the next one.
+   */
   finishSession(world: ReviewWorld, plan: PlannedSession, answers: ReadonlyMap<number, RoundAnswer>, recorded: readonly Promise<void>[], now?: Date): Promise<{ finished: FinishedSession; world: ReviewWorld }>;
   gradeTyped(target: string, typed: string): TypedGrade;
 }
@@ -102,6 +108,9 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
   const stoppedDrawn = new Map<string, number>();
   const drawnKey = (profileId: string, day: string): string => `${profileId}|${day}`;
   const drawnOn = (world: ReviewWorld, day: string = world.ctx.today): number => stoppedDrawn.get(drawnKey(world.profileId, day)) ?? 0;
+  // A finish is once per plan (AMENDMENTS-QUEST-LEAVE-RESUME section 3.5): a Try again for a plan whose entry is written
+  // answers its result and writes no second entry or event.
+  const finishPlanOnce = finishOnce<PlannedSession, { finished: FinishedSession; world: ReviewWorld }>();
 
   async function readWorld(profileId: string | null, now: Date = new Date()): Promise<WorldRead> {
     if (profileId === null || !deps.on(profileId)) return { kind: 'off' };
@@ -205,20 +214,22 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       stoppedDrawn.set(key, (stoppedDrawn.get(key) ?? 0) + due);
     },
 
-    async finishSession(world, plan, answers, recorded, now = new Date()) {
-      const { profileId, ctx } = world;
-      await Promise.all(recorded);
-      const result = sessionResult(plan.rounds, answers);
-      // A random id: never a profile id, a name or a time in clear. The 3 or 2 points join with CM-17's points API.
-      deps.recordReview(profileId, dailyEntry({ result, day: ctx.today, now, nonce: Math.floor(deps.random() * 0x7fffffff).toString(36) }));
-      deps.track(dailyReviewCompleteEvent(profileId, result.stars));
-      const read = await readWorld(profileId, now);
-      if (read.kind !== 'ready') {
-        return { finished: { stars: result.stars, stronger: null, after: 'empty' }, world: { ...world, reviews: deps.reviews(profileId) ?? world.reviews } };
-      }
-      const next: ReviewWorld = { ...read.world, ctx: { ...read.world.ctx, today: ctx.today, seed: ctx.seed } };
-      const stronger = strongerCount(ctx.states, next.ctx.states);
-      return { finished: { stars: result.stars, stronger, after: afterSession(next.ctx, dayReviewLog(next.reviews, ctx.today, drawnOn(world, ctx.today))) }, world: next };
+    finishSession(world, plan, answers, recorded, now = new Date()) {
+      return finishPlanOnce(plan, async () => {
+        const { profileId, ctx } = world;
+        await Promise.all(recorded);
+        const result = sessionResult(plan.rounds, answers);
+        // A random id: never a profile id, a name or a time in clear. The 3 or 2 points join with CM-17's points API.
+        deps.recordReview(profileId, dailyEntry({ result, day: ctx.today, now, nonce: Math.floor(deps.random() * 0x7fffffff).toString(36) }));
+        deps.track(dailyReviewCompleteEvent(profileId, result.stars));
+        const read = await readWorld(profileId, now);
+        if (read.kind !== 'ready') {
+          return { finished: { stars: result.stars, stronger: null, after: 'empty' as const }, world: { ...world, reviews: deps.reviews(profileId) ?? world.reviews } };
+        }
+        const next: ReviewWorld = { ...read.world, ctx: { ...read.world.ctx, today: ctx.today, seed: ctx.seed } };
+        const stronger = strongerCount(ctx.states, next.ctx.states);
+        return { finished: { stars: result.stars, stronger, after: afterSession(next.ctx, dayReviewLog(next.reviews, ctx.today, drawnOn(world, ctx.today))) }, world: next };
+      });
     },
 
     gradeTyped,

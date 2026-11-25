@@ -142,6 +142,38 @@ describe('a session, start to end', () => {
     expect(finished).toEqual({ stars: 1, stronger: null, after: 'empty' });
   });
 
+  // AMENDMENTS-QUEST-LEAVE-RESUME section 3.5 (row LR-4), test 27: a finish is once per plan.
+  it('a second finish for the same plan answers the result of the first and writes no second entry, event or read', async () => {
+    const f = fake();
+    const { api, world } = await ready(f);
+    const plan = (await api.startSession(world, 'daily', 'en')) as NonNullable<Awaited<ReturnType<typeof api.startSession>>>;
+    const answers = new Map<number, RoundAnswer>(plan.rounds.map((_r, i) => [i, { correct: true }]));
+    const first = await api.finishSession(world, plan, answers, [], NOW);
+    const second = await api.finishSession(world, plan, new Map(), [], NOW);
+    expect(second).toBe(first);
+    expect(f.reviews).toHaveLength(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
+  it('a finish that rejected (a recording or the entry) writes nothing, and the same plan finishes on the next call', async () => {
+    const f = fake();
+    const { api, world } = await ready(f);
+    const plan = (await api.startSession(world, 'daily', 'en')) as NonNullable<Awaited<ReturnType<typeof api.startSession>>>;
+    const answers = new Map<number, RoundAnswer>(plan.rounds.map((_r, i) => [i, { correct: true }]));
+    await expect(api.finishSession(world, plan, answers, [Promise.reject(new Error('store full'))], NOW)).rejects.toThrow('store full');
+    expect(f.reviews).toEqual([]);
+    const realRecord = f.deps.recordReview;
+    f.deps.recordReview = () => {
+      throw new Error('entry not written');
+    };
+    await expect(api.finishSession(world, plan, answers, [], NOW)).rejects.toThrow('entry not written');
+    f.deps.recordReview = realRecord;
+    const done = await api.finishSession(world, plan, answers, [], NOW);
+    expect(done.finished.stars).toBe(3);
+    expect(f.reviews).toHaveLength(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
   it('nothing due: no session and no review.start', async () => {
     const f = fake({}, 0);
     const { api, world } = await ready(f);

@@ -129,15 +129,61 @@ describe('a Stage Check', () => {
     const f = fake();
     const api = createStageCheckApi(f.deps);
     const w = await world(f);
-    const plan = (await api.startSession(w, 'stage3', 'en'))!;
-    expect(await api.finishSession(w, plan, all(20, 10), [], NOW)).toEqual({ stars: 2, passed: false, missed: true });
-    expect(await api.finishSession(w, plan, all(20, 20), [], new Date('2026-10-23T10:00:00.000Z'))).toEqual({ stars: 3, passed: true, missed: false });
-    expect(await api.finishSession(w, plan, all(20, 5), [], new Date('2026-10-24T10:00:00.000Z'))).toEqual({ stars: 1, passed: false, missed: true });
+    // A retake is a new check: a new plan for each (a plan finishes once, section 3.5 of AMENDMENTS-QUEST-LEAVE-RESUME).
+    const take = async () => (await api.startSession(w, 'stage3', 'en'))!;
+    expect(await api.finishSession(w, await take(), all(20, 10), [], NOW)).toEqual({ stars: 2, passed: false, missed: true });
+    expect(await api.finishSession(w, await take(), all(20, 20), [], new Date('2026-10-23T10:00:00.000Z'))).toEqual({ stars: 3, passed: true, missed: false });
+    expect(await api.finishSession(w, await take(), all(20, 5), [], new Date('2026-10-24T10:00:00.000Z'))).toEqual({ stars: 1, passed: false, missed: true });
     // Many retakes: still one entry for the stage, with the best result.
-    for (let i = 0; i < 30; i += 1) await api.finishSession(w, plan, all(20, 12), [], NOW);
+    for (let i = 0; i < 30; i += 1) await api.finishSession(w, await take(), all(20, 12), [], NOW);
     expect(f.reviews).toHaveLength(1);
     expect(f.reviews[0]).toMatchObject({ id: 'stage-check:stage3', resultStars: 3, generatedAt: '2026-10-23T10:00:00.000Z' });
     expect(f.latches).toHaveLength(1);
+  });
+
+  // AMENDMENTS-QUEST-LEAVE-RESUME section 3.5 (row LR-4), test 27: a finish is once per plan.
+  it('a second finish for the same plan answers the first one\'s result and writes no second entry, latch or event', async () => {
+    const f = fake();
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    const first = await api.finishSession(w, plan, all(20, 20), [], NOW);
+    const second = await api.finishSession(w, plan, all(20, 20), [], NOW);
+    expect(second).toBe(first);
+    expect(f.reviews).toHaveLength(1);
+    expect(f.latches).toHaveLength(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
+  it('a finish that rejected (a recording or the entry) wrote nothing, and the same plan finishes on the next call', async () => {
+    const f = fake();
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    await expect(api.finishSession(w, plan, all(20, 20), [Promise.reject(new Error('store full'))], NOW)).rejects.toThrow('store full');
+    const realRecord = f.deps.recordReview;
+    f.deps.recordReview = () => {
+      throw new Error('entry not written');
+    };
+    await expect(api.finishSession(w, plan, all(20, 20), [], NOW)).rejects.toThrow('entry not written');
+    expect(f.latches).toEqual([]);
+    f.deps.recordReview = realRecord;
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toEqual({ stars: 3, passed: true, missed: false });
+    expect(f.reviews).toHaveLength(1);
+    expect(f.latches).toHaveLength(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
+  it('a finish that answered null (switched off, stage closed) is not kept: the same plan finishes once it can', async () => {
+    let on = true;
+    const f = fake({ on: () => on });
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    on = false;
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toBeNull();
+    on = true;
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toMatchObject({ stars: 3 });
   });
 
   it('two devices converge on one entry: the best stars, then the earliest copy at equal stars, in either order', () => {

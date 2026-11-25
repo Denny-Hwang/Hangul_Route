@@ -8,6 +8,7 @@ import type { RoundAnswer } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
+import { finishOnce } from './save-retry';
 import {
   planStageCheck,
   stageCheckCompleteEvent,
@@ -92,7 +93,11 @@ export interface StageCheckApi {
   begin(world: StageCheckWorld, plan: PlannedStageCheck, hideRomanization: boolean): void;
   /** Records a round's first answer now (the spacing rule). */
   recordRound(world: StageCheckWorld, plan: PlannedStageCheck, index: number, answer: RoundAnswer): Promise<void>;
-  /** The result; null, with nothing written, when the switch went off or the stage closed (F-ENT-003) while it played. */
+  /**
+   * The result; null, with nothing written, when the switch went off or the stage closed (F-ENT-003) while it played.
+   * Once per plan (section 3.5 of AMENDMENTS-QUEST-LEAVE-RESUME): a second call for a plan whose entry is written answers
+   * its result and writes no second entry, latch or event; a call that rejected before the entry is run again.
+   */
   finishSession(
     world: StageCheckWorld,
     plan: PlannedStageCheck,
@@ -107,6 +112,8 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
   /** The offer per learner, stage, day and sound setting, and the in-flight store read per learner and day. */
   const offers = new Map<string, boolean>();
   const worlds = new Map<string, Promise<StageCheckWorldRead>>();
+  // A null (nothing was written) is not kept: the same plan may finish once the switch or the stage is back.
+  const finishPlanOnce = finishOnce<PlannedStageCheck, StageCheckFinished | null>((done) => done !== null);
 
   async function readWorld(profileId: string | null, now: Date = new Date()): Promise<StageCheckWorldRead> {
     if (profileId === null || !deps.on(profileId)) return { kind: 'off' };
@@ -207,18 +214,20 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       return deps.recordAnswers(world.profileId, checkAnswers([round], new Map([[0, answer]])));
     },
 
-    async finishSession(world, plan, answers, recorded, now = new Date()) {
-      const { profileId } = world;
-      await Promise.all(recorded);
-      // The switch and the stage's access, read again: either gone meanwhile writes nothing.
-      if (!deps.on(profileId) || !deps.stageOpen(profileId, plan.stage)) return null;
-      const result = stageCheckResult(plan.rounds, answers);
-      const file = await deps.file(profileId);
-      const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
-      deps.recordReview(profileId, stageCheckEntry({ stage: plan.stage, result, at }));
-      if (result.passed) deps.latch(profileId, plan.stage, at);
-      deps.track(stageCheckCompleteEvent(profileId, plan.stage, result.stars));
-      return { stars: result.stars, passed: result.passed, missed: result.missedItemIds.length > 0 };
+    finishSession(world, plan, answers, recorded, now = new Date()) {
+      return finishPlanOnce(plan, async () => {
+        const { profileId } = world;
+        await Promise.all(recorded);
+        // The switch and the stage's access, read again: either gone meanwhile writes nothing.
+        if (!deps.on(profileId) || !deps.stageOpen(profileId, plan.stage)) return null;
+        const result = stageCheckResult(plan.rounds, answers);
+        const file = await deps.file(profileId);
+        const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
+        deps.recordReview(profileId, stageCheckEntry({ stage: plan.stage, result, at }));
+        if (result.passed) deps.latch(profileId, plan.stage, at);
+        deps.track(stageCheckCompleteEvent(profileId, plan.stage, result.stars));
+        return { stars: result.stars, passed: result.passed, missed: result.missedItemIds.length > 0 };
+      });
     },
 
     gradeTyped,
