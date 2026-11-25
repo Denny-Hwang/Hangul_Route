@@ -273,7 +273,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the release `build:web` (CI=1) of the AF-2 branch measures 4,625,094 B raw / 1,273,518 B gzip (+7,145 B raw, +2,368 B
   // gzip), 3,194 B over the previous line. The line is the measurement plus a 3,806 B margin (one measured raise, 7,000 B
   // over the previous line).
-  startBundleRaw: 4_628_900,
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-4 (the save-failed page; the Daily Review and Stage Check failed phase): the
+  // learner.dailyReview.saveFailed en strings are in the learner dictionary, so they are in the start bundle (the page
+  // itself is in the Daily Review chunk). The previous line (4,628,900 B) was set at AF-2; the merged LR-4 branch, with
+  // AF-3 (main b52ab30da, Card Match on the answer feedback parts) in it, measures 4,629,855 B raw / 1,275,059 B gzip with
+  // the release `build:web` (CI=1), 955 B over that line. The line is the measurement plus a 4,045 B margin (one measured
+  // raise, 5,000 B over the previous line).
+  startBundleRaw: 4_633_900,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
