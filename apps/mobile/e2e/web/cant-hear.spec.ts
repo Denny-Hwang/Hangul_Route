@@ -1,5 +1,6 @@
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { shot } from './shots';
 import { jamoOfSpoken, onboardChild, passDiscover, readStored, seedStored } from './helpers';
 
 /**
@@ -194,4 +195,57 @@ test.describe('Always show the letters (CH-2)', () => {
     await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
     await expect(link(page)).toBeVisible();
   });
+});
+
+// AMENDMENTS-AUDIO-CANT-HEAR row CH-1d (OD-CH3): Discover's guidance-only link, once per page under the first card's buttons.
+test.describe('Discover: the guidance-only link (CH-1d)', () => {
+  for (const size of [
+    { width: 320, height: 568 },
+    { width: 360, height: 740 },
+  ]) {
+    test(`${size.width} x ${size.height}: one link on the page, a sheet with the line and Hear it only, Continue never waits for it`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await koreanVoiceThatPlays(page);
+      await onboardChild(page, { name: 'Dami' });
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await expect(page.getByText(/^Page 1 of \d+$/)).toBeVisible();
+
+      // One link on the page, in the first card, after its Hear it button.
+      await expect(link(page)).toHaveCount(1);
+      await link(page).scrollIntoViewIfNeeded();
+      const box = (await link(page).boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(64 - 0.5);
+      expect(box.x).toBeGreaterThanOrEqual(-0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(size.width + 0.5);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      await shot(page, `ch-1d-discover-${size.width}x${size.height}`);
+
+      // Continue is enabled at once; the link gates nothing.
+      await expect(page.getByTestId('discover-continue')).toBeEnabled();
+
+      await link(page).click();
+      const sheet = page.getByRole('dialog');
+      await expect(sheet.getByTestId('cant-hear-line')).toBeVisible();
+      await expect(sheet.getByRole('button', { name: 'Show the letters' })).toHaveCount(0);
+      await expect(sheet.getByRole('button', { name: 'Hear it' })).toBeVisible();
+      await shot(page, `ch-1d-sheet-${size.width}x${size.height}`);
+
+      // The page says its first letter by itself once it has settled (AU-10, QS-3): wait for that to land, and be quiet,
+      // before counting what Hear it adds.
+      await expect.poll(async () => (await utterances(page)).length, { timeout: 10_000 }).toBeGreaterThanOrEqual(1);
+      await page.waitForTimeout(800);
+      // Hear it plays the page's first sound once, through the card's own Hear it.
+      const before = (await utterances(page)).length;
+      await sheet.getByRole('button', { name: 'Hear it' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect.poll(async () => (await utterances(page)).length).toBe(before + 1);
+      await expect(link(page)).toBeFocused();
+
+      // The next page has its own link.
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByText(/^Page 2 of \d+$/)).toBeVisible();
+      await expect(link(page)).toHaveCount(1);
+    });
+  }
 });
