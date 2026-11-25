@@ -21,11 +21,13 @@ export interface BuildRoundViewProps {
   round: BuildRound;
   onFirst: (answer: RoundAnswer) => void;
   onSolved: () => void;
-  /** Offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): not in the Stage and Cell Check until CH-1e. */
+  /** Offer "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b, CH-1e): the review rounds and the Stage and Cell Check; not the Block Sprint. */
   cantHear?: boolean;
+  /** A Check (the Stage and Cell Check): "Always show the letters" does not reach it (owner decision 2026-11-25). */
+  soundFirst?: boolean;
 }
 
-export function BuildRoundView({ round, onFirst, onSolved, cantHear = false }: BuildRoundViewProps): ReactElement | null {
+export function BuildRoundView({ round, onFirst, onSolved, cantHear = false, soundFirst = false }: BuildRoundViewProps): ReactElement | null {
   const copy = useMessages().learner.minigame.syllableBuild;
   const parts = useMemo(() => partsOf(round.target.ko), [round.target.ko]);
   const tiles = useMemo(() => (parts ? tilesFor(parts, fnv1a32(`${round.question.itemId}|${round.target.ko}`)) : null), [parts, round.question.itemId, round.target.ko]);
@@ -40,6 +42,7 @@ export function BuildRoundView({ round, onFirst, onSolved, cantHear = false }: B
         {...(round.fixed !== undefined ? { fixed: round.fixed } : {})}
         autoplay
         cantHear={cantHear}
+        soundFirst={soundFirst}
         source="daily-review"
         testID="daily-review-build-board"
         onFirst={(correct, hinted) => onFirst({ correct, ...(hinted ? { hinted: true } : {}) })}

@@ -204,6 +204,8 @@ export function CellCheckScreen({ navigation, route }: Props): ReactElement {
               <ui.RoundView
                 round={round}
                 reducedMotion={reducedMotion}
+                cantHear
+                check="cell-check"
                 onFirst={(answer) => onFirst(index, answer)}
                 onSolved={onSolved}
                 grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}

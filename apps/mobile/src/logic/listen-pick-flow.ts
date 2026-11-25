@@ -192,7 +192,8 @@ export function headerView(mode: HostMode, state: ListenPickFlowState, copy: Min
 }
 
 export interface PromptContent {
-  ko: string;
+  /** `undefined`: the romanization only, no Hangul (a Check's asked text, `askedTextIsRomanizationOnly`). */
+  ko: string | undefined;
   romanization: string;
   gloss: string | undefined;
 }
@@ -210,8 +211,19 @@ export interface PromptView {
  * round resolved. The review gives no per-item feedback text, so it never
  * shows the gloss (it still shows the fallback text, so a missing voice does
  * not block the item). `textFallback` is the prompt slot's `view.textShown`.
+ *
+ * `romanizationOnly` (AMENDMENTS-AUDIO-CANT-HEAR CH-1e, section 3.12): the text is the one the learner asked for ("Show the
+ * letters", or the Always switch) in a Check whose options hold or hide their romanization. It then draws the romanization
+ * alone while the question is open, so the round is a decoding item (read the sound, find its spelling) and the Hangul
+ * is not printed above the options. Once the round resolved the answer is known, so the Korean shows as in any text.
  */
-export function promptView(round: ListenPickRound, state: ListenPickFlowState, mode: HostMode, textFallback = false): PromptView {
+export function promptView(
+  round: ListenPickRound,
+  state: ListenPickFlowState,
+  mode: HostMode,
+  textFallback = false,
+  romanizationOnly = false,
+): PromptView {
   const resolved = state.status === 'resolved' || state.status === 'done';
   const showGloss = resolved && mode !== 'review';
   // The prompt slot (F-AUDIO-004 §3.8) shows the text at once when sound is off or there is no Korean voice.
@@ -220,11 +232,24 @@ export function promptView(round: ListenPickRound, state: ListenPickFlowState, m
   return {
     showText,
     content: {
-      ko: round.prompt.ko,
+      ko: romanizationOnly && showText && state.status === 'asking' ? undefined : round.prompt.ko,
       romanization: round.prompt.romanization,
       gloss: showGloss ? round.prompt.en : undefined,
     },
   };
+}
+
+/**
+ * What a Check prints when the learner asks for the letters (AMENDMENTS-AUDIO-CANT-HEAR section 3.12, OD-CH6 (c), owner
+ * decision 2026-11-24). Where the options hold or hide their romanization (the quest Check, AU-8; the Hangul Check with
+ * its "hide the romanization" switch on) the asked text is the romanization only: the learner reads the sound and finds
+ * its spelling, as the Decoding Sprint and Syllable Build already fall back. Where the options show theirs (the Hangul
+ * Check with the switch off) and in every practice host, it is the surface's own text, as with Sound off (AD13).
+ * `textPrompt`: a text prompt round has no sound to ask about (no link), so it is never this case.
+ */
+export function askedTextIsRomanizationOnly(mode: HostMode, romanizationMode: RomanizationMode, textPrompt: boolean): boolean {
+  if (textPrompt) return false;
+  return checkHoldsRomanization(mode, textPrompt) || (mode === 'review' && romanizationMode === 'tap');
 }
 
 type ListenPickOption = ListenPickRound['options'][number];

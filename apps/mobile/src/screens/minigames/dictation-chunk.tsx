@@ -94,7 +94,7 @@ interface ForRound<T> {
 }
 
 /** One hear round's opening, sound and hint (a round that is not `hear` is `see`, untouched). */
-export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 'target'> | undefined, roundIdx: number): HearRound {
+export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 'target'> | undefined, roundIdx: number, soundFirst = false): HearRound {
   const isHear = round !== undefined && typeHangulMode(round) === 'hear';
   const speech = round === undefined ? null : hearSpeech(round);
   // [FU] FU-3: the round's recording, else the say clip of its word, so a device with no Korean voice still hears it.
@@ -102,10 +102,11 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   // Only a hear round reports its fallback: a `see` round beside it in the scope plays nothing and shows no notice.
   // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1c): only a hear round opts in. The slot's `cantHearActive` follows the
   // voice check, which a hear round does not wait for; its `hold` is the round's, so the link's activity is decided here.
-  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip, reportFallback: isHear, cantHear: isHear });
+  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip, reportFallback: isHear, cantHear: isHear, soundFirst });
   const { play: slotPlay, reset: slotReset, showLetters: slotShowLetters } = slot;
   // "Always show the letters" (CH-2): a hear round opens as the see round of the word, as it does with sound off.
-  const alwaysShow = useAudioStore((s) => s.showLetters);
+  // A Check (soundFirst) stays sound-first: the CH-2 switch does not open its hear round as a see round (owner decision 2026-11-25).
+  const alwaysShow = useAudioStore((s) => s.showLetters) && !soundFirst;
   const tts = useAudioStore((s) => s.tts.state);
   const muted = useAudioStore((s) => s.muted);
   const [heldFor, setHeldFor] = useState<number | null>(null);

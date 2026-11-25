@@ -100,7 +100,7 @@ describe('POST /api/telemetry: audio.fallback_shown (CH-4)', () => {
   });
 
   it('every source the app sends today fits', () => {
-    for (const source of ['match-sound', 'discover', 'listen-pick', 'story-check', 'vocab-card', 'vocab-speed', 'type-hangul-hear', 'presenter', 'quest-review']) {
+    for (const source of ['match-sound', 'discover', 'listen-pick', 'story-check', 'vocab-card', 'vocab-speed', 'type-hangul-hear', 'presenter', 'quest-review', 'quest-check', 'hangul-check', 'stage-check', 'cell-check']) {
       expect(keptEventFields('audio.fallback_shown', { source, reason: 'muted' }, 'p1').payload).toEqual({ source, reason: 'muted' });
     }
   });

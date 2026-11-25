@@ -286,4 +286,18 @@ describe('Dictation in a review round, "Can\'t hear it?"', () => {
     expect(reader.log).toEqual(['focus:none', 'focus:dictation-asked-word']);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
   });
+
+  it('in a Stage or Cell Check (check) Always show the letters does not open the hear round as a see round: sound first, with the link', async () => {
+    useAudioStore.setState({ showLetters: true });
+    const r = await render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
+        <TypeRoundView round={ROUND} check="stage-check" cantHear reducedMotion onFirst={() => undefined} onSolved={() => undefined} grade={(target, typed) => (typed === target ? 'right' : 'miss')} />
+      </LayoutProvider>,
+      { createNodeMock: focusNodes(FOCUS) as never },
+    );
+    mounted.push(r);
+    await tick(2000);
+    expect(hasId(r.root, 'cant-hear')).toBe(true);
+    expect(texts(r)).not.toContain('사과');
+  });
 });

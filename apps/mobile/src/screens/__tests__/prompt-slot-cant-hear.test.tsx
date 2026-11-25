@@ -17,8 +17,8 @@ vi.mock('../../platform/audio', async (importOriginal) => ({ ...(await importOri
 
 let slot: PromptSlot | null = null;
 
-function Probe({ cantHear = true, guidanceOnly = false }: { cantHear?: boolean; guidanceOnly?: boolean }): ReactElement {
-  slot = usePromptSlot({ source: 'probe', cantHear, guidanceOnly });
+function Probe({ cantHear = true, guidanceOnly = false, soundFirst = false }: { cantHear?: boolean; guidanceOnly?: boolean; soundFirst?: boolean }): ReactElement {
+  slot = usePromptSlot({ source: 'probe', cantHear, guidanceOnly, soundFirst });
   return <Text testID="probe">{`${String(slot.cantHear)}|${String(slot.cantHearActive)}|${String(slot.settled)}|${String(slot.view.textShown)}`}</Text>;
 }
 
@@ -184,6 +184,64 @@ describe('slot with Always show the letters on (AMENDMENTS-AUDIO-CANT-HEAR CH-2,
     });
     expect(slot!.view.textShown).toBe(true);
     expect(slot!.view.reason).toBeNull();
+    await unmount(r);
+  });
+});
+
+describe('slot.asked and soundFirst (CH-1e: a Check reads `asked`, CH-1f marks by it)', () => {
+  it('asked is true only after Show the letters, stays through a right answer and a play, and reset() clears it', async () => {
+    const r = await render(<Probe />);
+    expect(slot!.asked).toBe(false);
+    await act(async () => {
+      slot!.showLetters();
+    });
+    expect(slot!.asked).toBe(true);
+    await act(async () => {
+      await slot!.play(async () => 'played');
+    });
+    expect(slot!.asked).toBe(true);
+    await act(async () => {
+      slot!.reset();
+    });
+    expect(slot!.asked).toBe(false);
+    await unmount(r);
+  });
+
+  it('Sound off, no Korean voice and a failed play are not an ask', async () => {
+    useAudioStore.setState({ voiceCheckPending: false, muted: true });
+    const muted = await render(<Probe />);
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(muted);
+
+    useAudioStore.setState({ muted: false, tts: READY, lastFailure: { reason: 'error', at: 1 } });
+    const failed = await render(<Probe />);
+    await act(async () => {
+      await slot!.play(async () => 'unavailable');
+    });
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(failed);
+  });
+
+  it('Always show the letters is not an ask', async () => {
+    useAudioStore.setState({ showLetters: true, voiceCheckPending: false, tts: READY });
+    const on = await render(<Probe />);
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(false);
+    await unmount(on);
+  });
+
+  it('a Check (soundFirst) is not reached by Always show the letters: sound only, the link there, and Show the letters still asks', async () => {
+    useAudioStore.setState({ showLetters: true, voiceCheckPending: false, tts: READY });
+    const r = await render(<Probe soundFirst />);
+    expect(shown(r)).toBe('true|true|true|false');
+    expect(slot!.asked).toBe(false);
+    await act(async () => {
+      slot!.showLetters();
+    });
+    expect(slot!.view.textShown).toBe(true);
+    expect(slot!.asked).toBe(true);
     await unmount(r);
   });
 });

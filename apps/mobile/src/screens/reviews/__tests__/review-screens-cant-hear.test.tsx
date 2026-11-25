@@ -9,9 +9,10 @@ import { resetRemoteConfigForTests } from '../../../store/remote-config-store';
 import { byTestId, cleanup, press, render, resetPlatform } from '../../../test-support/render';
 
 /**
- * The call sites of "Can't hear it?" on `RoundView` (AMENDMENTS-AUDIO-CANT-HEAR row CH-1b, review of #1099): the Daily
- * Review and Keep going (`DailyReviewScreen`) pass `cantHear`; the Stage Check and the Cell Check do not until CH-1e.
- * `RoundView` is a stub that shows the prop it got, so deleting or adding the prop at a screen turns a test red
+ * The call sites of "Can't hear it?" on `RoundView` (AMENDMENTS-AUDIO-CANT-HEAR rows CH-1b and CH-1e): the Daily Review
+ * and Keep going (`DailyReviewScreen`), the Cell Check and the Stage Check pass `cantHear`; only the Stage Check passes
+ * `hidesRomanization`, and only while its "hide the romanization" switch is on (the asked text is then the romanization
+ * only, section 3.12). `RoundView` is a stub that shows the props it got, so deleting or adding a prop at a screen turns a test red
  * (`ReviewRounds-cant-hear.test.tsx` covers what the prop does). This week in Korea is `week-drop-ui.test.tsx`.
  */
 
@@ -38,7 +39,8 @@ vi.mock('../../stage-check/use-stage-offer', async (importOriginal) => ({ ...(aw
 vi.mock('../ReviewRounds', async () => {
   const { createElement } = await import('react');
   return {
-    RoundView: ({ cantHear }: { cantHear?: boolean }) => createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true }, 'round'),
+    RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
+      createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
   };
 });
 vi.mock('../DailyReviewRoute', async () => {
@@ -47,7 +49,8 @@ vi.mock('../DailyReviewRoute', async () => {
     dailyReviewChunk: async () => ({
       TopRow: () => createElement('div', { 'data-testid': 'top-row' }),
       DisplayHeadline: ({ children }: { children?: unknown }) => createElement('div', null, children as never),
-      RoundView: ({ cantHear }: { cantHear?: boolean }) => createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true }, 'round'),
+      RoundView: ({ cantHear, hidesRomanization, check }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string }) =>
+        createElement('div', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' }, 'round'),
     }),
   };
 });
@@ -115,6 +118,8 @@ async function draw(element: React.ReactElement): Promise<ReactTestRenderer> {
   return r;
 }
 const cantHearOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-cant-hear'];
+const hidesOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-hides'];
+const checkOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-check'];
 
 beforeEach(() => {
   endVoiceCheckHold();
@@ -138,19 +143,33 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     expect(cantHearOf(r)).toBe(true);
   });
 
-  it('the Cell Check does not, until CH-1e', async () => {
+  it('the Cell Check passes it (CH-1e), and no hide switch: its options show their romanization', async () => {
     const r = await draw(<CellCheckScreen navigation={nav()} route={{ key: 'CellCheck', name: 'CellCheck', params: { cellId: 'episode:stage2-letters', mode: 'check' } } as never} />);
     await press(byTestId(r.root, 'cell-check-go').find((n) => typeof n.props.onClick === 'function')!);
     await settle();
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
-    expect(cantHearOf(r)).toBe(false);
+    expect(cantHearOf(r)).toBe(true);
+    expect(hidesOf(r)).toBe(false);
+    expect(checkOf(r)).toBe('cell-check');
   });
 
-  it('the Stage Check does not, until CH-1e', async () => {
+  it('the Stage Check passes it (CH-1e); the hide switch off gives the surface\'s own text', async () => {
     const r = await draw(<StageCheckScreen navigation={nav()} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />);
     await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onClick === 'function')!);
     await settle();
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
-    expect(cantHearOf(r)).toBe(false);
+    expect(cantHearOf(r)).toBe(true);
+    expect(hidesOf(r)).toBe(false);
+    expect(checkOf(r)).toBe('stage-check');
+  });
+
+  it('the Stage Check with its "hide the romanization" switch on passes hidesRomanization, so the asked text is the romanization only', async () => {
+    const r = await draw(<StageCheckScreen navigation={nav()} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />);
+    await press(r.root.findAll((n) => n.props.role === 'switch')[0]!);
+    await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onClick === 'function')!);
+    await settle();
+    expect(cantHearOf(r)).toBe(true);
+    expect(hidesOf(r)).toBe(true);
+    expect(checkOf(r)).toBe('stage-check');
   });
 });

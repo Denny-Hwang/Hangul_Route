@@ -99,10 +99,12 @@ export interface SyllableBuildBoardProps {
   source: string;
   /**
    * Offer "Can't hear it?" next to the speaker (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): the quest step and the review round
-   * do; the Block Sprint (a clocked drill, OD-CH4) and the Stage and Cell Check (CH-1e) do not. Show the letters shows
+   * do, and so do the Stage and Cell Check (CH-1e); the Block Sprint (a clocked drill, OD-CH4) does not. Show the letters shows
    * the block's romanization, never the block.
    */
   cantHear?: boolean;
+  /** A Check: "Always show the letters" does not apply (owner decision 2026-11-25). */
+  soundFirst?: boolean;
   /** The quest step's announcement hook, when its heading is the round's header node (§3.4); else the board has its own. */
   speech?: AnswerAnnouncement;
   testID?: string;
@@ -139,7 +141,7 @@ function targetSpeech(target: SyllableBuildBoardProps['target'], source: string)
   return { text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source };
 }
 
-export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, cantHear = false, speech, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
+export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, cantHear = false, soundFirst = false, speech, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.syllableBuild;
   const a11y = m.a11y.minigame.syllableBuild;
@@ -149,7 +151,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const parts = useMemo(() => partsOf(target.ko), [target.ko]);
 
   // [FU] FU-3: the slot asks about what plays (the target's recording, else the say clip of its spoken text).
-  const slot = usePromptSlot({ source, hasClip: hasClipFor(targetSpeech(target, source)), cantHear });
+  const slot = usePromptSlot({ source, hasClip: hasClipFor(targetSpeech(target, source)), cantHear, soundFirst });
   const speakerRef = useRef<View | null>(null);
   const { play: slotPlay } = slot;
   const viewRef = useRef(slot.view);
