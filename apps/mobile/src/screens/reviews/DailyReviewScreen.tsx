@@ -26,12 +26,15 @@ import { themeGlyph } from '../../logic/journey';
 import { memoryChunk } from '../../logic/memory/boot';
 import type { DailyReviewApi, ReviewWorld } from '../../logic/reviews/daily-review-api';
 import type { AfterSession, DailySessionKind, PlannedSession, RoundAnswer } from '../../logic/reviews/daily-review';
+import { keepRecording, recordAgain } from '../../logic/reviews/save-retry';
 import { YUT_REVIEW_FLAG, sessionSeed } from '../../logic/reviews/yut-board';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { RoundView } from './ReviewRounds';
+import { SaveFailedPage } from './SaveFailedPage';
+import { SaveLaterLine } from './SaveLaterLine';
 import { YUT_CLOCK_IDLE, YutReviewSkin, yutClockAfter, yutResultHold, type YutClock } from './YutBoardSkin';
 import { useClipPacks } from '../../platform/audio-assets-store';
 
@@ -45,6 +48,10 @@ import { useClipPacks } from '../../platform/audio-assets-store';
  * refreshed today: nothing to ask, the flags off, or a store that cannot be read), E (Stop for now?, over a round) and
  * Keep going's done-today page (the collected card tapped). Never a percentage, an "n of m", a running count of
  * misses or a timer. Behind `dailyReview` with `memoryRecord`; off, a deep link shows D.
+ *
+ * A finish that could not be saved (AMENDMENTS-QUEST-LEAVE-RESUME section 3.5, row LR-4) is the `failed` phase, not D:
+ * `SaveFailedPage` says so and Try again finishes the same plan on the same answers, recording again only the rounds
+ * whose recording rejected (kept by round index). A back on it asks first, over a true line.
  *
  * Yut Review (row CM-39, `game.yut-review`, built-in pct 0): with the switch on when a session starts, the rounds sit
  * under the yut board band (`YutBoardSkin.tsx`), and each round that ends throws the sticks, whatever its answer. The
@@ -74,6 +81,8 @@ type Phase =
   | { kind: 'nothing' }
   | { kind: 'done-today'; offer: AfterSession }
   | { kind: 'playing'; plan: PlannedSession; index: number }
+  // The last round has ended and the session could not be written: the plan and the answers are kept (in refs).
+  | { kind: 'failed'; plan: PlannedSession }
   | { kind: 'result'; session: DailySessionKind; stars: 1 | 2 | 3; stronger: number | null; after: AfterSession };
 
 /** The dots row: fill-only, the same for right and wrong; it names the round's position and nothing else. */
@@ -170,8 +179,13 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const world = useRef<ReviewWorld | null>(null);
   const api = useRef<DailyReviewApi | null>(null);
   const answers = useRef(new Map<number, RoundAnswer>());
-  const recorded = useRef<Promise<void>[]>([]);
+  // Each round's recording by round index, so Try again records again only the rounds whose recording rejected.
+  const recorded = useRef(new Map<number, Promise<void>>());
   const allowLeave = useRef(false);
+  // Stop was chosen: a Try again still running finishes nothing.
+  const stopped = useRef(false);
+  // A Try again's finish is running: Stop does not count the answered items again, the entry that finish writes counts them.
+  const retrying = useRef(false);
   // A double tap never starts two sessions (two review.start events) or finishes one twice (two `daily` entries).
   const starting = useRef(false);
   const finishing = useRef(false);
@@ -193,7 +207,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
       try {
         const plan = await a.startSession(w, kind, locale);
         answers.current = new Map();
-        recorded.current = [];
+        recorded.current = new Map();
         if (plan !== null && yutOnRef.current) setYut({ seed: sessionSeed([plan.kind, ...plan.rounds.map((r) => r.question.itemId)]), finished: 0 });
         setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
       } catch {
@@ -236,7 +250,8 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
-        if (allowLeave.current || phaseRef.current.kind !== 'playing') return;
+        const kind = phaseRef.current.kind;
+        if (allowLeave.current || (kind !== 'playing' && kind !== 'failed')) return;
         e.preventDefault();
         setLeaving(true);
       }),
@@ -247,7 +262,9 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     const p = phaseRef.current;
     const w = world.current;
     // A stopped Daily Review keeps its answers (recorded as given) and writes no entry; its due items still count toward the day's 20.
-    if (p.kind === 'playing' && w !== null) api.current?.noteStopped(w, p.plan, answers.current.keys());
+    // The same for one whose finish could not be saved: it is stopped, and a Try again that is running writes nothing more.
+    if ((p.kind === 'playing' || p.kind === 'failed') && w !== null && !retrying.current) api.current?.noteStopped(w, p.plan, answers.current.keys());
+    stopped.current = true;
     setLeaving(false);
     allowLeave.current = true;
     if (navigation.canGoBack()) navigation.goBack();
@@ -261,7 +278,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     if (p.kind !== 'playing' || w === null || a === null || answers.current.has(index)) return;
     answers.current.set(index, answer);
     setAnswered(answers.current.size);
-    recorded.current.push(a.recordRound(w, p.plan, index, answer));
+    keepRecording(recorded.current, index, a.recordRound(w, p.plan, index, answer));
   };
 
   const onSolved = (): void => {
@@ -285,7 +302,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     setPhase(y === null ? { kind: 'loading' } : { kind: 'loading', finishing: p.plan.rounds.length });
     // With the yut board on, the plain result waits until the last item's throw has shown (row CM-39); off, at once.
     const hold = y === null ? 0 : yutResultHold(yutClock.current, Date.now(), y.seed, p.plan.rounds.length, reducedMotion);
-    const finish = a.finishSession(w, p.plan, answers.current, recorded.current);
+    const finish = a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]);
     const wait = (): Promise<void> =>
       new Promise<void>((resolve) => {
         holdTimer.current = setTimeout(resolve, hold);
@@ -296,13 +313,39 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
           world.current = next;
           setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
         },
-        // The session could not be written (a store that rejects): as a store that cannot be read, the calm "Nothing is
-        // waiting right now" page with its way home, never a loading frame with no way on (the Stage Check does the same).
-        () => setPhase({ kind: 'nothing' }),
+        // The session could not be written (a recording or the entry): the failed page, which says so and tries again
+        // on the same answers (section 3.5). Never "All refreshed today": that line is untrue here.
+        () => setPhase({ kind: 'failed', plan: p.plan }),
       )
       .finally(() => {
         finishing.current = false;
       });
+  };
+
+  // Try again (section 3.5): records again the rounds whose recording rejected, then finishes the same plan with the
+  // same answers (the finish is once per plan, so a second try never writes a second entry). The yut hold is not waited
+  // for again. Resolves whether the result is now showing.
+  const tryAgain = async (): Promise<boolean> => {
+    const p = phaseRef.current;
+    const w = world.current;
+    const a = api.current;
+    if (p.kind !== 'failed' || w === null || a === null) return false;
+    try {
+      await recordAgain(recorded.current, (index) => a.recordRound(w, p.plan, index, answers.current.get(index) as RoundAnswer));
+      // Stop was chosen while the recordings were being written: nothing more is written.
+      if (stopped.current) return true;
+      retrying.current = true;
+      const { finished, world: next } = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]).finally(() => {
+        retrying.current = false;
+      });
+      if (stopped.current) return true;
+      world.current = next;
+      setLeaving(false);
+      setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   // The [x]: over a round it asks "Stop for now?"; on the loading frame it leaves, home when there is no screen behind.
@@ -316,7 +359,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     <ConfirmSheet
       visible={leaving}
       title={copy.leave.title}
-      message={copy.leave.body}
+      message={phase.kind === 'failed' ? copy.saveFailed.leaveBody : copy.leave.body}
       cancelLabel={copy.leave.stay.cta}
       confirmLabel={copy.leave.stop.cta}
       onCancel={() => setLeaving(false)}
@@ -374,6 +417,15 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     );
   }
 
+  if (phase.kind === 'failed') {
+    return (
+      <>
+        <SaveFailedPage onTryAgain={tryAgain} testID="daily-review-save-failed" />
+        {leaveSheet}
+      </>
+    );
+  }
+
   if (phase.kind === 'result') {
     const stronger = phase.stronger;
     const offer = phase.after === 'offer';
@@ -383,6 +435,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
           <Hoya pose={phase.stars === 1 ? 'thinking' : 'cheering'} size={END_HOYA} accessibilityLabel={m.a11y.hoya(phase.stars === 1 ? 'thinking' : 'cheering')} />
           <DisplayHeadline testID="daily-review-headline">{copy.result.headline[headlineKey(phase.stars)]}</DisplayHeadline>
           <StarRow stars={phase.stars} size={spacing.xxxl} accessibilityLabel={m.a11y.dailyReview.stars(phase.stars)} testID="daily-review-stars" />
+          <SaveLaterLine testID="daily-review-save-later" />
           {stronger === null ? null : stronger > 0 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="daily-review-stronger">
               <Icon name="check" size={spacing.lg} color={colors.feedback.success} />

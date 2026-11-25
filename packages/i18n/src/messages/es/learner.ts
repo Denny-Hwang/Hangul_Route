@@ -2114,6 +2114,12 @@ export const learner = {
       stay: { cta: 'Seguir' },
       stop: { cta: 'Parar' },
     },
+    saveFailed: {
+      title: 'Aún no pudimos guardar esto.',
+      body: 'Tus respuestas siguen aquí.',
+      leaveBody: 'Aún no se ha guardado. Tus estrellas y tarjetas se quedan.',
+      stillStuck: 'Sigue sin guardarse. Puedes parar por ahora e intentarlo en otro momento.',
+    },
   },
   keepGoing: {
     offer: '¿Quieres hacer unas más?',

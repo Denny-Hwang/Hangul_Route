@@ -14,3 +14,5 @@ export { DailyReviewScreen } from './DailyReviewScreen';
 // time through `dailyReviewChunk()` of the route, so no module sits in two chunks.
 export { DisplayHeadline, TopRow } from './DailyReviewScreen';
 export { RoundView } from './ReviewRounds';
+// Row LR-4: the Stage Check's chunk draws the same save-failed page (AMENDMENTS-QUEST-LEAVE-RESUME section 3.5).
+export { SaveFailedPage } from './SaveFailedPage';
