@@ -87,7 +87,7 @@ describe('My Story keeps what is written in the step (test P-1, OD-13)', () => {
     const finished = read('logic/minigame-finished.ts');
     expect(finished).toMatch(/payload: \{ kind, questId, stepIndex \}/);
     const controller = read('logic/audio/controller.ts');
-    expect(controller).toMatch(/name: 'audio\.fallback_shown'; payload: \{ source: string; reason: FallbackReason \}/);
+    expect(controller).toMatch(/name: 'audio\.fallback_shown'; payload: \{ source: string; reason: FallbackShownReason \}/);
     expect(controller).toMatch(/deps\.emit\(\{ name: 'audio\.fallback_shown', payload: \{ source, reason \} \}\)/);
   });
 });

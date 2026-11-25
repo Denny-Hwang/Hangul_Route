@@ -227,6 +227,8 @@ for (const profile of [
       await page.getByRole('button', { name: 'Play minigame' }).click();
       const korean = (romanization: string): Locator => page.getByLabel(`Korean word ${romanization}`, { exact: true });
       const meaning = (gloss: string): Locator => page.getByLabel(`English meaning ${gloss}`, { exact: true });
+      // A matched card is named by its state first (F-A11Y-001 AF-3), and is inactive, never disabled.
+      const matchedKorean = (romanization: string): Locator => page.getByLabel(`Right answer: Korean word ${romanization}`, { exact: true });
       await expect(korean('geune')).toBeVisible();
       await page.waitForTimeout(AFTER_LOCK);
       const cards = await column(page, 'card-match-ko-');
@@ -309,7 +311,7 @@ for (const profile of [
       await expect(korean('geune')).not.toHaveAttribute('aria-selected', 'true');
       // The pick still makes its pair with a graze on its meaning.
       await touch.graze(centre(await inView(meaning('sand'))), 0, -16);
-      await expect(korean('morae')).toHaveAttribute('aria-disabled', 'true');
+      await expect(matchedKorean('morae')).toBeVisible();
 
       // Grazes on the meanings board make their pairs too: 24 px across, then a 900 ms hold.
       for (const [ro, gloss, g] of [
@@ -321,7 +323,7 @@ for (const profile of [
         await expect(korean(ro)).toHaveAttribute('aria-selected', 'true');
         await page.waitForTimeout(150);
         await touch.graze(centre(await inView(meaning(gloss))), g.dx, g.dy, { steps: 4, holdMs: 'holdMs' in g ? g.holdMs : 0 });
-        await expect(korean(ro), `${gloss}: graze ${g.dx},${g.dy}`).toHaveAttribute('aria-disabled', 'true');
+        await expect(matchedKorean(ro), `${gloss}: graze ${g.dx},${g.dy}`).toBeVisible();
       }
     });
   });
