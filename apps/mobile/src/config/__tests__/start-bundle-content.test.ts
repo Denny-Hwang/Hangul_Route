@@ -13,6 +13,20 @@ import { REPO, startGraph } from '../../test-support/start-graph';
 const graph = startGraph();
 const reached = (file: string): string | undefined => graph.files.get(file)?.join(' -> ');
 
+const APP = join(REPO, 'apps', 'mobile');
+/** Every source of the web build, start bundle or chunk: `.ts`/`.tsx` under `src` and the app entries, tests and `.native` files aside. */
+function webSources(): string[] {
+  const sources = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) return name === '__tests__' || name === 'node_modules' ? [] : sources(path);
+      return /\.tsx?$/.test(name) && !/\.(test|native)\.tsx?$/.test(name) ? [path] : [];
+    });
+  return [...sources(join(APP, 'src')), ...['index.ts', 'App.tsx', 'PresenterApp.tsx', 'BrowseApp.tsx'].map((f) => join(APP, f))];
+}
+/** The code of a file without its comments. */
+const codeOf = (file: string): string => readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
   it('walks the whole start bundle: the app, its navigation and its packages', () => {
     expect(graph.files.has('apps/mobile/App.tsx')).toBe(true);
@@ -74,21 +88,61 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     expect(graph.files.has('packages/i18n/src/messages/en/index.web.ts')).toBe(true);
     expect(graph.files.has('packages/i18n/src/messages/en/learner.ts')).toBe(true);
     // The twin's `landing` is empty, so no source of the web build, start bundle or chunk, may read it (comments aside).
-    const APP = join(REPO, 'apps', 'mobile');
-    const sources = (dir: string): string[] =>
-      readdirSync(dir).flatMap((name) => {
-        const path = join(dir, name);
-        if (statSync(path).isDirectory()) return name === '__tests__' || name === 'node_modules' ? [] : sources(path);
-        return /\.tsx?$/.test(name) && !/\.(test|native)\.tsx?$/.test(name) ? [path] : [];
-      });
-    const files = [...sources(join(APP, 'src')), ...['index.ts', 'App.tsx', 'PresenterApp.tsx', 'BrowseApp.tsx'].map((f) => join(APP, f))];
+    const files = webSources();
     expect(files.length).toBeGreaterThan(1000);
-    const readers = files
-      .filter((file) => {
-        const code = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-        return /\.landing\b|\[['"]landing['"]\]/.test(code);
-      })
-      .map((file) => relative(APP, file));
+    const readers = files.filter((file) => /\.landing\b|\[['"]landing['"]\]/.test(codeOf(file))).map((file) => relative(APP, file));
     expect(readers).toEqual([]);
+  });
+});
+
+/** `console.log` and its siblings: the global, not the dictionary namespace. */
+const CONSOLE_METHODS = new Set(['log', 'warn', 'error', 'info', 'debug', 'trace', 'table', 'group', 'groupEnd', 'time', 'timeEnd', 'assert', 'dir', 'count']);
+type Tree = { readonly [key: string]: unknown };
+const isTree = (v: unknown): v is Tree => typeof v === 'object' && v !== null;
+const at = (tree: unknown, path: string): unknown => path.split('.').reduce<unknown>((node, key) => (isTree(node) ? node[key] : undefined), tree);
+const leaves = (tree: Tree, prefix = ''): string[] =>
+  Object.entries(tree).flatMap(([key, value]) => (isTree(value) ? leaves(value, `${prefix}${key}.`) : [`${prefix}${key}`]));
+
+/**
+ * AMENDMENTS-START-BUNDLE-2026-11 SB-1: the web twin's `console` (`messages/en/console-app.ts`) holds only what a web
+ * source reads. The reads are `.console.<path>` in the sources' code; a path covers its whole subtree.
+ */
+describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2026-11 SB-1)', () => {
+  const reads = new Map<string, string[]>();
+  const wholeReaders: string[] = [];
+  for (const file of webSources()) {
+    const code = codeOf(file);
+    // `Messages['console']['billing']` is a type (plan-lines.ts); a value index on a lower-case name is a read.
+    if (/(?<!\b[A-Z][\w$]*)\[['"]console['"]\]/.test(code)) wholeReaders.push(relative(APP, file));
+    for (const match of code.matchAll(/\.console((?:\.[A-Za-z_$][\w$]*)*)(?![\w$])/g)) {
+      const path = (match[1] ?? '').slice(1);
+      if (CONSOLE_METHODS.has(path.split('.')[0] ?? '')) continue;
+      if (path === '') wholeReaders.push(relative(APP, file));
+      else reads.set(path, [...(reads.get(path) ?? []), relative(APP, file)]);
+    }
+  }
+  const twinConsole = async (): Promise<Tree> =>
+    (await import('../../../../../packages/i18n/src/messages/en/index.web')).en.console as unknown as Tree;
+
+  it('no web source reads the namespace whole, and the web build reads some of it', () => {
+    expect(wholeReaders).toEqual([]);
+    expect([...reads.keys()]).toEqual(expect.arrayContaining(['transfer.consent', 'confirm.remove', 'placement.startingSpot']));
+  });
+
+  it('every console path a web source reads is in the twin', async () => {
+    const twin = await twinConsole();
+    const missing = [...reads].filter(([path]) => at(twin, path) === undefined).map(([path, files]) => `${path} (${files.join(', ')})`);
+    expect(missing).toEqual([]);
+  });
+
+  it('the twin holds nothing a web source does not read', async () => {
+    const read = [...reads.keys()];
+    const unread = leaves(await twinConsole()).filter((leaf) => !read.some((path) => leaf === path || leaf.startsWith(`${path}.`)));
+    expect(unread).toEqual([]);
+  });
+
+  it('console.ts is not in the start bundle; the twin\'s console-app.ts is', () => {
+    expect(reached('packages/i18n/src/messages/en/console.ts')).toBeUndefined();
+    expect(graph.files.has('packages/i18n/src/messages/en/console-app.ts')).toBe(true);
   });
 });

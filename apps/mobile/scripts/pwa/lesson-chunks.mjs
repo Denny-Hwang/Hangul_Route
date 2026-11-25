@@ -293,6 +293,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (CI=1) measured 4,641,856 B raw / 1,278,538 B gzip (+7,348 B raw), 3,356 B over the line. Realia Read, played from Stage 4 on, then became
   // a chunk of its own (`realia-read-chunk`, a screen chunk of 8,738 B raw), and the build measures 4,634,003 B raw / 1,276,409 B gzip
   // (505 B raw under main, 4,497 B under the line). The line is unchanged: no raise.
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-1 (the web English twin's `console` is `console-app.ts`, the six subtrees a web
+  // source reads, so `en/console.ts` leaves the start bundle): on main 5f453304d (4,634,508 B raw / 1,276,063 B gzip) the
+  // release `build:web` (CI=1) measures 4,559,730 B raw / 1,253,422 B gzip (-74,778 B raw, -22,641 B gzip). The line stays
+  // until SB-3 lowers it after SB-2.
   startBundleRaw: 4_638_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
