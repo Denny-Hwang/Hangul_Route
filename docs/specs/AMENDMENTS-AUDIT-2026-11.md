@@ -4,6 +4,8 @@ Status: ready; rows AU-1 to AU-17 done (stage 1 in #1034, stage 2 in the PR that
 
 > **Amended 2026-11-25 by `AMENDMENTS-QUEST-LEAVE-RESUME.md` [LR]** (work order WO-06 and WO-07 of the 2026-11 review: a game is never left by accident; a quest or a long check goes on where it stopped; a finish that was not saved never looks done) (AU-12, "No new screen and no new string"): Home now says that the hero's lesson goes on: the button reads Continue, a caption says "You can go on from step 3 of 5." and a quiet Start again asks first, then opens the first step; the saved run is read through `durableRead`, and a failed read means no resume (row LR-2, #1089). Everything else in AU-12 stands: Leave still clears the saved run, and the quest's own leave line, "Stars from this try will not be saved.", is unchanged (OD-LR1 (c), owner decision 2026-11-24); only the comment at `QuestPlayerView.tsx:132` changed, to name the device copy (row LR-5).
 
+> **Amended 2026-11-25 by `AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF]** (work order WO-13 of the 2026-11 review; owner decision 2026-11-22, OD-R2) (AU-10): the sound a Look and learn page plays by itself is its first letter's **Hear it**, and on a consonant card Hear it now plays the letter's sound (가), not its name (기역); the name moved to a second button, **Hear the name**. AU-10's conditions and QS-3's 350 ms wait do not change. Row SF-1.
+
 # Amendment: fixes from the 2026-11-15 readiness audit
 
 > **Owner decision of 2026-11-15 (in chat, translated):** "Do stage 1 and stage 2 of the code-fix list and merge."
@@ -68,6 +70,7 @@ Stars are computed over played rounds only, so one perfect game and two skips gi
 **AU-10 The first sound plays by itself on a letter page (audit UX-7).**
 On each "Look and learn" page, the first letter's sound plays once when the page opens (after the tap that opened it), unless sound is off or reduced by the existing settings. Continue is never held back.
 **[QS]** `AMENDMENTS-QUEST-SOUND-BACK.md` QS-3: the sound waits 350 ms for the page; a tap on a speaker during the wait plays at once and drops it.
+**[SF]** `AMENDMENTS-DISCOVER-SOUND-FIRST.md` §3.3: "the first letter's sound" is literally its sound now (가 for ㄱ; ㅇ, vowels and finals as before).
 
 **AU-11 Two tabs do not write over each other's progress (audit FUNC-1).**
 A progress write merges with the stored record inside one storage transaction (the same union the sync merge uses), and other tabs re-read after a write (a broadcast channel, as the profile list does). Stars, cards and completions earned in either tab survive.
