@@ -306,13 +306,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // files / 10,998,783 B). The line comes down to the measurement plus a 4,131 B margin (-100,500 B).
   // [SB] SB-3 merged with AF-4b (main 454adefa4, with SB-1 #1107 and SB-2 #1109): the release `build:web` (CI=1) measures
   // 4,533,364 B raw / 1,245,521 B gzip, 4,636 B under the line. The line is unchanged.
-  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-3a (the Hangul Check goes on after an interruption, 2026-11-24): the Hangul Check's
-  // screen is in the start bundle (it has no chunk of its own), so its resume page, the stored-check rules (`saved-check.ts`),
-  // the per-learner store (`check-run-saved.ts`, which `profile-keys.ts` loads for the removal sweep) and the flow's two new
-  // phases come with it. On top of SB-3 merged with AF-4b (4,533,364 B raw / 1,245,521 B gzip) the release `build:web` (CI=1)
-  // measures 4,540,267 B raw / 1,247,579 B gzip (+6,903 B raw, +2,058 B gzip), 2,267 B over the line. The line is the
-  // measurement plus a 3,933 B margin (one measured raise, 6,200 B over the previous line).
-  startBundleRaw: 4_544_200,
+  startBundleRaw: 4_538_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
