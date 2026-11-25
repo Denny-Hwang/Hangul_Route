@@ -18,6 +18,7 @@ import { useMasteryMoment } from '../../store/mastery-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestAccess } from '../../store/tier-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
+import { SaveLaterLine } from '../reviews/SaveLaterLine';
 import { OopsScreen } from '../system/OopsScreen';
 import { useActiveRouteNext } from '../use-route-next';
 import { stageJumpRuleNow } from './StageJumpLine';
@@ -281,6 +282,8 @@ export function CellCheckScreen({ navigation, route }: Props): ReactElement {
           <Hoya pose={pose} size={END_HOYA} accessibilityLabel={m.a11y.hoya(pose)} />
           <ui.DisplayHeadline testID="cell-check-headline">{headline}</ui.DisplayHeadline>
           <StarRow stars={phase.stars} size={spacing.xxxl} accessibilityLabel={m.a11y.dailyReview.stars(phase.stars)} testID="cell-check-stars" />
+          {/* Row LR-4 (OD-LR8): one quiet line while the progress write is waiting, as Results shows it. */}
+          <SaveLaterLine testID="cell-check-save-later" />
           {!phase.passed && !testOut ? (
             <View style={{ alignItems: 'center' }} testID="cell-check-tricky">
               <Body align="center">{copy.tricky}</Body>

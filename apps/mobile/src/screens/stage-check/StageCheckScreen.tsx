@@ -10,6 +10,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { themeGlyph } from '../../logic/journey';
 import { memoryChunk } from '../../logic/memory/boot';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
+import { keepRecording, recordAgain } from '../../logic/reviews/save-retry';
 import type { PlannedStageCheck } from '../../logic/reviews/stage-check';
 import type { StageCheckApi, StageCheckWorld } from '../../logic/reviews/stage-check-api';
 import { PRIZE_STAGES } from '../../logic/stage1/stage-complete';
@@ -19,6 +20,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
 import { AttemptSwitch } from '../reviews/StageReviewScreen';
+import { SaveLaterLine } from '../reviews/SaveLaterLine';
 import { useStageOffer } from './use-stage-offer';
 
 /**
@@ -30,7 +32,9 @@ import { useStageOffer } from './use-stage-offer';
  * D the intro (about 7 minutes, no timer, the reading-practice switch), E the rounds in parts of 5 (the dots show the
  * part only, with the theme line: the items mix all five themes), E2 a pause between parts, F the result (stars, then
  * "Your best result is kept"), H the stop sheet (the Hangul Check's). Never a percentage, an "n of m", a score, a
- * timer, "exam" or a certificate. A stopped check keeps its answers and writes no entry and no latch. It never gates
+ * timer, "exam" or a certificate. A finish that could not be saved is the `failed` phase (AMENDMENTS-QUEST-LEAVE-RESUME
+ * section 3.5, row LR-4), not "This check is not open yet": the Daily Review chunk's `SaveFailedPage` says so, and Try
+ * again finishes the same plan on the same answers. A stopped check keeps its answers and writes no entry and no latch. It never gates
  * anything: the next stage does not read it (OD-1).
  */
 
@@ -51,6 +55,8 @@ type Phase =
   | { kind: 'intro'; plan: PlannedStageCheck }
   | { kind: 'playing'; plan: PlannedStageCheck; index: number }
   | { kind: 'pause'; plan: PlannedStageCheck; next: number }
+  // The last round has ended and the check could not be written: the plan and the answers are kept (in refs).
+  | { kind: 'failed'; plan: PlannedStageCheck }
   | { kind: 'result'; stars: 1 | 2 | 3; missed: boolean };
 
 const headlineKey = (stars: 1 | 2 | 3): 'one' | 'two' | 'three' => (stars === 3 ? 'three' : stars === 2 ? 'two' : 'one');
@@ -73,8 +79,11 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   const world = useRef<StageCheckWorld | null>(null);
   const api = useRef<StageCheckApi | null>(null);
   const answers = useRef(new Map<number, RoundAnswer>());
-  const recorded = useRef<Promise<void>[]>([]);
+  // Each round's recording by round index, so Try again records again only the rounds whose recording rejected.
+  const recorded = useRef(new Map<number, Promise<void>>());
   const allowLeave = useRef(false);
+  // Stop was chosen: a Try again still running finishes nothing.
+  const stopped = useRef(false);
   const finishing = useRef(false);
   // A Stage 1 link, a stage not finished, or one the learner cannot open (F-ENT-003; a stale link): the not-ready
   // page. Nothing waits on the check.
@@ -121,7 +130,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     () =>
       navigation.addListener('beforeRemove', (e) => {
         const kind = phaseRef.current.kind;
-        if (allowLeave.current || (kind !== 'playing' && kind !== 'pause')) return;
+        if (allowLeave.current || (kind !== 'playing' && kind !== 'pause' && kind !== 'failed')) return;
         e.preventDefault();
         setLeaving(true);
       }),
@@ -143,7 +152,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     if (p.kind !== 'playing' || w === null || a === null || answers.current.has(index)) return;
     answers.current.set(index, answer);
     setAnswered(answers.current.size);
-    recorded.current.push(a.recordRound(w, p.plan, index, answer));
+    keepRecording(recorded.current, index, a.recordRound(w, p.plan, index, answer));
   };
 
   const onSolved = (): void => {
@@ -160,20 +169,44 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     finishing.current = true;
     setPhase({ kind: 'loading' });
     void a
-      .finishSession(w, p.plan, answers.current, recorded.current)
+      .finishSession(w, p.plan, answers.current, [...recorded.current.values()])
       .then(
         // Null: the check was switched off or the stage closed while it played; nothing was written (the calm page).
         (done) => setPhase(done === null ? { kind: 'nothing' } : { kind: 'result', stars: done.stars, missed: done.missed }),
-        () => setPhase({ kind: 'nothing' }),
+        // The check could not be written (a recording or the entry): the failed page, which says so and tries again on
+        // the same answers (section 3.5). Never the not-ready line: it is untrue here.
+        () => setPhase({ kind: 'failed', plan: p.plan }),
       )
       .finally(() => {
         finishing.current = false;
       });
   };
 
+  // Try again (section 3.5): records again the rounds whose recording rejected, then finishes the same plan with the
+  // same answers (the finish is once per plan: a second try never writes a second entry, latch or event). Resolves
+  // whether the result, or the calm page for a check that closed meanwhile, is now showing.
+  const tryAgain = async (): Promise<boolean> => {
+    const p = phaseRef.current;
+    const w = world.current;
+    const a = api.current;
+    if (p.kind !== 'failed' || w === null || a === null) return false;
+    try {
+      await recordAgain(recorded.current, (index) => a.recordRound(w, p.plan, index, answers.current.get(index) as RoundAnswer));
+      // Stop was chosen while the recordings were being written: nothing more is written.
+      if (stopped.current) return true;
+      const done = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]);
+      if (stopped.current) return true;
+      setLeaving(false);
+      setPhase(done === null ? { kind: 'nothing' } : { kind: 'result', stars: done.stars, missed: done.missed });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const close = (): void => {
     const kind = phaseRef.current.kind;
-    if (kind === 'playing' || kind === 'pause') setLeaving(true);
+    if (kind === 'playing' || kind === 'pause' || kind === 'failed') setLeaving(true);
     else back();
   };
 
@@ -181,11 +214,12 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     <ConfirmSheet
       visible={leaving}
       title={m.learner.stageReview.leave.title}
-      message={m.learner.stageReview.leave.body}
+      message={phase.kind === 'failed' ? m.learner.dailyReview.saveFailed.leaveBody : m.learner.stageReview.leave.body}
       cancelLabel={m.learner.stageReview.leave.stay.cta}
       confirmLabel={m.learner.stageReview.leave.stop.cta}
       onCancel={() => setLeaving(false)}
       onConfirm={() => {
+        stopped.current = true;
         setLeaving(false);
         back();
       }}
@@ -248,6 +282,15 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     );
   }
 
+  if (phase.kind === 'failed' && ui !== null) {
+    return (
+      <>
+        <ui.SaveFailedPage onTryAgain={tryAgain} testID="stage-check-save-failed" />
+        {leaveSheet}
+      </>
+    );
+  }
+
   if (phase.kind === 'pause' && ui !== null) {
     const pauses = Math.ceil(phase.plan.rounds.length / PART) - 1;
     const n = phase.next / PART - 1;
@@ -294,7 +337,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
           fullWidth
           onPress={() => {
             answers.current = new Map();
-            recorded.current = [];
+            recorded.current = new Map();
             if (world.current !== null) api.current?.begin(world.current, phase.plan, hideRomanization);
             setPhase({ kind: 'playing', plan: phase.plan, index: 0 });
           }}
@@ -314,6 +357,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
           <Hoya pose={pose} size={END_HOYA} accessibilityLabel={m.a11y.hoya(pose)} />
           <ui.DisplayHeadline testID="stage-check-headline">{m.learner.dailyReview.result.headline[headlineKey(phase.stars)]}</ui.DisplayHeadline>
           <StarRow stars={phase.stars} size={spacing.xxxl} accessibilityLabel={m.a11y.dailyReview.stars(phase.stars)} testID="stage-check-stars" />
+          <SaveLaterLine testID="stage-check-save-later" />
           <Body align="center" testID="stage-check-best">
             {copy.best}
           </Body>

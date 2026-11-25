@@ -2042,6 +2042,12 @@ export const learner = {
       stay: { cta: '계속하기' },
       stop: { cta: '그만하기' },
     },
+    saveFailed: {
+      title: '아직 저장하지 못했어요.',
+      body: '답한 건 그대로 있어요.',
+      leaveBody: '아직 저장되지 않았어요. 별과 카드는 그대로 남아요.',
+      stillStuck: '아직도 저장되지 않았어요. 지금은 그만하고 다음에 다시 해 봐도 돼요.',
+    },
   },
   keepGoing: {
     offer: '조금 더 해 볼까요?',

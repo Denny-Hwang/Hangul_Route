@@ -278,7 +278,17 @@ export const PRECACHE_BUDGET = Object.freeze({
   // `build:web` (CI=1) measures 4,630,569 B raw / 1,274,804 B gzip (+5,475 B raw, +1,286 B gzip). Merged with AF-3 (Card Match, which imports the
   // same announcer and Next hook; #1102) the tree measures 4,633,012 B raw / 1,275,605 B gzip, 1,488 B under the AF-4a line
   // of 4,634,500 B. The line is that measurement plus a 3,988 B margin: 4,637,000 B (one measured raise, 2,500 B over the AF-4a line).
-  startBundleRaw: 4_637_000,
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-4 (the save-failed page; the Daily Review and Stage Check failed phase): the
+  // learner.dailyReview.saveFailed en strings are in the learner dictionary, so they are in the start bundle (the page
+  // itself is in the Daily Review chunk). The previous line (4,628,900 B) was set at AF-2; the merged LR-4 branch, with
+  // AF-3 (main b52ab30da, Card Match on the answer feedback parts) in it, measures 4,629,855 B raw / 1,275,059 B gzip with
+  // the release `build:web` (CI=1), 955 B over that line. The line is the measurement plus a 4,045 B margin (one measured
+  // raise, 5,000 B over the previous line).
+  // [AF] [LR] Rows LR-4 and AF-4a merged (main f31c6b313 with LR-4, AF-3 and AF-4a together): the release `build:web` (CI=1)
+  // measures 4,634,508 B raw / 1,276,063 B gzip, 608 B over the LR-4 line (4,633,900 B) and 2,492 B under the AF-4a line
+  // (4,637,000 B). The line is the measurement plus a 3,992 B margin (one measured raise, 1,500 B over the AF-4a line and
+  // 4,600 B over main's LR-4 line).
+  startBundleRaw: 4_638_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
