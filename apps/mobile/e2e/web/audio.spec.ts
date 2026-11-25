@@ -946,7 +946,8 @@ test.describe('bundled clips (A-6)', () => {
     for (let round = 2; round <= 6 && gaps.length === 0; round += 1) {
       const pill = page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true }).first();
       for (let i = 0; i < 4 && !(await pill.isVisible()); i += 1) {
-        await tiles.nth(i).click({ timeout: 2_000 }).catch(() => undefined);
+        // An answered tile is renamed "Not this one: …" (F-A11Y-001 AF-4a), so the next open one is always the first.
+        await tiles.first().click({ timeout: 2_000 }).catch(() => undefined);
         await expect(pill).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
       }
       await expect(pill).toBeVisible();
