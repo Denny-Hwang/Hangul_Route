@@ -64,6 +64,8 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
   const { clear, focusPrompt } = a;
   const next = useRoundNext();
   const mounted = useRef(false);
+  /** The turn last moved on from: a second Next for the same turn does nothing, and a reply is not started after it (reader on). */
+  const movedFrom = useRef(-1);
   // While a right reply is being said, nothing may start the NPC line again (it would cut the reply off).
   const replying = useRef(false);
   useEffect(() => {
@@ -109,6 +111,8 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
 
   const last = turnIdx >= turns.length - 1;
   const advance = (): void => {
+    if (movedFrom.current === turnIdx) return;
+    movedFrom.current = turnIdx;
     replying.current = false;
     next.hide();
     if (last) {
@@ -144,6 +148,8 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
         gameMinMs: ADVANCE_MIN_MS,
         announce: a.readerOn ? () => next.afterFocus(say) : say,
         play: () => {
+          // A reader on may press Next before the line ends: the turn has moved on, so its reply is not started.
+          if (movedFrom.current === turnIdx || !mounted.current) return;
           reply = pacing.track(play(() => playPrompt(said), said));
         },
         showNext: next.show,

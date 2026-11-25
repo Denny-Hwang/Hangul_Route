@@ -270,8 +270,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // MinigameScreen, so they are in the start bundle, and the announcer, its hook, `logic/answer-feedback.ts` (the announcement builder,
   // `afterRightAnswer` and the wait helpers), the Next button's focus hook and the games' own changes now come with them; AF-1 left the announcer
   // out because no game imported it yet. On top of CH-1a (4,617,949 B raw / 1,271,150 B gzip)
-  // the release `build:web` (CI=1) of the AF-2 branch measures 4,624,867 B raw / 1,273,405 B gzip (+6,918 B raw, +2,255 B
-  // gzip), 2,967 B over the previous line. The line is the measurement plus a 4,033 B margin (one measured raise, 7,000 B
+  // the release `build:web` (CI=1) of the AF-2 branch measures 4,625,094 B raw / 1,273,518 B gzip (+7,145 B raw, +2,368 B
+  // gzip), 3,194 B over the previous line. The line is the measurement plus a 3,806 B margin (one measured raise, 7,000 B
   // over the previous line).
   startBundleRaw: 4_628_900,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean

@@ -68,6 +68,15 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
   const a = useAnswerAnnouncement();
   const { clear, focusPrompt } = a;
   const next = useRoundNext();
+  const mounted = useRef(false);
+  /** The round last moved on from: a second Next (or a late timer) for the same round does nothing (the last round ends the step once). */
+  const movedFrom = useRef(-1);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   useEffect(() => {
     reset();
   }, [roundIdx, reset]);
@@ -93,6 +102,8 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
 
   const last = roundIdx >= rounds.length - 1;
   const advance = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
     next.hide();
     if (last) {
       markStepComplete();
@@ -121,7 +132,10 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
         gameMinMs: 700,
         announce: a.readerOn ? () => next.afterFocus(say) : say,
         showNext: next.show,
-        waitThenAdvance: (minMs) => void afterSound(sounding.current, { minMs }).then(advance),
+        waitThenAdvance: (minMs) =>
+          void afterSound(sounding.current, { minMs }).then(() => {
+            if (mounted.current) advance();
+          }),
       });
     } else {
       nudge();

@@ -19,16 +19,21 @@ import { TapRespondGame } from '../TapRespondGame';
  */
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-const sr = vi.hoisted(() => ({ enabled: false, queued: [] as string[], focused: [] as unknown[] }));
+/** `log` is one ordered record of the focus moves and the queued-and-awaited iOS lines. */
+const sr = vi.hoisted(() => ({ enabled: false, queued: [] as string[], focused: [] as unknown[], log: [] as string[] }));
 vi.mock('../../../platform/screen-reader', () => ({
   isScreenReaderEnabled: () => Promise.resolve(sr.enabled),
   subscribeScreenReader: () => () => undefined,
   announceQueued: (text: string) => {
     if ((globalThis as { __os?: string }).__os === 'ios') sr.queued.push(text);
   },
-  announceAndWait: () => Promise.resolve(),
+  announceAndWait: (text: string) => {
+    sr.log.push(`announce: ${text}`);
+    return Promise.resolve();
+  },
   focusForScreenReader: (node: unknown) => {
     sr.focused.push(node);
+    sr.log.push(`focus: ${(node as { testID?: string } | null)?.testID}`);
   },
 }));
 
@@ -120,6 +125,7 @@ beforeEach(() => {
   sr.enabled = false;
   sr.queued.length = 0;
   sr.focused.length = 0;
+  sr.log.length = 0;
   audio.said = [];
   useAudioStore.setState({ muted: false });
   endVoiceCheckHold();
@@ -241,6 +247,40 @@ describe('Culture Quiz answers (test 11)', () => {
     await press(pressable(r, 'culture-quiz-next'));
     expect(finish).toHaveBeenCalledTimes(1);
   });
+
+  it('iOS, reader on: focus moves to Next first, then the line is queued (never the other way round)', async () => {
+    on('ios');
+    sr.enabled = true;
+    const r = await open(<CultureQuizGame scope={QUIZ} onFinish={() => undefined} />);
+    const pair = asked(r);
+    await press(pressable(r, optionId(pair.en)));
+    expect(sr.log).toEqual(['focus: culture-quiz-next', `announce: ${line({ kind: 'right', item: answerItem(m.a11y, pair.romanization, pair.en) })}`]);
+    await tick(60_000);
+    expect(asked(r)).toBe(pair);
+  });
+
+  it('a second Next on the last round ends the step once', async () => {
+    readerOnWeb();
+    const finish = vi.fn();
+    const r = await open(<CultureQuizGame scope={{ ...QUIZ, rounds: 1 } as MinigameScope} onFinish={finish} />);
+    await press(pressable(r, optionId(asked(r).en)));
+    await tick(60_000);
+    // The second tap is a late one on the node as it was drawn (Next is gone by then).
+    const shown = pressable(r, 'culture-quiz-next');
+    const next = { props: shown.props, type: shown.type } as ReactTestInstance;
+    await press(next);
+    await press(next);
+    expect(finish).toHaveBeenCalledTimes(1);
+  });
+
+  it('reader off: leaving the game during the floor ends nothing afterwards', async () => {
+    const finish = vi.fn();
+    const r = await open(<CultureQuizGame scope={{ ...QUIZ, rounds: 1 } as MinigameScope} onFinish={finish} />);
+    await press(pressable(r, optionId(asked(r).en)));
+    await unmount(r);
+    await tick(RESULT_MARK_MIN_MS * 3);
+    expect(finish).not.toHaveBeenCalled();
+  });
 });
 
 describe('Tap & Respond replies (test 12)', () => {
@@ -327,7 +367,7 @@ describe('Tap & Respond replies (test 12)', () => {
     const header = host(r, 'tap-respond-round');
     expect(sr.focused.at(-1)).toEqual(expect.objectContaining({ testID: 'tap-respond-round' }));
     expect(header.props.role).toBe('heading');
-    // The first turn's NPC line has a romanization; the label names it by that, never by its Hangul.
+    // The second turn's NPC line has no romanization, so the label names it by its meaning; never by its Hangul.
     expect(String(header.props['aria-label'])).toBe(m.a11y.answer.round(2, 2, `${m.learner.minigame.tapRespond.someoneSays} What is your name?`));
     expect(String(header.props['aria-label'])).not.toMatch(HANGUL);
   });
@@ -341,6 +381,44 @@ describe('Tap & Respond replies (test 12)', () => {
     await tick(60_000);
     expect(finish).not.toHaveBeenCalled();
     await press(pressable(r, 'tap-respond-next'));
+    expect(finish).toHaveBeenCalledTimes(1);
+  });
+
+  it('iOS, reader on: focus moves to Next first, then the line is queued, then the reply is said', async () => {
+    on('ios');
+    sr.enabled = true;
+    const r = await open(<TapRespondGame scope={TAP} onFinish={() => undefined} />);
+    await settle();
+    audio.said = [];
+    await press(pressable(r, opt('안녕하세요!')));
+    expect(sr.log).toEqual(['focus: tap-respond-next', `announce: ${line({ kind: 'right', item: answerItem(m.a11y, 'annyeonghaseyo', 'Hello!') })}`]);
+    expect(audio.said).toEqual(['안녕하세요!']);
+  });
+
+  it('reader on: a Next pressed before the line has ended starts no reply afterwards', async () => {
+    readerOnWeb();
+    const r = await open(<TapRespondGame scope={TAP} onFinish={() => undefined} />);
+    await settle();
+    audio.said = [];
+    await press(pressable(r, opt('안녕하세요!')));
+    expect(audio.said).toEqual([]);
+    await press(pressable(r, 'tap-respond-next'));
+    await tick(60_000);
+    // The next turn's own line may be said; the old turn's reply never is.
+    expect(audio.said).not.toContain('안녕하세요!');
+  });
+
+  it('a second Next on the last turn ends the step once', async () => {
+    readerOnWeb();
+    const finish = vi.fn();
+    const r = await open(<TapRespondGame scope={{ ...TAP, dialogue: [TAP.dialogue![1]!] }} onFinish={finish} />);
+    await settle();
+    await press(pressable(r, opt('저는 다미예요.')));
+    await tick(60_000);
+    const shown = pressable(r, 'tap-respond-next');
+    const next = { props: shown.props, type: shown.type } as ReactTestInstance;
+    await press(next);
+    await press(next);
     expect(finish).toHaveBeenCalledTimes(1);
   });
 
