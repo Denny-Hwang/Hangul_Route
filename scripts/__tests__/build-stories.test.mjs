@@ -35,6 +35,7 @@ const LEGACY_REL = join("apps", "mobile", "src", "content", "stories.generated.t
 const {
   GENERATED_HEADER,
   BUDGET,
+  E2E_MODULE,
   SHELF_DEFAULTS,
   STORY_BODY_FIELDS,
   artBytes,
@@ -806,6 +807,40 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     const r = run(root, ["--include-fixtures"]);
     assert.equal(r.status, 1);
     assert.match(r.stdout, /broken\.json/);
+  });
+});
+
+describe("build-stories.mjs: the e2e registry (AMENDMENTS-START-BUNDLE-2026-11 SB-2)", () => {
+  const registryOf = (root) => readFileSync(join(root, OUT_REL, E2E_MODULE), "utf8");
+  /** The module's run-time imports (a type-only import is erased). */
+  const valueImports = (source) => [...source.matchAll(/^import\s+(?!type\s)[^;]*from\s+'([^']+)';$/gm)].map((m) => m[1]);
+
+  test("a plain run writes it null, with a type import only, so a release build has no e2e code", () => {
+    assert.equal(E2E_MODULE, "e2e-registry.ts");
+    const modules = buildModules({ stories: [] });
+    const source = modules[E2E_MODULE];
+    assert.ok(source.startsWith(GENERATED_HEADER));
+    assert.match(source, /^import type \{ E2eEntry \} from '\.\.\/\.\.\/navigation\/e2e-entry';$/m);
+    assert.deepEqual(valueImports(source), []);
+    assert.match(source, /export const E2E_ENTRY: E2eEntry \| null = null;\n$/);
+  });
+
+  test("--include-fixtures writes it with the e2e entry; a plain run restores the null one and --check holds it", () => {
+    const root = makeRoot();
+    putFixtures(root);
+    assert.equal(run(root, ["--include-fixtures"]).status, 0);
+    const fixture = registryOf(root);
+    assert.match(fixture, /never commit/);
+    assert.deepEqual(valueImports(fixture), ["../../navigation/e2e-entry"]);
+    assert.match(fixture, /export const E2E_ENTRY: E2eEntry \| null = e2eEntry;\n$/);
+    assert.equal(run(root, ["--check"]).status, 1);
+    assert.equal(run(root).status, 0);
+    assert.deepEqual(valueImports(registryOf(root)), []);
+    assert.equal(run(root, ["--check"]).status, 0);
+    rmSync(join(root, OUT_REL, E2E_MODULE));
+    const check = run(root, ["--check"]);
+    assert.equal(check.status, 1);
+    assert.match(check.stdout, /e2e-registry\.ts/);
   });
 });
 

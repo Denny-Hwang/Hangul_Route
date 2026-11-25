@@ -42,7 +42,8 @@ function placementRoutes(source: string): string[] {
 }
 
 const routes = {
-  root: stackRoutes(read('navigation/root.tsx')),
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-2: the fixture build's e2e screens, registered in root through the e2e registry.
+  root: [...stackRoutes(read('navigation/root.tsx')), ...stackRoutes(read('navigation/e2e-entry.tsx'))],
   onboarding: stackRoutes(read('navigation/onboarding.tsx')),
   browse: stackRoutes(read('navigation/browse.tsx')),
   // [GU] Row GU-3: the guest's first quest (its own stack; GU-4 adds the save's two routes).
