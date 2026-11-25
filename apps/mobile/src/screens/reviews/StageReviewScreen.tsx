@@ -37,6 +37,7 @@ import {
   reviewResultView,
   reviewStartEvent,
   stageCertificateEntry,
+  stageCertificateId,
   startReviewFlow,
   stepReviewFlow,
   tallyReview,
@@ -104,6 +105,12 @@ export function StageReviewScreen({ route, navigation }: Props): ReactElement {
   return <HangulCheck navigation={navigation} />;
 }
 
+/** Whether the progress already holds the entry of the Hangul Check that began at `startedAt`. */
+function recordedCheck(profileId: string, startedAt: string): boolean {
+  const id = stageCertificateId(startedAt);
+  return (useProgressStore.getState().byProfile[profileId]?.reviews ?? []).some((r) => r.id === id);
+}
+
 function HangulCheck({ navigation }: { navigation: Props['navigation'] }): ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageReview;
@@ -121,6 +128,8 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   // [LR] The stored check this visit found (the resume page's Continue), and what the run is stored with while it is kept.
   const offer = useRef<ResumableHangulCheck | null>(null);
   const [kept, setKept] = useState<ReviewRunSaveContext | null>(null);
+  // The start time of the check in play (a resumed check keeps its own): the entry's identity, so a finish is once only.
+  const startedAtRef = useRef<string | null>(null);
 
   // Set before the flow's own exits, so the back guard below lets them through.
   const allowLeave = useRef(false);
@@ -140,7 +149,9 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
           if (profile) {
             // A new check forgets the stored one, and from its first answer it is stored in its place (section 3.4).
             void clearSavedCheck(profile.id);
-            setKept({ seed, hideRomanization: effect.hideRomanization, startedAt: new Date().toISOString() });
+            const startedAt = new Date().toISOString();
+            startedAtRef.current = startedAt;
+            setKept({ seed, hideRomanization: effect.hideRomanization, startedAt });
             void track(reviewStartEvent(profile.id, effect.hideRomanization));
           }
           return;
@@ -151,8 +162,14 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
           const tally = tallyReview(run.itemIds, run.answers);
           const now = new Date();
           if (profile) {
-            recordReview(profile.id, stageCertificateEntry({ itemIds: run.itemIds, tally, now }));
-            void track(reviewCompleteEvent(profile.id, tally));
+            // [LR] A finished check is recorded once: its entry is named by its start time, so a stored run that outlived
+            // its result (a kill before the clear, a clear that failed) and is continued records and reports nothing again.
+            const startedAt = startedAtRef.current ?? undefined;
+            const recorded = startedAt !== undefined && recordedCheck(profile.id, startedAt);
+            if (!recorded) {
+              recordReview(profile.id, stageCertificateEntry({ itemIds: run.itemIds, tally, now, startedAt }));
+              void track(reviewCompleteEvent(profile.id, tally));
+            }
           }
           setResult({ view: reviewResultView(tally), at: now.toISOString() });
           run.reset();
@@ -191,6 +208,12 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     const offered = (value: unknown): boolean => {
       const found = resumableHangulCheck(value, Date.now(), (s) => buildHangulCheck({ seed: s }));
       if (found === null) return false;
+      // A stored run whose check was already recorded (a kill before the clear after the result, or a clear that failed)
+      // is not offered; it goes.
+      if (recordedCheck(profileId, found.startedAt)) {
+        void clearSavedCheck(profileId);
+        return false;
+      }
       offer.current = found;
       return true;
     };
@@ -211,7 +234,9 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
 
   const onContinue = useCallback((): void => {
     const found = offer.current;
-    if (!found) return;
+    // A second tap on Continue, or one after the page has gone, does nothing.
+    if (!found || flowRef.current.phase !== 'resume') return;
+    startedAtRef.current = found.startedAt;
     setSeed(found.seed);
     setKept({ seed: found.seed, hideRomanization: found.hideRomanization, startedAt: found.startedAt });
     useReviewRunStore.getState().restore(

@@ -192,14 +192,22 @@ export function pauseLine(chunk: number, m: Messages['learner']['stageReview']['
 }
 
 /**
+ * [LR] The id of a Hangul Check's entry. It comes from the check's start time (kept by a resumed check), so a check that
+ * is finished twice, a stored run surviving its own result, is the same entry and is never recorded a second time.
+ */
+export function stageCertificateId(startedAt: string): string {
+  return `review:stage1:${startedAt}`;
+}
+
+/**
  * The caregiver channel's entry (`recordReview`): one per attempt, the numbers stay off the learner
  * screen. `missedItemIds` means "not right on the first try": the misses and any item never asked.
  */
-export function stageCertificateEntry({ itemIds, tally, now }: { itemIds: readonly string[]; tally: ReviewTally; now: Date }): ReviewEntry {
+export function stageCertificateEntry({ itemIds, tally, now, startedAt }: { itemIds: readonly string[]; tally: ReviewTally; now: Date; startedAt?: string }): ReviewEntry {
   const at = now.toISOString();
   const notRight = new Set([...tally.missedItemIds, ...tally.unansweredItemIds]);
   return {
-    id: `review:stage1:${at}`,
+    id: stageCertificateId(startedAt ?? at),
     kind: 'stage-certificate',
     generatedAt: at,
     scope: 'stage1',

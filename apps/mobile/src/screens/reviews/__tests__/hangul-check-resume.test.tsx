@@ -10,7 +10,7 @@ import { buildHangulCheck } from '../../../logic/stage1/hangul-check';
 import { useProfileStore } from '../../../store/profile-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { resetRemoteConfigForTests } from '../../../store/remote-config-store';
-import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts } from '../../../test-support/render';
+import { buttonsNamed, byTestId, cleanup, passTapLock, press, render, resetPlatform, screenTexts } from '../../../test-support/render';
 
 /**
  * AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (test 20): the Hangul Check goes on after an interruption. The game is a stub
@@ -21,7 +21,7 @@ import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTe
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-const rig = vi.hoisted(() => ({ right: true, mem: new Map<string, unknown>(), stall: null as Promise<void> | null }));
+const rig = vi.hoisted(() => ({ right: true, failRemove: false, mem: new Map<string, unknown>(), stall: null as Promise<void> | null }));
 
 // The stop sheet is a Modal the Node renderer cannot show: a stand-in that draws its children while visible.
 vi.mock('react-native', async (importOriginal) => {
@@ -44,6 +44,7 @@ vi.mock('../../../platform/storage', () => ({
   }),
   updateJson: vi.fn(async () => true),
   removeKey: vi.fn(async (k: string) => {
+    if (rig.failRemove) throw new Error('storage cannot remove');
     rig.mem.delete(k);
   }),
   listKeys: vi.fn(async () => [...rig.mem.keys()]),
@@ -185,6 +186,7 @@ beforeEach(async () => {
   await settleSavedChecksForTests(true);
   rig.mem.clear();
   rig.right = true;
+  rig.failRemove = false;
   rig.stall = null;
   vi.mocked(track).mockClear();
   resetRemoteConfigForTests();
@@ -523,5 +525,108 @@ describe('[LR] what is never resumed', () => {
     const { r } = await open();
     expect(byTestId(r.root, 'hangul-check-not-ready')).toHaveLength(1);
     expect(byTestId(r.root, 'hangul-check-resume')).toHaveLength(0);
+  });
+});
+
+describe('[LR] a finished check is recorded once, and Continue once', () => {
+  const reviews = (): Array<{ id: string }> => useProgressStore.getState().byProfile[ID]!.reviews as Array<{ id: string }>;
+  const completes = (): number => vi.mocked(track).mock.calls.filter(([e]) => e.name === 'review.complete').length;
+
+  /** Plays a whole check, the clear after its result failing: the stored check outlives the result. */
+  async function finishWithStoredRunLeft(): Promise<void> {
+    const { r } = await open();
+    await tap(r, M.intro.start.cta);
+    for (let part = 0; part < 5; part += 1) {
+      await answer(r, 7);
+      if (part < 4) {
+        await partDone(r);
+        await tap(r, M.pause.keepGoing.cta);
+      }
+    }
+    // The last answer is stored; the removal that the result asks for rejects (or the app is killed before it runs).
+    await settleSavedChecksForTests();
+    rig.failRemove = true;
+    await partDone(r);
+    await settleSavedChecksForTests();
+    rig.failRemove = false;
+    expect(byTestId(r.root, 'hangul-check-result')).toHaveLength(1);
+    await cleanup();
+  }
+
+  it('a stored run that outlived its result is not offered again: no second entry, no second complete event, and it is cleared', async () => {
+    await finishWithStoredRunLeft();
+    expect(reviews()).toHaveLength(1);
+    expect(completes()).toBe(1);
+    expect(Object.keys(stored()!.answers)).toHaveLength(35);
+
+    const { r } = await open();
+    expect(byTestId(r.root, 'hangul-check-resume')).toHaveLength(0);
+    expect(byTestId(r.root, 'hangul-check-intro')).toHaveLength(1);
+    await settleSavedChecksForTests();
+    expect(stored()).toBeNull();
+    expect(reviews()).toHaveLength(1);
+    expect(completes()).toBe(1);
+  });
+
+  it('the entry is named by the check\'s start time, which a resumed check keeps', async () => {
+    await finishWithStoredRunLeft();
+    expect(reviews()[0]!.id).toBe(`review:stage1:${stored()!.startedAt}`);
+  });
+
+  it('Continue straight to the finish, with the entry already recorded, records and reports nothing again', async () => {
+    const { r: a } = await open();
+    await tap(a, M.intro.start.cta);
+    for (let part = 0; part < 5; part += 1) {
+      await answer(a, 7);
+      if (part < 4) {
+        await partDone(a);
+        await tap(a, M.pause.keepGoing.cta);
+      }
+    }
+    await settleSavedChecksForTests();
+    const whole = stored()!;
+    await cleanup();
+
+    const { r } = await open();
+    expect(byTestId(r.root, 'hangul-check-resume')).toHaveLength(1);
+    // The progress write of the first finish lands while the page shows (the entry exists under the check's start time).
+    useProgressStore.getState().recordReview(ID, {
+      id: `review:stage1:${whole.startedAt}`,
+      kind: 'stage-certificate',
+      generatedAt: new Date().toISOString(),
+      scope: 'stage1',
+      itemIds: Object.keys(whole.answers),
+      resultStars: 3,
+      missedItemIds: [],
+    });
+    await tap(r, EN.common.buttons.continue);
+    expect(byTestId(r.root, 'hangul-check-result')).toHaveLength(1);
+    expect(reviews().filter((e) => e.id.startsWith('review:stage1:'))).toHaveLength(1);
+    expect(completes()).toBe(0);
+  });
+
+  it('a second tap on Continue does nothing: the restored answers are not put back over the new ones', async () => {
+    await playSome(9);
+    await cleanup();
+    const { r } = await open();
+    const continueButton = button(r, EN.common.buttons.continue);
+    // The handler the first tap ran, kept: the second tap of a double tap reaches it after the page has gone.
+    const onClick = continueButton.props.onClick as (event: unknown) => void;
+    const event = { altKey: false, currentTarget: { getAttribute: (name: string): unknown => continueButton.props[name] ?? null, tagName: 'DIV' }, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined };
+    passTapLock();
+    await act(async () => {
+      onClick(event);
+    });
+    await flush();
+    await answer(r, 1);
+    expect(Object.keys(useReviewRunStore.getState().answers)).toHaveLength(10);
+    // The same button again (a double tap that reached the handler after the page went).
+    passTapLock();
+    await act(async () => {
+      onClick(event);
+    });
+    await flush();
+    expect(Object.keys(useReviewRunStore.getState().answers)).toHaveLength(10);
+    expect(items(r)).toHaveLength(5);
   });
 });

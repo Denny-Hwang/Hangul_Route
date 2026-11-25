@@ -12,6 +12,7 @@ import {
   reviewResultView,
   reviewStartEvent,
   stageCertificateEntry,
+  stageCertificateId,
   startReviewFlow,
   stepReviewFlow,
   tallyReview,
@@ -307,6 +308,16 @@ describe('copy helpers', () => {
 describe('the caregiver entry and telemetry', () => {
   const answers = Object.fromEntries(ids.map((id) => [id, { first: id !== 'jamo:pieup', retries: id === 'jamo:pieup' ? 2 : 0 }]));
   const tally = tallyReview(ids, answers);
+
+  it('[LR] the entry is named by the check\'s start time when it has one, and generated at the finish', () => {
+    const startedAt = '2026-10-12T08:55:00.000Z';
+    const entry = stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-13T09:00:00.000Z'), startedAt });
+    expect(entry.id).toBe(stageCertificateId(startedAt));
+    expect(entry.id).toBe('review:stage1:2026-10-12T08:55:00.000Z');
+    expect(entry.generatedAt).toBe('2026-10-13T09:00:00.000Z');
+    // The same check finished twice is the same entry.
+    expect(stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-13T09:00:07.000Z'), startedAt }).id).toBe(entry.id);
+  });
 
   it('builds one stage-certificate entry with the 35 item ids, the stars and the misses', () => {
     const entry = stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-12T09:00:00.000Z') });
