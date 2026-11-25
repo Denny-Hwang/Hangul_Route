@@ -167,7 +167,7 @@ test('switching the sound off is saved on this device and still off after a relo
   await expect(sound).toContainText('On');
   await sound.click();
   await expect(sound).toContainText('Off');
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true, showLetters: false }));
 
   await page.reload();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
@@ -220,7 +220,7 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await page.goto('/');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('switch', { name: 'Sound' }).click();
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true, showLetters: false }));
   await page.reload();
 
   // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
@@ -240,7 +240,7 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   const [first] = await utterances(page);
   expect(first).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
   await expect(panelText(page)).toBeVisible();
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false, showLetters: false }));
 });
 
 test('a wrong tap names the letter: a letter question says the name, not a syllable (AMENDMENTS-AUDIO-CLIPS JV-A1)', async ({ page }) => {
@@ -282,10 +282,10 @@ test('Profile Sound card with a Korean voice: says ready, offers no how-to, and 
 
   await expect(page.getByTestId('sound-voice-status')).toHaveText('Korean voice: ready');
   await expect(page.getByTestId('sound-how-to-add')).toHaveCount(0);
-  const sound = page.getByRole('switch', { name: 'Sound, on. Korean voice ready.' });
+  const sound = page.getByRole('switch', { name: 'Sound. Korean voice ready.' });
   await expect(sound).toBeVisible();
   await sound.click();
-  await expect(page.getByRole('switch', { name: 'Sound, off. Korean voice ready.' })).toContainText('Off');
+  await expect(page.getByRole('switch', { name: 'Sound. Korean voice ready.' })).toContainText('Off');
 });
 
 test('Profile Sound card with no Korean voice: says so and the how-to sheet lists the steps', async ({ page }) => {
@@ -294,7 +294,7 @@ test('Profile Sound card with no Korean voice: says so and the how-to sheet list
   await openProfile(page);
 
   await expect(page.getByTestId('sound-voice-status')).toHaveText('No Korean voice on this device');
-  const sound = page.getByRole('switch', { name: 'Sound, on. No Korean voice on this device.' });
+  const sound = page.getByRole('switch', { name: 'Sound. No Korean voice on this device.' });
   await expect(sound).toBeVisible();
 
   await page.getByTestId('sound-how-to-add').click();
@@ -394,7 +394,7 @@ test('Build a Letter with sound off: a tap says sound is off, and Turn sound on 
   await page.goto('/');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('switch', { name: /^Sound/ }).click();
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true, showLetters: false }));
   await page.reload();
   // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
   await page.getByTestId('home-next-lesson-start').click();
@@ -408,7 +408,7 @@ test('Build a Letter with sound off: a tap says sound is off, and Turn sound on 
   await page.getByTestId('prompt-panel-action').click();
   await expect.poll(async () => (await utterances(page)).length).toBe(1);
   expect((await utterances(page))[0]).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false, showLetters: false }));
 });
 
 /** Onboarded learner: the Journey tab, the Install guide closed if it shows. */
@@ -466,7 +466,7 @@ async function muteOnThisDevice(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('switch', { name: /^Sound/ }).click();
-  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true, showLetters: false }));
   await page.reload();
 }
 

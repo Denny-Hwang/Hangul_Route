@@ -1,6 +1,6 @@
 import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { jamoOfSpoken, onboardChild, passDiscover } from './helpers';
+import { jamoOfSpoken, onboardChild, passDiscover, readStored, seedStored } from './helpers';
 
 /**
  * AMENDMENTS-AUDIO-CANT-HEAR row CH-1a, the e2e of section 6: Match Sound in quest 1 over an engine that has a Korean
@@ -52,8 +52,12 @@ async function koreanVoiceThatPlays(page: Page): Promise<void> {
 
 const utterances = (page: Page): Promise<string[]> => page.evaluate(() => (window as SpeechWindow).__utterances ?? []);
 
-async function openMatchSound(page: Page): Promise<void> {
+async function openMatchSound(page: Page, prefs?: { muted: boolean; showLetters: boolean }): Promise<void> {
   await koreanVoiceThatPlays(page);
+  if (prefs !== undefined) {
+    await page.goto('/');
+    await seedStored(page, 'device:audio', prefs);
+  }
   await onboardChild(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
@@ -140,5 +144,54 @@ test.describe('an Android phone (the project device): the Android line', () => {
   test('Match Sound: the Android line, and the text in two taps', async ({ page }) => {
     await openMatchSound(page);
     await twoTapsToTheText(page, LINES.android);
+  });
+});
+
+test.describe('Always show the letters (CH-2)', () => {
+  const desktop = devices['Desktop Chrome'];
+  test.use({ userAgent: desktop.userAgent, viewport: desktop.viewport, hasTouch: false, isMobile: false, deviceScaleFactor: 1, locale: 'en-US' });
+
+  const alwaysShow = (page: Page) => page.getByRole('switch', { name: 'Always show the letters' });
+
+  test('Profile: a switch under Sound, off at first, saved with the mute, and the Sound switch says its state once', async ({ page }) => {
+    await koreanVoiceThatPlays(page);
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    const sound = page.getByRole('switch', { name: 'Sound. Korean voice ready.' });
+    await expect(sound).toHaveAttribute('aria-checked', 'true');
+    await expect(alwaysShow(page)).toHaveAttribute('aria-checked', 'false');
+    await expect(alwaysShow(page)).toContainText('Off');
+    await alwaysShow(page).click();
+    await expect(alwaysShow(page)).toHaveAttribute('aria-checked', 'true');
+    await expect(alwaysShow(page)).toContainText('On');
+    await expect.poll(() => readStored(page, 'device:audio')).toEqual({ muted: false, showLetters: true });
+    // Turning the sound off keeps the other switch.
+    await sound.click();
+    await expect.poll(() => readStored(page, 'device:audio')).toEqual({ muted: true, showLetters: true });
+    await expect(alwaysShow(page)).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('Match Sound opens with the letters up, no link, and the sound still plays; every round', async ({ page }) => {
+    await openMatchSound(page, { muted: false, showLetters: true });
+    await expect(page.getByText('Tap the letter for this sound')).toBeVisible();
+    await expect(page.getByText('No sound? Read it here.')).toBeVisible();
+    await expect(page.getByTestId('prompt-panel-text')).toBeVisible();
+    await expect(link(page)).toHaveCount(0);
+    await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
+
+    const label = (await page.getByTestId('prompt-panel-text').getAttribute('aria-label')) ?? '';
+    const letter = jamoOfSpoken(label.split(',')[0]!.trim());
+    await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: letter }).click();
+    await expect(page.getByText('2 / 6')).toBeVisible();
+    await expect(page.getByTestId('prompt-panel-text')).toBeVisible();
+    await expect(link(page)).toHaveCount(0);
+  });
+
+  test('with the switch off the round is sound-only with the link, as before', async ({ page }) => {
+    await openMatchSound(page, { muted: false, showLetters: false });
+    await expect(page.getByText('Tap the letter you hear')).toBeVisible();
+    await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
+    await expect(link(page)).toBeVisible();
   });
 });
