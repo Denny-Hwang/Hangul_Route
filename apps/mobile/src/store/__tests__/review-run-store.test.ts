@@ -39,6 +39,31 @@ describe('review-run-store', () => {
     expect(useReviewRunStore.getState()).toMatchObject({ itemIds: [], answers: {} });
   });
 
+  it('[LR] restore puts a stored run back: a restored item keeps its first answer and a later answer to it is a retry (test 19)', () => {
+    const s = useReviewRunStore.getState();
+    s.restore(['jamo:giyeok', 'jamo:nieun', 'word:bap'], { 'jamo:giyeok': { first: false, retries: 1 }, 'jamo:nieun': { first: true, retries: 0 } });
+    expect(useReviewRunStore.getState()).toMatchObject({
+      itemIds: ['jamo:giyeok', 'jamo:nieun', 'word:bap'],
+      answers: { 'jamo:giyeok': { first: false, retries: 1 }, 'jamo:nieun': { first: true, retries: 0 } },
+    });
+    s.answer('jamo:giyeok', true);
+    s.answer('jamo:nieun', false);
+    s.answer('word:bap', true);
+    expect(useReviewRunStore.getState().answers).toEqual({
+      'jamo:giyeok': { first: false, retries: 2 },
+      'jamo:nieun': { first: true, retries: 1 },
+      'word:bap': { first: true, retries: 0 },
+    });
+  });
+
+  it('[LR] restore keeps only items of the run, and copies what it is given', () => {
+    const given = { 'jamo:giyeok': { first: true, retries: 0 }, 'jamo:nope': { first: true, retries: 0 } };
+    useReviewRunStore.getState().restore(['jamo:giyeok'], given);
+    expect(useReviewRunStore.getState().answers).toEqual({ 'jamo:giyeok': { first: true, retries: 0 } });
+    useReviewRunStore.getState().answer('jamo:giyeok', false);
+    expect(given['jamo:giyeok']).toEqual({ first: true, retries: 0 });
+  });
+
   it('the review host credits the item by its id, never by the round index, and never touches a quest run', () => {
     const questRun = useQuestRunStore.getState();
     const before = JSON.stringify({ ...questRun });

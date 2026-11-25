@@ -21,7 +21,12 @@ export const HEAR_HOLD_MS = 1500;
 /** Failed plays in one hear round before it becomes a `see` round. */
 export const HEAR_FAILURES_TO_SEE = 2;
 
-export type HearSeeReason = 'no_voice' | 'muted' | 'error';
+/**
+ * Why a hear round is a `see` round. `asked`: the learner's own "Show the letters" (AMENDMENTS-AUDIO-CANT-HEAR CH-1c); the
+ * hinted mark of CH-1f keys on this alone. `always`: the device's "Always show the letters" (CH-2), drawn the same but
+ * unmarked. Neither failed, so neither has a reason line or an action.
+ */
+export type HearSeeReason = 'no_voice' | 'muted' | 'error' | 'asked' | 'always';
 export type HearOpening = { kind: 'hold' } | { kind: 'hear' } | { kind: 'see'; reason: HearSeeReason };
 
 export interface HearOpeningInput {

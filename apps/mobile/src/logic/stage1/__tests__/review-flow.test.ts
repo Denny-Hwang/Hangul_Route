@@ -12,6 +12,7 @@ import {
   reviewResultView,
   reviewStartEvent,
   stageCertificateEntry,
+  stageCertificateId,
   startReviewFlow,
   stepReviewFlow,
   tallyReview,
@@ -40,6 +41,7 @@ describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
     expect(startReviewFlow({ chunks: 5, romanizationMode: 'always' })).toEqual({
       phase: 'intro',
       chunk: 0,
+      from: 0,
       chunks: 5,
       hideRomanization: false,
       leaving: false,
@@ -103,6 +105,76 @@ describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
   it('a one-chunk check goes straight to the result', () => {
     const s = run(startReviewFlow({ chunks: 1, romanizationMode: 'always' }), [{ type: 'start' }, { type: 'chunk-done' }]);
     expect(s.state.phase).toBe('result');
+  });
+});
+
+/** [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (test 18): the `reading` and `resume` phases. */
+describe('[LR] the stored check: reading, resume, Continue, Start again', () => {
+  const reading = () => startReviewFlow({ chunks: 5, romanizationMode: 'always', reading: true });
+
+  it('starts in reading when asked to, and a read that found nothing opens the intro', () => {
+    expect(reading().phase).toBe('reading');
+    expect(run(reading(), [{ type: 'read', found: false }]).state.phase).toBe('intro');
+  });
+
+  it('a read that found a run opens the resume page', () => {
+    expect(run(reading(), [{ type: 'read', found: true }]).state.phase).toBe('resume');
+  });
+
+  it('a late read switches the intro to the resume page, but only while the intro shows (never after Let us go)', () => {
+    const intro = run(reading(), [{ type: 'read', found: false }]).state;
+    expect(run(intro, [{ type: 'read', found: true }]).state.phase).toBe('resume');
+    // A late read that found nothing changes nothing.
+    expect(run(intro, [{ type: 'read', found: false }]).state).toEqual(intro);
+    // After Let us go (playing, a pause, the result) it is ignored.
+    const playing = run(intro, [{ type: 'start' }]).state;
+    expect(run(playing, [{ type: 'read', found: true }]).state).toEqual(playing);
+    const pause = run(playing, [{ type: 'chunk-done' }]).state;
+    expect(run(pause, [{ type: 'read', found: true }]).state).toEqual(pause);
+  });
+
+  it('Continue goes to playing at the resume point with the stored romanization choice, and sends no started effect', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    const out = run(resume, [{ type: 'continue', at: { chunk: 2, from: 3 }, hideRomanization: true }]);
+    expect(out.state).toMatchObject({ phase: 'playing', chunk: 2, from: 3, hideRomanization: true });
+    expect(out.effects).toEqual([]);
+  });
+
+  it('Continue with every item answered goes straight to the finish', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    const out = run(resume, [{ type: 'continue', at: null, hideRomanization: false }]);
+    expect(out.state.phase).toBe('result');
+    expect(out.effects).toEqual([{ type: 'finished' }]);
+  });
+
+  it('the offset belongs to the resumed part only: Keep going starts the next part from its first item', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    const playing = run(resume, [{ type: 'continue', at: { chunk: 1, from: 4 }, hideRomanization: false }]).state;
+    const next = run(playing, [{ type: 'chunk-done' }, { type: 'keep-going' }]).state;
+    expect(next).toMatchObject({ phase: 'playing', chunk: 2, from: 0 });
+  });
+
+  it('Start again shows the intro with no effect (nothing is cleared until Let us go), and Let us go then starts a new check', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    const again = run(resume, [{ type: 'start-again' }]);
+    expect(again.state.phase).toBe('intro');
+    expect(again.effects).toEqual([]);
+    expect(run(again.state, [{ type: 'start' }]).effects).toEqual([{ type: 'started', hideRomanization: false }]);
+    // Only the resume page has these two events.
+    expect(run(again.state, [{ type: 'start-again' }, { type: 'continue', at: null, hideRomanization: false }])).toEqual({ state: again.state, effects: [] });
+  });
+
+  it('a leave on the reading frame or the resume page exits at once, and neither guards a back', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    expect(run(reading(), [{ type: 'leave' }]).effects).toEqual([{ type: 'exit' }]);
+    expect(run(resume, [{ type: 'leave' }]).effects).toEqual([{ type: 'exit' }]);
+    expect(guardsBack(reading())).toBe(false);
+    expect(guardsBack(resume)).toBe(false);
+  });
+
+  it('the romanization switch is the intro only', () => {
+    const resume = run(reading(), [{ type: 'read', found: true }]).state;
+    expect(run(resume, [{ type: 'toggle-romanization' }]).state).toEqual(resume);
   });
 });
 
@@ -236,6 +308,16 @@ describe('copy helpers', () => {
 describe('the caregiver entry and telemetry', () => {
   const answers = Object.fromEntries(ids.map((id) => [id, { first: id !== 'jamo:pieup', retries: id === 'jamo:pieup' ? 2 : 0 }]));
   const tally = tallyReview(ids, answers);
+
+  it('[LR] the entry is named by the check\'s start time when it has one, and generated at the finish', () => {
+    const startedAt = '2026-10-12T08:55:00.000Z';
+    const entry = stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-13T09:00:00.000Z'), startedAt });
+    expect(entry.id).toBe(stageCertificateId(startedAt));
+    expect(entry.id).toBe('review:stage1:2026-10-12T08:55:00.000Z');
+    expect(entry.generatedAt).toBe('2026-10-13T09:00:00.000Z');
+    // The same check finished twice is the same entry.
+    expect(stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-13T09:00:07.000Z'), startedAt }).id).toBe(entry.id);
+  });
 
   it('builds one stage-certificate entry with the 35 item ids, the stars and the misses', () => {
     const entry = stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-12T09:00:00.000Z') });
