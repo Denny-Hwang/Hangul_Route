@@ -27,6 +27,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot, type PromptSlot } from '../../components/use-prompt-slot';
@@ -337,6 +338,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
               {render.exchange ? (
                 <ExchangeCard
                   render={render.exchange}
+                  cantHear
                   dispatch={dispatch}
                   copy={copy}
                   m={m}
@@ -344,13 +346,15 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
                   audio={{ register: registerSlot, replay, onHelp: openHelp }}
                 />
               ) : null}
-              {cards.map((card) => {
+              {cards.map((card, cardIndex) => {
                 const rows = render.items
                   .filter((r) => card.includes(r.item))
                   .map((r, i) => (
                     <DiscoverItemCard
                       key={r.item.key}
                       render={r}
+                      // "Can't hear it?" (CH-1d): once per page, on its first card unless the exchange card carries it.
+                      cantHear={render.exchange === undefined && cardIndex === 0 && i === 0}
                       dispatch={dispatch}
                       copy={copy}
                       a11y={m.a11y}
@@ -401,10 +405,12 @@ interface CardAudio {
  * clip only when every button on the card has one (the sound, its name, the example; each exchange
  * line), so a button without a clip still says "No Korean voice" on a device without one.
  */
-function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio): PromptSlot {
+function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio, cantHear = false): PromptSlot {
   const playable = actions.filter((a): a is HearAction => a !== undefined);
   const clip = playable.length > 0 && playable.every((a) => hasClipFor(a.spec));
-  const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true });
+  // `cantHear` is the page's one guidance-only "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1d, OD-CH3): the card prints
+  // its Korean, so the sheet has no Show the letters, and "Always show the letters" brings nothing up here.
+  const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true, cantHear, guidanceOnly: cantHear });
   const { play } = slot;
   const { register } = audio;
   useEffect(() => register(key, { play }), [register, key, play]);
@@ -462,6 +468,7 @@ function DiscoverItemCard({
   audio,
   bare = false,
   divided = false,
+  cantHear = false,
 }: {
   render: DiscoverItemRender;
   dispatch: (event: DiscoverEvent) => void;
@@ -472,10 +479,12 @@ function DiscoverItemCard({
   bare?: boolean;
   /** A row under another row: a thin line above it. */
   divided?: boolean;
+  /** The page's one "Can't hear it?" link lives under this card's buttons. */
+  cantHear?: boolean;
 }): ReactElement {
   const { item } = render;
   const audioCopy = useMessages().learner.audio;
-  const slot = useCardSlot(item.key, [item.hear, item.soundWith?.action, item.example?.hear], audio);
+  const slot = useCardSlot(item.key, [item.hear, item.soundWith?.action, item.example?.hear], audio, cantHear);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -547,6 +556,13 @@ function DiscoverItemCard({
           />
           {/* The taught line "na = ㄴ + ㅏ" with its romanization is content, never inside the UI string. */}
           <KoreanText ko={item.soundWith.ko} romanization={item.soundWith.romanization} size="sm" />
+        </View>
+      ) : null}
+
+      {slot.cantHear ? (
+        // Centred under the buttons, as Hear it above it.
+        <View style={{ alignSelf: 'center' }}>
+          <CantHear guidanceOnly round={item.key} active onHear={() => dispatch({ type: 'hear', id: item.hear.id })} />
         </View>
       ) : null}
 
@@ -683,6 +699,7 @@ const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow
 
 function ExchangeCard({
   render,
+  cantHear = false,
   dispatch,
   copy,
   m,
@@ -690,6 +707,8 @@ function ExchangeCard({
   audio,
 }: {
   render: DiscoverExchangeRender;
+  /** The page's one "Can't hear it?" link lives under Read along. */
+  cantHear?: boolean;
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   m: Messages;
@@ -700,7 +719,7 @@ function ExchangeCard({
   const first = render.item.lines[0];
   // One slot for the exchange: Read along and each line's own speaker. When a line cannot play, its panel
   // says why (sound off, no Korean voice, a tap needed, a failure) with the one action; nothing stays lit.
-  const slot = useCardSlot(render.item.key, render.item.lines.map((l) => l.hear), audio);
+  const slot = useCardSlot(render.item.key, render.item.lines.map((l) => l.hear), audio, cantHear);
   return (
     <View style={{ gap: spacing.md }} testID={`discover-exchange-${render.item.key}`}>
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>
@@ -714,6 +733,11 @@ function ExchangeCard({
         />
         {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
       </View>
+      {slot.cantHear && first ? (
+        <View style={{ alignSelf: 'flex-start' }}>
+          <CantHear guidanceOnly round={render.item.key} active onHear={() => dispatch({ type: 'hear', id: first.hear.id })} />
+        </View>
+      ) : null}
       <PromptPanel
         variant="status"
         view={slot.view}
