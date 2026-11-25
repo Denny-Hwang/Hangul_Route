@@ -1,6 +1,6 @@
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ADVANCE_MIN_MS } from '../../../logic/audio/reply-advance';
+import { RESULT_MARK_MIN_MS } from '../../../logic/answer-feedback';
 import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { useAudioStore } from '../../../store/audio-store';
@@ -81,7 +81,7 @@ describe('[QS] the first line waits 350 ms for the screen (QS-3)', () => {
     expect(audio.said).toEqual(['안녕하세요!']);
     await press(r.root.findAll((n) => n.props.role === 'button' && typeof n.props.onClick === 'function' && screenTexts(n).some((t) => t.includes('안녕하세요!')) && n.props.testID !== 'tap-respond-hear').at(-1)!);
     expect(audio.said).toEqual(['안녕하세요!', '안녕하세요!']); // the reply
-    await tick(ADVANCE_MIN_MS);
+    await tick(RESULT_MARK_MIN_MS); // F-A11Y-001 OD-AF2 (b): the floor is above Tap & Respond's own 900 ms
     expect(audio.said).toEqual(['안녕하세요!', '안녕하세요!', '이름이 뭐예요?']);
   });
 
