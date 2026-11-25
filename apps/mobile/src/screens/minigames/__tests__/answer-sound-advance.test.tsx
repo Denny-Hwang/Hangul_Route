@@ -214,7 +214,7 @@ describe('[QS-4] Read Pick: the letter\'s sound ends before the next round, with
   });
 });
 
-describe('[QS-4] Card Match: the step ends once the word that is being said has ended', () => {
+describe('[QS-4] Card Match: the step ends once the word that is being said has ended (and the result floor of F-A11Y-001 OD-AF2 (b) is the least wait)', () => {
   const PAIRS = [
     { ko: '그네', en: 'swing', romanization: 'geune' },
     { ko: '모래', en: 'sand', romanization: 'morae' },
@@ -235,7 +235,7 @@ describe('[QS-4] Card Match: the step ends once the word that is being said has 
     const r = await open(<CardMatchGame scope={scope} onFinish={finish} />);
     audio.hold = true;
     await matchAll(r);
-    await heldUntilTheSoundEnds(800, () => finish.mock.calls.length === 1);
+    await heldUntilTheSoundEnds(RESULT_MARK_MIN_MS, () => finish.mock.calls.length === 1);
   });
 
   it('released at the cap', async () => {
@@ -243,7 +243,7 @@ describe('[QS-4] Card Match: the step ends once the word that is being said has 
     const r = await open(<CardMatchGame scope={scope} onFinish={finish} />);
     audio.hold = true;
     await matchAll(r);
-    await releasedAtTheCap(800, () => finish.mock.calls.length === 1);
+    await releasedAtTheCap(RESULT_MARK_MIN_MS, () => finish.mock.calls.length === 1);
   });
 });
 
