@@ -17,7 +17,7 @@ Three small pieces that answer one question a grown-up asks on a shared device: 
  +---------------------------------------------+
 ```
 
-The switch row (glyph, label, voice line, pill) is one accessibility group: "Sound, on. Korean voice ready." The How-to button sits outside the switch so a tap on it never toggles the sound.
+The switch row (glyph, label, voice line, pill) is one accessibility group: "Sound. Korean voice ready." (`a11y.soundSwitch`, built by `soundSwitchLabel`). The name does not say on or off: that state is the switch's own (`accessibilityState.checked`, and `aria-checked` for the web, which ignores `accessibilityState`), so a reader does not say it twice. The How-to button sits outside the switch so a tap on it never toggles the sound. Under the Sound switch, **Always show the letters** is a second device switch (`screens/profile/AlwaysShowLettersRow.tsx`, row CH-2).
 
 | Voice state (`audio-store.tts`) | Voice line | How-to button |
 |---|---|---|
@@ -42,6 +42,8 @@ Tokens: existing `Card` (padding `md`, default tone), `Body` semibold for the la
 - *owner decision 2026-11-24: from window class `regular` the sheet's width is capped at 720 (mock MD6, README Q2).*
 
 *Mock: `design/screens/audio-cant-hear/` (H1 to H3; mock decisions MD6 and MD11).*
+
+*Amended 2026-11-25 by AMENDMENTS-AUDIO-CANT-HEAR [CH]: built by CH-1a (#1090). `VoiceHelpSheet` passes `currentDeviceFamily()` to `voiceHelpContent`, so it draws one section; both sheets sit in the shared `SheetFrame` (`components/SheetFrame.tsx`): the scrim is a tap target for sight only and not an accessibility element, focus starts on the title, and the width is capped at 720 from window class `regular`. The Sound card's switch name no longer says on or off (§1).*
 
 A bottom sheet over a dimmed screen (`colors.surface.overlay`), plain text, scrolls.
 

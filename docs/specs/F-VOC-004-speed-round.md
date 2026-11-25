@@ -2,6 +2,8 @@ Status: ready
 
 # F-VOC-004 — Speed Round: picture, word and sound questions with one session clock, a spark meter that only fills, and an opt-in Challenge mode
 
+> **Amended 2026-11-25 by `AMENDMENTS-AUDIO-CANT-HEAR.md` [CH]** (work order WO-05 of the 2026-11 review: a way out when the sound does not reach the learner; owner decision OD-R6, 2026-11-22: the app still does not play through the silent switch) (the sound question, `audio-to-image`, in Relaxed mode): the question has the **Can't hear it?** link beside its large speaker button (`VocabQuestionView` `cantHear`, passed only when `mode === 'relaxed'`). **Show the letters** shows the word with its romanization read in full (`readHere` and `textFallback`); the options are pictures, so none is printed. The Challenge mode has no link: its one session clock runs, and a sheet would cost time on it (OD-CH4, not now). S1 and the clock rules do not change, and opening the sheet starts and stops no clock (Relaxed has none). The ask is not yet marked hinted: `logic/vocab/stars.ts` counts `hinted` against the stars, so it needs a separate flag (follow-up CH-1h, open). Row CH-1b.
+
 **Scope**: `apps/mobile` (`logic/vocab/`, `logic/shuffle.ts`, `platform/app-state*.ts`, `screens/vocab/`, `store/vocab-run-store.ts`, `navigation/`) · `packages/content-schema` (`ProfileSettings` fields, telemetry names) · `packages/design-system` (reuses `ChoiceCard` from F-STORY-003, `KoreanText`, `WordArt`, `StarRow`, `Progress`, `HoyaBubble`; adds one small `SparkMeter` component)
 **Owner**: solo dev
 **Rollout**: behind `flags.vocabTopicsEnabled` (F-VOC-003). PR order in §6.

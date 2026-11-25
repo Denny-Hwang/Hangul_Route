@@ -5,7 +5,7 @@ Extends: `design/wireframes/minigame/shell.md` (round shell), `quest/discover.md
 Audience: **any learner, any age** (CLAUDE.md §1); the same screens for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts, art or final copy; text in (parentheses) is a placeholder.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean shown with romanization + gloss (`KoreanText`), `{ x }` content-driven, `(*)` fill-only marker, `<state>` a runtime state.
 
-Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b) · W10 The learner audio pass: the panel under what was tapped, and the trace games' one-row form (A-12) · W11 The F-CURR-002 formats: where the sound notice goes (CM-D2)
+Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b) · W10 The learner audio pass: the panel under what was tapped, and the trace games' one-row form (A-12) · W11 The F-CURR-002 formats: where the sound notice goes (CM-D2) · W12 "Can't hear it?" and Always show the letters (a pointer, drawn in `audio-cant-hear.md`)
 
 ---
 
@@ -197,7 +197,7 @@ Help sheet (bottom sheet, plain text, scrolls):
 +------------------------------------------+
 ```
 
-- The switch label, state and voice line are one accessibility group ("Sound, on. Korean voice ready.").
+- The switch label and the voice line are one accessibility group ("Sound. Korean voice ready."): the name does not say on or off, the state is the switch's own (`checked`, and `aria-checked` on the web).
 - Lecture mode's "Check this device" row reads the same capability (`describeKoVoice()`), not this card.
 
 ---
@@ -344,6 +344,16 @@ Dictation with no Korean voice (proactive, the round opens as see)     Role Play
 - Every panel is neutral (the fallback card tone), never amber and never red, and a polite live region; every round scores normally. `audio.fallback_shown { source, reason }` uses the source ids in the table (strings, once per session, source and reason; the Worker's payload check is unchanged, which each build row confirms).
 
 ---
+
+## W12 — "Can't hear it?" and Always show the letters (a pointer; drawn in `minigame/audio-cant-hear.md` C1 to C9)
+
+Amended 2026-11-25 by `docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md` [CH]. The W1 to W11 screens are unchanged; what the amendment adds to them:
+
+- **A fourth way into the text states** (W8). Besides `muted`, `no_voice` and `error` / `blocked`, the learner can ask: a **Can't hear it?** link in the speaker row (W1; W5 under the card's buttons), its sheet (`audio-cant-hear.md` C2) with one line for this device and **Show the letters**. The state machine gets the `'show_text'` event and an `asked` flag that is not a reason: the panel shows the text of W2 without a reason line or action, and the text stays for the round (`audio-cant-hear.md` C3, C4).
+- **W5 and W6 (Discover)** keep their text and get a guidance-only link once per page (`audio-cant-hear.md` C6).
+- **W7 (Profile)**: the Sound card gets a second switch, **Always show the letters**; the help sheet shows this device's steps only (`audio-cant-hear.md` C7).
+- **W11 (Dictation)**: **Show the letters** opens the `see` round of W11; with **Always show the letters** the `hear` round opens as a `see` round. A Check's Dictation round is to get no **Show the letters** (row CH-1g, PR #1124, open).
+- Telemetry: `audio.fallback_shown { source, reason: 'asked' }`, once per session and source, no profile id.
 
 ## Interaction points
 
