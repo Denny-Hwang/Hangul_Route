@@ -122,9 +122,9 @@ async function tapUntil(option: ReturnType<Page['locator']>, verdict: RegExp): P
  * Answer one part (7 items) right, reading each prompt from the captured speech. `missFirst`
  * takes a wrong card first on the part's first item (a first-try miss).
  */
-async function playPart(page: Page, previous: string | undefined, missFirst = false): Promise<string | undefined> {
+async function playPart(page: Page, previous: string | undefined, missFirst = false, count = 7): Promise<string | undefined> {
   let before = previous;
-  for (let item = 0; item < 7; item += 1) {
+  for (let item = 0; item < count; item += 1) {
     await expect(page.locator(OPTIONS).first()).toBeVisible();
     // The first item of a part waits for a tap on the speaker; the others play on open.
     if (item === 0) await page.getByTestId('listen-pick-speaker').click();
@@ -142,7 +142,7 @@ async function playPart(page: Page, previous: string | undefined, missFirst = fa
     }
     await tapUntil(right, /^Right answer/);
     before = spoken;
-    if (item < 6) await waitForNextListenPickRound(page);
+    if (item < count - 1) await waitForNextListenPickRound(page);
   }
   return before;
 }
@@ -241,4 +241,120 @@ test('at 320 wide the intro and the Journey button fit with no sideways scroll',
   const scroll = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(scroll).toBeLessThanOrEqual(0);
   await page.screenshot({ path: test.info().outputPath('hangul-check-intro-320.png'), fullPage: true });
+});
+
+/** [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a: the stored check (`hr:check-run:<profileId>`), as many answers as it holds. */
+const storedAnswers = async (page: Page, profileId: string): Promise<number> =>
+  Object.keys(((await readStored<{ answers?: object }>(page, `check-run:${profileId}`)) ?? {}).answers ?? {}).length;
+
+/** The Journey's Hangul Check button after the app was closed and opened again (a reload, as an app kill or a discarded tab). */
+async function reopenHangulCheck(page: Page): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByTestId('journey-hangul-check').click();
+}
+
+test('[LR] an interrupted Hangul Check goes on: Pick up where you left off, Continue at the next item, the result counts every item (LR-3a)', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await captureSpeech(page);
+  const profileId = await finishedLearner(page);
+  await openFromJourney(page);
+  await page.getByRole('button', { name: "Let's go" }).click();
+
+  // Part 1 (the first item missed on the first try), a pause, then two items of part 2.
+  let previous = await playPart(page, undefined, true);
+  await expect(page.getByTestId('hangul-check-pause')).toBeVisible();
+  await page.getByRole('button', { name: 'Keep going' }).click();
+  previous = await playPart(page, previous, false, 2);
+  await expect.poll(() => storedAnswers(page, profileId)).toBe(9);
+
+  // The app is closed and opened again: the check says it can go on.
+  await reopenHangulCheck(page);
+  const resume = page.getByTestId('hangul-check-resume');
+  await expect(resume).toBeVisible();
+  await expect(page.getByTestId('hangul-check-intro')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Pick up where you left off?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start again' })).toBeVisible();
+  // No count, no fraction, no percent, and no reading-practice switch (the run keeps its choice).
+  expect(await page.locator('body').innerText()).not.toMatch(/\d+\s*\/\s*\d+|%/);
+  await expect(page.getByRole('switch')).toHaveCount(0);
+  for (const [width, height] of [
+    [360, 740],
+    [320, 568],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await expect(resume).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    await shot(page, `hangul-check-resume-${width}`);
+    await page.screenshot({ path: test.info().outputPath(`hangul-check-resume-${width}.png`), fullPage: true });
+  }
+  await page.setViewportSize({ width: 393, height: 727 });
+
+  // Continue: part 2 goes on at its third item, five items left, then the three parts after it.
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator(OPTIONS).first()).toBeVisible();
+  previous = await playPart(page, undefined, false, 5);
+  for (let part = 2; part < 5; part += 1) {
+    await expect(page.getByTestId('hangul-check-pause')).toBeVisible();
+    await page.getByRole('button', { name: 'Keep going' }).click();
+    previous = await playPart(page, previous);
+  }
+  await expect(page.getByTestId('hangul-check-result')).toBeVisible();
+
+  // One review of 35 items, the first-try miss from before the interruption kept, and nothing left stored.
+  const saved = await readStored<ProgressSnapshot>(page, `progress:${profileId}`);
+  const reviews = saved?.reviews ?? [];
+  expect(reviews).toHaveLength(1);
+  expect(reviews[0]?.itemIds).toHaveLength(35);
+  expect(reviews[0]?.missedItemIds).toHaveLength(1);
+  await expect.poll(() => readStored(page, `check-run:${profileId}`)).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('[LR] Stop keeps the check for later; Start again clears nothing until Let us go (LR-3a)', async ({ page }) => {
+  await captureSpeech(page);
+  const profileId = await finishedLearner(page);
+  await openFromJourney(page);
+  await page.getByRole('button', { name: "Let's go" }).click();
+  await playPart(page, undefined, false, 1);
+  await expect.poll(() => storedAnswers(page, profileId)).toBe(1);
+
+  // After an answer the sheet says the check is kept.
+  await headerClose(page).click();
+  await expect(page.getByText('Stop the check?')).toBeVisible();
+  await expect(page.getByText('You can keep going later.')).toBeVisible();
+  await expect(page.getByText('You can take it again any time.')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await expect(page.getByTestId('journey-hangul-check')).toBeVisible();
+  expect(await storedAnswers(page, profileId)).toBe(1);
+
+  // Opened again: the resume page. Start again shows the intro; Maybe later keeps the stored check.
+  await page.getByTestId('journey-hangul-check').click();
+  await expect(page.getByTestId('hangul-check-resume')).toBeVisible();
+  await page.getByRole('button', { name: 'Start again' }).click();
+  await expect(page.getByTestId('hangul-check-intro')).toBeVisible();
+  await page.getByRole('button', { name: 'Maybe later' }).click();
+  await expect(page.getByTestId('journey-hangul-check')).toBeVisible();
+  expect(await storedAnswers(page, profileId)).toBe(1);
+
+  // The header's Close on the resume page leaves at once and keeps it too.
+  await page.getByTestId('journey-hangul-check').click();
+  await expect(page.getByTestId('hangul-check-resume')).toBeVisible();
+  await headerClose(page).click();
+  await expect(page.getByTestId('journey-hangul-check')).toBeVisible();
+  expect(await storedAnswers(page, profileId)).toBe(1);
+
+  // Start again, then Let's go: the stored check is replaced by the new one (no answer yet, so nothing is stored).
+  await page.getByTestId('journey-hangul-check').click();
+  await page.getByRole('button', { name: 'Start again' }).click();
+  await page.getByRole('button', { name: "Let's go" }).click();
+  await expect(page.locator(OPTIONS).first()).toBeVisible();
+  await expect.poll(() => readStored(page, `check-run:${profileId}`)).toBeNull();
 });
