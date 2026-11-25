@@ -50,7 +50,7 @@ const SOUND_HINTS: Readonly<Record<string, string>> = {
   'jamo:i': 'like "ee" in "see"',
   'jamo:giyeok-batchim': 'a short, closed k (like "book" cut off)',
   'jamo:nieun-batchim': 'ends like n in "sun"',
-  'jamo:rieul-batchim': 'ends like l in "ball"',
+  'jamo:rieul-batchim': 'ends in a clear l, tongue tip behind the top teeth',
   'jamo:mieum-batchim': 'ends like m in "ham"',
   'jamo:bieup-batchim': 'a short, closed p (like "cup" cut off)',
   'jamo:ieung-batchim': 'ends like ng in "sing"',
@@ -157,21 +157,21 @@ export const jamoConsonants: Jamo[] = [
   c('giyeok', 'ㄱ', 'g/k', 'giyeok', 'k', '가족', 'gajok', 'family', 1, '가', 'ga', '기역'),
   c('nieun', 'ㄴ', 'n', 'nieun', 'n', '나무', 'namu', 'tree', 2, '나', 'na', '니은'),
   c('digeut', 'ㄷ', 'd/t', 'digeut', 't', '달', 'dal', 'moon', 3, '다', 'da', '디귿'),
-  c('rieul', 'ㄹ', 'r/l', 'rieul', 'r', '라면', 'ramyeon', 'ramyeon', 4, '라', 'ra', '리을'),
+  c('rieul', 'ㄹ', 'r/l', 'rieul', 'ɾ', '라면', 'ramyeon', 'ramyeon', 4, '라', 'ra', '리을'),
   c('mieum', 'ㅁ', 'm', 'mieum', 'm', '물', 'mul', 'water', 5, '마', 'ma', '미음'),
   c('bieup', 'ㅂ', 'b/p', 'bieup', 'p', '밥', 'bap', 'rice', 6, '바', 'ba', '비읍'),
   c('siot', 'ㅅ', 's', 'siot', 's', '산', 'san', 'mountain', 7, '사', 'sa', '시옷'),
   c('ieung', 'ㅇ', 'silent/ng', 'ieung', 'ŋ', '아이', 'ai', 'child', 8, '이응', 'ieung', '이응', 'name'),
   c('jieut', 'ㅈ', 'j', 'jieut', 'tɕ', '집', 'jip', 'house', 9, '자', 'ja', '지읒'),
-  c('chieut', 'ㅊ', 'ch', 'chieut', 'tɕʰ', '책', 'chaek', 'book', 10, '차', 'cha', '치읓'),
+  c('chieut', 'ㅊ', 'ch', 'chieut', 'tɕʰ', '치마', 'chima', 'skirt', 10, '차', 'cha', '치읓'),
   c('kieuk', 'ㅋ', 'k', 'kieuk', 'kʰ', '코', 'ko', 'nose', 11, '카', 'ka', '키읔'),
-  c('tieut', 'ㅌ', 't', 'tieut', 'tʰ', '토끼', 'tokki', 'rabbit', 12, '타', 'ta', '티읕'),
+  c('tieut', 'ㅌ', 't', 'tieut', 'tʰ', '토마토', 'tomato', 'tomato', 12, '타', 'ta', '티읕'),
   c('pieup', 'ㅍ', 'p', 'pieup', 'pʰ', '포도', 'podo', 'grape', 13, '파', 'pa', '피읖'),
   c('hieut', 'ㅎ', 'h', 'hieut', 'h', '하늘', 'haneul', 'sky', 14, '하', 'ha', '히읗'),
 ];
 
 export const jamoVowels: Jamo[] = [
-  v('a', 'ㅏ', 'a', 'a', 'a', '아빠', 'appa', 'dad', 15, '아', 'a', '아'),
+  v('a', 'ㅏ', 'a', 'a', 'a', '아기', 'agi', 'baby', 15, '아', 'a', '아'),
   v('ya', 'ㅑ', 'ya', 'ya', 'ja', '야구', 'yagu', 'baseball', 16, '야', 'ya', '야'),
   v('eo', 'ㅓ', 'eo', 'eo', 'ʌ', '엄마', 'eomma', 'mom', 17, '어', 'eo', '어'),
   v('yeo', 'ㅕ', 'yeo', 'yeo', 'jʌ', '여우', 'yeou', 'fox', 18, '여', 'yeo', '여'),
@@ -179,7 +179,7 @@ export const jamoVowels: Jamo[] = [
   v('yo', 'ㅛ', 'yo', 'yo', 'jo', '요리', 'yori', 'cooking', 20, '요', 'yo', '요'),
   v('u', 'ㅜ', 'u', 'u', 'u', '우유', 'uyu', 'milk', 21, '우', 'u', '우'),
   v('yu', 'ㅠ', 'yu', 'yu', 'ju', '유리', 'yuri', 'glass', 22, '유', 'yu', '유'),
-  v('eu', 'ㅡ', 'eu', 'eu', 'ɯ', '으뜸', 'eutteum', 'first', 23, '으', 'eu', '으'),
+  v('eu', 'ㅡ', 'eu', 'eu', 'ɯ', '그림', 'geurim', 'picture', 23, '으', 'eu', '으'),
   v('i', 'ㅣ', 'i', 'i', 'i', '이름', 'ireum', 'name', 24, '이', 'i', '이'),
 ];
 
