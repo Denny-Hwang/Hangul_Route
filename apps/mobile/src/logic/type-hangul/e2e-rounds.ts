@@ -35,6 +35,14 @@ export const FIXTURE_ROUNDS = {
     mode: 'hear',
     target: { ko: '우유', romanization: 'uyu', en: 'milk' },
   },
+  // A word line that is longer than a 320 wide row once the Korean, its romanization and its meaning are drawn
+  // (AMENDMENTS-AUDIO-CANT-HEAR CH-1c: after Show the letters it must wrap inside the window).
+  hearChuseok: {
+    id: 'e2e-hear-chuseok',
+    promptEn: 'Type the word you hear.',
+    mode: 'hear',
+    target: { ko: '추석', romanization: 'chuseok', en: 'the autumn harvest festival' },
+  },
 } as const satisfies Record<string, TypeHangulRound>;
 
 /**
