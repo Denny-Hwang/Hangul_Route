@@ -40,20 +40,24 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { ClozePickRound } from '@hangul-route/content-schema';
+import { afterMiss, afterRightAnswer, lookHereLine } from '../../logic/answer-feedback';
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { startCloze, stepCloze, type ClozeEffect, type ClozeEvent, type ClozeFlowState } from '../../logic/cloze-pick/flow';
 import { clozeToListenPick, filledSentence, validClozeRounds } from '../../logic/cloze-pick/round';
 import { clozeColumns, clozeView, type ClozeHoyaLine } from '../../logic/cloze-pick/view';
 import { pictureTextArrangement } from '../../logic/layout/game-layout';
 import { shuffleOptions } from '../../logic/listen-pick';
-import { headerView, optionView } from '../../logic/listen-pick-flow';
+import { headerView, optionItem, optionView } from '../../logic/listen-pick-flow';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
+import { AnswerAnnouncer } from './answer-announcer';
 import { ClozeRealia } from './ClozeRealia';
 import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * Cloze Pick (F-CURR-002 section 7.1 F1, row CM-30): read a Korean sentence with one gap and pick the tile that fills
@@ -67,6 +71,12 @@ import type { MinigameHost } from './host';
  *   and romanization only (D3): a gloss would answer a word gap. The sentence keeps its meaning, the input it reads.
  * - The rules are `logic/cloze-pick/` (the flow, the prompt view, the tile columns); this file draws them. It is the
  *   `cloze-pick-chunk` (`./cloze-pick-chunk.tsx`), loaded by `./cloze-pick-entry.tsx` while `game.cloze-pick` is on.
+ * - Answer feedback (F-A11Y-001 row AF-4b): a right tile shows `check` and a locked miss `replay`, each in a mark column
+ *   that is kept in every state (a mark inside the word's own room covered it at 320 wide with 200 % text), named with
+ *   its state first and never `disabled`. Each result is said once by the answer announcer (the miss that rings the
+ *   fitting tile carries the look-here line), Hoya's line is not live, the advance waits the 1000 ms result floor with a
+ *   screen reader off, and with one on a right tile shows Next (OD-AF9 (b)), the last round included, and the sentence
+ *   is said after the line.
  */
 
 interface Props {
@@ -117,6 +127,19 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
   const roundsRef = useRef(rounds);
   roundsRef.current = rounds;
   const dispatchRef = useRef<(event: ClozeEvent) => void>(() => undefined);
+  // F-A11Y-001 AF-4b: each result is said once, by the answer announcer; with a screen reader on a right tile shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const nextButton = useRoundNext();
+  const mounted = useRef(false);
+  /** The round last moved on from: a second Next (or a late wait) for the same round does nothing; the sentence is not said after it. */
+  const movedFrom = useRef(-1);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const current = rounds[state.roundIdx];
   const slot = usePromptSlot({
@@ -159,14 +182,67 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
     [slotPlay, pacing],
   );
 
-  const dispatch = useCallback(
-    (event: ClozeEvent): void => {
-      const out = stepCloze(stateRef.current, event);
-      stateRef.current = out.state;
-      setState(out.state);
-      out.effects.forEach(runEffect);
+  /** What a result needs from this render: read when the tap comes, so `dispatch` keeps one identity. */
+  const latest = useRef({ a, next: nextButton, a11y: m.a11y });
+  latest.current = { a, next: nextButton, a11y: m.a11y };
+
+  /** A tap that scored: the line is said once, and the effects that follow are the answer's own (§3.4). */
+  const settle = useCallback(
+    (before: ClozeFlowState, after: ClozeFlowState, tapped: string, effects: ClozeEffect[]): void => {
+      const entry = roundsRef.current[before.roundIdx];
+      const { a: say, next, a11y: texts } = latest.current;
+      const option = entry?.pick.options.find((o) => o.id === tapped);
+      const sentence = effects.find((e) => e.type === 'say');
+      const advanceNow = effects.find((e) => e.type === 'schedule-advance');
+      const correct = effects.some((e) => e.type === 'answer' && e.correct);
+      effects.filter((e) => e !== sentence && e !== advanceNow).forEach(runEffect);
+      if (!entry || !option) return;
+      const asked = before.roundIdx;
+      if (correct && advanceNow?.type === 'schedule-advance') {
+        const item = optionItem(option, texts, { gloss: true });
+        const speak = (): Promise<void> => say.announce({ kind: 'right', item });
+        void afterRightAnswer({
+          readerOn: say.readerOn,
+          gameMinMs: advanceNow.ms,
+          announce: say.readerOn ? () => next.afterFocus(speak) : speak,
+          ...(sentence === undefined
+            ? {}
+            : {
+                play: () => {
+                  // A reader on may press Next before the line ends: the round has moved on, so its sentence is not said.
+                  if (movedFrom.current === asked || !mounted.current) return;
+                  runEffect(sentence);
+                },
+              }),
+          showNext: next.show,
+          waitThenAdvance: (minMs) => runEffect({ type: 'schedule-advance', ms: minMs }),
+        });
+        return;
+      }
+      const item = optionItem(option, texts, { gloss: false });
+      const fits = entry.pick.options.find((o) => o.id === entry.pick.answerId);
+      // The miss that rings the fitting tile carries the look-here line; every other miss is a plain retry.
+      afterMiss({
+        readerOn: say.readerOn,
+        announce: () =>
+          say.announce(
+            after.hint && !before.hint && fits ? { kind: 'missHint', item, hint: lookHereLine(texts, optionItem(fits, texts, { gloss: false })) } : { kind: 'miss', item },
+          ),
+      });
     },
     [runEffect],
+  );
+
+  const dispatch = useCallback(
+    (event: ClozeEvent): void => {
+      const before = stateRef.current;
+      const out = stepCloze(before, event);
+      stateRef.current = out.state;
+      setState(out.state);
+      if (event.type === 'tap' && out.effects.some((e) => e.type === 'answer')) settle(before, out.state, event.optionId, out.effects);
+      else out.effects.forEach(runEffect);
+    },
+    [runEffect, settle],
   );
   dispatchRef.current = dispatch;
 
@@ -177,12 +253,17 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
     [],
   );
 
-  // A new round is a new prompt slot; focus moves to its card from round 2 on.
+  // A new round is a new prompt slot and empties the announcer; focus moves to the round's header node with a screen reader
+  // on (§3.4), and otherwise to the sentence card, from round 2 on.
   const roundIdx = state.roundIdx;
   useEffect(() => {
     slotReset();
-    if (roundIdx > 0) cardRef.current?.focus?.();
-  }, [roundIdx, slotReset]);
+    clear();
+    if (roundIdx > 0) {
+      if (latest.current.a.readerOn) focusPrompt();
+      else cardRef.current?.focus?.();
+    }
+  }, [roundIdx, slotReset, clear, focusPrompt]);
 
   // The tile's text drops into the gap; at once with reduced motion.
   const fill = useSharedValue(1);
@@ -223,6 +304,15 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
     lookHere: copy.clozePick.lookHere,
   };
   const hear = (): void => dispatch({ type: 'hear' });
+  /** Next (a reader on): the round moves on once; a second press, or one after the round has moved, does nothing. */
+  const advanceNow = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
+    nextButton.hide();
+    dispatch({ type: 'advance' });
+  };
+  // The round's header node (§3.4): the heading; the sentence card under it names the Korean by romanization already.
+  const roundLabel = m.a11y.answer.round(roundIdx + 1, rounds.length, copy.clozePick.heading);
 
   const gap = (
     <Animated.View
@@ -278,7 +368,9 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
         resetKey={round.id}
         prompt={
           <View style={{ gap: spacing.md }}>
-            <Heading level="prompt">{copy.clozePick.heading}</Heading>
+            <View ref={a.promptRef} testID="cloze-pick-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
+              <Heading level="prompt">{copy.clozePick.heading}</Heading>
+            </View>
             {round.gapKind === 'value' && realia ? <ClozeRealia realia={realia} testID="cloze-pick-realia" /> : null}
             <View
               ref={(node) => {
@@ -364,10 +456,11 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                             <View
                               style={{
                                 minHeight: touchTarget.min,
-                                justifyContent: 'center',
+                                flexDirection: 'row',
                                 alignItems: 'center',
+                                gap: spacing.sm,
                                 paddingVertical: spacing.sm - pressInset(p, rest),
-                                paddingHorizontal: spacing.xxl - pressInset(p, rest),
+                                paddingHorizontal: spacing.md - pressInset(p, rest),
                                 borderRadius: look.borderRadius,
                                 borderWidth: p?.borderWidth ?? rest,
                                 borderColor: p?.borderColor ?? look.borderColor,
@@ -379,19 +472,24 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                                 // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is the card's dashed ring outside the tile.
                                 <View aria-hidden pointerEvents="none" style={choiceCardRingStyle(look.ring, look.borderRadius, p?.borderWidth ?? rest)} />
                               ) : null}
-                              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-                                {card.ko}
-                              </Text>
-                              {card.romanization !== '' ? (
-                                <Body size="sm" tone="secondary">
-                                  {card.romanization}
-                                </Body>
-                              ) : null}
+                              {/* A column as wide as the mark on each side, in every state: the word stays centred, the mark never
+                                  covers it (it did at 320 wide with 200 % text), and answering never rewraps the word. */}
+                              <View style={{ width: spacing.xl }} />
+                              <View style={{ flex: 1, alignItems: 'center' }}>
+                                <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+                                  {card.ko}
+                                </Text>
+                                {card.romanization !== '' ? (
+                                  <Body size="sm" tone="secondary">
+                                    {card.romanization}
+                                  </Body>
+                                ) : null}
+                              </View>
                               {look.mark ? (
-                                <View style={{ position: 'absolute', right: spacing.md }}>
-                                  <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
-                                </View>
-                              ) : null}
+                                <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
+                              ) : (
+                                <View style={{ width: spacing.xl }} />
+                              )}
                             </View>
                           );
                         }}
@@ -401,19 +499,32 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                 })}
               </View>
             </TapBoard>
+            {nextButton.shown ? (
+              <Button
+                pressableRef={nextButton.nextRef}
+                label={copy.trace.next.cta}
+                tone="primary"
+                size="hero"
+                fullWidth
+                onPress={advanceNow}
+                testID="cloze-pick-next"
+              />
+            ) : null}
           </View>
         }
         feedback={
-          <View accessibilityLiveRegion="polite">
+          <View>
             {view.hoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={hoyaLine[view.hoya]} />
+                {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
+                <HoyaBubble tone="thinking" message={hoyaLine[view.hoya]} live={false} />
               </>
             ) : null}
           </View>
         }
       />
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
     </Screen>
   );

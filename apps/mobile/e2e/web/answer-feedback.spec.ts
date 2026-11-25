@@ -1,5 +1,8 @@
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { journeyCellName, onboardChild, openPlaygroundWordsQuest, passDiscover } from './helpers';
+
+const m = getMessages('en');
 
 /**
  * F-A11Y-001 row AF-2 (§6 test 18): in the Culture Quiz, after a right answer, one `aria-live="polite"` region holds
@@ -106,4 +109,45 @@ test('Card Match: a miss stays marked, a right pair is named with its state firs
   await expect(page.locator('[aria-live="polite"]').filter({ hasText: 'Right answer:' })).toHaveCount(1);
   await expect(page.locator('[aria-live="assertive"]')).toHaveCount(0);
   await expect(slide).toHaveAccessibleName('English meaning slide');
+});
+
+/**
+ * F-A11Y-001 row AF-4b (§6 test 16, e2e): in Pic-Word Match a wrong word keeps its mark and its "Not this one" name with no
+ * timer to let it go (it went after 600 ms), Hoya's line is not a live region, the announcer says each result once (a miss
+ * by the word's romanization, a pair by its word and meaning), and nothing on the page is `aria-live="assertive"`.
+ */
+test('Pic-Word Match: a miss stays marked, each result is said once, the miss line is not live', async ({ page }) => {
+  await openPlaygroundWordsQuest(page, { largest: false });
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByTestId('pic-word-pictures')).toBeVisible();
+  await page.waitForTimeout(700);
+
+  const ids = await page
+    .locator('[data-testid^="pic-word-picture-"]')
+    .evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') ?? '').replace('pic-word-picture-', '')));
+  const [first, other] = [ids[0]!, ids[1]!];
+  const announcer = page.getByTestId('answer-announcer');
+  await expect(announcer).toHaveAttribute('aria-live', 'polite');
+  await expect(announcer).toHaveText('');
+
+  await page.getByTestId(`pic-word-picture-${first}`).click();
+  await page.waitForTimeout(500);
+  await page.getByTestId(`pic-word-word-${other}`).click();
+  const missed = page.getByTestId(`pic-word-word-${other}`);
+  await expect(missed).toHaveAccessibleName(/^Not this one: /);
+  await expect(announcer).toHaveText(/^Not this one: [^.]+\. Try another\.$/);
+  // Hoya's line is on the page and is not a live region.
+  await expect(page.getByTestId('pic-word-sound')).toBeAttached();
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: m.learner.minigame.picWord.missHoya })).toHaveCount(0);
+
+  // No timer lets the mark go.
+  await page.waitForTimeout(2500);
+  await expect(missed).toHaveAccessibleName(/^Not this one: /);
+
+  // The right word: one result line, the pair numbered on both tiles.
+  await page.getByTestId(`pic-word-word-${first}`).click();
+  await expect(page.getByTestId(`pic-word-word-${first}`)).toHaveAccessibleName(/^Matched, number 1: /);
+  await expect(announcer).toHaveText(/^Right answer: [^,]+, .+\.$/);
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: 'Right answer:' })).toHaveCount(1);
+  await expect(page.locator('[aria-live="assertive"]')).toHaveCount(0);
 });

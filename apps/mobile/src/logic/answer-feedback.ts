@@ -104,6 +104,14 @@ export function answerOptionLabel(state: AnswerOptionState, base: string, option
   }
 }
 
+/**
+ * The look-here line a miss that turns the hint on carries (§3.2): "Look here: {item}." names the option that is now
+ * ringed, by the same words its name will use. `item` holds no taught-Korean Hangul.
+ */
+export function lookHereLine(a11y: AnswerA11y, item: string): string {
+  return tidy(`${a11y.minigame.option.hint(item)}.`, [item]);
+}
+
 /** OD-AF2 (b): a right answer's mark shows at least this long before the round moves on (reader off). */
 export const RESULT_MARK_MIN_MS = 1000;
 

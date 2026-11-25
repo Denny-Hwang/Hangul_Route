@@ -36,6 +36,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '../../logic/answer-feedback';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
@@ -43,6 +44,7 @@ import {
   headerView,
   listenPickSpeech,
   optionColumns,
+  optionItem,
   optionView,
   promptView,
   startFlow,
@@ -58,10 +60,13 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
+import { AnswerAnnouncer } from './answer-announcer';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
 import type { HostMode, MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
+import { useAnswerAnnouncement } from './use-answer-announcement';
+import { useRoundNext } from './use-round-next';
 
 /**
  * Listen & Pick (F-QUEST-002 §3.10, catalog 3): hear a Korean sound or word,
@@ -74,6 +79,12 @@ import { PictureArt } from './PictureArt';
  * and the one action (Turn sound on, Tap to hear, Try again).
  * Design: design/wireframes/minigame/listen-pick.md,
  * design/wireframes/minigame/audio-fallback.md (W1-W4).
+ *
+ * Answer feedback (F-A11Y-001 row AF-4b): each result is said once by the answer announcer (a right option by its
+ * romanization and meaning, a miss by what was tapped; the miss that turns the look-here ring on carries the look-here
+ * line), the miss bubble and the prompt line are not live regions, the advance waits the 1000 ms result floor with a
+ * screen reader off, and with one on a right answer shows Next (OD-AF9 (b)), the last round included, and the clip it
+ * would play starts after the line. A reader hears no replay after a miss; the learner taps Hear it.
  */
 
 interface Props {
@@ -119,6 +130,9 @@ interface Focusable {
   focus?: () => void;
 }
 
+/** The spelling round's option name (letter names), or none. */
+type OptionItemLabel = ((text: { ko: string; romanization: string }) => string) | undefined;
+
 /** The hosts whose Listen & Pick offers "Can't hear it?" (CH-1b); `check` and `review` follow with CH-1e. */
 const PRACTICE_HOSTS: readonly HostMode[] = ['quest', 'vocab', 'preview'];
 
@@ -158,6 +172,19 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const roundsRef = useRef(rounds);
   roundsRef.current = rounds;
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
+  // F-A11Y-001 AF-4b: each result is said once, by the answer announcer; with a screen reader on a right answer shows Next.
+  const a = useAnswerAnnouncement();
+  const { clear, focusPrompt } = a;
+  const nextButton = useRoundNext();
+  const mounted = useRef(false);
+  /** The round last moved on from: a second Next (or a late wait) for the same round does nothing; a clip is not started after it. */
+  const movedFrom = useRef(-1);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot. The spelling round
   // prints its meaning, never its Korean (the answer), so it shows only the status panel (W11); the text prompt mode
@@ -258,14 +285,73 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     }
   }, [slotPlay, slotReset, pacing]);
 
-  const dispatch = useCallback(
-    (event: FlowEvent): void => {
-      const out = stepFlow(stateRef.current, event);
-      stateRef.current = out.state;
-      setState(out.state);
-      out.effects.forEach(runEffect);
+  /** What a result needs from this render: read when the tap comes, so `dispatch` keeps one identity. */
+  const latest = useRef({ a, next: nextButton, a11y: m.a11y, labelOf: undefined as OptionItemLabel });
+  latest.current = {
+    a,
+    next: nextButton,
+    a11y: m.a11y,
+    labelOf: spellingNow ? (text) => spelling.spellingOptionLabel(text, m.a11y.romanizationOr) : undefined,
+  };
+
+  /** A tap that scored: the line is said once, and the effects that follow are the answer's own (§3.4). */
+  const settle = useCallback(
+    (before: ListenPickFlowState, after: ListenPickFlowState, tapped: string, effects: FlowEffect[]): void => {
+      const round = roundsRef.current[before.roundIdx];
+      const { a: say, next, a11y, labelOf } = latest.current;
+      const option = round?.options.find((o) => o.id === tapped);
+      const correct = effects.some((e) => e.type === 'answer' && e.correct);
+      const play = effects.find((e) => e.type === 'play');
+      const advanceNow = effects.find((e) => e.type === 'schedule-advance');
+      const replay = effects.find((e) => e.type === 'schedule-replay');
+      effects.filter((e) => e !== play && e !== advanceNow && e !== replay).forEach(runEffect);
+      if (!round || !option) return;
+      const asked = before.roundIdx;
+      if (correct && advanceNow?.type === 'schedule-advance') {
+        const item = optionItem(option, a11y, { gloss: true, labelOf });
+        const speak = (): Promise<void> => say.announce({ kind: 'right', item });
+        void afterRightAnswer({
+          readerOn: say.readerOn,
+          gameMinMs: advanceNow.ms,
+          announce: say.readerOn ? () => next.afterFocus(speak) : speak,
+          ...(play === undefined
+            ? {}
+            : {
+                play: () => {
+                  // A reader on may press Next before the line ends: the round has moved on, so its clip is not started.
+                  if (movedFrom.current === asked || !mounted.current) return;
+                  runEffect(play);
+                },
+              }),
+          showNext: next.show,
+          waitThenAdvance: (minMs) => runEffect({ type: 'schedule-advance', ms: minMs }),
+        });
+        return;
+      }
+      const item = optionItem(option, a11y, { gloss: false, labelOf });
+      const answerOption = round.options.find((o) => o.id === round.answerId);
+      // The miss that turns the ring on carries the look-here line; every other miss names a retry by the prompt's kind.
+      const result: AnswerResult =
+        after.hint && !before.hint && answerOption
+          ? { kind: 'missHint', item, hint: lookHereLine(a11y, optionItem(answerOption, a11y, { gloss: false, labelOf })) }
+          : textModeRef.current
+            ? { kind: 'miss', item }
+            : { kind: 'missListen', item };
+      afterMiss({ readerOn: say.readerOn, announce: () => say.announce(result), ...(replay === undefined ? {} : { replay: () => runEffect(replay) }) });
     },
     [runEffect],
+  );
+
+  const dispatch = useCallback(
+    (event: FlowEvent): void => {
+      const before = stateRef.current;
+      const out = stepFlow(before, event);
+      stateRef.current = out.state;
+      setState(out.state);
+      if (event.type === 'tap' && out.effects.some((e) => e.type === 'answer')) settle(before, out.state, event.optionId, out.effects);
+      else out.effects.forEach(runEffect);
+    },
+    [runEffect, settle],
   );
   dispatchRef.current = dispatch;
 
@@ -277,11 +363,16 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     [],
   );
 
-  // Round 1 never autoplays (the first sound needs a gesture); focus follows the prompt button from round 2.
+  // Round 1 never autoplays (the first sound needs a gesture). A new round empties the announcer; from round 2 on focus
+  // goes to the round's header node with a screen reader on (§3.4), and otherwise follows the prompt button as before.
   const roundIdx = state.roundIdx;
   useEffect(() => {
-    if (roundIdx > 0) speakerRef.current?.focus?.();
-  }, [roundIdx]);
+    clear();
+    if (roundIdx > 0) {
+      if (latest.current.a.readerOn) focusPrompt();
+      else speakerRef.current?.focus?.();
+    }
+  }, [roundIdx, clear, focusPrompt]);
 
   // The speaker pulses once while round 1 waits for a tap; static under reduced motion.
   const pulse = useSharedValue(1);
@@ -321,6 +412,13 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   );
   const resolved = state.status === 'resolved' || state.status === 'done';
   const hear = (): void => dispatch({ type: 'hear' });
+  /** Next (a reader on): the round moves on once; a second press, or one after the round has moved, does nothing. */
+  const advanceNow = (): void => {
+    if (movedFrom.current === roundIdx) return;
+    movedFrom.current = roundIdx;
+    nextButton.hide();
+    dispatch({ type: 'advance' });
+  };
   // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
   const arrangement = pictureTextArrangement(layoutClass);
@@ -341,6 +439,14 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   // single [ (speaker) Hear it ] reads, so the meaning, the speaker and both spellings fit the first screen.
   const hearAgainShown = spellingKit === null || !(layoutClass.windowHeight > 0 && layoutClass.windowHeight < layout.compactHeight);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
+  // The round's header node (§3.4): the heading, the scaffold line and, in the text prompt mode, the Korean it shows by
+  // its romanization (never its Hangul); never a button.
+  const headingText = textPrompt ? textPrompt.heading : spellingKit === null ? copy.listenPick.heading : copy.spellingPick.heading;
+  const roundLabel = m.a11y.answer.round(
+    roundIdx + 1,
+    rounds.length,
+    [headingText, hint, textMode && !spellingNow ? round.prompt.romanization : undefined].filter((part): part is string => part !== undefined && part !== '').join(' '),
+  );
   const textContent = textPrompt ? (
     <View style={{ gap: spacing.md }}>
       {textPrompt.prompt(round, (node) => {
@@ -379,12 +485,14 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         arrangement={arrangement}
         prompt={
           <>
-            <Heading level="prompt">{textPrompt ? textPrompt.heading : spellingKit === null ? copy.listenPick.heading : copy.spellingPick.heading}</Heading>
-            {hint ? (
-              <Body tone="secondary" testID="listen-pick-hint">
-                {hint}
-              </Body>
-            ) : null}
+            <View ref={a.promptRef} testID="listen-pick-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
+              <Heading level="prompt">{headingText}</Heading>
+              {hint ? (
+                <Body tone="secondary" testID="listen-pick-hint">
+                  {hint}
+                </Body>
+              ) : null}
+            </View>
             <Spacer size="md" />
 
             {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
@@ -445,7 +553,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                 </View>
               ) : null}
 
-              <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
+              {/* Not live: the answer's word is said once by the announcer (§3.3). */}
+              <View style={{ alignItems: 'center', gap: spacing.sm }}>
                 {prompt.content ? (
                   <KoreanText
                     ko={prompt.content.ko}
@@ -482,6 +591,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         answers={
           // Held while the voice check may still bring the sound's text panel in above the cards; the text prompt mode
           // draws its prompt as text from the start (its status panel shows only once the round is answered).
+          <>
           <TapBoard lock="board" held={!textMode && !slot.settled}>
             {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
             <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
@@ -513,18 +623,35 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
               })}
             </View>
           </TapBoard>
+          {nextButton.shown ? (
+            <>
+              <Spacer size="lg" />
+              <Button
+                pressableRef={nextButton.nextRef}
+                label={copy.trace.next.cta}
+                tone="primary"
+                size="hero"
+                fullWidth
+                onPress={advanceNow}
+                testID="listen-pick-next"
+              />
+            </>
+          ) : null}
+          </>
         }
         feedback={
-          <View accessibilityLiveRegion="polite">
+          <View>
             {showMissHoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={textPrompt ? textPrompt.missLine : spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss} />
+                {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
+                <HoyaBubble tone="thinking" live={false} message={textPrompt ? textPrompt.missLine : spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss} />
               </>
             ) : null}
           </View>
         }
       />
+      <AnswerAnnouncer line={a.line} />
       <Spacer size="xl" />
     </Screen>
   );

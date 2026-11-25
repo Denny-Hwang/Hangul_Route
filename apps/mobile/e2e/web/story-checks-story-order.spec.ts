@@ -54,6 +54,11 @@ const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWind
 const card = (page: Page, id: string) => page.getByTestId(`story-order-card-${id}`);
 const frameColor = (page: Page, id: string): Promise<string> => card(page, id).evaluate((el) => getComputedStyle(el.firstElementChild ?? el).borderTopColor);
 const MORNING = STORY_ORDER_FIXTURES.captions.storyOrder!.rounds[0]!;
+/**
+ * What the answer announcer says for the card placed at `i` (F-A11Y-001 AF-4b): the place and the line by romanization and
+ * meaning, never its Hangul. The slot keeps its own name, Korean included.
+ */
+const placed = (i: number, p: (typeof MORNING.panels)[number]): string => `Right answer: Place ${i + 1} of 4: ${p.caption.romanization}, ${p.caption.en}`;
 const [DAY] = STORY_ORDER_FIXTURES.twoRounds.storyOrder!.rounds;
 
 /** Every visible button at least the floor on both sides and inside the window; every slot at least touchTarget.min tall. */
@@ -112,11 +117,11 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
           await pastTapLock(page);
           await card(page, p.id).click();
           await expect(page.getByTestId(`story-order-slot-${i + 1}`)).toHaveAccessibleName(`Place ${i + 1} of 4: ${p.caption.ko}`);
-          await expect(page.getByTestId('story-order-announce')).toHaveText(`Place ${i + 1} of 4: ${p.caption.ko}`);
+          await expect(page.getByTestId('answer-announcer')).toHaveText(placed(i, p));
         }
         await expect(page.getByTestId('story-order-slot-2')).toContainText('그다음에');
         await expect(page.getByTestId('story-order-slot-2')).toContainText('geudaeume');
-        await expect(page.getByTestId('story-order-announce')).toHaveAttribute('aria-live', 'polite');
+        await expect(page.getByTestId('answer-announcer')).toHaveAttribute('aria-live', 'polite');
         await expectNoHorizontalOverflow(page);
         await expectTargets(page);
         await shot(page, `story-order-two-placed-${size.name}`);
@@ -212,7 +217,7 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         // The last card fills the row and opens the replay, so its slot is not on screen any more.
         if (i === MORNING.panels.length - 1) break;
         await expect(page.getByTestId(`story-order-slot-${i + 1}`)).toHaveAccessibleName(`Place ${i + 1} of 4: ${p.caption.ko}`);
-        await expect(page.getByTestId('story-order-announce')).toHaveText(`Place ${i + 1} of 4: ${p.caption.ko}`);
+        await expect(page.getByTestId('answer-announcer')).toHaveText(placed(i, p));
         // The placed card is gone and the focus is on the first card still to place, never on the page body.
         await expect.poll(focusedCard).toBe((await remainingIds())[0]);
       }
