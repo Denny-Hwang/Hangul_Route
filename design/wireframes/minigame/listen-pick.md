@@ -99,3 +99,50 @@ Exit: the last round -> back to `quest/player` (step complete) · empty scope ->
 
 - The Hangul Check shows chunk dots instead of the bar; its header comes with the review screen (Q-10), this game keeps the bar until a host supplies chunk data.
 - Should the text fallback also appear before the first tap when sound is already known to be off? Recommend no: the first tap reveals it, as in audio-fallback W2.
+
+## [MP] Contrast round (plain, aspirated, tense)
+
+Spec: `docs/specs/AMENDMENTS-MINIMAL-PAIRS.md` [MP] §3.5-§3.9 (row MP-2). A contrast round is a Listen & Pick round whose options are one approved **contrast set** (2 or 3 members that differ only in the first consonant's series: 가 / 카, 달 / 탈 / 딸). It lives in its own practice step (`contrast: true`) right after the quest's practice step; the step draws its rounds and targets per play: quest 6 "(Hear the Puff)", Stage 2 Letters quest 2 "(Soft, Puff or Tight?)". It is never scored and never shown as text.
+
+Asking (same layout as S4; 2 or 3 text options, no picture):
+
+```
++----------------------------------+
+| (bar)                     n / N  |  <- N counts playable rounds only
+|  (Listen, then pick)             |
+|        [[ (speaker) ]]           |  <- clip only; never the device voice
+|        [ Hear it again ]         |
+|  (Can't hear it?)                |  <- guidance only (no Show the letters)
+|  +-----------+  +-----------+    |
+|  |  ~~ 가 ~~ |  |  ~~ 카 ~~ |    |  <- a word set adds its gloss after the answer
+|  +-----------+  +-----------+    |
++----------------------------------+
+```
+
+Miss (the compare row replaces the 0.8 s replay):
+
+```
++----------------------------------+
+|  +-----------+  +-----------+    |
+|  |  ~~ 가 ~~ |  |  ~~ 카 ~~ |    |  <- tapped card: amber + replay mark, locked
+|  +-----------+  +-----------+    |
+|  (Hoya thinking: "Listen to both.")
+|  +--------------+ +--------------+
+|  | ~~ 카 ~~      | | ~~ 가 ~~      |  <- right one first, then the one tapped; each plays in turn
+|  | (Big puff,    | | (Soft, starts |     the one playing: outline + speaker glyph (not colour alone)
+|  |  starts       | |  lower.)      |  <- each item is a button that plays it again
+|  |  higher.)     | |               |
+|  +--------------+ +--------------+
+|  [[ Next ]]  (pair only)         |  <- a pair ends here, unscored; a triple stays open
++----------------------------------+
+```
+
+Hit: green + check (as S4); every option shows its kind line ("(Soft, starts lower.)", "(Big puff, starts higher.)", "(Tight, no puff.)"; ㅅ "(Soft, with a little breath.)", ㅆ "(A long, sharp hiss.)") and its gloss, and becomes a button that plays its clip; the prompt plays once more; next round after 0.7 s.
+
+States:
+- **not playable** (set not approved, a member's clip cannot play, sound off, "Always show the letters" on): the round is not shown; nothing is said or marked.
+- **step with nothing to play** (no playable round, or fewer than two sets, or one series only; decided after the clip packs have loaded): the quest goes on to the next step (and back past it on Previous); no step screen; its step dot still fills.
+- **clip fails while shown**: the round ends with nothing scored; the next one opens.
+- **Can't hear it? opened**: guidance only; the step's later contrast rounds are dropped after this one.
+- **large text / 320-wide window**: the compare row stacks its two or three items in one column and the body scrolls; Hear it again and the options stay reachable.
+- **anti-shame**: amber and Hoya thinking only; no red, no counter, no timer; nothing counts toward stars.

@@ -10,10 +10,17 @@
  * Deviation from the audit's rr.py (owner-requested): a simple stop final before an
  * initial ㅎ keeps the ㅎ (noun convention) instead of aspirating, see applyBoundaryRules.
  *
+ * Also applied (AMENDMENTS-ROMANIZER-GAPS RG-1): a verb-stem ㄺ before ㄱ is heard [ㄹ]
+ * (읽고 ilgo; the ㄺ nouns 닭 탉 흙 칡 삵 슭 keep [ㄱ]), the finals of 밟- and 넓죽- / 넓둥- /
+ * 넓적- are heard [ㅂ], and a simple stop before the suffix 히 / 혀 / 혔 / 힌 / 힐 aspirates
+ * (좁히다 jopida, 잡혀 japyeo).
+ *
  * Known limits (deliberately not implemented; cover them with an entry in
  * ROMANIZATION_EXCEPTIONS): ㄴ-insertion in compounds (꽃잎 RR kkonnip, here
- * kkochip; 솔잎 RR sollip, here sorip), the special final of 밟- (밟다 RR bapda,
- * here balda; 잡혀 RR japyeo, here japhyeo, verb ㅎ after a simple stop), word-internal compound boundaries and Sino-Korean exceptions.
+ * kkochip; 솔잎 RR sollip, here sorip), 사이시옷 before 이 (깻잎), the juncture before a
+ * content morpheme (맛없어요, 첫인상), a predicate's ㅎ after a stop before a 하다 form
+ * (못해요 RR motaeyo, here mothaeyo; the noun 북한산 keeps its ㅎ), word-internal compound
+ * boundaries and Sino-Korean exceptions; see AMENDMENTS-ROMANIZER-GAPS.
  * Cross-word sandhi is not applied either (RR does not mark it).
  */
 import {
@@ -66,8 +73,23 @@ const CODA_RR: Readonly<Record<Coda, string>> = {
   K: 'k', T: 't', P: 'p', L: 'l', M: 'm', N: 'n', NG: 'ng', '': '',
 };
 
+/** ㄺ-final noun syllables: they keep [ㄱ] before ㄱ (닭고기 dakgogi), unlike a verb stem (읽고 ilgo). */
+const RIEUL_GIYEOK_NOUNS: ReadonlySet<string> = new Set(['닭', '탉', '흙', '칡', '삵', '슭']);
+/** The suffix blocks (히 혀 혔 힌 힐) whose ㅎ joins a preceding simple stop (SP 제12항 붙임 1, 제17항 붙임). */
+const SUFFIX_HI: ReadonlySet<string> = new Set(['히', '혀', '혔', '힌', '힐']);
+/** 넓 is heard [ㅂ] directly before these blocks (SP 제10항 다만: 넓죽하다, 넓둥글다; 해설: 넓적하다). */
+const NEOP_P_BEFORE: ReadonlySet<string> = new Set(['죽', '둥', '적']);
+/** A simple stop final followed by the suffix 히: the ㅎ merges into this aspirated consonant. */
+const ASPIRATED_BEFORE_SUFFIX_HI: Readonly<Record<string, string>> = {
+  'ㄱ': 'ㅋ', 'ㄲ': 'ㅋ', 'ㅋ': 'ㅋ',
+  'ㅂ': 'ㅍ', 'ㅍ': 'ㅍ',
+  'ㄷ': 'ㅊ',
+  'ㅅ': 'ㅌ', 'ㅆ': 'ㅌ', 'ㅌ': 'ㅌ',
+  'ㅈ': 'ㅊ', 'ㅊ': 'ㅊ',
+};
+
 /** Apply ㅎ, liaison and palatalisation rules between neighbouring blocks, left to right. */
-function applyBoundaryRules(blocks: SyllableParts[]): void {
+function applyBoundaryRules(word: string, blocks: SyllableParts[]): void {
   for (let i = 0; i < blocks.length - 1; i++) {
     const cur = blocks[i] as SyllableParts;
     const next = blocks[i + 1] as SyllableParts;
@@ -84,6 +106,14 @@ function applyBoundaryRules(blocks: SyllableParts[]): void {
       if (next.initial === 'ㅇ') cur.final = rest;
       else if (next.initial === 'ㄴ') cur.final = rest === '' ? 'ㄴ' : rest;
       coda = cur.final;
+    }
+
+    // A simple stop before the suffix 히 / 혀 / 혔 / 힌 / 힐 aspirates (좁히다 jopida, 잡혀 japyeo).
+    const suffixAspirate = ASPIRATED_BEFORE_SUFFIX_HI[coda];
+    if (suffixAspirate !== undefined && SUFFIX_HI.has(word.charAt(i + 1))) {
+      next.initial = suffixAspirate;
+      cur.final = '';
+      continue;
     }
 
     // Noun convention (NIKL RR, special provisions): after a simple stop final the ㅎ is
@@ -135,9 +165,21 @@ export function romanizeSyllables(word: string): string[] | null {
     blocks.push(parts);
   }
 
-  applyBoundaryRules(blocks);
+  applyBoundaryRules(word, blocks);
 
   const codas: Coda[] = blocks.map((b) => NEUTRAL[b.final] as Coda);
+  for (let i = 0; i < blocks.length - 1; i++) {
+    const block = word.charAt(i);
+    const final = (blocks[i] as SyllableParts).final;
+    // ㄺ before ㄱ in a verb stem is heard [ㄹ] (SP 제11항 다만); the ㄺ nouns keep [ㄱ].
+    if (final === 'ㄺ' && (blocks[i + 1] as SyllableParts).initial === 'ㄱ' && !RIEUL_GIYEOK_NOUNS.has(block)) {
+      codas[i] = 'L';
+    }
+    // 밟- before a consonant, and 넓 before 죽 / 둥 / 적, are heard [ㅂ] (SP 제10항 다만).
+    if (final === 'ㄼ' && (block === '밟' || (block === '넓' && NEOP_P_BEFORE.has(word.charAt(i + 1))))) {
+      codas[i] = 'P';
+    }
+  }
   const initials: string[] = blocks.map((b) => b.initial);
 
   for (let i = 0; i < blocks.length - 1; i++) {
