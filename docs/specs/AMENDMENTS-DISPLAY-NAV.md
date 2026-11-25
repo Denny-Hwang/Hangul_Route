@@ -1,5 +1,7 @@
 Status: ready (spec, wireframe and mock pass DN-0; amends F-I18N-001 §3.2 / §3.3, F-AUTH-002, F-APP-001 §3.7 / §3.9, F-BROWSE-001 §4.9, F-LAYOUT-001 (text size), F-LEARN-001 §3.15.4; implementation rows in section 12)
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) (§3.6, the Display control and sheet): on the web only (`Platform.OS === 'web'`, the installed PWA included) the Display sheet gains an "I use a screen reader" switch, with the level check's existing label and the new help line `common.display.screenReaderHelp` ("Tap Next to go on. Sounds play when you tap them."), writing `screenReader` to `device:settings` (OD-AF3 (d)). The language and text size rows, and the sheet's focus and history rules (§8), are unchanged (row AF-1).
+
 # Amendment: one language and one text size per device, a way back on every screen, and the learner UX pass of the owner report 2026-10-16
 
 > Basis: `origin/main` `426384b45` (2026-10-16). Every `file:line` below is at that commit. The lecture-mode parts of the same report (the phone stage, the presenter's way back, the helper picker, the grouped chooser) are `AMENDMENTS-LECTURE-V2.md` section 18; this file is their device-wide base (the Display control and record the presenter uses).

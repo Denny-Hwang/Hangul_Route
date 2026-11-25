@@ -722,6 +722,27 @@ describe('[LR] Start again, Maybe later and the stop sheet', () => {
     expect(stored()!.answers).toHaveLength(1);
   });
 
+  // [LR-6] Keep going is the filled button and Stop the plain one, as on the Hangul Check's sheet.
+  it('[LR-6] the stop sheet draws Keep going as the filled safe choice and Stop plain, Stop never danger', async () => {
+    const { r, nav } = await open();
+    await tapId(r, 'stage-check-go');
+    expect(await nav.back()).toBe(true);
+    expect(sheetOf(r)).toMatchObject({
+      visible: true,
+      testID: 'stage-check-leave',
+      title: M.leave.title,
+      cancelLabel: M.leave.stay.cta,
+      confirmLabel: M.leave.stop.cta,
+      safeFilled: true,
+    });
+    expect(sheetOf(r).confirmTone ?? 'primary').toBe('primary');
+    expect(sheetOf(r).confirmFirst).toBeUndefined();
+    // Keep going closes the sheet and the check goes on; nothing is left.
+    await act(async () => sheetOf(r).onCancel());
+    expect(sheetOf(r).visible).toBe(false);
+    expect(nav.goBack).not.toHaveBeenCalled();
+  });
+
   it('a resumed check says the check is kept from its first round', async () => {
     await playSome(2);
     const { r, nav } = await open();

@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1); the same screen for everyone
 Code (row CM-36): `apps/mobile/src/screens/minigames/HiddenHeritageGame.tsx`; pure rules in `apps/mobile/src/logic/hidden-heritage-flow.ts` (hit test, first-try scoring, hint); the scene drawn by `StoryScene`'s renderer (`packages/design-system/src/scene-art/`); budget and composition checks beside `scene-art/rules.ts`. Scenes: CM-36 (Food) and CM-37 ×4 (Letters, Holidays, Nature, Play).
 Mock: `design/screens/journey-topic-pages/` (`mock/hidden-heritage.html` and `mock/hidden-heritage-slide.html`; 320, 768 and the projector stage)
 Notation: `[[ X ]]` the one primary action, `[ X ]` a button, `( x )` a text placeholder, `~~ x ~~` taught Korean with romanization (`KoreanText`), `{ x }` content-driven, `<x>` a runtime state.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a found ring gets a `check` disc and a miss ring a `replay` disc on its corner, kept inside the scene; the miss ring stays until the next tap that changes the board and the missed spot is inactive; the dashed look-here ring stays; each result is said once; the caption stays visible and is not live (row AF-4c).
 
 ## Scenario (Given-When-Then)
 

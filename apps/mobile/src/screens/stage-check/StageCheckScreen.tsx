@@ -389,6 +389,8 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
       message={phase.kind === 'failed' ? m.learner.dailyReview.saveFailed.leaveBody : kept ? m.learner.stageReview.leave.bodyKept : m.learner.stageReview.leave.body}
       cancelLabel={m.learner.stageReview.leave.stay.cta}
       confirmLabel={m.learner.stageReview.leave.stop.cta}
+      // [LR-6] Keep going is the filled button and Stop the plain one, as on the Hangul Check's sheet (owner decision 2026-11-24, O5).
+      safeFilled
       onCancel={() => setLeaving(false)}
       onConfirm={() => {
         stopped.current = true;

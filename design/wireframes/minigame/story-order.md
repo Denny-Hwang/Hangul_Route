@@ -5,6 +5,7 @@ Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, 
 Mock: `design/screens/minigame-variety/` (`mock/story-order.html`, `mock/states.html` board O; shots at 320 and 768)
 Code (planned, CM-34): renderer `apps/mobile/src/screens/minigames/StoryOrderGame.tsx`, built on the shipped pure rules of the sequence game (`logic/story/sequence-player.ts`, `seeded-order.ts`, `sequence-view.ts`) with a caption mode; round schema `StoryOrderRoundSchema` and `storyOrderToSequence` in `packages/content-schema`; lint `story-order-text` in `scripts/`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko ~~` taught Korean with romanization (`KoreanText`), `(art)` a `StoryScene` picture, `[ n ]` a numbered slot.
+Amended 2026-11-24 by `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` [AF]: a placement is one announcer line (place, romanization and meaning, no Hangul), a miss stays until the next tap that changes the board (the 600 ms flash is gone), and Story Order ends in its own replay and Done, so it has no Next (row AF-4b).
 
 ## Scenario (Given-When-Then)
 

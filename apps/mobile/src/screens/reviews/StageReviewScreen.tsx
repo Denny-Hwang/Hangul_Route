@@ -3,6 +3,7 @@ import {
   Button,
   Caption,
   Card,
+  ConfirmSheet,
   Heading,
   Hoya,
   HoyaBubble,
@@ -20,7 +21,7 @@ import { formatDate } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Modal, Platform, Pressable, View, type PressableStateCallbackType } from 'react-native';
+import { Platform, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll, stage1Cards } from '../../content';
 import { RomanizationModeOverride, useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -265,13 +266,21 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   const host = useMemo(() => reviewHost(() => dispatch({ type: 'chunk-done' })), [dispatch]);
   // [LR] OD-LR1 (c): Stop keeps the stored check, so the sheet says so; before the first answer nothing is stored yet.
   const hasAnswers = useReviewRunStore((run) => Object.keys(run.answers).length > 0);
+  const stay = useCallback(() => dispatch({ type: 'stay' }), [dispatch]);
+  const stop = useCallback(() => dispatch({ type: 'confirm-leave' }), [dispatch]);
+  // [LR-6] "Stop the check?" is the design system's ConfirmSheet, as the Stage Check's: Keep going first, focused and filled
+  // (the safe choice), Stop the plain outlined button (never danger); Escape, the scrim and the back are Keep going.
   const leaveSheet = (
-    <LeaveSheet
+    <ConfirmSheet
       visible={flow.leaving}
-      m={m.leave}
-      kept={hasAnswers}
-      onStay={() => dispatch({ type: 'stay' })}
-      onStop={() => dispatch({ type: 'confirm-leave' })}
+      title={m.leave.title}
+      message={hasAnswers ? m.leave.bodyKept : m.leave.body}
+      cancelLabel={m.leave.stay.cta}
+      confirmLabel={m.leave.stop.cta}
+      safeFilled
+      onCancel={stay}
+      onConfirm={stop}
+      testID="hangul-check-leave"
     />
   );
 
@@ -545,45 +554,4 @@ function AttemptSwitch({ label, value, onChange }: { label: string; value: boole
   );
 }
 
-/**
- * "Stop the check?": stay is the primary; stop goes back. [LR] With answers given Stop keeps the stored check for a day
- * (OD-LR1 (c)) and the line says so; before the first answer there is nothing stored, and the old line stays true.
- */
-function LeaveSheet({
-  visible,
-  m,
-  kept,
-  onStay,
-  onStop,
-}: {
-  visible: boolean;
-  m: ReturnType<typeof useMessages>['learner']['stageReview']['leave'];
-  kept: boolean;
-  onStay: () => void;
-  onStop: () => void;
-}): ReactElement {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onStay} accessibilityViewIsModal>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="hangul-check-leave">
-        {/* A tap on the dimmed area stays; hidden from assistive tech, which has the Keep going button below. */}
-        <Pressable onPress={onStay} focusable={false} aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flex: 1 }} />
-        <View
-          style={{
-            backgroundColor: colors.surface.paper,
-            borderTopLeftRadius: radii.xl,
-            borderTopRightRadius: radii.xl,
-            padding: spacing.lg,
-            gap: spacing.sm,
-          }}
-        >
-          <Heading level="prompt">{m.title}</Heading>
-          <Body tone="secondary">{kept ? m.bodyKept : m.body}</Body>
-          <Spacer size="sm" />
-          <Button label={m.stay.cta} tone="primary" size="md" fullWidth onPress={onStay} />
-          <Button label={m.stop.cta} tone="ghost" size="md" fullWidth onPress={onStop} />
-        </View>
-      </View>
-    </Modal>
-  );
-}
 export { AttemptSwitch };

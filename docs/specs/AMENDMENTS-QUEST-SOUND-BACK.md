@@ -1,5 +1,7 @@
 Status: done; rows QB-1 to QB-4 done (#1037), rows QS-1 to QS-5 done (the PR that adds this line)
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) (QS-4, the least waits): the game's "present delay as the least wait" becomes one floor, `RESULT_MARK_MIN_MS` = 1000 ms after every right answer with the reader off, applied by each screen (OD-AF2 (b)): Match Sound, Odd One Out (now on `pacing.after`), Culture Quiz, Listen & Pick, Pic-Word Match, Cloze Pick, Realia Read and Hidden Heritage were 700 ms, Card Match's last pair 800 ms, Build a Letter, Read Pick (0 under reduced motion), Syllable Build, Match Shape, and `afterReply` in Tap & Respond and Role Play 900 ms, Sentence Builder 600 ms. The sound's end (the cap of 2500 ms, 6000 ms for a sentence) still holds the advance after the floor (rows AF-2 to AF-4c).
+
 # Amendment: sounds get room at both ends, and a quest step can be taken back
 
 > **Owner request of 2026-11-17 (in chat, translated):**

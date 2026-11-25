@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-24 by `F-A11Y-001-answer-feedback-and-announcements.md` [AF]** (work order WO-04 of the 2026-11 review: answer feedback you can see without colour, and hear once) ("wrong picks lock + nudge", `:36`): Tap & Respond's replies are `ChoiceCard` rows with `check` or `replay`, named state first; a missed reply stays locked and marked but is no longer `disabled` (that painted the amber as a greyed-out button, and a reader said "dimmed"); the result is said once and the miss bubble is not live; `afterReply` (900 ms) and the 1000 ms floor apply with the reader off, and with a reader on Next shows after a right reply, the last round included (row AF-2).
+
 ## 1. Context
 
 CLAUDE.md §1 MVP scope: "Stage 2 / Stage 4 — taste only". This adds the Stage 4
