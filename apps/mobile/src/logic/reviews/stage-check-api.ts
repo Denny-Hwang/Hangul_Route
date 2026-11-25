@@ -8,7 +8,7 @@ import type { RoundAnswer } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
-import { finishOnce } from './save-retry';
+import { finishOnce, stepsOnce } from './save-retry';
 import {
   planStageCheck,
   stageCheckCompleteEvent,
@@ -114,6 +114,8 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
   const worlds = new Map<string, Promise<StageCheckWorldRead>>();
   // A null (nothing was written) is not kept: the same plan may finish once the switch or the stage is back.
   const finishPlanOnce = finishOnce<PlannedStageCheck, StageCheckFinished | null>((done) => done !== null);
+  // The writes inside it, each once per plan: a step after the entry that throws never makes the next call write a second entry.
+  const writeOnce = stepsOnce<PlannedStageCheck>();
 
   async function readWorld(profileId: string | null, now: Date = new Date()): Promise<StageCheckWorldRead> {
     if (profileId === null || !deps.on(profileId)) return { kind: 'off' };
@@ -223,9 +225,9 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
         const result = stageCheckResult(plan.rounds, answers);
         const file = await deps.file(profileId);
         const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
-        deps.recordReview(profileId, stageCheckEntry({ stage: plan.stage, result, at }));
-        if (result.passed) deps.latch(profileId, plan.stage, at);
-        deps.track(stageCheckCompleteEvent(profileId, plan.stage, result.stars));
+        writeOnce(plan, 'entry', () => deps.recordReview(profileId, stageCheckEntry({ stage: plan.stage, result, at })));
+        if (result.passed) writeOnce(plan, 'latch', () => deps.latch(profileId, plan.stage, at));
+        writeOnce(plan, 'event', () => deps.track(stageCheckCompleteEvent(profileId, plan.stage, result.stars)));
         return { stars: result.stars, passed: result.passed, missed: result.missedItemIds.length > 0 };
       });
     },

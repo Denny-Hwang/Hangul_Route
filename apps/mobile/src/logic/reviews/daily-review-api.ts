@@ -23,7 +23,7 @@ import {
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
-import { finishOnce } from './save-retry';
+import { finishOnce, stepsOnce } from './save-retry';
 
 /**
  * The Daily Review's side of the stores (F-CURR-002 row CM-14). It reads the learner's memory store and the review
@@ -111,6 +111,8 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
   // A finish is once per plan (AMENDMENTS-QUEST-LEAVE-RESUME section 3.5): a Try again for a plan whose entry is written
   // answers its result and writes no second entry or event.
   const finishPlanOnce = finishOnce<PlannedSession, { finished: FinishedSession; world: ReviewWorld }>();
+  // The writes inside it, each once per plan: a step after the entry that throws never makes the next call write a second entry.
+  const writeOnce = stepsOnce<PlannedSession>();
 
   async function readWorld(profileId: string | null, now: Date = new Date()): Promise<WorldRead> {
     if (profileId === null || !deps.on(profileId)) return { kind: 'off' };
@@ -220,8 +222,8 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
         await Promise.all(recorded);
         const result = sessionResult(plan.rounds, answers);
         // A random id: never a profile id, a name or a time in clear. The 3 or 2 points join with CM-17's points API.
-        deps.recordReview(profileId, dailyEntry({ result, day: ctx.today, now, nonce: Math.floor(deps.random() * 0x7fffffff).toString(36) }));
-        deps.track(dailyReviewCompleteEvent(profileId, result.stars));
+        writeOnce(plan, 'entry', () => deps.recordReview(profileId, dailyEntry({ result, day: ctx.today, now, nonce: Math.floor(deps.random() * 0x7fffffff).toString(36) })));
+        writeOnce(plan, 'event', () => deps.track(dailyReviewCompleteEvent(profileId, result.stars)));
         const read = await readWorld(profileId, now);
         if (read.kind !== 'ready') {
           return { finished: { stars: result.stars, stronger: null, after: 'empty' as const }, world: { ...world, reviews: deps.reviews(profileId) ?? world.reviews } };

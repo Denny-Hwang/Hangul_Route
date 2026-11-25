@@ -17,11 +17,13 @@ export function keepRecording(recorded: Map<number, Promise<void>>, index: numbe
 
 /**
  * Records again the rounds whose recording rejected: each is replaced, in the same place, by the new recording. A
- * recording that rejects again stays as a rejection for the next try. Resolves once every old recording has settled.
+ * recording that rejects again stays as a rejection for the next try. Resolves once every old recording has settled and
+ * every new one has (a new one that rejects does not reject this: the finish that follows reads it from the map).
  */
 export async function recordAgain(recorded: Map<number, Promise<void>>, record: (index: number) => Promise<void>): Promise<void> {
   const failed = await Promise.all([...recorded].map(([index, recording]) => recording.then(() => null, () => index)));
-  for (const index of failed) if (index !== null) keepRecording(recorded, index, record(index));
+  const again = failed.flatMap((index) => (index === null ? [] : [keepRecording(recorded, index, record(index))]));
+  await Promise.all(again.map((recording) => recording.catch(() => undefined)));
 }
 
 /**
@@ -45,5 +47,21 @@ export function finishOnce<K extends object, T>(keep: (result: T) => boolean = (
       },
     );
     return started;
+  };
+}
+
+/**
+ * The writes of a finish, each once per plan: a step that ran is never run again by a later call for the same plan,
+ * even when a step after it threw (the entry is written, the latch then threw: the next call writes no second entry).
+ * A step that threw is not marked, so the next call runs it again.
+ */
+export function stepsOnce<K extends object>(): (plan: K, step: string, run: () => void) => void {
+  const done = new WeakMap<K, Set<string>>();
+  return (plan, step, run) => {
+    const steps = done.get(plan) ?? new Set<string>();
+    done.set(plan, steps);
+    if (steps.has(step)) return;
+    run();
+    steps.add(step);
   };
 }

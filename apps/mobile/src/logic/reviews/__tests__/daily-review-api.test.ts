@@ -174,6 +174,28 @@ describe('a session, start to end', () => {
     expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
   });
 
+  it('a step after the entry was written that throws leaves the entry written once: the next call writes no second one', async () => {
+    const f = fake();
+    let trackFails = true;
+    const track = f.deps.track;
+    f.deps.track = (e) => {
+      if (e.name === 'review.complete' && trackFails) {
+        trackFails = false;
+        throw new Error('telemetry down');
+      }
+      track(e);
+    };
+    const { api, world } = await ready(f);
+    const plan = (await api.startSession(world, 'daily', 'en')) as NonNullable<Awaited<ReturnType<typeof api.startSession>>>;
+    const answers = new Map<number, RoundAnswer>(plan.rounds.map((_r, i) => [i, { correct: true }]));
+    await expect(api.finishSession(world, plan, answers, [], NOW)).rejects.toThrow('telemetry down');
+    expect(f.reviews).toHaveLength(1);
+    const done = await api.finishSession(world, plan, answers, [], NOW);
+    expect(done.finished.stars).toBe(3);
+    expect(f.reviews).toHaveLength(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
   it('nothing due: no session and no review.start', async () => {
     const f = fake({}, 0);
     const { api, world } = await ready(f);

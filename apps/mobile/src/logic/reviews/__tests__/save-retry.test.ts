@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { finishOnce, keepRecording, recordAgain } from '../save-retry';
+import { finishOnce, keepRecording, recordAgain, stepsOnce } from '../save-retry';
 
 /**
  * AMENDMENTS-QUEST-LEAVE-RESUME section 3.5 (row LR-4): the pure parts of a finish that can be tried again. The
@@ -36,6 +36,20 @@ describe('keepRecording and recordAgain', () => {
     await recordAgain(recorded, record);
     expect(record).toHaveBeenCalledTimes(1);
     await expect(recorded.get(0)).resolves.toBeUndefined();
+  });
+
+  it('waits for the new recordings, and a new one that rejects does not reject it', async () => {
+    const recorded = new Map<number, Promise<void>>();
+    keepRecording(recorded, 0, Promise.reject(new Error('no')));
+    let release!: () => void;
+    let settled = false;
+    const done = recordAgain(recorded, () => new Promise<void>((resolve) => (release = resolve))).then(() => (settled = true));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(settled).toBe(false);
+    release();
+    await done;
+    expect(settled).toBe(true);
+    await expect(recordAgain(recorded, () => Promise.reject(new Error('still no')))).resolves.toBeUndefined();
   });
 
   it('writes nothing again when every recording worked', async () => {
@@ -85,6 +99,34 @@ describe('finishOnce', () => {
     expect(await once(plan, run)).toBeNull();
     expect(await once(plan, run)).toBe(3);
     expect(await once({}, run)).toBe(3);
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('stepsOnce', () => {
+  it('runs a step once per plan, and a step that threw is run again by the next call', () => {
+    const step = stepsOnce<object>();
+    const plan = {};
+    const write = vi.fn();
+    step(plan, 'entry', write);
+    step(plan, 'entry', write);
+    expect(write).toHaveBeenCalledTimes(1);
+    const flaky = vi.fn().mockImplementationOnce(() => {
+      throw new Error('latch failed');
+    });
+    expect(() => step(plan, 'latch', flaky)).toThrow('latch failed');
+    step(plan, 'latch', flaky);
+    step(plan, 'latch', flaky);
+    expect(flaky).toHaveBeenCalledTimes(2);
+  });
+
+  it('steps and plans are kept apart', () => {
+    const step = stepsOnce<object>();
+    const run = vi.fn();
+    const a = {};
+    step(a, 'entry', run);
+    step(a, 'event', run);
+    step({}, 'entry', run);
     expect(run).toHaveBeenCalledTimes(3);
   });
 });

@@ -184,6 +184,8 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const allowLeave = useRef(false);
   // Stop was chosen: a Try again still running finishes nothing.
   const stopped = useRef(false);
+  // A Try again's finish is running: Stop does not count the answered items again, the entry that finish writes counts them.
+  const retrying = useRef(false);
   // A double tap never starts two sessions (two review.start events) or finishes one twice (two `daily` entries).
   const starting = useRef(false);
   const finishing = useRef(false);
@@ -261,7 +263,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     const w = world.current;
     // A stopped Daily Review keeps its answers (recorded as given) and writes no entry; its due items still count toward the day's 20.
     // The same for one whose finish could not be saved: it is stopped, and a Try again that is running writes nothing more.
-    if ((p.kind === 'playing' || p.kind === 'failed') && w !== null) api.current?.noteStopped(w, p.plan, answers.current.keys());
+    if ((p.kind === 'playing' || p.kind === 'failed') && w !== null && !retrying.current) api.current?.noteStopped(w, p.plan, answers.current.keys());
     stopped.current = true;
     setLeaving(false);
     allowLeave.current = true;
@@ -332,7 +334,10 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
       await recordAgain(recorded.current, (index) => a.recordRound(w, p.plan, index, answers.current.get(index) as RoundAnswer));
       // Stop was chosen while the recordings were being written: nothing more is written.
       if (stopped.current) return true;
-      const { finished, world: next } = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]);
+      retrying.current = true;
+      const { finished, world: next } = await a.finishSession(w, p.plan, answers.current, [...recorded.current.values()]).finally(() => {
+        retrying.current = false;
+      });
       if (stopped.current) return true;
       world.current = next;
       setLeaving(false);

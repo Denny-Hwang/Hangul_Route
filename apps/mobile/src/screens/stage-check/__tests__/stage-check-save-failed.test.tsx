@@ -28,6 +28,9 @@ const api = vi.hoisted(() => ({
   finished: 0,
   rounds: 2,
   recordFails: new Set<number>(),
+  /** Holds each recording started after it is set, and the next finish, until the test lets them go. */
+  recordHold: null as null | Promise<void>,
+  finishHold: null as null | Promise<void>,
   recordLog: [] as number[],
 }));
 const reader = vi.hoisted(() => ({ announce: vi.fn(), focus: vi.fn() }));
@@ -69,10 +72,12 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       begin: () => undefined,
       recordRound: async (_w: unknown, _p: unknown, index: number) => {
         api.recordLog.push(index);
+        if (api.recordHold !== null) await api.recordHold;
         if (api.recordFails.delete(index)) throw new Error('store full');
       },
       finishSession: async (_w: unknown, _p: unknown, _a: unknown, recorded: readonly Promise<void>[]) => {
         api.finished += 1;
+        if (api.finishHold !== null) await api.finishHold;
         await Promise.all(recorded);
         if (api.finishFails > 0) {
           api.finishFails -= 1;
@@ -150,6 +155,8 @@ beforeEach(() => {
   api.rounds = 2;
   api.recordFails.clear();
   api.recordLog.length = 0;
+  api.recordHold = null;
+  api.finishHold = null;
   reader.announce.mockReset();
   reader.focus.mockReset();
   useProfileStore.setState({ profiles: [learner], activeId: ID, hydrated: true });
@@ -253,6 +260,42 @@ describe('the Stage Check when its finish cannot be saved (LR-4, tests 25, 26, 2
     await act(async () => sheetOf(r).onConfirm());
     expect(goBack).toHaveBeenCalledTimes(1);
     expect(api.finished).toBe(1);
+  });
+
+  // Stop while a Try again is running: it writes nothing more.
+  it('Stop while a retry is still recording again: no result page and no further finish', async () => {
+    api.recordFails.add(0);
+    const { navigation, goBack, back } = guardedNav();
+    const r = await playThrough(navigation);
+    expect(api.finished).toBe(1);
+    let release!: () => void;
+    api.recordHold = new Promise<void>((resolve) => (release = resolve));
+    await press(tryAgainButton(r));
+    expect(await back()).toBe(true);
+    await act(async () => sheetOf(r).onConfirm());
+    expect(goBack).toHaveBeenCalledTimes(1);
+    release();
+    await flush();
+    expect(api.finished).toBe(1);
+    expect(byTestId(r.root, 'stage-check-result')).toHaveLength(0);
+  });
+
+  it('Stop while a retry\'s finish is in flight: its result is not shown', async () => {
+    api.finishFails = 1;
+    const { navigation, goBack, back } = guardedNav();
+    const r = await playThrough(navigation);
+    let release!: () => void;
+    api.finishHold = new Promise<void>((resolve) => (release = resolve));
+    await press(tryAgainButton(r));
+    expect(api.finished).toBe(2);
+    expect(await back()).toBe(true);
+    await act(async () => sheetOf(r).onConfirm());
+    expect(goBack).toHaveBeenCalledTimes(1);
+    release();
+    await flush();
+    expect(api.finished).toBe(2);
+    expect(byTestId(r.root, 'stage-check-result')).toHaveLength(0);
+    expect(byTestId(r.root, 'stage-check-nothing')).toHaveLength(0);
   });
 
   it('during a round the stop sheet keeps its own line', async () => {

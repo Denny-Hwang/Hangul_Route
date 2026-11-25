@@ -174,6 +174,32 @@ describe('a Stage Check', () => {
     expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
   });
 
+  it('a step after the entry was written that throws leaves the entry written once: the next call writes no second one', async () => {
+    let entries = 0;
+    let latchFails = true;
+    const f = fake({
+      latch: () => {
+        if (latchFails) {
+          latchFails = false;
+          throw new Error('latch not written');
+        }
+      },
+    });
+    const record = f.deps.recordReview;
+    f.deps.recordReview = (p, entry) => {
+      entries += 1;
+      record(p, entry);
+    };
+    const api = createStageCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage2', 'en'))!;
+    await expect(api.finishSession(w, plan, all(20, 20), [], NOW)).rejects.toThrow('latch not written');
+    expect(entries).toBe(1);
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toEqual({ stars: 3, passed: true, missed: false });
+    expect(entries).toBe(1);
+    expect(f.events.filter((e) => e.name === 'review.complete')).toHaveLength(1);
+  });
+
   it('a finish that answered null (switched off, stage closed) is not kept: the same plan finishes once it can', async () => {
     let on = true;
     const f = fake({ on: () => on });

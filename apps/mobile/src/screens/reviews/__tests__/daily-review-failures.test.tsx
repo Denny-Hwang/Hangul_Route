@@ -32,6 +32,8 @@ const api = vi.hoisted(() => ({
   stopped: 0,
   /** Holds the next finish until the test lets it go. */
   hold: null as null | Promise<void>,
+  /** Holds each recording started after it is set until the test lets it go. */
+  recordHold: null as null | Promise<void>,
 }));
 const reader = vi.hoisted(() => ({ announce: vi.fn(), focus: vi.fn() }));
 vi.mock('../../../platform/screen-reader', async (importOriginal) => ({
@@ -52,6 +54,7 @@ vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
       },
       recordRound: async (_w: unknown, _p: unknown, index: number) => {
         api.recordLog.push(index);
+        if (api.recordHold !== null) await api.recordHold;
         if (api.recordFails.delete(index)) throw new Error('store full');
       },
       noteStopped: () => void (api.stopped += 1),
@@ -153,6 +156,7 @@ beforeEach(() => {
   api.recordLog.length = 0;
   api.stopped = 0;
   api.hold = null;
+  api.recordHold = null;
   reader.announce.mockReset();
   reader.focus.mockReset();
   useProfileStore.setState({ profiles: [learner], activeId: ID, hydrated: true });
@@ -304,6 +308,45 @@ describe('a finish that cannot be saved (LR-4, tests 24, 26, 28)', () => {
     expect(goBack).toHaveBeenCalledTimes(1);
     expect(api.stopped).toBe(1);
     expect(api.finished).toBe(1);
+  });
+
+  // Stop while a Try again is running: it writes nothing more, and the day's 20 are counted once.
+  it('Stop while a retry is still recording again: no result page, no further finish, the answered items counted once', async () => {
+    api.recordFails.add(0);
+    const { navigation, goBack, back } = guardedNav();
+    const r = await open(navigation);
+    await answerRight(r);
+    expect(api.finished).toBe(1);
+    let release!: () => void;
+    api.recordHold = new Promise<void>((resolve) => (release = resolve));
+    await press(tryAgainButton(r));
+    expect(await back()).toBe(true);
+    await act(async () => sheetOf(r).onConfirm());
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(api.stopped).toBe(1);
+    release();
+    await flush();
+    expect(api.finished).toBe(1);
+    expect(byTestId(r.root, 'daily-review-result')).toHaveLength(0);
+  });
+
+  it('Stop while a retry\'s finish is in flight: its result is not shown, and noteStopped is skipped (the entry counts them)', async () => {
+    api.finishFails = 1;
+    const { navigation, goBack, back } = guardedNav();
+    const r = await open(navigation);
+    await answerRight(r);
+    let release!: () => void;
+    api.hold = new Promise<void>((resolve) => (release = resolve));
+    await press(tryAgainButton(r));
+    expect(api.finished).toBe(2);
+    expect(await back()).toBe(true);
+    await act(async () => sheetOf(r).onConfirm());
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(api.stopped).toBe(0);
+    release();
+    await flush();
+    expect(api.finished).toBe(2);
+    expect(byTestId(r.root, 'daily-review-result')).toHaveLength(0);
   });
 
   it('during a round the stop sheet keeps its own line, and a back asks as ever', async () => {
