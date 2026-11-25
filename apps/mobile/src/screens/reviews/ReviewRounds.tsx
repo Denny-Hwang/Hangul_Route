@@ -349,6 +349,11 @@ function TypeRoundBody({
           )
         ) : round.mode === 'picture' && round.picture ? (
           <PictureArt pictureRef={round.picture} gloss={round.answer.gloss ?? ''} size={pictureSize} />
+        ) : kit !== null && heard !== null ? (
+          // A hear round that is now the see round (Show the letters, CH-1c): the word is one item focus can land on.
+          <kit.AskedWord hear={heard} target={{ ko: round.target, romanization: round.answer.ko.romanization, ...(round.answer.gloss === undefined ? {} : { en: round.answer.gloss }) }}>
+            <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" testID="daily-review-type-target" />
+          </kit.AskedWord>
         ) : (
           <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" testID="daily-review-type-target" />
         )}

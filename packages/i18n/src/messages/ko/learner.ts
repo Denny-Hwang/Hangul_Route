@@ -1534,10 +1534,15 @@ export const learner = {
       fourth: '거의 다 했어요. 한 부분만 더!',
       keepGoing: { cta: '계속하기' },
     },
+    resume: {
+      title: '하던 곳부터 이어서 할까요?',
+      startAgain: { cta: '처음부터 하기' },
+    },
     leave: {
       close: '확인 그만하기',
       title: '확인을 그만할까요?',
       body: '언제든지 다시 할 수 있어요.',
+      bodyKept: '나중에 이어서 할 수 있어요.',
       stop: { cta: '그만하기' },
       stay: { cta: '계속하기' },
     },

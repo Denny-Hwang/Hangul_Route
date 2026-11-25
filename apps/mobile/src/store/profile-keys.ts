@@ -1,3 +1,4 @@
+import { CHECK_RUN_KEY } from './check-run-saved';
 import { CLASS_MOVES_SEEN_KEY } from './class-update-store';
 import { DECODE_SPRINT_KEY } from './decode-sprint-store';
 import { FREE_END_SEEN_KEY } from './free-end-seen';
@@ -47,4 +48,6 @@ export const PER_PROFILE_KEYS: Readonly<Record<string, (profileId: string) => st
   'decode-sprint': DECODE_SPRINT_KEY,
   'week-drop': WEEK_DROP_KEY,
   'quest-run': QUEST_RUN_KEY,
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a: the check a learner stopped or an interruption cut short (one per learner).
+  'check-run': CHECK_RUN_KEY,
 };

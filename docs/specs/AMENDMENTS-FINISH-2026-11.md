@@ -52,6 +52,7 @@ The console, `/signin`, `/start` and `/account/*` load the English dictionary an
 **FN-7 The start bundle gets smaller (finding F4).**
 In order, each its own commit with a bundle-content test: the placement bank behind the level check's own chunk; the content-schema linters out of the learner barrel; more game screens as screen chunks (the `SCREEN_CHUNKS` pattern); the console and site strings out of the learner dictionary where that is local. Reanimated aliases and Metro `inlineRequires` are not in this row. The start bundle line goes down to the measured number plus about 4 KB.
 *Done when:* each step's bundle test passes, the offline e2e passes against a local release build, and the start bundle before and after is recorded.
+> **Amended by AMENDMENTS-START-BUNDLE-2026-11 (SB-1 to SB-3, 2026-11-24).** The learner web English twin no longer keeps all of `console`: `index.web.ts` takes the six subtrees a web source reads from `en/console-app.ts` (same paths and values; `en/console.ts` and the ledger unchanged), the e2e hooks and screens reach `root.tsx` only through a generated registry that is null in a release build, and `startBundleRaw` comes down from 4,638,500 B to 4,538,000 B (measured 4,533,869 B).
 
 **FN-8 The active tab has a mark that is not only colour.**
 The selected tab in the learner tab bar shows a shape mark (for example a bar or a filled pill behind the icon) as well as its colour, in every theme and at every text size. Design pass first (wireframe, mock).

@@ -216,6 +216,15 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   const reveal = (): void => setRevealed(true);
   const kit = hearing ? hear : null;
   const notice = hearRound && heard !== null && hear !== null && heard.mode === 'see' ? <hear.SeeNotice hear={heard} /> : null;
+  // After "Show the letters" (CH-1c) the word is one focusable item, so focus has somewhere to land once it is drawn.
+  const askedWord = (node: ReactElement): ReactElement =>
+    hearRound && heard !== null && hear !== null ? (
+      <hear.AskedWord hear={heard} target={round.target} romanizationShown={romanizationVisible}>
+        {node}
+      </hear.AskedWord>
+    ) : (
+      node
+    );
 
   // The word to type, with its romanization and gloss (taught Korean always carries both). A compact
   // window (under 640 tall) draws it inline in the top row, as the mock does; a picture round hides the Korean.
@@ -227,7 +236,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {mode === 'picture' ? <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} /> : null}
         {mode === 'see' ? (
-          <WordLine round={round} romanizationVisible={romanizationVisible} onReveal={reveal} testID="type-hangul-prompt" />
+          <WordLine round={round} romanizationVisible={romanizationVisible} onReveal={reveal} wrap={askedWord} testID="type-hangul-prompt" />
         ) : (
           <View style={{ flexShrink: 1 }} testID="type-hangul-prompt">
             <Body weight="bold">{round.target.romanization}</Body>
@@ -238,15 +247,17 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
     </View>
   ) : mode === 'see' ? (
     <View style={{ alignItems: 'center', gap: spacing.xs }}>
-      <KoreanText
-        ko={round.target.ko}
-        romanization={round.target.romanization}
-        gloss={round.target.en}
-        size="md"
-        romanizationShown={romanizationVisible}
-        accessibilityLabel={romanizationVisible ? undefined : m.a11y.vocab.cards.word(round.target.ko)}
-        testID="type-hangul-prompt"
-      />
+      {askedWord(
+        <KoreanText
+          ko={round.target.ko}
+          romanization={round.target.romanization}
+          gloss={round.target.en}
+          size="md"
+          romanizationShown={romanizationVisible}
+          accessibilityLabel={romanizationVisible ? undefined : m.a11y.vocab.cards.word(round.target.ko)}
+          testID="type-hangul-prompt"
+        />,
+      )}
       {romanizationVisible ? null : (
         <Button label={t.showRomanization.cta} tone="ghost" size="sm" onPress={reveal} testID="type-hangul-reveal" />
       )}
@@ -567,11 +578,13 @@ interface WordLineProps {
   romanizationVisible: boolean;
   /** Shows the romanization when the setting hides it until a tap. */
   onReveal?: () => void;
+  /** Wraps the word itself (not its "Show romanization" button), for "Can't hear it?" to focus it. */
+  wrap?: (node: ReactElement) => ReactElement;
   testID?: string;
 }
 
 /** A word on one line, as the mock draws it: the Korean, its romanization and `· gloss`, read as one item. */
-function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProps): ReactElement {
+function WordLine({ round, romanizationVisible, onReveal, wrap = (node) => node, testID }: WordLineProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const { ko, romanization, en } = round.target;
@@ -579,7 +592,7 @@ function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProp
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, flexShrink: 1 }}>
       {/* One item with its romanization; while the setting hides it, the Korean (Korean voice) and the gloss are read in turn. */}
-      <View
+      {wrap(<View
         accessible={!hidden}
         accessibilityLabel={hidden ? undefined : m.a11y.koreanItem({ ko, romanization, gloss: en })}
         style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm, flexShrink: 1 }}
@@ -592,7 +605,7 @@ function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProp
         </Text>
         {hidden ? null : <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
         <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
-      </View>
+      </View>)}
       {hidden && onReveal ? (
         <Button label={m.learner.minigame.typeHangul.showRomanization.cta} tone="ghost" size="sm" onPress={onReveal} testID="type-hangul-reveal" />
       ) : null}

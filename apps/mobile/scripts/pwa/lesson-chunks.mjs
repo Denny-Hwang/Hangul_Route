@@ -297,7 +297,22 @@ export const PRECACHE_BUDGET = Object.freeze({
   // source reads, so `en/console.ts` leaves the start bundle): on main 5f453304d (4,634,508 B raw / 1,276,063 B gzip) the
   // release `build:web` (CI=1) measures 4,559,730 B raw / 1,253,422 B gzip (-74,778 B raw, -22,641 B gzip). The line stays
   // until SB-3 lowers it after SB-2.
-  startBundleRaw: 4_638_500,
+  // [SB] SB-2 (the e2e hooks and screens reach root.tsx only through the generated e2e registry, null in a release build,
+  // so they and the block strokes they folded in leave the start bundle): on main 5f453304d the release `build:web` (CI=1)
+  // measures 4,606,826 B raw / 1,267,474 B gzip (-27,682 B raw, -8,589 B gzip); the three e2e screen chunks leave the
+  // build too (learner precache 156 -> 153 files).
+  // [SB] SB-3: SB-1 and SB-2 together, on main b244e0de5 (4,636,329 B raw / 1,276,458 B gzip, with CH-2), measure
+  // 4,533,869 B raw / 1,245,164 B gzip (-102,460 B raw, -31,294 B gzip; learner precache 156 files / 11,111,300 B -> 153
+  // files / 10,998,783 B). The line comes down to the measurement plus a 4,131 B margin (-100,500 B).
+  // [SB] SB-3 merged with AF-4b (main 454adefa4, with SB-1 #1107 and SB-2 #1109): the release `build:web` (CI=1) measures
+  // 4,533,364 B raw / 1,245,521 B gzip, 4,636 B under the line. The line is unchanged.
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-3a (the Hangul Check goes on after an interruption, 2026-11-24): the Hangul Check's
+  // screen is in the start bundle (it has no chunk of its own), so its resume page, the stored-check rules (`saved-check.ts`),
+  // the per-learner store (`check-run-saved.ts`, which `profile-keys.ts` loads for the removal sweep), the flow's two new
+  // phases and the once-only finish come with it. On main with SB-3 (4,533,364 B raw / 1,245,521 B gzip) the release
+  // `build:web` (CI=1) measures 4,540,705 B raw / 1,247,661 B gzip (+7,341 B raw, +2,140 B gzip), 2,705 B over the line. The
+  // line is the measurement plus a 3,895 B margin (one measured raise, 6,600 B over the previous line).
+  startBundleRaw: 4_544_600,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

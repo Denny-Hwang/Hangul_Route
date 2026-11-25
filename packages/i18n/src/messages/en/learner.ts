@@ -2186,10 +2186,21 @@ export const learner = {
       fourth: 'Almost done. One more part!',
       keepGoing: { cta: 'Keep going' },
     },
+    /**
+     * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (section 3.4): a check stopped or interrupted within a day goes on.
+     * The level check's words (`learner.placement.resume`), so the learner meets one way of saying it; the Stage Check
+     * reuses them (row LR-3b). Continue is `common.buttons.continue`.
+     */
+    resume: {
+      title: 'Pick up where you left off?',
+      startAgain: { cta: 'Start again' },
+    },
     leave: {
       close: 'Stop the check',
       title: 'Stop the check?',
       body: 'You can take it again any time.',
+      /** [LR] Row LR-3a (OD-LR1 (c)): Stop keeps the stored check, so the line says so (the Stage Check reuses it). */
+      bodyKept: 'You can keep going later.',
       stop: { cta: 'Stop' },
       stay: { cta: 'Keep going' },
     },
