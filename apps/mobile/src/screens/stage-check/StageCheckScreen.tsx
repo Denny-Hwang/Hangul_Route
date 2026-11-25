@@ -109,12 +109,12 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   const continuing = useRef(false);
   const starting = useRef(false);
   const mounted = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
       mounted.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
   // A Stage 1 link, a stage not finished, or one the learner cannot open (F-ENT-003; a stale link): the not-ready
   // page. Nothing waits on the check.
   const opens = PRIZE_STAGES[stageKey]?.check === 'StageCheck' && complete && open;

@@ -275,8 +275,11 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     let snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string; id: string; resultStars: number }> }>(page, `progress:${id}`);
     expect(snap?.reviews.filter((r) => r.kind === 'stage-certificate')).toHaveLength(1);
     expect(snap?.stageCheckAt?.stage2).toBe(AT);
-    // Again, with 8 misses: 2 stars on the result, 3 stars kept on the header.
+    // [LR] Stop keeps the run for a day: the check offers to go on. Again from the start, with 8 misses: 2 stars on the
+    // result, 3 stars kept on the header.
     await page.getByTestId('journey-stage-check-stage2').click();
+    await expect(page.getByTestId('stage-check-resume')).toBeVisible();
+    await page.getByTestId('stage-check-start-again').click();
     await page.getByTestId('stage-check-go').click();
     await play(page, 8);
     await expect(page.getByTestId('stage-check-stars')).toHaveAccessibleName(/[12] stars?/);
