@@ -52,7 +52,7 @@ async function koreanVoice(page: Page): Promise<void> {
   });
 }
 
-async function learner(page: Page): Promise<void> {
+async function learner(page: Page, extraFlags: Record<string, { on: boolean; pct: number }> = {}): Promise<void> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -75,7 +75,7 @@ async function learner(page: Page): Promise<void> {
     cellBest: Object.fromEntries(cells.map((c) => [c, 1])),
     stageCeremonyAt: { stage2: AT },
   });
-  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: { on: true, pct: 100 }, stageChecks: { on: true, pct: 100 }, mastery: { on: true, pct: 100 } } });
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: { on: true, pct: 100 }, stageChecks: { on: true, pct: 100 }, mastery: { on: true, pct: 100 }, ...extraFlags } });
   await page.reload();
 }
 
@@ -129,9 +129,10 @@ async function moveOn(page: Page): Promise<void> {
   await expect.poll(async () => (await page.getByTestId('stage-check-pause').count()) > 0 || (await dots.getAttribute('aria-label', { timeout: 1_000 }).catch(() => null)) !== before, { timeout: 10_000 }).toBe(true);
 }
 
-/** Plays the Stage Check until a heard pick round with the link is on screen. */
-async function toHeardPick(page: Page, hide: boolean): Promise<void> {
-  await learner(page);
+/** Plays the Stage Check until a heard round of the wanted kind (`pick` or `dictation`) with the link is on screen. */
+async function toHeardPick(page: Page, hide: boolean, want: 'pick' | 'dictation' = 'pick'): Promise<void> {
+  // The produce rung is Dictation only with `game.type-hangul-hear` on (row CM-31).
+  await learner(page, want === 'dictation' ? { 'game.type-hangul-hear': { on: true, pct: 100 } } : {});
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByTestId('journey-stage-check-stage2').click();
   await expect(page.getByTestId('stage-check-intro')).toBeVisible();
@@ -145,10 +146,13 @@ async function toHeardPick(page: Page, hide: boolean): Promise<void> {
     }
     await expect(page.getByTestId('daily-review-round')).toBeVisible();
     await page.waitForTimeout(400);
-    if ((await page.getByTestId('cant-hear').count()) > 0 && (await page.getByTestId('daily-review-hear-again').count()) > 0 && (await page.locator('[data-testid^="daily-review-option-"]').count()) > 0) return;
+    if ((await page.getByTestId('cant-hear').count()) > 0) {
+      if (want === 'dictation' && (await page.getByTestId('daily-review-dictation-speaker').count()) > 0) return;
+      if (want === 'pick' && (await page.getByTestId('daily-review-hear-again').count()) > 0 && (await page.locator('[data-testid^="daily-review-option-"]').count()) > 0) return;
+    }
     await moveOn(page);
   }
-  throw new Error('no heard pick round came up in the Stage Check');
+  throw new Error(`no heard ${want} round came up in the Stage Check`);
 }
 
 for (const size of SIZES) {
@@ -193,3 +197,27 @@ test('the Stage Check with the hide switch off: the options show their romanizat
   await expect(page.getByTestId('daily-review-prompt-panel-text')).toBeVisible();
   expect(await page.getByTestId('daily-review-prompt-panel-text').innerText()).toMatch(HANGUL);
 });
+
+// CH-1g (owner decision 2026-11-25): a Check's Dictation hear round has the link, but its sheet is guidance only, since
+// Show the letters would print the word the learner has to type.
+for (const size of SIZES) {
+  test(`the Stage Check's Dictation hear round at ${size.width} x ${size.height}: the sheet is guidance only, Hear it plays, the word is never printed`, async ({ page }) => {
+    test.setTimeout(240_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await koreanVoice(page);
+    await page.setViewportSize(size);
+    await toHeardPick(page, false, 'dictation');
+    await expect(page.getByTestId('daily-review-type-target')).toHaveCount(0);
+    await page.getByTestId('cant-hear').click();
+    await expect(page.getByTestId('cant-hear-sheet')).toBeVisible();
+    await expect(page.getByTestId('cant-hear-show-letters')).toHaveCount(0);
+    await expect(page.getByTestId('cant-hear-hear')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await shot(page, `ch-1g-stage-check-dictation-${size.width}x${size.height}`);
+    await page.getByTestId('cant-hear-hear').click();
+    await expect(page.getByTestId('cant-hear-sheet')).toHaveCount(0);
+    await expect(page.getByTestId('daily-review-type-target')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}
