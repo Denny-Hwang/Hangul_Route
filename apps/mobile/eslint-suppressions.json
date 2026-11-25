@@ -13,10 +13,5 @@
     "react-native-a11y/has-valid-accessibility-descriptors": {
       "count": 1
     }
-  },
-  "src/screens/reviews/StageReviewScreen.tsx": {
-    "react-native-a11y/has-valid-accessibility-descriptors": {
-      "count": 1
-    }
   }
 }

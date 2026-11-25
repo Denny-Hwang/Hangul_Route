@@ -271,6 +271,11 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     await page.getByTestId('daily-review-close').click();
     await expect(page.getByText('Stop the check?')).toBeVisible();
     await shot(page, 'stage-check-stop-320');
+    // [LR-6] Keep going is the filled safe choice and takes focus; Stop is the plain one. A 360 shot as well.
+    await expect(page.getByTestId('stage-check-leave').getByRole('button', { name: 'Keep going' })).toBeFocused();
+    await page.setViewportSize({ width: 360, height: 800 });
+    await shot(page, 'stage-check-stop-360');
+    await page.setViewportSize({ width: 320, height: 800 });
     await page.getByRole('button', { name: 'Stop', exact: true }).click();
     let snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string; id: string; resultStars: number }> }>(page, `progress:${id}`);
     expect(snap?.reviews.filter((r) => r.kind === 'stage-certificate')).toHaveLength(1);

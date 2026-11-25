@@ -218,6 +218,12 @@ test('stopping the Hangul Check asks first and saves nothing; Maybe later goes s
   await expect(page.getByText('Stop the check?')).toBeVisible();
   await expect(page.getByText('You can take it again any time.')).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('hangul-check-leave.png'), fullPage: true });
+  // [LR-6] The stop sheet is the same as the Stage Check's: Keep going filled and focused, Stop plain. Shots with HR_SHOTS=1.
+  await expect(page.getByTestId('hangul-check-leave').getByRole('button', { name: 'Keep going' })).toBeFocused();
+  for (const [width, height] of [[320, 568], [360, 740]] as const) {
+    await page.setViewportSize({ width, height });
+    await shot(page, `hangul-check-stop-${width}x${height}`);
+  }
   // Keep going returns to the item.
   await page.getByTestId('hangul-check-leave').getByRole('button', { name: 'Keep going' }).click();
   await expect(page.getByText('Stop the check?')).toHaveCount(0);

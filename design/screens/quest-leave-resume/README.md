@@ -28,6 +28,7 @@ colour literal in a rule; no `colors.feedback.danger`; no emoji; no motion.
 | `shots/<frame>-{360x740,390x844,1024x768}.png` | each frame on two phones and a tablet in landscape |
 | `shots/<frame>-320x568-text200.png`, `-full.png` | each frame on a small phone at 200 % text (the app's text-size rule at f = 2: reading sizes x 2, large type x 1.5): the first screen, and the whole page. For Home, judge `-full.png`: at that size the shared learner-shell header and pills fill the first screen |
 | `shots/app-stage-check-resume-{360x740,320x568}.png` | the shipped Stage Check resume page (LR-3b), from `apps/mobile/e2e/web/stage-check.spec.ts` with `HR_SHOTS=1`, not a mock |
+| `shots/app-{hangul-check-stop-320x568,hangul-check-stop-360x740,stage-check-stop-320,stage-check-stop-360}.png` | the shipped stop sheets of both Checks as built (LR-6: the same `ConfirmSheet`, Keep going filled and focused, Stop plain), from `hangul-check.spec.ts` and `stage-check.spec.ts` with `HR_SHOTS=1`, not mocks |
 | `shots/board-{home-resume,check-resume,save-failed,keep-playing,greyscale}-1280.png` | the boards, full page |
 
 Frames: `home-resume`, `home-plain`, `home-sheet`, `check-reading`, `check-resume`, `stage-check-resume`, `check-stop`,
