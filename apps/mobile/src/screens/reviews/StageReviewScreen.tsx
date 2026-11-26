@@ -23,7 +23,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Platform, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll, stage1Cards } from '../../content';
-import { RomanizationModeOverride, useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
@@ -60,7 +59,8 @@ import { SaveLaterLine } from './SaveLaterLine';
 
 /**
  * F-QUEST-002 §3.9 — the Hangul Check (wireframe `design/wireframes/reviews/hangul-check.md`).
- * Intro with the per-attempt "hide the romanization" switch, 5 parts of 7 Listen & Pick items in
+ * Intro (no romanization switch: every round holds its romanization until it is answered, AMENDMENTS-STAGE1-DECODING-CHECK
+ * DC-1a), 5 parts of 7 Listen & Pick items in
  * review mode with a Hoya pause between parts, then stars, Hoya, a certificate, the tip letters
  * and the Stage 1 cards. It never gates anything. The behaviour lives in `logic/stage1/review-flow.ts`; the run in
  * `store/review-run-store.ts`; the one write to the progress is `progress-store.recordReview` (the caregiver channel).
@@ -117,13 +117,12 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   const m = messages.learner.stageReview;
   const locale = useLocale();
   const profile = useProfileStore(activeProfileSelector);
-  const profileMode = useRomanizationMode();
   const recordReview = useProgressStore((s) => s.recordReview);
   const ownedIds = useProgressStore((s) => (profile ? s.byProfile[profile.id]?.cards : undefined));
   // The seed of this visit's check; a resumed check swaps in the stored seed (the check is deterministic by seed).
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const check = useMemo(() => buildHangulCheck({ seed }), [seed]);
-  const [flow, setFlow] = useState(() => startReviewFlow({ chunks: check.chunks.length, romanizationMode: profileMode, reading: true }));
+  const [flow, setFlow] = useState(() => startReviewFlow({ chunks: check.chunks.length, reading: true }));
   const flowRef = useRef(flow);
   const [result, setResult] = useState<{ view: ReviewResultView; at: string } | null>(null);
   // [LR] The stored check this visit found (the resume page's Continue), and what the run is stored with while it is kept.
@@ -152,8 +151,8 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
             void clearSavedCheck(profile.id);
             const startedAt = new Date().toISOString();
             startedAtRef.current = startedAt;
-            setKept({ seed, hideRomanization: effect.hideRomanization, startedAt });
-            void track(reviewStartEvent(profile.id, effect.hideRomanization));
+            setKept({ seed, startedAt });
+            void track(reviewStartEvent(profile.id));
           }
           return;
         case 'finished': {
@@ -239,12 +238,12 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     if (!found || flowRef.current.phase !== 'resume') return;
     startedAtRef.current = found.startedAt;
     setSeed(found.seed);
-    setKept({ seed: found.seed, hideRomanization: found.hideRomanization, startedAt: found.startedAt });
+    setKept({ seed: found.seed, startedAt: found.startedAt });
     useReviewRunStore.getState().restore(
       found.check.items.map((i) => i.id),
       found.answers,
     );
-    dispatch({ type: 'continue', at: found.at, hideRomanization: found.hideRomanization });
+    dispatch({ type: 'continue', at: found.at });
   }, [dispatch]);
 
   // Leaving the screen any other way forgets the run in memory (the stored check stays: a Stop or a kill goes on later).
@@ -289,9 +288,8 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     const rounds = (check.chunks[flow.chunk] ?? []).slice(flow.from).map((i) => i.round);
     return (
       <>
-        <RomanizationModeOverride mode={flow.hideRomanization ? 'tap' : 'always'}>
-          <ListenPickGame key={`${flow.chunk}:${flow.from}`} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
-        </RomanizationModeOverride>
+        {/* A Check holds its romanization until each answer (DC-1a): no override, the learner's own mode shows it after. */}
+        <ListenPickGame key={`${flow.chunk}:${flow.from}`} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
         {leaveSheet}
       </>
     );
@@ -472,8 +470,6 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
           {m.intro.body}
         </Body>
       </View>
-      <Spacer size="lg" />
-      <AttemptSwitch label={m.intro.hideRomanization} value={flow.hideRomanization} onChange={() => dispatch({ type: 'toggle-romanization' })} />
       <Spacer size="xl" />
       <Button label={m.intro.start.cta} tone="primary" size="hero" fullWidth onPress={() => dispatch({ type: 'start' })} />
       <Spacer size="sm" />

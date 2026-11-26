@@ -3,6 +3,7 @@ import type { Messages } from '@hangul-route/i18n';
 import { answerItem } from './answer-feedback';
 import type { PlayResult, PlaySpec } from '../platform/audio';
 import type { HostMode } from '../screens/minigames/host';
+import { holdsRomanization, hostSurface } from './locale/check-hold';
 
 /**
  * Listen & Pick flow (F-QUEST-002 §3.10): the reducer and view-models behind
@@ -240,16 +241,17 @@ export function promptView(
 }
 
 /**
- * What a Check prints when the learner asks for the letters (AMENDMENTS-AUDIO-CANT-HEAR section 3.12, OD-CH6 (c), owner
- * decision 2026-11-24). Where the options hold or hide their romanization (the quest Check, AU-8; the Hangul Check with
- * its "hide the romanization" switch on) the asked text is the romanization only: the learner reads the sound and finds
- * its spelling, as the Decoding Sprint and Syllable Build already fall back. Where the options show theirs (the Hangul
- * Check with the switch off) and in every practice host, it is the surface's own text, as with Sound off (AD13).
+ * What a Check prints for a sound that stands in as text (AMENDMENTS-STAGE1-DECODING-CHECK section 3.2, row DC-1a, owner
+ * decision 2026-11-25; it widens AMENDMENTS-AUDIO-CANT-HEAR CH-1e, section 3.12). In the quest Check and the Hangul Check,
+ * whatever the learner's mode, a heard round that cannot be heard (the learner asked: Show the letters; Sound is off; there
+ * is no Korean voice and no clip; the play failed or was blocked) shows the romanization only while the question is open,
+ * never the Hangul. The round is then a reading item: read the sound, find its spelling among options that show none, as the
+ * Decoding Sprint and Syllable Build already fall back. A practice host keeps the surface's own text (AD13).
  * `textPrompt`: a text prompt round has no sound to ask about (no link), so it is never this case.
  */
-export function askedTextIsRomanizationOnly(mode: HostMode, romanizationMode: RomanizationMode, textPrompt: boolean): boolean {
+export function askedTextIsRomanizationOnly(mode: HostMode, textPrompt: boolean): boolean {
   if (textPrompt) return false;
-  return checkHoldsRomanization(mode, textPrompt) || (mode === 'review' && romanizationMode === 'tap');
+  return checkHoldsRomanization(mode);
 }
 
 type ListenPickOption = ListenPickRound['options'][number];
@@ -263,7 +265,7 @@ export interface OptionView {
   /** Empty string draws no line (ChoiceCard). */
   romanization: string;
   /**
-   * A quest Check's open question (AMENDMENTS-AUDIT-2026-11 AU-8): the romanization that is held back until the
+   * A Check's open question (AMENDMENTS-AUDIT-2026-11 AU-8, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a): the romanization that is held back until the
    * question is answered. The card keeps its line's room and draws nothing; '' when nothing is held.
    */
   heldRomanization: string;
@@ -283,21 +285,38 @@ export interface OptionViewContext {
    */
   labelOf?: (text: { ko: string; romanization: string }) => string;
   /**
-   * A quest Check that plays a sound (`checkHoldsRomanization`, AU-8): no option shows its romanization while the
-   * question is open, so the sound cannot be matched to Latin letters; every line the learner's mode shows comes at
-   * the answer. The accessible name is unchanged. Absent: unchanged.
+   * A Check (`checkHoldsRomanization`, AU-8 and DC-1a): no option shows its romanization while the question is open,
+   * so the sound cannot be matched to Latin letters; every line the learner's mode shows comes at the answer. The
+   * accessible name is unchanged. Absent: unchanged.
    */
   holdRomanization?: boolean;
 }
 
 /**
- * AMENDMENTS-AUDIT-2026-11 AU-8 (audit EDU-3; owner decision 2026-11-15): the quest Check ("Quick check") holds its
- * options' romanization until the question is answered. Only the Check that plays its prompt: a text prompt round
- * (Read Pick Meaning, the Cloze Pick fallback) says nothing before the answer, so there is no sound to match. Practice
- * steps, the Hangul Check (its own "hide the romanization" switch), vocabulary and previews of other steps are not it.
+ * Whether a Listen & Pick host holds its romanization until the question is answered: the quest Check ("Quick check";
+ * AMENDMENTS-AUDIT-2026-11 AU-8, audit EDU-3, owner decision 2026-11-15) and the Hangul Check (AMENDMENTS-STAGE1-DECODING-
+ * CHECK section 3.1, row DC-1a, owner decision 2026-11-22, OD-R1). A call of the one rule, `holdsRomanization`. A text
+ * prompt round holds too: its prompt's own romanization and its text options'. Practice steps, vocabulary and previews of
+ * other steps are not Checks.
  */
-export function checkHoldsRomanization(mode: HostMode, textPrompt: boolean): boolean {
-  return mode === 'check' && !textPrompt;
+export function checkHoldsRomanization(mode: HostMode): boolean {
+  return holdsRomanization(hostSurface(mode));
+}
+
+export interface TextPromptView {
+  ko: string;
+  romanization: string;
+  /** The romanization line is held while the question is open: the prompt keeps its room and draws nothing. */
+  held: boolean;
+}
+
+/**
+ * A text prompt round's prompt (Read Pick Meaning, the Cloze Pick fallback) as the surface draws it: the Korean, and its
+ * romanization held back while a Check's question is open (`hold`, from `checkHoldsRomanization`), shown with the answer
+ * as the surface shows it (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3).
+ */
+export function textPromptView(round: ListenPickRound, state: ListenPickFlowState, hold: boolean): TextPromptView {
+  return { ko: round.prompt.ko, romanization: round.prompt.romanization, held: hold && state.status === 'asking' };
 }
 
 function cardStateOf(round: ListenPickRound, option: ListenPickOption, state: ListenPickFlowState, mode: HostMode): OptionCardState {

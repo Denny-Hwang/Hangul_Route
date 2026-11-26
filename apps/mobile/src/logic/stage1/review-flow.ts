@@ -1,4 +1,4 @@
-import type { Quest, RomanizationMode, ReviewEntry, StageKey } from '@hangul-route/content-schema';
+import type { Quest, ReviewEntry, StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { episodesAll } from '../../content/episodes';
 import { findJamo } from '../../content/jamo';
@@ -10,7 +10,7 @@ import { isSymbolItem } from './hangul-check';
 
 /**
  * The behaviour behind `StageReviewScreen` (F-QUEST-002 §3.9), as a reducer and view-models so
- * the screen only renders them: the intro with its per-attempt romanization switch, five chunks
+ * the screen only renders them: the intro (no romanization switch: the Check holds the romanization until each answer, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a), five chunks
  * with a Hoya pause between them, a confirm before stopping, and the stars-only result. Also the
  * first-try tally, the caregiver entry (`recordReview`) and the two telemetry events. Pure.
  */
@@ -28,18 +28,15 @@ export interface ReviewFlowState {
   /** [LR] Items of `chunk` already answered when a check was resumed in the middle of it (0 otherwise, and after a pause). */
   from: number;
   chunks: number;
-  /** "Reading practice": hide the romanization until a tap, for this attempt only. */
-  hideRomanization: boolean;
   /** The "Stop the check?" question is open. */
   leaving: boolean;
 }
 
 export type ReviewFlowEvent =
-  | { type: 'toggle-romanization' }
   /** [LR] The stored check was read: `found` when a resumable one is there. Before the intro it picks the page; on the intro, before Let's go, it offers the resume page late. */
   | { type: 'read'; found: boolean }
-  /** [LR] Continue on the resume page: at a chunk and offset, or null (every item answered: straight to the finish). `hideRomanization` is the stored run's choice. */
-  | { type: 'continue'; at: ResumePoint | null; hideRomanization: boolean }
+  /** [LR] Continue on the resume page: at a chunk and offset, or null (every item answered: straight to the finish). */
+  | { type: 'continue'; at: ResumePoint | null }
   /** [LR] Start again on the resume page: the normal intro; nothing is cleared until Let's go. */
   | { type: 'start-again' }
   | { type: 'start' }
@@ -49,24 +46,21 @@ export type ReviewFlowEvent =
   | { type: 'stay' }
   | { type: 'confirm-leave' };
 
-export type ReviewFlowEffect = { type: 'started'; hideRomanization: boolean } | { type: 'finished' } | { type: 'exit' };
+export type ReviewFlowEffect = { type: 'started' } | { type: 'finished' } | { type: 'exit' };
 
 export interface ReviewFlowStep {
   state: ReviewFlowState;
   effects: ReviewFlowEffect[];
 }
 
-/** A profile that reads in tap mode gets the switch on without being asked (D2). */
-export function startReviewFlow({ chunks, romanizationMode, reading = false }: { chunks: number; romanizationMode: RomanizationMode; reading?: boolean }): ReviewFlowState {
-  return { phase: reading ? 'reading' : 'intro', chunk: 0, from: 0, chunks, hideRomanization: romanizationMode === 'tap', leaving: false };
+export function startReviewFlow({ chunks, reading = false }: { chunks: number; reading?: boolean }): ReviewFlowState {
+  return { phase: reading ? 'reading' : 'intro', chunk: 0, from: 0, chunks, leaving: false };
 }
 
 const same = (state: ReviewFlowState): ReviewFlowStep => ({ state, effects: [] });
 
 export function stepReviewFlow(state: ReviewFlowState, event: ReviewFlowEvent): ReviewFlowStep {
   switch (event.type) {
-    case 'toggle-romanization':
-      return state.phase === 'intro' ? same({ ...state, hideRomanization: !state.hideRomanization }) : same(state);
     case 'read':
       // A read that lands while the intro shows and nothing has started offers the resume page late; after Let's go it is ignored.
       if (state.phase === 'reading') return same({ ...state, phase: event.found ? 'resume' : 'intro' });
@@ -74,13 +68,13 @@ export function stepReviewFlow(state: ReviewFlowState, event: ReviewFlowEvent): 
       return same(state);
     case 'continue':
       if (state.phase !== 'resume') return same(state);
-      if (event.at === null) return { state: { ...state, phase: 'result', hideRomanization: event.hideRomanization, leaving: false }, effects: [{ type: 'finished' }] };
-      return same({ ...state, phase: 'playing', chunk: event.at.chunk, from: event.at.from, hideRomanization: event.hideRomanization });
+      if (event.at === null) return { state: { ...state, phase: 'result', leaving: false }, effects: [{ type: 'finished' }] };
+      return same({ ...state, phase: 'playing', chunk: event.at.chunk, from: event.at.from });
     case 'start-again':
       return state.phase === 'resume' ? same({ ...state, phase: 'intro' }) : same(state);
     case 'start':
       if (state.phase !== 'intro') return same(state);
-      return { state: { ...state, phase: 'playing', chunk: 0, from: 0 }, effects: [{ type: 'started', hideRomanization: state.hideRomanization }] };
+      return { state: { ...state, phase: 'playing', chunk: 0, from: 0 }, effects: [{ type: 'started' }] };
     case 'chunk-done':
       if (state.phase !== 'playing') return same(state);
       if (state.chunk + 1 >= state.chunks) return { state: { ...state, phase: 'result', leaving: false }, effects: [{ type: 'finished' }] };
@@ -222,9 +216,9 @@ export function hangulCheckOpens(stageKey: StageKey, complete: ReadonlySet<Stage
   return stageKey === 'stage1' && complete.has('stage1');
 }
 
-/** `review.start { kind, stageKey, hideRomanization }` when the check begins. */
-export function reviewStartEvent(profileId: string, hideRomanization: boolean): TelemetryEvent {
-  return { name: 'review.start', profileId, payload: { kind: 'stage-certificate', stageKey: 'stage1', hideRomanization } };
+/** `review.start { kind, stageKey }` when the check begins (the `hideRomanization` flag went with the switch, DC-1a). */
+export function reviewStartEvent(profileId: string): TelemetryEvent {
+  return { name: 'review.start', profileId, payload: { kind: 'stage-certificate', stageKey: 'stage1' } };
 }
 
 /** `review.complete` with the counts: internal analytics only, never on a learner screen. */

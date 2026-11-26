@@ -19,7 +19,7 @@ Rules that apply to every row:
 
 ## B. In an open PR (6): F-QUEST-002 Q-1, PR #103
 
-`quest.discover_completed` `{ questId, pages, heard }` · `quest.check_completed` `{ questId, firstTryCorrect, retries }` · `quest.teaser_tapped` `{ fromQuestId, toQuestId }` · `stage.complete` `{ stageKey, cardsAwarded }` · `review.start` `{ kind, stageKey, hideRomanization }` · `review.complete` `{ kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` (internal).
+`quest.discover_completed` `{ questId, pages, heard }` · `quest.check_completed` `{ questId, firstTryCorrect, retries }` · `quest.teaser_tapped` `{ fromQuestId, toQuestId }` · `stage.complete` `{ stageKey, cardsAwarded }` · `review.start` `{ kind, stageKey, hideRomanization? }` (the Hangul Check stopped sending `hideRomanization` with its switch, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a; the Stage Check still does until DC-1b) · `review.complete` `{ kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` (internal).
 
 ## C. New names of the F-STORY chain (21)
 

@@ -7,6 +7,7 @@ import {
   LISTEN_PICK_TIMING,
   askedTextIsRomanizationOnly,
   checkHoldsRomanization,
+  textPromptView,
   headerView as headerViewWith,
   listenPickSpeech,
   optionColumns,
@@ -503,15 +504,14 @@ describe('optionView', () => {
   });
 });
 
-describe('a quest Check holds its options\' romanization until the answer (AMENDMENTS-AUDIT-2026-11 AU-8)', () => {
+describe('a Check holds its options\' romanization until the answer (AMENDMENTS-AUDIT-2026-11 AU-8, widened by AMENDMENTS-STAGE1-DECODING-CHECK DC-1a)', () => {
   const asking = startFlow(2);
-  const check = { mode: 'check', romanizationMode: 'always', holdRomanization: checkHoldsRomanization('check', false) } as const;
+  const check = { mode: 'check', romanizationMode: 'always', holdRomanization: checkHoldsRomanization('check') } as const;
 
-  it('only the quest Check that plays its prompt holds it', () => {
-    expect(checkHoldsRomanization('check', false)).toBe(true);
-    // A text prompt round (Read Pick Meaning, the Cloze Pick fallback) plays nothing before the answer.
-    expect(checkHoldsRomanization('check', true)).toBe(false);
-    for (const mode of ['quest', 'review', 'vocab', 'preview'] as const) expect(checkHoldsRomanization(mode, false)).toBe(false);
+  it('the quest Check and the Hangul Check hold it, text prompt rounds included; a practice host never does', () => {
+    expect(checkHoldsRomanization('check')).toBe(true);
+    expect(checkHoldsRomanization('review')).toBe(true);
+    for (const mode of ['quest', 'vocab', 'preview'] as const) expect(checkHoldsRomanization(mode)).toBe(false);
   });
 
   it('an open question draws no romanization on any option and keeps each line\'s room', () => {
@@ -568,15 +568,41 @@ describe('a quest Check holds its options\' romanization until the answer (AMEND
     expect(optionView(pictureRound, pictureRound.options[0]!, startFlow(1), check)).toMatchObject({ romanization: '', heldRomanization: '', label: 'rice' });
   });
 
-  it('every other host is unchanged: a practice step, the Hangul Check, vocabulary and a preview show it from the start', () => {
-    for (const mode of ['quest', 'review', 'vocab', 'preview'] as const) {
-      const context = { mode, romanizationMode: 'always', holdRomanization: checkHoldsRomanization(mode, false) } as const;
+  it('the Hangul Check holds it the same way, whatever the learner\'s mode: nothing shows while asking, and the answer shows it as the mode does', () => {
+    const review = { mode: 'review', romanizationMode: 'always', holdRomanization: checkHoldsRomanization('review') } as const;
+    for (const option of textRound.options) {
+      expect(optionView(textRound, option, asking, review)).toMatchObject({ romanization: '', heldRomanization: option.text!.romanization });
+    }
+    const resolved = run(asking, [tap('b', 100), tap('a', 900)]).state;
+    expect(textRound.options.map((o) => optionView(textRound, o, resolved, review).romanization)).toEqual(['ga', 'na', 'da', 'ra']);
+    const tapReview = { ...review, romanizationMode: 'tap' } as const;
+    expect(textRound.options.map((o) => optionView(textRound, o, resolved, tapReview).romanization)).toEqual(['ga', 'na', '', '']);
+  });
+
+  it('every practice host is unchanged: a practice step, vocabulary and a preview show it from the start', () => {
+    for (const mode of ['quest', 'vocab', 'preview'] as const) {
+      const context = { mode, romanizationMode: 'always', holdRomanization: checkHoldsRomanization(mode) } as const;
       for (const option of textRound.options) {
         expect(optionView(textRound, option, asking, context)).toMatchObject({ romanization: option.text!.romanization, heldRomanization: '' });
       }
     }
     // A Check context without the flag (Cloze Pick's own option cards) is unchanged too.
     expect(optionView(textRound, textRound.options[1]!, asking, { mode: 'check', romanizationMode: 'always' })).toMatchObject({ romanization: 'na', heldRomanization: '' });
+  });
+});
+
+describe('textPromptView: a text prompt round holds its own romanization while the question is open (DC-1a, section 3.3)', () => {
+  const asking = startFlow(2);
+  const resolved = run(startFlow(2), [tap('a', 100)]).state;
+
+  it('held while asking: the Korean and its romanization are the round\'s, the line is marked held', () => {
+    expect(textPromptView(textRound, asking, true)).toEqual({ ko: '가', romanization: 'ga', held: true });
+  });
+
+  it('shown once the round is answered, and never held when the surface holds nothing', () => {
+    expect(textPromptView(textRound, resolved, true)).toEqual({ ko: '가', romanization: 'ga', held: false });
+    expect(textPromptView(textRound, asking, false)).toEqual({ ko: '가', romanization: 'ga', held: false });
+    expect(textPromptView(textRound, { ...resolved, status: 'done' }, true).held).toBe(false);
   });
 });
 
@@ -658,20 +684,15 @@ describe('the asked text in a Check (AMENDMENTS-AUDIO-CANT-HEAR CH-1e, section 3
   const asking = startFlow(2);
   const resolved = run(startFlow(2), [tap('a', 100)]).state;
 
-  it('askedTextIsRomanizationOnly: the quest Check always, the Hangul Check only with its switch on, a practice host never', () => {
-    expect(askedTextIsRomanizationOnly('check', 'always', false)).toBe(true);
-    expect(askedTextIsRomanizationOnly('check', 'tap', false)).toBe(true);
-    expect(askedTextIsRomanizationOnly('review', 'tap', false)).toBe(true);
-    expect(askedTextIsRomanizationOnly('review', 'always', false)).toBe(false);
-    for (const mode of ['quest', 'vocab', 'preview'] as const) {
-      expect(askedTextIsRomanizationOnly(mode, 'tap', false)).toBe(false);
-      expect(askedTextIsRomanizationOnly(mode, 'always', false)).toBe(false);
-    }
+  it('askedTextIsRomanizationOnly: every Check host with a sound prompt, whatever the mode; a practice host never (DC-1a, section 3.2)', () => {
+    expect(askedTextIsRomanizationOnly('check', false)).toBe(true);
+    expect(askedTextIsRomanizationOnly('review', false)).toBe(true);
+    for (const mode of ['quest', 'vocab', 'preview'] as const) expect(askedTextIsRomanizationOnly(mode, false)).toBe(false);
   });
 
   it('a text prompt round has no sound to ask about, so it is never the romanization-only case', () => {
-    expect(askedTextIsRomanizationOnly('check', 'always', true)).toBe(false);
-    expect(askedTextIsRomanizationOnly('review', 'tap', true)).toBe(false);
+    expect(askedTextIsRomanizationOnly('check', true)).toBe(false);
+    expect(askedTextIsRomanizationOnly('review', true)).toBe(false);
   });
 
   it('romanizationOnly: the text carries the romanization and no Hangul while the question is open', () => {
