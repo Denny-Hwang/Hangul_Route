@@ -9,7 +9,7 @@ import {
   isRolePlayEnd,
   localize,
   rolePlayTurnCount,
-  romanize,
+  romanizeReviewed,
   scopeRoundCount,
   translatableFields,
   type RolePlayNode,
@@ -48,7 +48,7 @@ describe('Role Play scene (F-CURR-002 section 7.1 F6, row CM-35)', () => {
   it('every line, reply and title of the fixture is romanized as the repo converter reads it', () => {
     const texts = [LIBRARY_SCENE.title, LIBRARY_SCENE.partner, ...LIBRARY_SCENE.nodes.flatMap((n) => (isRolePlayEnd(n) ? [] : [n.line, ...n.replies.map((r) => r.text)]))];
     for (const t of texts) {
-      const r = romanize(t.ko);
+      const r = romanizeReviewed(t.ko);
       expect(r.unknown, t.ko).toEqual([]);
       expect(t.romanization, t.ko).toBe(r.text);
     }

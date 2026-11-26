@@ -743,6 +743,62 @@ const story = (slug, extra = {}) => ({
 const topicFile = (key, order) => ({ topic: { id: `vocab-topic:${key}`, key, order, titleEn: key.toUpperCase() }, items: [] });
 const discoverStepOf = (ids) => ({ id: "s2", kind: "discover", titleEn: "Meet", discover: { pages: [{ items: ids.map((jamoId) => ({ type: "jamo", jamoId })) }] } });
 
+/** A ready Stage 2 Letters-style cell of `n` quests whose last `optional` ones are optional (AMENDMENTS-BATCHIM-COMPLETE BC-2a). */
+function optionalCell(n, optional, extra = {}) {
+  const c = cell("stage3", "rites", "ready", extra);
+  c.quests = Array.from({ length: n }, (_, i) => quest("stage3", "rites", i + 1));
+  if (optional > 0) c.optionalQuestIds = c.quests.slice(n - optional).map((q) => q.id);
+  return c;
+}
+
+describe("build-lessons.mjs: optional quests in a cell (AMENDMENTS-BATCHIM-COMPLETE BC-2a)", () => {
+  test("shapeCell puts optionalQuestIds on the episode, and nothing when the cell states none", () => {
+    const shaped = shapeCell(optionalCell(5, 2), "content/episodes/stage-3/rites.json");
+    assert.deepEqual(shaped.episode.optionalQuestIds, ["quest:stage3-rites-q4", "quest:stage3-rites-q5"]);
+    assert.equal(shaped.episode.questIds.length, 5);
+    assert.ok(!("optionalQuestIds" in shapeCell(cell("stage3", "rites"), "content/episodes/stage-3/rites.json").episode));
+  });
+
+  test("a malformed list fails with the file: not a list, empty, not the last quests in order, every quest, a Volume 2 file", () => {
+    const rel = "content/episodes/stage-3/rites.json";
+    const bad = (value, pattern) => assert.throws(() => shapeCell(optionalCell(5, 0, { optionalQuestIds: value }), rel), pattern);
+    bad("quest:stage3-rites-q5", /non-empty list of quest ids/);
+    bad([], /non-empty list of quest ids/);
+    bad([7], /non-empty list of quest ids/);
+    bad(["quest:stage3-rites-q3", "quest:stage3-rites-q5"], /the last quests of the cell, in order/);
+    bad(["quest:stage3-rites-q5", "quest:stage3-rites-q4"], /the last quests of the cell, in order/);
+    bad(["quest:stage3-rites-q9"], /the last quests of the cell, in order/);
+    bad(["quest:stage3-rites-q1", "quest:stage3-rites-q2", "quest:stage3-rites-q3", "quest:stage3-rites-q4", "quest:stage3-rites-q5"], /at least one quest stays required/);
+    const v2 = volume2(optionalCell(5, 0));
+    v2.optionalQuestIds = ["quest:stage3-rites-v2-q5"];
+    assert.throws(() => shapeCell(v2, "content/episodes/stage-3/rites.v2.json"), /a Volume 2 file has no optional quests/);
+  });
+
+  test("the generator writes the list on the manifest episode, the catalogue cell and the compact row (the volume slot reads 1, then the count)", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-3/rites.json", optionalCell(5, 2));
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(read(root, "lessons-index.ts"), /"optionalQuestIds":\["quest:stage3-rites-q4","quest:stage3-rites-q5"\]/);
+    const model = catalogueOf({ cells: readCellsOf(root) });
+    assert.deepEqual(model.cells.find((c) => c.stage === "stage3").optionalQuestIds, ["quest:stage3-rites-q4", "quest:stage3-rites-q5"]);
+    assert.ok(!("optionalQuestIds" in model.cells.find((c) => c.stage === "stage2")));
+    const rows = cellRowsOf(model);
+    assert.deepEqual(rows[1].slice(6), [1, 2]);
+    assert.equal(rows[0].length, 6);
+    assert.match(renderCatalogue(model), /\["Quest 5",4,\[\]\]\],1,2\],/);
+  });
+
+  test("a cell whose optional list is not the end of its quests does not fit a compact row", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-3/rites.json", optionalCell(5, 2));
+    const model = catalogueOf({ cells: readCellsOf(root) });
+    const moved = { ...model, cells: model.cells.map((c) => ({ ...c, optionalQuestIds: ["quest:stage3-rites-q3", "quest:stage3-rites-q5"] })) };
+    assert.throws(() => cellRowsOf(moved), /does not fit a compact row/);
+  });
+});
+
 describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
   test("the cells and their quests are written as compact rows (ids by position), and a model that would not expand back fails", () => {
     const root = makeRoot();

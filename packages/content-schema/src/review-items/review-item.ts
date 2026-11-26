@@ -127,6 +127,13 @@ export const ReviewItemSchema = z
      * (`cellOfVolume`). These are the cells whose mastery denominator holds it (§4.4).
      */
     cells: z.array(z.string().regex(TEACHING_CELL_RE)).min(1),
+    /**
+     * The cells of `cells` that teach it **only** through optional quests (a cell's `optionalQuestIds`, F-CURR-002 §4.2),
+     * with those quests (AMENDMENTS-BATCHIM-COMPLETE §3.9 item 5, BC-OD-16): such a cell holds the item in its mastery
+     * denominator and its Cell Check once the learner has completed one of them, never before. Absent for an item every
+     * cell of which teaches it through a required quest (`cellHoldsItem`).
+     */
+    optionalIn: z.record(z.string(), z.array(z.string().min(1)).min(1)).optional(),
     /** The later cells and stories that only ask it again in a scored round (a recycle), in route order: never in their denominator. */
     asked: z.array(z.string().regex(TEACHING_CELL_RE)),
     formats: z.array(ReviewFormatSchema).min(1),
@@ -144,6 +151,7 @@ export const ReviewItemSchema = z
       if (!allowed.includes(f)) issue('formats', `a ${item.kind} item is never asked as ${f}`);
     });
     if (new Set(item.formats).size !== item.formats.length) issue('formats', 'a format is listed once');
+    for (const cell of Object.keys(item.optionalIn ?? {})) if (!item.cells.includes(cell)) issue('optionalIn', `${cell} is not one of the item's cells`);
     if (new Set([...item.cells, ...item.asked]).size !== item.cells.length + item.asked.length) issue('cells', 'a cell is listed once, in cells or in asked');
     if (item.homophoneOf.includes(item.id)) issue('homophoneOf', 'an item is not its own homophone');
   });
@@ -158,7 +166,9 @@ export type ReviewItem = z.infer<typeof ReviewItemSchema>;
  *   - en, glossKey, picture: '' when absent; glossKey abbreviated (`packGlossKey`), '=' for `<id>#gloss`;
  *   - home: an index into the chunk's `homes`; cells and asked: indexes into its `cells`;
  *   - meta: stage | volume << 3 | soundChange << 8; formats: a bitmask over REVIEW_FORMATS;
- *   - reply: 0, or [ko, romanization, en, glossKey] packed the same way.
+ *   - reply: 0, or [ko, romanization, en, glossKey] packed the same way;
+ *   - optionalIn: present only on an item some cell teaches through optional quests alone (BC-2a): [cell index, ...quest ids]
+ *     per such cell. A row of an item with none is as long as it ever was.
  */
 export type ReviewItemRow = readonly [
   id: string,
@@ -174,6 +184,7 @@ export type ReviewItemRow = readonly [
   reply: 0 | readonly [ko: string, romanization: string, en: string, glossKey: string],
   picture: string,
   asked: readonly number[],
+  optionalIn?: readonly (readonly [cell: number, ...questIds: string[]])[],
 ];
 
 /** The shared strings of the rows: the cells (an episode without its `episode:` prefix, or a story) and the homes. */
@@ -281,14 +292,15 @@ export function encodeReviewItems(items: readonly ReviewItem[]): { tables: Revie
       reply === undefined ? 0 : [reply.ko, packRomanization(reply.romanization, reply.ko), reply.en ?? '', packGlossKey(reply.glossKey, item.id)],
       item.picture ?? '',
       item.asked.map((cell) => indexIn(cells, packCell(cell))),
-    ];
+      ...(item.optionalIn === undefined ? [] : [Object.entries(item.optionalIn).map(([cell, quests]) => [indexIn(cells, packCell(cell)), ...quests] as const)]),
+    ] as unknown as ReviewItemRow;
   });
   return { tables: { cells, homes }, rows };
 }
 
 /** One chunk row as its item. */
 export function decodeReviewItem(row: ReviewItemRow, tables: ReviewItemTables): ReviewItem {
-  const [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture, asked] = row;
+  const [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture, asked, optionalIn] = row;
   const item: ReviewItem = {
     id,
     kind: kindOfId(id) as ReviewItemKind,
@@ -314,6 +326,9 @@ export function decodeReviewItem(row: ReviewItemRow, tables: ReviewItemTables): 
     if (replyKey !== undefined) item.reply.glossKey = replyKey;
   }
   if (opt(picture) !== undefined) item.picture = picture;
+  if (optionalIn !== undefined) {
+    item.optionalIn = Object.fromEntries(optionalIn.map(([cell, ...quests]) => [unpackCell(tables.cells[cell] as string), quests]));
+  }
   return item;
 }
 
@@ -363,20 +378,34 @@ export function cellOfVolume(cell: string, volume: number): string {
 }
 
 /**
+ * Whether `cell` holds the item in its mastery denominator and its Cell Check now: the cell teaches it (`cells`), and when
+ * it does so only through optional quests (`optionalIn`) the learner has completed one of them (`done`: the completed
+ * quest ids). An item an unplayed optional quest alone teaches is never asked of a learner who was not offered it as played.
+ */
+export function cellHoldsItem(item: Pick<ReviewItem, 'cells' | 'optionalIn'>, cell: string, done: ReadonlySet<string> = NO_QUESTS): boolean {
+  if (!item.cells.includes(cell)) return false;
+  const only = item.optionalIn?.[cell];
+  return only === undefined || only.some((id) => done.has(id));
+}
+const NO_QUESTS: ReadonlySet<string> = new Set();
+
+/**
  * The mastery denominator of a grid cell or pack level (§4.4): the items its started volumes
- * teach (`cells`, not the recycles of `asked`), minus the retired ones, in the order given.
+ * teach (`cells`, not the recycles of `asked`), minus the retired ones, in the order given. An item a cell teaches only
+ * through optional quests joins it once the learner has completed one of them (`done`, `cellHoldsItem`).
  * `cell` is the grid cell's own id (`episode:stage2-life`, `episode:pack-<key>-s<n>`), never a
  * `-v<k>` id; `volumes` are its volumes the learner has started (a volume not started, or one that
  * ships later, never holds a level back). An item first taught in another cell and only asked
  * again here counts in its own cells, not this one.
  */
 export function masteryDenominator(
-  items: readonly Pick<ReviewItem, 'id' | 'cells'>[],
+  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'optionalIn'>[],
   cell: string,
   volumes: readonly number[],
   retired: RetiredIds,
+  done: ReadonlySet<string> = NO_QUESTS,
 ): string[] {
-  const teaching = new Set(volumes.filter((v) => Number.isInteger(v) && v >= 1).map((v) => cellOfVolume(cell, v)));
+  const teaching = [...new Set(volumes.filter((v) => Number.isInteger(v) && v >= 1).map((v) => cellOfVolume(cell, v)))];
   const out = asSet(retired);
-  return items.filter((item) => !out.has(item.id) && item.cells.some((c) => teaching.has(c))).map((item) => item.id);
+  return items.filter((item) => !out.has(item.id) && teaching.some((c) => cellHoldsItem(item, c, done))).map((item) => item.id);
 }

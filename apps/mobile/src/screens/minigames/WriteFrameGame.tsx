@@ -1,4 +1,4 @@
-import { a11yRomanization, keysFor, romanize, type KoText, type SoundTable, type WriteFrameRound } from '@hangul-route/content-schema';
+import { a11yRomanization, keysFor, romanizeReviewed, type KoText, type SoundTable, type WriteFrameRound } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -234,7 +234,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false, chain }
   const round = rounds[state.roundIdx];
   const words = pickedWords(state);
   const field = fieldView(state);
-  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text, m.a11y.romanizationOr));
+  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanizeReviewed(text).text, m.a11y.romanizationOr));
   const readTypedRef = useRef(readTyped);
   readTypedRef.current = readTyped;
   const live = state.phase === 'typing' ? field.live : '';

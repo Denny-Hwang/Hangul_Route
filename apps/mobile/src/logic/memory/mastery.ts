@@ -22,7 +22,8 @@ import { isItemDue } from './spacing';
  *   `d` are never read for a level, so a falling box never lowers one. A seeded box alone never holds an item, as it
  *   never counts a word known (row CM-16).
  * - **The denominator** is `masteryDenominator` (row CM-10): the items the cell's started volumes teach, minus the
- *   retired ones. A volume is started when one of its quests is done or it was tested out (`testedOut` of its volume
+ *   retired ones; an item the cell teaches only through optional quests joins it once the learner has completed one of
+ *   them (AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 5, BC-OD-16). A volume is started when one of its quests is done or it was tested out (`testedOut` of its volume
  *   cell, `cellOfVolume`). A volume not started never holds a level back; a started cell whose later volume has
  *   shipped (it has quests in the catalogue) and is not started shows the "New volume" marker instead.
  * - **Topic words** (`vocab:` ids) are read from the word slice (`bestBox`, `seen`). They stay in the denominator as the
@@ -56,7 +57,7 @@ export interface MasteryInput {
   /** Every catalogue quest, so a later volume's quests (episode `<cell>-v<k>`) are found. */
   quests: readonly Pick<CatalogQuest, 'id' | 'episodeId'>[];
   /** The review items of this build, with the retired ids. */
-  items: readonly Pick<ReviewItem, 'id' | 'cells'>[];
+  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'optionalIn'>[];
   retired: ReadonlySet<string>;
   /** The memory store's rows (lesson, story and pack items). */
   rows: Readonly<Record<string, { st: HeldState & Partial<Pick<MemoryItemState, 'b' | 'd'>> }>>;
@@ -125,7 +126,7 @@ export function deriveMastery(input: MasteryInput): Map<string, CellMastery> {
     const firstQuests = volumes.quests.get(1) ?? [];
     const isDone = (firstQuests.length > 0 && firstQuests.every((id) => done.has(id))) || testedOut[cell] !== undefined;
     // Every item the started volumes teach, topic words included whether collected or not (section 4.4 as written).
-    const denominator = masteryDenominator(input.items, cell, started, input.retired);
+    const denominator = masteryDenominator(input.items, cell, started, input.retired, done);
     const at3 = denominator.filter((id) => held(id, PRACTICED_BOX)).length;
     const at4 = denominator.filter((id) => held(id, MASTERED_BOX)).length;
     const practiced = isDone && reaches(at3, denominator.length, PRACTICED_SHARE);

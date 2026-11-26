@@ -51,6 +51,13 @@ export interface ItemOccurrence {
   stage: number;
   volume: number;
   source: 'discover' | 'round';
+  /**
+   * The quest this was read in, set only when that quest is one of its cell's `optionalQuestIds`
+   * (AMENDMENTS-BATCHIM-COMPLETE §3.9 item 5): an item every occurrence of which, in a cell, carries it is taught there
+   * by optional quests alone (`ReviewItem.optionalIn`). Absent everywhere else, so a cell with no optional quest
+   * reads exactly as before.
+   */
+  optionalQuest?: string;
   /** `<file> <path>`: where it was read, for coverage reports and error messages. */
   at: string;
 }
@@ -442,8 +449,10 @@ export function lessonOccurrences(source: LessonSource, symbols: readonly Review
     new Map(symbols.map((s) => [s.id, s])),
   );
   const body = isRec(source.body) ? source.body : {};
+  const optional = new Set(arr(body.optionalQuestIds).filter((id): id is string => typeof id === 'string'));
   arr(body.quests).filter(isRec).forEach((quest, qi) => {
     const questId = typeof quest.id === 'string' ? quest.id : '';
+    const from = c.out.length;
     const steps = arr(quest.steps).filter(isRec);
     const scopes = arr(quest.scopes).filter(isRec);
     steps.forEach((step, si) => {
@@ -458,6 +467,8 @@ export function lessonOccurrences(source: LessonSource, symbols: readonly Review
       const at = scopes.findIndex((s) => s.ref === step.minigameRef);
       if (at >= 0) scopeAnswers(c, scopes[at] as Rec, `${source.file} quests[${qi}].scopes[${at}]`);
     });
+    // An optional quest's occurrences say so (§3.9 item 5): the merge tells a cell it teaches only by those.
+    if (optional.has(questId)) for (const occ of c.out.slice(from)) occ.optionalQuest = questId;
   });
   return c.out;
 }

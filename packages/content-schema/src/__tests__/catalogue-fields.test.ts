@@ -13,7 +13,7 @@ import {
   isPillarTag,
   parseStory,
   pillarTagRomanization,
-  romanize,
+  romanizeReviewed,
   type Story,
 } from '../index';
 import { lintStory } from '../story-lint';
@@ -79,7 +79,7 @@ describe('PILLAR_TAGS registry (§3.8)', () => {
 
   it('generates every romanization with the F-CNT-002 converter, none typed (§3.8, D13)', () => {
     for (const tag of PILLAR_TAGS) {
-      const { text, unknown } = romanize(tag.ko);
+      const { text, unknown } = romanizeReviewed(tag.ko);
       expect(unknown, tag.id).toEqual([]);
       expect(text.trim().length, tag.id).toBeGreaterThan(0);
       expect(pillarTagRomanization(tag), tag.id).toBe(text);

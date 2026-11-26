@@ -441,3 +441,37 @@ describe('access (Learning Route amendment section 4.5, LR-3b): not-open pips', 
     expect(row(closed, 'stage1')?.newPips.map((p) => [p.state, p.laterReason])).toEqual(Array(7).fill(['later', 'notOpen']));
   });
 });
+
+describe('optional quests on My Route (AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 4)', () => {
+  // Stage 1 Life's second quest is optional, as `quest:stage1-crafts-q4` is in the shipped Stage 1.
+  const optionalLife: Bundle = {
+    ...BUNDLE_8,
+    episodes: BUNDLE_8.episodes.map((e) => (e.id === 'episode:stage1-life' ? { ...e, optionalQuestIds: ['quest:stage1-life-q2'] } : e)),
+  };
+  const requiredDone = STAGE1_8.filter((id) => id !== 'quest:stage1-life-q2');
+
+  it('a cell, and the stage, are complete once the required quests are done; the optional pip shows and stays open', () => {
+    const m = build(requiredDone, {}, optionalLife);
+    expect(row(m, 'stage1')?.cells.map((c) => c.state)).toEqual(['complete', 'complete', 'complete', 'complete', 'complete']);
+    expect(row(m, 'stage1')?.state).toBe('complete');
+    const pips = row(m, 'stage1')?.pips ?? [];
+    expect(pips).toHaveLength(8);
+    expect(pips.filter((p) => p.optional).map((p) => [p.questId, p.state])).toEqual([['quest:stage1-life-q2', 'open']]);
+    expect(row(m, 'stage1')?.done).toBe(7);
+  });
+
+  it('without the optional list the same progress leaves the cell partial', () => {
+    expect(row(build(requiredDone), 'stage1')?.cells.map((c) => c.state)).toContain('partial');
+  });
+
+  it('a stage whose required pips are placed out or done reads known although the optional pip is unplayed', () => {
+    const m = build(requiredDone.slice(1), { route: { placedOutQuestIds: ['quest:stage1-letters-q1'] } as MyRouteInput['route'] }, optionalLife);
+    expect(row(m, 'stage1')?.state).toBe('known');
+  });
+
+  it('playing the optional quest fills its pip and nothing else changes', () => {
+    const m = build(STAGE1_8, {}, optionalLife);
+    expect(row(m, 'stage1')?.pips.map((p) => p.state)).toEqual(Array(8).fill('done'));
+    expect(row(m, 'stage1')?.cells.every((c) => c.state === 'complete')).toBe(true);
+  });
+});

@@ -1,4 +1,4 @@
-import { a11yRomanization, composeTyped, romanize, typeHangulMode, type TypeHangulRound } from '@hangul-route/content-schema';
+import { a11yRomanization, composeTyped, romanizeReviewed, typeHangulMode, type TypeHangulRound } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -161,7 +161,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   );
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
-  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text, m.a11y.romanizationOr));
+  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanizeReviewed(text).text, m.a11y.romanizationOr));
   const readTypedRef = useRef(readTyped);
   readTypedRef.current = readTyped;
 

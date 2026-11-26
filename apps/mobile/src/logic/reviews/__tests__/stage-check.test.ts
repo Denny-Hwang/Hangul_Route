@@ -37,6 +37,25 @@ const UPPER: StageKey[] = ['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'st
 const answersOf = (n: number, right: number): Map<number, RoundAnswer> => new Map(Array.from({ length: n }, (_, i) => [i, { correct: i < right }]));
 const themeOf = (cell: string): string => episodesAll.find((e) => e.id === cell)?.theme ?? '';
 
+describe('an item only an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a, BC-OD-16)', () => {
+  const [A, B] = ['episode:stage2-letters', 'episode:stage2-life'];
+  const base = INDEX.items.find((i) => i.cells.includes(A)) as (typeof INDEX.items)[number];
+  const only = { ...base, id: 'lex:opt-only', cells: [A], asked: [], optionalIn: { [A]: ['quest:stage2-letters-q8'] } };
+  const other = { ...base, id: 'lex:other', cells: [B], asked: [] };
+  const index = { items: [only, other], byId: new Map([only, other].map((i) => [i.id, i])), retired: new Set<string>() };
+
+  it('is in the cell\'s share once a quest that teaches it is completed, and in none before', () => {
+    expect(stageCheckItemIds(index, [A, B])).toEqual([[], ['lex:other']]);
+    expect(stageCheckItemIds(index, [A, B], new Set(['quest:stage2-letters-q1']))).toEqual([[], ['lex:other']]);
+    expect(stageCheckItemIds(index, [A, B], new Set(['quest:stage2-letters-q8']))).toEqual([['lex:opt-only'], ['lex:other']]);
+  });
+
+  it('the plan reads the completed quests of its context', () => {
+    const planned = (done?: ReadonlySet<string>) => planStageCheck({ ...ctx(), index: surfaceIndex(index), ...(done === undefined ? {} : { doneQuestIds: done }) }, 'stage2', [A, B], rounds)?.rounds.map((r) => r.question.itemId) ?? [];
+    expect(planned()).not.toContain('lex:opt-only');
+  });
+});
+
 describe('shares: fair places over the cells', () => {
   it('splits 20 places evenly over five full cells, and gives a short cell its all, the rest to the others', () => {
     expect(shares([30, 30, 30, 30, 30], 20)).toEqual([4, 4, 4, 4, 4]);

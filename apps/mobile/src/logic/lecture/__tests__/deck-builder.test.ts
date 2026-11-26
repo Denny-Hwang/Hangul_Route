@@ -2595,6 +2595,11 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         ],
       },
     },
+    // AMENDMENTS-ROMANIZER-GAPS RG-2a: 솔잎 has a reviewed entry (sollip), so the composed example line says it.
+    'mg:frame-entry': {
+      kind: 'write-frame',
+      writeFrame: { rounds: [{ id: 'e1', frame: kt('___ 주세요.', '___ juseyo', 'Please give me ___.'), slots: [{ id: 's1', bank: [kt('솔잎', 'sollip', 'pine needle')] }], entry: 'type', freeEntry: false }] },
+    },
     'mg:frame-bad': {
       kind: 'write-frame',
       writeFrame: {
@@ -2613,16 +2618,24 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
   };
   const written = quest('written', [['intro'], ['practice', 'mg:type'], ['practice', 'mg:trace'], ['apply', 'mg:frame']], { rewardCardId: undefined });
   const empty = quest('written-empty', [['practice', 'mg:type-none'], ['practice', 'mg:trace-bare'], ['apply', 'mg:frame-bare']], { rewardCardId: undefined });
+  const reviewed = quest('written-reviewed', [['apply', 'mg:frame-entry']], { rewardCardId: undefined });
   const malformed = quest('written-bad', [['apply', 'mg:frame-bad'], ['practice', 'mg:trace']], { rewardCardId: undefined });
   const b = (over: Partial<LectureBundle> = {}) =>
     bundle({
       scopeFor: (ref) => writeScopes[ref] ?? scopes[ref],
-      questById: (id) => [written, empty, malformed].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      questById: (id) => [written, empty, malformed, reviewed].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
       ...over,
     });
   const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
   type Write = Extract<Slide, { kind: 'write-together' }>;
   const writes = (slides: readonly Slide[]) => only(slides, 'write-together') as Write[];
+
+  it('the example line of a frame round is its reviewed romanization (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+    const slide = writes(run(reviewed.id).slides)[0]!;
+    expect(slide.variant).toBe('frame');
+    const example = slide.variant === 'frame' ? slide.example : undefined;
+    expect(example).toMatchObject({ ko: '솔잎 주세요.', romanization: 'sollip juseyo', spoken: { text: '솔잎 주세요.', romanization: 'sollip juseyo' } });
+  });
 
   it('one write-together slide per round, keyed by the round, in content order; a step with no round is a counted skip', () => {
     const { slides, skipped } = run(written.id);

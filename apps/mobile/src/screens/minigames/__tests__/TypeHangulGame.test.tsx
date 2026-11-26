@@ -177,6 +177,13 @@ describe('Type Hangul: screen readers', () => {
     expect(screenReader.announceForScreenReader).toHaveBeenLastCalledWith('You typed: 홍, hong');
   });
 
+  it('iOS: what was typed is read with its reviewed romanization where the word has an entry (AMENDMENTS-ROMANIZER-GAPS RG-2a)', async () => {
+    setPlatform('ios');
+    const { r } = await play(['hoya'], { width: 375, height: 667 });
+    await typeKeys(r, 'ㅅㅗㄹㅇㅣㅍㅇ');
+    expect(screenReader.announceForScreenReader).toHaveBeenLastCalledWith('You typed: 솔잎, sollip');
+  });
+
   it('native: the result panel moves screen-reader focus to Hoya\'s line, on every Done', async () => {
     setPlatform('ios');
     const { r } = await play(['hoya'], { width: 375, height: 667 });

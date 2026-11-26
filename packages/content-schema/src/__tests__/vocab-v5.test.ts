@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { VocabTopicFileSchema, romanizeWord } from '../index';
+import { VocabTopicFileSchema, romanizeReviewed } from '../index';
 
 /**
  * F-VOC-001 PR V-5: the Colors, Numbers and Animals topics as the spec's section 3.4
@@ -131,7 +131,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
   });
 
   it.each(spec.rows)('$id romanization equals the converter output (unhyphenated RR)', (row) => {
-    expect(romanizeWord(row.ko)).toBe(row.romanization);
+    expect(romanizeReviewed(row.ko).text).toBe(row.romanization);
     expect(row.romanization).not.toContain('-');
   });
 
@@ -147,7 +147,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
       fixedOrder: spec.fixedOrder,
     });
     expect(file.topic.titleKo).toMatchObject(spec.titleKo);
-    expect(romanizeWord(spec.titleKo.ko)).toBe(spec.titleKo.romanization);
+    expect(romanizeReviewed(spec.titleKo.ko).text).toBe(spec.titleKo.romanization);
   });
 
   it('uses no spokenKo, audioRef or example at launch', () => {

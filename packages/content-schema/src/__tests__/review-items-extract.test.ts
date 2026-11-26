@@ -239,6 +239,16 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
     expect(occs[0]?.at).toBe('content/episodes/stage-2/life.json quests[0].steps[1].discover.pages[0].items[0]');
   });
 
+  it('marks the occurrences of an optional quest with it (BC-2a), and no other: a cell without optional quests reads as before', () => {
+    expect(occs.every((o) => o.optionalQuest === undefined)).toBe(true);
+    const marked = lessonOccurrences({ ...source, body: { ...cell, optionalQuestIds: ['quest:stage2-life-q2', 7] } }, SYMBOLS);
+    expect(marked).toHaveLength(occs.length);
+    const quest = (o: { at: string }): string => (/quests\[(\d)\]/.exec(o.at) as RegExpExecArray)[1] as string;
+    expect(marked.filter((o) => quest(o) === '1').every((o) => o.optionalQuest === 'quest:stage2-life-q2')).toBe(true);
+    expect(marked.filter((o) => quest(o) === '0').every((o) => o.optionalQuest === undefined)).toBe(true);
+    expect(marked.filter((o) => o.optionalQuest !== undefined).length).toBeGreaterThan(0);
+  });
+
   it('reads nothing from a body that is not a lesson', () => {
     expect(lessonOccurrences({ ...source, body: 'nope' }, SYMBOLS)).toEqual([]);
     expect(lessonOccurrences({ ...source, body: { quests: [{ steps: [{ kind: 'check', minigameRef: 'minigame:x' }] }] } }, SYMBOLS)).toEqual([]);

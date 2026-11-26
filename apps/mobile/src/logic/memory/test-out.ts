@@ -1,5 +1,5 @@
 import type { MemoryItemState, ProgressSnapshot } from '@hangul-route/content-schema';
-import type { ReviewItem } from '@hangul-route/content-schema/review-items';
+import { cellHoldsItem, type ReviewItem } from '@hangul-route/content-schema/review-items';
 import { addDays } from '../vocab/srs';
 import { shardOf } from './resolve';
 import { SEED_PER_DAY, type SeededItem } from './seed';
@@ -46,9 +46,18 @@ function order(seed: string, id: string): number {
   return h;
 }
 
-/** The items a cell teaches that the memory store schedules: its own `cells`, not retired, not a topic word (those live in the `vocab` slice). */
-export function cellStoreItems(items: readonly Pick<ReviewItem, 'id' | 'cells'>[], retired: ReadonlySet<string>, cellId: string): string[] {
-  return items.filter((i) => i.cells.includes(cellId) && !retired.has(i.id) && !i.id.startsWith(VOCAB)).map((i) => i.id);
+/**
+ * The items a cell teaches that the memory store schedules: its own `cells`, not retired, not a topic word (those live in
+ * the `vocab` slice). An item the cell teaches only through optional quests is left out unless one of them is in `done`:
+ * a tested-out cell has played none, so it never derives a state for what it did not offer (BC-OD-16).
+ */
+export function cellStoreItems(
+  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'optionalIn'>[],
+  retired: ReadonlySet<string>,
+  cellId: string,
+  done?: ReadonlySet<string>,
+): string[] {
+  return items.filter((i) => cellHoldsItem(i, cellId, done) && !retired.has(i.id) && !i.id.startsWith(VOCAB)).map((i) => i.id);
 }
 
 /**
@@ -71,7 +80,7 @@ export function testOutPlacement(answer: Answer, passed: boolean, today: string,
 
 export interface TestedOutInput {
   testedOut: ProgressSnapshot['testedOut'];
-  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'home' | 'stage'>[];
+  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'optionalIn' | 'home' | 'stage'>[];
   retired: ReadonlySet<string>;
   /** The quest seeding's states (section 4.8): they keep their place, and their due days count toward the day cap. */
   seeded: ReadonlyMap<string, SeededItem>;

@@ -309,6 +309,26 @@ export function cellFileName(name) {
 /** The part of a cell's ids after the stage: `<theme>`, or `<theme>-v2` for its Volume 2 (`episode:stage2-life-v2`). */
 export const cellKey = (theme, volume) => (volume === 1 ? theme : `${theme}-v${volume}`);
 
+/**
+ * A cell's `optionalQuestIds` (AMENDMENTS-BATCHIM-COMPLETE §3.9): the last quests of a Volume 1 cell, in order, with at
+ * least one quest left required. [] when it states none. The schema holds the rest (the caps); this is what the generator
+ * needs to emit a count that expands back to the same ids.
+ */
+function optionalQuestIdsOf(cell, shapedQuests, volume, rel) {
+  if (cell.optionalQuestIds === undefined) return [];
+  const list = cell.optionalQuestIds;
+  if (!Array.isArray(list) || list.length === 0 || list.some((id) => typeof id !== "string")) {
+    throw new ContentError("optionalQuestIds is a non-empty list of quest ids", rel);
+  }
+  if (volume !== 1) throw new ContentError("a Volume 2 file has no optional quests", rel);
+  const ids = shapedQuests.map((q) => q.id);
+  const suffix = ids.slice(ids.length - list.length);
+  if (list.length >= ids.length || list.some((id, i) => id !== suffix[i])) {
+    throw new ContentError("optionalQuestIds are the last quests of the cell, in order, and at least one quest stays required", rel);
+  }
+  return list;
+}
+
 /** One parsed cell file -> its episode, quests and scopes; throws ContentError on what it cannot emit. */
 export function shapeCell(cell, rel) {
   if (!isObject(cell)) throw new ContentError("a lesson cell is an object", rel);
@@ -354,6 +374,7 @@ export function shapeCell(cell, rel) {
     }
     return Object.fromEntries(PICK_QUEST.filter((k) => quest[k] !== undefined).map((k) => [k, quest[k]]));
   });
+  const optionalQuestIds = optionalQuestIdsOf(cell, shapedQuests, volume, rel);
   const seconds = shapedQuests.flatMap((q) => q.steps).reduce((sum, step) => sum + (step.durationSeconds ?? 0), 0);
   const episode = {
     id,
@@ -368,6 +389,8 @@ export function shapeCell(cell, rel) {
     estimatedMinutes: Math.max(3, Math.round(seconds / 60)),
     pillarTags: need(cell, "pillarTags", rel, "array"),
     status: "shipped",
+    // AMENDMENTS-BATCHIM-COMPLETE BC-2a: the trailing quests a cell lists as optional (never needed for it to be done).
+    ...(optionalQuestIds.length === 0 ? {} : { optionalQuestIds }),
     // Row CM-40: a Volume 2 episode says so (`EpisodeSchema` ties it to the -v2 id); Volume 1 keeps the default.
     ...(volume === 1 ? {} : { volume }),
   };
@@ -802,6 +825,7 @@ export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new
       status: "shipped",
       minutes: episode.estimatedMinutes,
       questIds: episode.questIds,
+      ...(episode.optionalQuestIds === undefined ? {} : { optionalQuestIds: episode.optionalQuestIds }),
       ...(volume === 1 ? {} : { volume }),
     });
     for (const quest of cell.quests) {
@@ -854,14 +878,18 @@ export function cellRowsOf(model) {
     const volume = cell.volume ?? 1;
     const own = `${cell.stage}-${cellKey(cell.theme, volume)}`;
     const ids = quests.map((_, i) => `quest:${own}-q${i + 1}`);
+    const optional = cell.optionalQuestIds ?? [];
     const fits =
       cell.episodeId === `episode:${own}` &&
+      optional.every((id, i) => id === ids[ids.length - optional.length + i]) &&
       cell.questIds.length === ids.length &&
       cell.questIds.every((id, i) => id === ids[i]) &&
       quests.every((q, i) => q.id === ids[i] && q.stage === cell.stage && q.theme === cell.theme && q.kind === "lesson");
     if (!fits) throw new Error(`catalogue cell ${cell.episodeId} does not fit a compact row (ids by position, one cell)`);
     const row = [cell.stage, cell.theme, cell.title, cell.status, cell.minutes, quests.map((q) => [q.title, q.minutes, q.teaches])];
-    // A Volume 2 row ends with its volume (row CM-40); a Volume 1 row is what it was.
+    // A Volume 2 row ends with its volume (row CM-40); a Volume 1 row is what it was, unless the cell has optional quests
+    // (BC-2a): then the volume slot reads 1 and a last slot counts them.
+    if (optional.length > 0) return [...row, volume, optional.length];
     return volume === 1 ? row : [...row, volume];
   });
 }

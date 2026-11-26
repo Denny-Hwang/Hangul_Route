@@ -1,4 +1,4 @@
-import { romanize, storyOrderPictures, type KoText, type StoryOrderRound } from '@hangul-route/content-schema';
+import { romanizeReviewed, storyOrderPictures, type KoText, type StoryOrderRound } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { WidthClass } from '@hangul-route/design-system';
 import type { PlaySpec } from '../audio/controller';
@@ -33,7 +33,7 @@ export function slotFace(line: KoText): { ko: string; romanization: string } {
   const words = line.ko.trim().split(/\s+/u);
   const first = (words[0] ?? '').replace(SENTENCE_MARK, '');
   const roman = line.romanization.trim().split(/\s+/u);
-  const romanization = roman.length === words.length ? (roman[0] ?? '').replace(SENTENCE_MARK, '') : romanize(first).text;
+  const romanization = roman.length === words.length ? (roman[0] ?? '').replace(SENTENCE_MARK, '') : romanizeReviewed(first).text;
   return { ko: first, romanization };
 }
 

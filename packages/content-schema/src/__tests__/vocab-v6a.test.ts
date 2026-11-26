@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { VocabTopicFileSchema, romanizeWord } from '../index';
+import { VocabTopicFileSchema, romanizeReviewed } from '../index';
 
 /**
  * F-VOC-001 PR V-6a: the Family, School, Body and Nature topics, from the spec's
@@ -154,7 +154,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
   });
 
   it.each(spec.rows)('$id romanization equals the converter output (unhyphenated RR)', (row) => {
-    expect(romanizeWord(row.ko)).toBe(row.romanization);
+    expect(romanizeReviewed(row.ko).text).toBe(row.romanization);
     expect(row.romanization).not.toContain('-');
   });
 
@@ -174,7 +174,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
       fixedOrder: false,
     });
     expect(file.topic.titleKo).toMatchObject(spec.titleKo);
-    expect(romanizeWord(spec.titleKo.ko)).toBe(spec.titleKo.romanization);
+    expect(romanizeReviewed(spec.titleKo.ko).text).toBe(spec.titleKo.romanization);
   });
 
   it('keeps the topic copy plain: no Hangul and no age words', () => {
@@ -361,7 +361,7 @@ describe('topic-specific rules', () => {
     const romanizedIn = (text: string | undefined): string[] =>
       [...new Set((text ?? '').match(/\p{L}+/gu) ?? [])].filter((t) => tableRr.has(t) || catalogRomanizations.has(t)).sort();
 
-    for (const [ko, rr] of NOTE_ROMANIZATIONS) expect(romanizeWord(ko), ko).toBe(rr);
+    for (const [ko, rr] of NOTE_ROMANIZATIONS) expect(romanizeReviewed(ko).text, ko).toBe(rr);
 
     const used = new Set<string>();
     for (const spec of TOPICS) {

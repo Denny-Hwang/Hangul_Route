@@ -316,6 +316,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // startsWith Check round and its builder `lp.symSound`; Discover and the quest Check are in the start bundle): on main with
   // RG-1 (4,544,073 B raw / 1,248,797 B gzip) the release `build:web` (CI=1) measures 4,546,233 B raw / 1,249,427 B gzip
   // (+2,160 B raw), 1,633 B over the line. The line is the measurement plus a 3,967 B margin (one measured raise).
+  // [RG] AMENDMENTS-ROMANIZER-GAPS RG-2a (`romanizeReviewed` and its eight reviewed entries, whose app call sites now reach the
+  // start bundle: the Write Frame sentence line, the lecture example line, the `{ko:}` note tokens, the typed-text labels): on
+  // main with RG-1 (4,544,073 B raw / 1,248,797 B gzip) alone it measures 4,545,421 B raw / 1,249,206 B gzip (+1,348 B raw);
+  // on top of SF-1 the release `build:web` (CI=1) measures 4,547,724 B raw / 1,249,854 B gzip, 2,476 B under the line. The line is
+  // unchanged. Splitting the `reason` texts out of `exceptions.ts` was tried and added bytes (Metro does not tree-shake): not kept.
   startBundleRaw: 4_550_200,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
