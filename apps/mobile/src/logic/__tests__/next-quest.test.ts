@@ -191,3 +191,27 @@ describe('isQuestOpen on the shipped bundle (F-ENT-003 sections 3.3 and 3.5)', (
     }
   });
 });
+
+describe('Word Builder q7-q9 are optional on the shipped bundle (AMENDMENTS-BATCHIM-COMPLETE BC-1, section 3.1)', () => {
+  const offerable = offerableQuests(questsAll, episodesAll).map((q) => q.id);
+  const doneIds = (ids: readonly string[]) =>
+    snapshotWith(ids.map((questId) => ({ questId, episodeId: episodesAll.find((e) => e.questIds.includes(questId))?.id ?? '' })));
+  const OPTIONAL = ['quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9'];
+  const q6 = offerable.indexOf('quest:stage2-letters-q6');
+  const throughQ6 = offerable.slice(0, q6 + 1);
+
+  it('come right after q6 in the route', () => {
+    expect(offerable.slice(q6 + 1, q6 + 4)).toEqual(OPTIONAL);
+  });
+
+  it('with Word Builder q1-q6 done and nothing later, the cursor offers q7', () => {
+    expect(nextQuestAfter({ snapshot: doneIds(throughQ6), quests: questsAll, episodes: episodesAll })?.id).toBe('quest:stage2-letters-q7');
+  });
+
+  it('with q1-q6 and a Stage 3 quest done, the cursor does not go back to q7-q9', () => {
+    const next = nextQuestAfter({ snapshot: doneIds([...throughQ6, 'quest:stage3-letters-q1']), quests: questsAll, episodes: episodesAll })?.id;
+    expect(next).toBeDefined();
+    expect(OPTIONAL).not.toContain(next);
+    expect(offerable.indexOf(next ?? '')).toBeGreaterThan(offerable.indexOf('quest:stage2-letters-q9'));
+  });
+});

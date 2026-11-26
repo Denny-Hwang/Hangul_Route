@@ -49,7 +49,10 @@ describe('lesson quest letters before the chunk loads', () => {
   it('a closed Stage 2 Letters & Books quest shows its letters on the lesson page', () => {
     expect(taughtLetters(coldQuest(LETTERS_Q1)).map((l) => l.ko)).toEqual(['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']);
     const episode = LESSON_EPISODES.find((e) => e.id === 'episode:stage2-letters');
-    for (const id of episode?.questIds ?? []) expect(taughtLetters(coldQuest(id)).length, id).toBeGreaterThan(0);
+    // [BC] The optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE) read end sounds and two bottom letters by word: no new letter.
+    const optional = new Set(episode?.optionalQuestIds ?? []);
+    expect([...optional]).toEqual(['quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
+    for (const id of episode?.questIds ?? []) expect(taughtLetters(coldQuest(id)).length, id)[optional.has(id) ? 'toBe' : 'toBeGreaterThan'](0);
   });
 
   it('the results teaser into the first Stage 2 Letters & Books quest shows its new letters', () => {

@@ -124,7 +124,9 @@ describe('chooserGroups: the groups over CATALOG', () => {
         expect(row.lessons.map((l) => l.key)).toEqual(cell.questIds);
         expect(row.minutes).toBe(cell.minutes);
         expect(row.lessons.length).toBeGreaterThanOrEqual(2);
-        expect(row.lessons.length).toBeLessThanOrEqual(6);
+        // 3 to 6 required lessons, then up to 3 optional ones (AMENDMENTS-BATCHIM-COMPLETE §3.9: Word Builder 6 + 3).
+        expect(row.lessons.length - (cell.optionalQuestIds?.length ?? 0)).toBeLessThanOrEqual(6);
+        expect(row.lessons.length).toBeLessThanOrEqual(9);
       }
       // The label counts the stage's lessons ("Stage n · k lessons").
       expect(g.count).toBe(cells.reduce((n, c) => n + c.questIds.length, 0));
@@ -133,9 +135,10 @@ describe('chooserGroups: the groups over CATALOG', () => {
 
   it('pins the counts of the shipped catalogue', () => {
     // Stage 1 has 16 lessons since F-CURR-002 row CM-33 (Crafts quest 4, letter shapes).
-    expect(groups.map((g) => g.count)).toEqual([16, 18, 15, 15, 14, 15, 15, 24, 12]);
-    expect(episode(groups, 'episode:stage2-letters').lessons).toHaveLength(6);
-    expect(keysOf(groups)).toHaveLength(35 + 108 + 2 + 24 + 12);
+    // Stage 2 has 21 since AMENDMENTS-BATCHIM-COMPLETE BC-1 (Word Builder's optional q7-q9).
+    expect(groups.map((g) => g.count)).toEqual([16, 21, 15, 15, 14, 15, 15, 24, 12]);
+    expect(episode(groups, 'episode:stage2-letters').lessons).toHaveLength(9);
+    expect(keysOf(groups)).toHaveLength(35 + 111 + 2 + 24 + 12);
   });
 
   it('Stage 1 also holds the two letter sets, after its episodes', () => {

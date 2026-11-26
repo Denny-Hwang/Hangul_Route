@@ -71,8 +71,9 @@ describe('consoleChooserGroups', () => {
   it('the plan builder lists every ready stage, episodes and lessons only', () => {
     expect(plan.map((g) => g.id)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
     expect(plan.every((g) => g.rows.every((r) => r.kind === 'episode'))).toBe(true);
-    // 108 lessons since F-CURR-002 row CM-33 (the Stage 1 letter-shapes quest).
-    expect(planKeys.size).toBe(35 + 108);
+    // 108 lessons since F-CURR-002 row CM-33 (the Stage 1 letter-shapes quest); 111 since AMENDMENTS-BATCHIM-COMPLETE BC-1
+    // (Word Builder's optional q7-q9).
+    expect(planKeys.size).toBe(35 + 111);
   });
 
   it('the lecture catalogue adds the listed stories and topics', () => {
@@ -96,7 +97,7 @@ describe('consoleChooserGroups', () => {
 
 describe('labels', () => {
   it('groupHeading and groupChip for a stage, the stories and the topics', () => {
-    expect(groupHeading(group(lecture, 'stage2'), w)).toBe('Stage 2 · 18 lessons');
+    expect(groupHeading(group(lecture, 'stage2'), w)).toBe('Stage 2 · 21 lessons');
     expect(groupHeading(group(lecture, 'stories'), w)).toBe(`Stories · ${LECTURE_STORIES.length} stories`);
     expect(groupHeading(group(lecture, 'topics'), w)).toBe(`Word topics · ${LECTURE_VOCAB_TOPICS.length} topics`);
     expect([groupChip(group(lecture, 'stage7'), w), groupChip(group(lecture, 'stories'), w), groupChip(group(lecture, 'topics'), w)]).toEqual(['Stage 7', 'Stories', 'Word topics']);
@@ -166,7 +167,7 @@ describe('addsItems: the room a press needs (one item per key on the console)', 
     expect(addsItems([], letters, 'quest:stage1-letters-q1')).toBe(1);
     expect(addsItems(['quest:stage1-letters-q1'], letters, 'quest:stage1-letters-q1')).toBe(-1);
     expect(addsItems(['episode:stage1-letters'], letters, 'quest:stage1-letters-q1')).toBe(1);
-    expect(addsItems(['episode:stage2-letters'], row(plan, 'episode:stage2-letters'), 'quest:stage2-letters-q1')).toBe(4);
+    expect(addsItems(['episode:stage2-letters'], row(plan, 'episode:stage2-letters'), 'quest:stage2-letters-q1')).toBe(7); // [BC] nine lessons: eight replace the episode
     expect(addsItems(['episode:stage1-letters', 'quest:stage1-letters-q2'], letters, 'quest:stage1-letters-q1')).toBe(0);
     // An older plan with the episode and the same lesson: the press removes both and adds the two others.
     expect(addsItems(['episode:stage1-letters', 'quest:stage1-letters-q1'], letters, 'quest:stage1-letters-q1')).toBe(0);
@@ -300,10 +301,10 @@ describe('the stages the plan builder lists and its line (AMENDMENTS-LESSON-CHOO
   });
 
   it('lessonsPastStages counts the ready lessons of the stages left out', () => {
-    // The lesson counts of the stage groups the picker would draw for Stages 2 to 7 (92 in the shipped catalogue).
+    // The lesson counts of the stage groups the picker would draw for Stages 2 to 7 (95 in the shipped catalogue since BC-1).
     expect(past).toBe(plan.filter((g) => g.id !== 'stage1').reduce((n, g) => n + g.count, 0));
-    expect(past).toBe(92);
-    expect(lessonsPastStages([])).toBe(108);
+    expect(past).toBe(95);
+    expect(lessonsPastStages([])).toBe(111);
     expect(lessonsPastStages(all)).toBe(0);
   });
 

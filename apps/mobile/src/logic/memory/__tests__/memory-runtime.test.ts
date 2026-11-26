@@ -434,9 +434,10 @@ describe('seeding at runtime', () => {
     expect(server.posted.flatMap((p) => Object.values(p.shards).flatMap((sh) => Object.values(sh)))).toEqual([]);
   });
 
-  it('only answered rows are stored; the seeded ones are derived again on the next read (all 107 quests: a small stored value)', async () => {
+  it('only answered rows are stored; the seeded ones are derived again on the next read (all 110 quests: a small stored value)', async () => {
     const d = device();
-    d.snapshots.set('p1', finished(107));
+    // [BC] 110: Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE BC-1) come before the later cells in catalogue order.
+    d.snapshots.set('p1', finished(110));
     await d.rt.ensureSeeded('p1');
     await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
     await d.runTimers();

@@ -1,4 +1,4 @@
-import { EpisodeSchema, isPillarTag, type Episode } from '@hangul-route/content-schema';
+import { EpisodeSchema, isPillarTag, requiredQuestIds, type Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { bookEpisodes } from '../books';
 import {
@@ -283,6 +283,13 @@ describe('episodesFor', () => {
  * un-complete an episode for existing learners), and every cell keeps its id.
  */
 describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
+  it('Word Builder lists q7-q9 as optional, after its six required quests (AMENDMENTS-BATCHIM-COMPLETE BC-1)', () => {
+    const wordBuilder = episodesAll.find((e) => e.id === 'episode:stage2-letters')!;
+    expect(wordBuilder.questIds).toHaveLength(9);
+    expect(wordBuilder.optionalQuestIds).toEqual(['quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
+    expect(requiredQuestIds(wordBuilder)).toEqual(wordBuilder.questIds.slice(0, 6));
+  });
+
   it('keeps the eight shipped lessons frozen, then the shipped Stage 5 books', () => {
     const shipped = gridEpisodes(episodesAll)
       .filter((e) => e.status === 'shipped')
@@ -299,8 +306,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4'], status: 'shipped' },
       // F-CURR-001 generated lesson cells, after the hand-written lessons: by stage, then in grid theme order
       // (letters, life, rites, nature, crafts), the order build-lessons writes them in.
-      // S2-1 Word Builder.
-      { id: 'episode:stage2-letters', order: 1, questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'], status: 'shipped' },
+      // S2-1 Word Builder; AMENDMENTS-BATCHIM-COMPLETE BC-1 appends q7-q9 as optional quests, so no learner's cell is un-completed.
+      { id: 'episode:stage2-letters', order: 1, questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6', 'quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9'], status: 'shipped' },
       // T-1: the Lunch Box Words taste moved into its generated cell (same id, three quests).
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3'], status: 'shipped' },
       // S2-2 Holiday Words.

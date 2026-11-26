@@ -408,7 +408,7 @@ describe('Customize: the grouped chooser (section 18.3)', () => {
     const inside = one(r.root, 'presenter-chooser-inside-episode:stage2-letters');
     // Named by its episode and its count, so no two disclosures read the same.
     expect(inside.props['aria-label']).toBeUndefined();
-    expect(nameOf(r.root, inside)).toBe(`${groups.flatMap((g) => g.rows).find((row) => row.key === 'episode:stage2-letters')!.title} 6 lessons inside`);
+    expect(nameOf(r.root, inside)).toBe(`${groups.flatMap((g) => g.rows).find((row) => row.key === 'episode:stage2-letters')!.title} 9 lessons inside`); // [BC] q7-q9 (AMENDMENTS-BATCHIM-COMPLETE BC-1)
     const names = hostNodes(one(r.root, 'presenter-chooser-panel-lessons'), (n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].startsWith('presenter-chooser-inside-')).map((n) => nameOf(r.root, n));
     expect(new Set(names).size).toBe(names.length);
     expect(inside.props['aria-expanded']).toBe(false);

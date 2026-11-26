@@ -13,6 +13,11 @@
   "rewardCardIds": [
     "card:norae"
   ],
+  "optionalQuestIds": [
+    "quest:stage2-letters-q7",
+    "quest:stage2-letters-q8",
+    "quest:stage2-letters-q9"
+  ],
   "quests": [
     {
       "id": "quest:stage2-letters-q1",
@@ -2168,7 +2173,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Word Builder Done!",
-          "hoyaLineEn": "You met the last new letters of Word Builder. Wonderful!",
+          "hoyaLineEn": "You have met every Hangul letter now. Wonderful!",
           "durationSeconds": 8
         }
       ],
@@ -2452,6 +2457,1382 @@
           ]
         }
       ]
+    },
+    {
+      "id": "quest:stage2-letters-q7",
+      "titleEn": "Many Letters, Seven Sounds",
+      "blurbEn": "Many bottom letters, just seven end sounds.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261126,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Seven End Sounds",
+          "hoyaLineEn": "So many bottom letters! But there are just seven end sounds.",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Seven Sounds at the End",
+          "hoyaLineEn": "At the end of a word, bottom letters make just seven sounds: k, n, t, l, m, p and ng.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "These end in t.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "flower"
+                    },
+                    "picture": "word:nature-flower"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "밭",
+                      "romanization": "bat",
+                      "en": "field for growing food"
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "These end in k.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "책",
+                      "romanization": "chaek",
+                      "en": "book"
+                    },
+                    "picture": "card:book"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "밖",
+                      "romanization": "bak",
+                      "en": "outside"
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "Same sound. Look at the bottom letter.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "입",
+                      "romanization": "ip",
+                      "en": "mouth"
+                    },
+                    "picture": "word:body-mouth"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "잎",
+                      "romanization": "ip",
+                      "en": "leaf"
+                    },
+                    "picture": "word:prop-leaf"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-letters-q7-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen to the End",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-q7-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-letters-q7-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Just Seven Sounds!",
+          "hoyaLineEn": "Seven end sounds: k, n, t, l, m, p, ng. You know them all!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-q7-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                },
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "word": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "but",
+                  "pictureRef": "card:brush",
+                  "word": {
+                    "ko": "붓",
+                    "romanization": "but",
+                    "en": "brush"
+                  }
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "ip-mouth",
+                  "pictureRef": "word:body-mouth",
+                  "word": {
+                    "ko": "입",
+                    "romanization": "ip",
+                    "en": "mouth"
+                  }
+                },
+                {
+                  "id": "ip-leaf",
+                  "pictureRef": "word:prop-leaf",
+                  "word": {
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
+                  }
+                },
+                {
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
+                  "word": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "bit",
+                  "pictureRef": "word:science-light",
+                  "word": {
+                    "ko": "빛",
+                    "romanization": "bit",
+                    "en": "light"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
+                  "word": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                },
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "word": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q7-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-bap",
+              "prompt": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "options": [
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "bam",
+                  "text": {
+                    "ko": "밤",
+                    "romanization": "bam",
+                    "en": "night"
+                  }
+                },
+                {
+                  "id": "bal",
+                  "text": {
+                    "ko": "발",
+                    "romanization": "bal",
+                    "en": "foot"
+                  }
+                }
+              ],
+              "answerId": "bap"
+            },
+            {
+              "id": "hear-gom",
+              "prompt": {
+                "ko": "곰",
+                "romanization": "gom",
+                "en": "bear"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "text": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "got",
+                  "text": {
+                    "ko": "곧",
+                    "romanization": "got",
+                    "en": "soon"
+                  }
+                }
+              ],
+              "answerId": "gom"
+            },
+            {
+              "id": "hear-bat",
+              "prompt": {
+                "ko": "밭",
+                "romanization": "bat",
+                "en": "field for growing food"
+              },
+              "options": [
+                {
+                  "id": "bam",
+                  "text": {
+                    "ko": "밤",
+                    "romanization": "bam",
+                    "en": "night"
+                  }
+                },
+                {
+                  "id": "bat",
+                  "text": {
+                    "ko": "밭",
+                    "romanization": "bat",
+                    "en": "field for growing food"
+                  }
+                },
+                {
+                  "id": "bal",
+                  "text": {
+                    "ko": "발",
+                    "romanization": "bal",
+                    "en": "foot"
+                  }
+                }
+              ],
+              "answerId": "bat"
+            },
+            {
+              "id": "hear-bal",
+              "prompt": {
+                "ko": "발",
+                "romanization": "bal",
+                "en": "foot"
+              },
+              "options": [
+                {
+                  "id": "bal",
+                  "text": {
+                    "ko": "발",
+                    "romanization": "bal",
+                    "en": "foot"
+                  }
+                },
+                {
+                  "id": "bak",
+                  "text": {
+                    "ko": "밖",
+                    "romanization": "bak",
+                    "en": "outside"
+                  }
+                },
+                {
+                  "id": "bam",
+                  "text": {
+                    "ko": "밤",
+                    "romanization": "bam",
+                    "en": "night"
+                  }
+                }
+              ],
+              "answerId": "bal"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q7-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "ip-mouth",
+                  "pictureRef": "word:body-mouth",
+                  "word": {
+                    "ko": "입",
+                    "romanization": "ip",
+                    "en": "mouth"
+                  }
+                },
+                {
+                  "id": "ip-leaf",
+                  "pictureRef": "word:prop-leaf",
+                  "word": {
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
+                  }
+                },
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "bal",
+                  "pictureRef": "word:body-foot",
+                  "word": {
+                    "ko": "발",
+                    "romanization": "bal",
+                    "en": "foot"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-letters-q8",
+      "titleEn": "Two Letters at the Bottom",
+      "blurbEn": "Some blocks have two bottom letters.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261126,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Two at the Bottom",
+          "hoyaLineEn": "Look! Some blocks have two letters at the bottom.",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Two Bottom Letters",
+          "hoyaLineEn": "Two letters at the bottom! At the end of a word, say just one. Before a vowel, the second one moves over.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "At the end of a word, you say just one of the two. Learn which one with each word.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "닭",
+                      "romanization": "dak",
+                      "en": "chicken",
+                      "soundChange": true
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "값",
+                      "romanization": "gap",
+                      "en": "price",
+                      "soundChange": true
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "Before a vowel, the second one moves over.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "읽어요",
+                      "romanization": "ilgeoyo",
+                      "en": "read",
+                      "syllables": [
+                        "il",
+                        "geo",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "없어요",
+                      "romanization": "eopseoyo",
+                      "en": "there is none; I don't have it",
+                      "syllables": [
+                        "eop",
+                        "seo",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "One more: you say m.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "삶",
+                      "romanization": "sam",
+                      "en": "life",
+                      "soundChange": true
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-q8-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Meaning",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-letters-q8-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read the Word",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-q8-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Two Letters, One Block!",
+          "hoyaLineEn": "Two bottom letters? You can read them now!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-q8-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-dak",
+              "prompt": {
+                "ko": "닭",
+                "romanization": "dak",
+                "en": "chicken"
+              },
+              "options": [
+                {
+                  "id": "dak",
+                  "text": {
+                    "ko": "닭",
+                    "romanization": "dak",
+                    "en": "chicken"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "text": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "text": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                }
+              ],
+              "answerId": "dak"
+            },
+            {
+              "id": "hear-gap",
+              "prompt": {
+                "ko": "값",
+                "romanization": "gap",
+                "en": "price"
+              },
+              "options": [
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "gap",
+                  "text": {
+                    "ko": "값",
+                    "romanization": "gap",
+                    "en": "price"
+                  }
+                },
+                {
+                  "id": "sam",
+                  "text": {
+                    "ko": "삶",
+                    "romanization": "sam",
+                    "en": "life"
+                  }
+                }
+              ],
+              "answerId": "gap"
+            },
+            {
+              "id": "hear-ilgeoyo",
+              "prompt": {
+                "ko": "읽어요",
+                "romanization": "ilgeoyo",
+                "en": "read"
+              },
+              "options": [
+                {
+                  "id": "norae",
+                  "text": {
+                    "ko": "노래",
+                    "romanization": "norae",
+                    "en": "song"
+                  }
+                },
+                {
+                  "id": "eopseoyo",
+                  "text": {
+                    "ko": "없어요",
+                    "romanization": "eopseoyo",
+                    "en": "there is none; I don't have it"
+                  }
+                },
+                {
+                  "id": "ilgeoyo",
+                  "text": {
+                    "ko": "읽어요",
+                    "romanization": "ilgeoyo",
+                    "en": "read"
+                  }
+                }
+              ],
+              "answerId": "ilgeoyo"
+            },
+            {
+              "id": "hear-eopseoyo",
+              "prompt": {
+                "ko": "없어요",
+                "romanization": "eopseoyo",
+                "en": "there is none; I don't have it"
+              },
+              "options": [
+                {
+                  "id": "eopseoyo",
+                  "text": {
+                    "ko": "없어요",
+                    "romanization": "eopseoyo",
+                    "en": "there is none; I don't have it"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "text": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "ilgeoyo",
+                  "text": {
+                    "ko": "읽어요",
+                    "romanization": "ilgeoyo",
+                    "en": "read"
+                  }
+                }
+              ],
+              "answerId": "eopseoyo"
+            },
+            {
+              "id": "hear-gap-2",
+              "prompt": {
+                "ko": "값",
+                "romanization": "gap",
+                "en": "price"
+              },
+              "options": [
+                {
+                  "id": "son",
+                  "text": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "text": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "gap",
+                  "text": {
+                    "ko": "값",
+                    "romanization": "gap",
+                    "en": "price"
+                  }
+                }
+              ],
+              "answerId": "gap"
+            },
+            {
+              "id": "hear-dak-2",
+              "prompt": {
+                "ko": "닭",
+                "romanization": "dak",
+                "en": "chicken"
+              },
+              "options": [
+                {
+                  "id": "byeol",
+                  "text": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "dak",
+                  "text": {
+                    "ko": "닭",
+                    "romanization": "dak",
+                    "en": "chicken"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "dak"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q8-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "닭",
+              "romanization": "dak",
+              "en": "chicken"
+            },
+            {
+              "ko": "달",
+              "romanization": "dal",
+              "en": "moon"
+            },
+            {
+              "ko": "삶",
+              "romanization": "sam",
+              "en": "life"
+            },
+            {
+              "ko": "책",
+              "romanization": "chaek",
+              "en": "book"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q8-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-gong",
+              "promptShown": true,
+              "prompt": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              },
+              "options": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "bear"
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
+                },
+                {
+                  "id": "bal",
+                  "pictureRef": "word:body-foot",
+                  "labelEn": "foot"
+                }
+              ],
+              "answerId": "gong"
+            },
+            {
+              "id": "see-ip-leaf",
+              "promptShown": true,
+              "prompt": {
+                "ko": "잎",
+                "romanization": "ip",
+                "en": "leaf"
+              },
+              "options": [
+                {
+                  "id": "ip-mouth",
+                  "pictureRef": "word:body-mouth",
+                  "labelEn": "mouth"
+                },
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "labelEn": "flower"
+                },
+                {
+                  "id": "ip-leaf",
+                  "pictureRef": "word:prop-leaf",
+                  "labelEn": "leaf"
+                }
+              ],
+              "answerId": "ip-leaf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-letters-q9",
+      "titleEn": "A Quiet h",
+      "blurbEn": "A bottom h makes no sound before a vowel.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261126,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "A Quiet Letter",
+          "hoyaLineEn": "Shh! A bottom h can be quiet.",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Quiet Before a Vowel",
+          "hoyaLineEn": "Before a vowel, a bottom h is quiet. You see it, but you don't say it.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Before a vowel, the bottom h is quiet.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "좋아요",
+                      "romanization": "joayo",
+                      "en": "good; I like it",
+                      "syllables": [
+                        "jo",
+                        "a",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "넣어요",
+                      "romanization": "neoeoyo",
+                      "en": "put it in",
+                      "syllables": [
+                        "neo",
+                        "eo",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "Two letters: the h is quiet, the other one moves over.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "많이",
+                      "romanization": "mani",
+                      "en": "a lot",
+                      "syllables": [
+                        "ma",
+                        "ni"
+                      ],
+                      "soundChange": true
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "괜찮아요",
+                      "romanization": "gwaenchanayo",
+                      "en": "it's okay",
+                      "syllables": [
+                        "gwaen",
+                        "cha",
+                        "na",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "One more: the h is quiet, the other one moves over.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "싫어요",
+                      "romanization": "sireoyo",
+                      "en": "I don't like it",
+                      "syllables": [
+                        "si",
+                        "reo",
+                        "yo"
+                      ],
+                      "soundChange": true
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-q9-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Meaning",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-letters-q9-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-letters-q9-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Quiet h!",
+          "hoyaLineEn": "A bottom h before a vowel? You can read it now!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-q9-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-joayo",
+              "prompt": {
+                "ko": "좋아요",
+                "romanization": "joayo",
+                "en": "good; I like it"
+              },
+              "options": [
+                {
+                  "id": "joayo",
+                  "text": {
+                    "ko": "좋아요",
+                    "romanization": "joayo",
+                    "en": "good; I like it"
+                  }
+                },
+                {
+                  "id": "sireoyo",
+                  "text": {
+                    "ko": "싫어요",
+                    "romanization": "sireoyo",
+                    "en": "I don't like it"
+                  }
+                },
+                {
+                  "id": "ilgeoyo",
+                  "text": {
+                    "ko": "읽어요",
+                    "romanization": "ilgeoyo",
+                    "en": "read"
+                  }
+                }
+              ],
+              "answerId": "joayo"
+            },
+            {
+              "id": "hear-mani",
+              "prompt": {
+                "ko": "많이",
+                "romanization": "mani",
+                "en": "a lot"
+              },
+              "options": [
+                {
+                  "id": "namu",
+                  "text": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "mani",
+                  "text": {
+                    "ko": "많이",
+                    "romanization": "mani",
+                    "en": "a lot"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                }
+              ],
+              "answerId": "mani"
+            },
+            {
+              "id": "hear-sireoyo",
+              "prompt": {
+                "ko": "싫어요",
+                "romanization": "sireoyo",
+                "en": "I don't like it"
+              },
+              "options": [
+                {
+                  "id": "eopseoyo",
+                  "text": {
+                    "ko": "없어요",
+                    "romanization": "eopseoyo",
+                    "en": "there is none; I don't have it"
+                  }
+                },
+                {
+                  "id": "joayo",
+                  "text": {
+                    "ko": "좋아요",
+                    "romanization": "joayo",
+                    "en": "good; I like it"
+                  }
+                },
+                {
+                  "id": "sireoyo",
+                  "text": {
+                    "ko": "싫어요",
+                    "romanization": "sireoyo",
+                    "en": "I don't like it"
+                  }
+                }
+              ],
+              "answerId": "sireoyo"
+            },
+            {
+              "id": "hear-gwaenchanayo",
+              "prompt": {
+                "ko": "괜찮아요",
+                "romanization": "gwaenchanayo",
+                "en": "it's okay"
+              },
+              "options": [
+                {
+                  "id": "gwaenchanayo",
+                  "text": {
+                    "ko": "괜찮아요",
+                    "romanization": "gwaenchanayo",
+                    "en": "it's okay"
+                  }
+                },
+                {
+                  "id": "ilgeoyo",
+                  "text": {
+                    "ko": "읽어요",
+                    "romanization": "ilgeoyo",
+                    "en": "read"
+                  }
+                },
+                {
+                  "id": "eopseoyo",
+                  "text": {
+                    "ko": "없어요",
+                    "romanization": "eopseoyo",
+                    "en": "there is none; I don't have it"
+                  }
+                }
+              ],
+              "answerId": "gwaenchanayo"
+            },
+            {
+              "id": "hear-neoeoyo",
+              "prompt": {
+                "ko": "넣어요",
+                "romanization": "neoeoyo",
+                "en": "put it in"
+              },
+              "options": [
+                {
+                  "id": "uyu",
+                  "text": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "ilgeoyo",
+                  "text": {
+                    "ko": "읽어요",
+                    "romanization": "ilgeoyo",
+                    "en": "read"
+                  }
+                },
+                {
+                  "id": "neoeoyo",
+                  "text": {
+                    "ko": "넣어요",
+                    "romanization": "neoeoyo",
+                    "en": "put it in"
+                  }
+                }
+              ],
+              "answerId": "neoeoyo"
+            },
+            {
+              "id": "hear-joayo-2",
+              "prompt": {
+                "ko": "좋아요",
+                "romanization": "joayo",
+                "en": "good; I like it"
+              },
+              "options": [
+                {
+                  "id": "mani",
+                  "text": {
+                    "ko": "많이",
+                    "romanization": "mani",
+                    "en": "a lot"
+                  }
+                },
+                {
+                  "id": "joayo",
+                  "text": {
+                    "ko": "좋아요",
+                    "romanization": "joayo",
+                    "en": "good; I like it"
+                  }
+                },
+                {
+                  "id": "norae",
+                  "text": {
+                    "ko": "노래",
+                    "romanization": "norae",
+                    "en": "song"
+                  }
+                }
+              ],
+              "answerId": "joayo"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q9-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "좋아요",
+              "romanization": "joayo",
+              "en": "good; I like it"
+            },
+            {
+              "ko": "싫어요",
+              "romanization": "sireoyo",
+              "en": "I don't like it"
+            },
+            {
+              "ko": "많이",
+              "romanization": "mani",
+              "en": "a lot"
+            },
+            {
+              "ko": "노래",
+              "romanization": "norae",
+              "en": "song"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q9-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "see-joayo",
+              "promptEn": "Type the word for \"good\".",
+              "target": {
+                "ko": "좋아요",
+                "romanization": "joayo",
+                "en": "good; I like it"
+              }
+            },
+            {
+              "id": "see-gwaenchanayo",
+              "promptEn": "Type the word for \"it's okay\".",
+              "target": {
+                "ko": "괜찮아요",
+                "romanization": "gwaenchanayo",
+                "en": "it's okay"
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "culture": [
@@ -2616,13 +3997,115 @@
         "scope": "lesson",
         "notes": "Pass 1 (author sourcing, 2026-10-14): article 13 moves a single or double final to the next syllable with its own value before a vowel-initial particle, ending or suffix, and the NIKL explainer gives 옷이 [오시]. Backs the second sentence of the q5 Discover Hoya line.\nPass 2b (independent fact check, 2026-10-14): article 13 (in chapter 4, Pronouncing final consonants, not chapter 5 as the locator said: corrected) moves a single or double final, with its own value, to the next syllable before a vowel-initial particle, ending or suffix, example 옷이[오시]; the NIKL 새국어소식 article (2001, June) gives 옷이[오시], 꽃이[꼬치] and contrasts 겉옷[거돋]. Claim holds; no copied wording.\nPass 5 (MAR culture review, independent final check, 2026-10-14): Article 13 and the 새국어소식 example 옷이[오시] re-read; both limit the carry-over to vowel-initial particles, endings and suffixes (겉옷 [거돋] is not one). Note narrowed to these bottom letters (final ㅇ never moves, ㅎ drops). The q5 line no longer states the rule; the note alone carries it. No wording shared with the sources."
       }
+    },
+    {
+      "id": "n7",
+      "kind": "language",
+      "textEn": "{ko:입} (mouth) and {ko:잎} (leaf) are both said ip: at the end of a word, {ko:ㅂ} and {ko:ㅍ} make the same sound. The spelling shows which word it is.",
+      "sources": [
+        {
+          "title": "표준어 규정 제2부 표준 발음법",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "제4장 받침의 발음, 제8항: \"받침소리로는 'ㄱ, ㄴ, ㄷ, ㄹ, ㅁ, ㅂ, ㅇ'의 7개 자음만 발음한다.\"; 제9항: \"받침 'ㄲ, ㅋ', 'ㅅ, ㅆ, ㅈ, ㅊ, ㅌ', 'ㅍ'은 어말 또는 자음 앞에서 각각 대표음 [ㄱ, ㄷ, ㅂ]으로 발음한다.\" (예: 앞[압], 덮다[덥따])"
+        },
+        {
+          "title": "표준국어대사전 「잎」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=274298&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "잎1 「명사」: 발음 [입]; 활용 잎이[이피], 잎만[임만]"
+        },
+        {
+          "title": "표준국어대사전 「입」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=470931&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "입 「명사」: 발음 [입]; 활용 입만[임만]"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-26",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, BC-1, 2026-11-26): articles 8 and 9 give the seven final sounds and send final ㅍ to [ㅂ] at the end of a word or before a consonant (앞[압]); the Standard Korean Language Dictionary gives 잎 [입]. Backs the q7 page 3 caption and Check board 1.\nPass 2 (independent fact check, MAR culture, 2026-11-26): articles 8 and 9 re-read on the NIKL page, word for word (examples 앞[압], 덮다[덥따]). Dictionary entries read: 잎1 (word_no 274298) 발음 [입], 활용 잎이[이피], 잎만[임만]; 입 (word_no 470931) 발음 [입]. So 입 and 잎 sound the same at the end of a word, and 잎이[이피] shows they differ before a vowel: the note's limit 'at the end of a word' is right. Locator URLs are entry pages (a search list does not show the pronunciation). No wording shared with the sources.\nPass 3 (MAR language, independent es and ko, reviser, 2026-11-26): es and ko say the same; ko writes [입]; es reworded to avoid 'igual' twice. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n8",
+      "kind": "language",
+      "textEn": "With two bottom letters, you say just one at the end of a word: {ko:닭} is said dak. When an ending or particle that starts with a vowel follows, the second one moves over: {ko:읽어요} is said ilgeoyo.",
+      "sources": [
+        {
+          "title": "표준어 규정 제2부 표준 발음법",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "제4장 받침의 발음, 제10항: \"겹받침 'ㄳ', 'ㄵ', 'ㄼ, ㄽ, ㄾ', 'ㅄ'은 어말 또는 자음 앞에서 각각 [ㄱ, ㄴ, ㄹ, ㅂ]으로 발음한다.\" (예: 값[갑]); 제11항: \"겹받침 'ㄺ, ㄻ, ㄿ'은 어말 또는 자음 앞에서 각각 [ㄱ, ㅁ, ㅂ]으로 발음한다.\" (예: 닭[닥], 삶[삼ː]); 제14항: \"겹받침이 모음으로 시작된 조사나 어미, 접미사와 결합되는 경우에는, 뒤엣것만을 뒤 음절 첫소리로 옮겨 발음한다.(이 경우, 'ㅅ'은 된소리로 발음함.)\" (예: 닭을[달글], 없어[업ː써])"
+        },
+        {
+          "title": "표준국어대사전 「닭」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=413678&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "닭 「명사」: 발음 [닥]; 활용 닭이[달기], 닭만[당만]"
+        },
+        {
+          "title": "표준국어대사전 「읽다」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=475959&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "읽다 「동사」: 발음 [익따]; 활용 읽어[일거], 읽으니[일그니], 읽고[일꼬], 읽는[잉는], 읽지[익찌]"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-26",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, BC-1, 2026-11-26): articles 10 and 11 reduce a double final to one sound at the end of a word or before a consonant (닭[닥], 값[갑], 삶[삼ː]); article 14 moves only the second letter to the next syllable before a vowel-initial particle, ending or suffix (닭을[달글], 없어[업ː써]); the dictionary gives 닭 [닥] and 읽다 활용 읽어[일거]. Backs the q8 Discover captions.\nPass 2 (independent fact check, MAR culture, 2026-11-26): articles 10, 11 (with its 다만, ㄺ before ㄱ in a verb stem, not taught) and 14 re-read word for word; the 해설 to 14 marks 닭이[다기] as wrong and gives 닭이[달기]. Dictionary: 닭 (word_no 413678) 발음 [닥], 활용 닭이[달기]; 읽다 (word_no 475959) 활용 읽어[일거], so 읽어요 is [일거요]. Finding: the draft's 'before a vowel' was wider than article 14 (only before a particle, ending or suffix; 닭 앞에 [다가페] is article 15) and wrong for ㄶ and ㅀ (article 12.4: the ㅎ drops and the first letter moves, 많이 [마니], taught in q9).\nPass 3 (MAR language, independent es and ko, reviser, 2026-11-26): the note was narrowed in en, es and ko to 'an ending or particle that starts with a vowel', as n6 was, and 'at the end' became 'at the end of a word' (값 [갑] keeps the first letter, so 'the one at the end' could mislead). ko writes [닥] and [일거요]. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n9",
+      "kind": "language",
+      "textEn": "When an ending or suffix that starts with a vowel follows, a bottom {ko:ㅎ} is not said: {ko:좋아요} is said joayo. In {ko:많이}, the {ko:ㅎ} is quiet, so {ko:ㄴ} moves over instead: mani.",
+      "sources": [
+        {
+          "title": "표준어 규정 제2부 표준 발음법",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "제4장 받침의 발음, 제12항: \"받침 'ㅎ'의 발음은 다음과 같다.\" 4: \"'ㅎ(ㄶ, ㅀ)' 뒤에 모음으로 시작된 어미나 접미사가 결합되는 경우에는, 'ㅎ'을 발음하지 않는다.\" (예: 놓아[노아], 많아[마ː나], 않은[아는], 싫어도[시러도])"
+        },
+        {
+          "title": "표준국어대사전 「좋다」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=302141&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "좋다 「형용사」: 발음 [조ː타]; 활용 좋아[조ː아], 좋으니[조ː으니], 좋소[조ː쏘]"
+        },
+        {
+          "title": "표준국어대사전 「많이」",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=109560&searchKeywordTo=3",
+          "accessed": "2026-11-26",
+          "quoteOrLocator": "많-이 「부사」: 발음 [마ː니]; 한 걸음 더: 어간에 '-이'가 붙어서 부사로 된 것 (한글 맞춤법 제19항)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-26",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, BC-1, 2026-11-26): article 12.4 says a final ㅎ (also in ㄶ, ㅀ) is not pronounced before a vowel-initial ending or suffix (놓아[노아], 많아[마ː나], 싫어도[시러도]); the dictionary gives 좋다 활용 좋아[조ː아]. Backs the q9 Discover captions.\nPass 2 (independent fact check, MAR culture, 2026-11-26): article 12 item 4 and its 해설 re-read word for word (the ㅎ is dropped, not changed). Dictionary: 좋다 (word_no 302141) 활용 좋아[조ː아], so 좋아요 is [조아요]; 많-이 (word_no 109560) 발음 [마ː니], an adverb made with the suffix -이, which item 4 covers. Length marks are in the sources; like the romanization, the note does not show length. Items 1 to 3 (ㅎ before a consonant) are left out, as the spec says.\nPass 3 (MAR language, independent es and ko, reviser, 2026-11-26): 'before a vowel' narrowed in en, es and ko to 'an ending or suffix that starts with a vowel' (히읗이 [히으시], article 16, is the counter-case), and the note now says the ㄴ moves over instead, so it reads with n8. ko writes [조아요] and [마니]. No native-speaker or expert review is claimed."
+      }
     }
   ],
   "review": {
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-29",
+    "reviewedAt": "2026-11-26",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 register and romanization clean; ko overlay names letters by jamo; q2, q3, q5 and q6 rule lines tightened; q4 and q6 practice reworked within the art that exists; glosses fixed (회사, 낮, 과자, 있다). 있다 is said [읻따], a tensing the cell does not teach; it stays only as the ㅆ-final example, with its audio.",
       "Culture (pass 5, MAR 2026-10-14): all six language notes re-checked against both sources (verification line 3); n6 narrowed to the letters taught; the q5 carry-over sentence removed; 떡볶이 glossed often spicy. No culture claim beyond the notes, no person, brand, shop or price, no age wording.",
@@ -2630,7 +4113,12 @@
       "Dictation words have no sound change, one spelling among taught words and no ㅐ/ㅔ or ㅚ/ㅙ/ㅞ; no q5 or q6 final is asked by ear (several letters share its sound). Read words use only letters taught by then. Glosses are the cell's own.",
       "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
       "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
-      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt.",
+      "Word Builder q7-q9 (row BC-1 of AMENDMENTS-BATCHIM-COMPLETE, MAR 2026-11-26: language, culture and learning-design checkers, reviser, independent es and ko passes): three optional quests, no card. Every romanization is the converter's, no new exception. 삶 kept (BC-OD-15): ㄻ keeps the second letter, 값 the first; never asked by ear.",
+      "Language (BC-1): 'at the end of a word' added to the q7 and q8 rule lines and q8's page 1 caption (값 [갑] keeps the first letter); no line calls the bottom h quiet without 'before a vowel'. q6's reward says 'You have met every Hangul letter now': true after q1-q6 (U-2), and q7-q9 add no letter.",
+      "Culture (BC-1): n7-n9 rest on 표준 발음법 articles 8-12 and 14, read word for word, and on Standard Korean Language Dictionary entries (잎, 입, 닭, 읽다, 좋다, 많이; word_no in each locator). n8 and n9 narrowed from 'before a vowel' to an ending, particle or suffix that starts with a vowel, as n6 was, so n8 no longer contradicts ㄶ and ㅀ in q9.",
+      "Learning design (BC-1): the spec's q8 Check (labels only) cannot be built as content (an option needs text or drawn art; no q8 meaning has art; a book on 읽어요 would become its review picture). It reads two pictured pairs that differ only in the bottom letter (공, 잎), the rites-v2 picture-Check exception, until a chicken glyph lands. q7's Apply asks 발; q9's Card Match uses 노래.",
+      "es and ko (BC-1, independent passes): es 넣어요 'poner dentro' as in Stage 3, 삶 'vida', 닭 'gallina, pollo', «está bien»; ko 밭 and 닭 glosses smoothed, q8's caption says each word decides which bottom letter is said. Read Pick ko labels share no syllable with their prompt; ko notes write the said forms in brackets. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1

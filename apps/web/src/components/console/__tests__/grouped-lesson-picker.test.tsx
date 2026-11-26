@@ -104,14 +104,14 @@ describe('GroupedLessonPicker', () => {
     const { renderer } = planHarness();
     const root = renderer.root;
     act(() => byTestId(root, 'pick-chip-stage2').props.onChange());
-    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 2 · 18 lessons');
+    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 2 · 21 lessons'); // [BC] Word Builder q7-q9
     const open = byTestId(root, 'pick-open-episode:stage2-letters');
     expect(open.props['aria-label']).toBe('Lessons: Word Builder');
     act(() => open.props.onClick());
     expect(byTestId(root, 'pick-open-episode:stage2-letters').props['aria-expanded']).toBe(true);
     const list = root.find((n) => n.type === 'ul' && n.props.id === byTestId(root, 'pick-open-episode:stage2-letters').props['aria-controls']);
     expect(list.props.hidden).toBe(false);
-    expect(list.findAll((n) => n.type === 'input')).toHaveLength(6);
+    expect(list.findAll((n) => n.type === 'input')).toHaveLength(9);
     act(() => byTestId(root, 'pick-open-episode:stage2-letters').props.onClick());
     expect(byTestId(root, 'pick-open-episode:stage2-letters').props['aria-expanded']).toBe(false);
   });
@@ -230,10 +230,10 @@ describe('GroupedLessonPicker', () => {
     // Only the matching lesson is drawn, the detail line is the whole episode's.
     expect(hasTestId(root, 'pick-lesson-quest:stage2-letters-q4')).toBe(true);
     expect(hasTestId(root, 'pick-lesson-quest:stage2-letters-q1')).toBe(false);
-    const detail = getMessages('en').console.chooser.episodeDetail(6, CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-letters')!.minutes);
+    const detail = getMessages('en').console.chooser.episodeDetail(9, CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-letters')!.minutes);
     expect(textOf(root.find((n) => n.type === 'label' && n.findAll((c) => c.props['data-testid'] === 'pick-row-episode:stage2-letters').length > 0))).toContain(detail);
     act(() => byTestId(root, 'pick-lesson-quest:stage2-letters-q4').props.onChange());
-    expect(items().map((i) => i.id)).toEqual(['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']);
+    expect(items().map((i) => i.id)).toEqual(['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6', 'quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
     expect(items().every((i) => i.targetDate === '2026-10-22')).toBe(true);
   });
 
@@ -392,7 +392,7 @@ describe('LectureChooserSection (the lecture page, tabs)', () => {
     const root = renderer.root;
     act(() => byTestId(root, 'lecture-picker-stage-stage2').props.onChange());
     const inside = byTestId(root, 'lecture-picker-open-episode:stage2-letters');
-    expect(textOf(inside)).toBe(lw.chooser.lessonsIn(6));
+    expect(textOf(inside)).toBe(lw.chooser.lessonsIn(9)); // [BC] Word Builder q7-q9
     expect(inside.props['aria-expanded']).toBe(false);
     expect(inside.props['aria-label']).toBeUndefined();
     // Its row's title describes it, so six "lessons inside" buttons are told apart.

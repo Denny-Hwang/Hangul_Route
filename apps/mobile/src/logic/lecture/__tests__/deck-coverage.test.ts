@@ -89,7 +89,8 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:rites': { quests: 3, slides: 36, wordCards: 4, differentWords: 4, quiz: 23, skipped: {}, flattened: {} },
   'stage1:nature': { quests: 3, slides: 32, wordCards: 16, differentWords: 14, quiz: 24, skipped: {}, flattened: {} },
   'stage1:crafts': { quests: 4, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
-  'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 14, skipped: {}, flattened: {} },
+  // [BC] Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE BC-1) make it nine quests; the other figures are section 1's.
+  'stage2:letters': { quests: 9, slides: 172, wordCards: 139, differentWords: 75, quiz: 14, skipped: {}, flattened: {} },
   'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 15, skipped: {}, flattened: {} },
   'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 18, skipped: {}, flattened: {} },
   'stage2:nature': { quests: 3, slides: 84, wordCards: 70, differentWords: 17, quiz: 11, skipped: {}, flattened: {} },
@@ -433,7 +434,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     // Section 1: type-hangul 21 steps holding 73 rounds, write-frame 7 holding 21, trace-word 5 holding 20; one write-frame round is the name round.
     // Rows CM-3A S2, S3 and S6 add the seven Stage 2 Dictation Checks (14 rounds), the four Stage 3 Dictation Checks (8
     // rounds) and the four Stage 6 Dictation Checks (8 rounds); row CM-3A S7 makes five Stage 7 Checks Write Frame (10).
-    expect({ rounds, ...counts }).toEqual({ rounds: 154, type: 103, trace: 20, frame: 30, 'own-name': 1 });
+    // [BC] Word Builder q9's Type Hangul Check adds two copy rounds (AMENDMENTS-BATCHIM-COMPLETE BC-1).
+    expect({ rounds, ...counts }).toEqual({ rounds: 156, type: 105, trace: 20, frame: 30, 'own-name': 1 });
   });
 
   it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {
@@ -528,7 +530,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     'by-stage 20 stage2: 108 slides',
     'by-stage 30 first visit: 102 slides',
     'by-stage 30 stage1: 102 slides',
-    'by-stage 30 stage2: 137 slides',
+    // [BC] Word Builder's q7-q9 change which Stage 2 lessons a 30-minute deck picks (AMENDMENTS-BATCHIM-COMPLETE BC-1).
+    'by-stage 30 stage2: 135 slides',
     'by-stage 30 stage3: 97 slides',
   ];
 

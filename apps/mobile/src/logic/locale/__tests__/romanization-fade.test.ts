@@ -1,3 +1,4 @@
+import { requiredQuestIds } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll } from '../../../content';
 import { placementResult } from '../../placement/__tests__/fixtures';
@@ -18,7 +19,8 @@ const FIRST_TEN = STAGE1_QUESTS.slice(0, 10).map((q) => q.id);
 const FIRST_NINE = FIRST_TEN.slice(0, 9);
 const QUEST_11 = FADE_READING_FROM_QUEST;
 const WORD_BUILDER = episodesAll.find((e) => e.id === FADE_ALL_FROM_EPISODE)!;
-const WORD_BUILDER_QUESTS = WORD_BUILDER.questIds;
+// [BC] Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE) never delay phase `all` (BC-OD-17).
+const WORD_BUILDER_QUESTS = requiredQuestIds(WORD_BUILDER);
 
 function input(over: { done?: readonly string[]; placedOut?: readonly string[]; testedOut?: Record<string, string> } = {}): FadeInput {
   return { doneQuestIds: new Set(over.done ?? []), placedOutQuestIds: new Set(over.placedOut ?? []), testedOut: over.testedOut ?? {} };
@@ -39,6 +41,7 @@ describe('the content the fade is anchored on (drift guard)', () => {
   it('Word Builder is in the bundle with six required quests', () => {
     expect(WORD_BUILDER).toBeDefined();
     expect(WORD_BUILDER_QUESTS).toHaveLength(6);
+    expect(WORD_BUILDER.optionalQuestIds).toEqual(['quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
   });
 });
 
