@@ -12,6 +12,11 @@ import { jamoConsonants, jamoVowels } from '../jamo';
  * fields must agree: the same 24 letters in the same order, the same letter, kind and order, the
  * romanization written as the sound value plus the letter name for a consonant ("g/k (giyeok)"),
  * and the same example word and romanization. No speech reads this file.
+ *
+ * The text fields follow the app too (AMENDMENTS-STAGE1-CONTENT-FIXES CF-2, section 3.5, OD-CF7): `en`
+ * is the letter's `soundHint` word for word, and the es and ko overlay `gloss` is that overlay's own
+ * `soundHint`. The reviewed hints name no voiced English sound-alike and no "between u and i", so the
+ * record can no longer say what the app does not.
  */
 
 interface JsonJamo {
@@ -22,6 +27,10 @@ interface JsonJamo {
   kind: string;
   order: number;
   exampleWord?: { ko: string; romanization: string; en: string };
+}
+
+interface OverlayFile {
+  entries: Record<string, { soundHint?: string; gloss?: string }>;
 }
 
 const json = JSON.parse(readFileSync(join(repoRoot, 'content/episodes/stage-1/jamo.json'), 'utf8')) as JsonJamo[];
@@ -45,5 +54,21 @@ describe('content/episodes/stage-1/jamo.json agrees with src/content/jamo.ts (M9
     expect(entry.exampleWord?.ko).toBe(record.exampleWordKo);
     expect(entry.exampleWord?.romanization).toBe(record.exampleWordRomanization);
     expect(entry.exampleWord?.en.trim()).not.toBe('');
+  });
+
+  it.each(app.map((j) => [j.id, j] as const))('%s: en is the app\'s soundHint (CF-2)', (id, record) => {
+    const entry = json.find((j) => j.id === id)!;
+    expect(record.soundHint?.trim()).toBeTruthy();
+    expect(entry.en).toBe(record.soundHint);
+  });
+
+  describe.each(['es', 'ko'])('the %s overlay gloss is its soundHint (CF-2)', (locale) => {
+    const overlay = JSON.parse(readFileSync(join(repoRoot, `content/i18n/${locale}/stage1-jamo.json`), 'utf8')) as OverlayFile;
+
+    it.each(app.map((j) => [j.id] as const))('%s', (id) => {
+      const entry = overlay.entries[id];
+      expect(entry?.soundHint?.trim()).toBeTruthy();
+      expect(entry?.gloss).toBe(entry?.soundHint);
+    });
   });
 });
