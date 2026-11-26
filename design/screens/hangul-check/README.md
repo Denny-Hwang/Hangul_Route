@@ -175,9 +175,9 @@ Reused unchanged: `learner.stageReview.leave.close`, `learner.audio.cantHear.*`,
 
 ## Open items
 
-- **OQ-1 (owner)**: Hoya in the syllable panel (idle, thinking after a miss, cheering on the right commit; no words). The review host's Listen & Pick rounds draw no Hoya today, so within a part only the decode items have him. Recommendation: keep him in the decode round (CLAUDE.md §1: a miss uses amber and Hoya's thinking pose); adding the same silent figure to the review host is a separate F-QUEST-002 §3.10 change, not proposed here.
-- **OQ-2 (owner)**: the hint line `learner.stageReview.decode.hint` is new copy beyond §3.5. Recommendation: keep it (the round's one new interaction, both steps named). The tight arrangements do not draw it.
-- Largest text on 320 x 568, and a device font taller than Chromium's at 667 x 375: see "Arrangements"; DC-2d's text-size and layout runs settle them.
+- **OQ-1, settled (owner decision 2026-11-26: approved as recommended)**: Hoya stays in the decode round's syllable panel, silent and decorative (idle; thinking after a wrong commit until the round resolves; cheering on the right commit; no words; in tight-row at the header's end). CLAUDE.md §1: a miss uses amber and Hoya's thinking pose. The review host's Listen & Pick rounds stay without Hoya (adding him there would be a separate F-QUEST-002 §3.10 change, not made).
+- **OQ-2, settled (owner decision 2026-11-26: approved as recommended)**: the hint line `learner.stageReview.decode.hint` = "Tap a sound to hear it. Then tap This one." ships with DC-2d (en, es, ko). It is drawn in full, compact, side; not drawn in tight, tight-row and side-tight, where it stays in the round's spoken heading; with Sound off or after a failed play its place carries the status line.
+- **Open, for DC-2d's on-device check**: Largest text on 320 x 568 fits no arrangement (the four cards on screen, This one and the help slot under the fold; the Screen scrolls). Also a device font taller than Chromium's at 667 x 375 (no further step). DC-2d's text-size and layout runs settle them.
 - The theme pictures of the word round and the Listen & Pick looks are drawn only for the part's header; their own look is unchanged by this row.
 
 ## Review log
