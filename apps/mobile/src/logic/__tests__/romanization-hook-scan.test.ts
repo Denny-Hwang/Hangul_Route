@@ -23,12 +23,19 @@ const files = ['screens', 'components'].flatMap((dir) =>
   sourceFiles(join(SRC, dir)).map((f) => ({ rel: relative(SRC, f).split('\\').join('/'), source: readFileSync(f, 'utf8') })),
 );
 
-/** Every way a file could read the mode off a settings object instead of the hook. */
+/**
+ * Every way a file could read the mode, or the stored reading choice (AMENDMENTS-ROMANIZATION-FADE section 3.1, row RF-1a),
+ * off a settings object instead of the hook.
+ */
 const DIRECT_READS: RegExp[] = [
   /\.\s*romanizationMode\b/,
   /\]\??\.romanizationMode/,
   /\b(?:const|let|var)\s*\{[^}]*\bromanizationMode\b[^}]*\}\s*=/,
   /\[\s*['"`]romanizationMode['"`]\s*\]/,
+  /\.\s*romanizationChoice\b/,
+  /\]\??\.romanizationChoice/,
+  /\b(?:const|let|var)\s*\{[^}]*\bromanizationChoice\b[^}]*\}\s*=/,
+  /\[\s*['"`]romanizationChoice['"`]\s*\]/,
 ];
 
 /**
@@ -74,6 +81,11 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
     ['destructuring with a rename', 'const { uiLocale, romanizationMode: mode } = s.byProfile[id];'],
     ['a string key', "const m = settings['romanizationMode'];"],
     ['a string key in double quotes', 'const m = settings["romanizationMode"];'],
+    ['a choice property read', 'const c = settings.romanizationChoice;'],
+    ['an optional choice read', 'const c = s.byProfile[id]?.romanizationChoice;'],
+    ['choice destructuring', 'const { romanizationChoice } = settings;'],
+    ['choice destructuring with a rename', 'const { uiLocale, romanizationChoice: choice } = s.byProfile[id];'],
+    ['a choice string key', "const c = settings['romanizationChoice'];"],
   ])('the scan catches %s', (_, line) => {
     expect(DIRECT_READS.some((re) => re.test(line))).toBe(true);
   });
@@ -83,6 +95,8 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
       'const romanizationMode = useRomanizationMode();',
       'resolveRomanizationMode(null, settings)',
       'wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);',
+      'const resolver = useRomanizationResolver();',
+      'romanizationChoiceOf(settings)',
     ]) {
       expect(DIRECT_READS.some((re) => re.test(line))).toBe(false);
     }
@@ -110,6 +124,16 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
     expect(hook).toContain('export function useRomanizationMode(');
     expect(hook).toContain('export function RomanizationModeOverride(');
     expect(hook).toContain('useContext(');
-    expect(hook).toContain('resolveRomanizationMode(');
+    expect(hook).toContain('romanizationResolver(');
+  });
+
+  it('the hook carries the Check scope and the resolver hook (RF section 3.7), and the Check host wraps its game in the scope', () => {
+    const hook = readFileSync(join(SRC, 'i18n', 'use-romanization-mode.tsx'), 'utf8');
+    expect(hook).toContain('export function RomanizationCheckScope(');
+    expect(hook).toContain('export function useRomanizationResolver(');
+    const host = readFileSync(join(SRC, 'screens', 'minigames', 'MinigameScreen.tsx'), 'utf8');
+    expect(host).toContain('<RomanizationCheckScope active={step?.kind === \'check\'}>');
+    // one wrapper, set by the `check` host and nowhere else
+    expect(files.filter((f) => f.source.includes('<RomanizationCheckScope')).map((f) => f.rel)).toEqual(['screens/minigames/MinigameScreen.tsx']);
   });
 });

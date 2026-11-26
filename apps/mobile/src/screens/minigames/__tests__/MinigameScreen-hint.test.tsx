@@ -45,6 +45,9 @@ vi.mock('../../lesson-content', () => ({
 }));
 vi.mock('../../story-content', () => ({ useStoryQuestState: () => 'ready' }));
 vi.mock('../../../content', () => ({
+  // The hook's reading of the course (the romanization fade) needs the two lists; this screen's course is the one quest below.
+  episodesAll: [],
+  questsAll: [],
   questById: (id: string) => ({ id, steps: [{ kind: 'check', minigameRef: `mg-${id}` }] }),
 }));
 vi.mock('../../../logic/minigame-config', () => ({

@@ -18,6 +18,14 @@ export const RomanizationModeSchema = z.enum(['always', 'tap']);
 export type RomanizationMode = z.infer<typeof RomanizationModeSchema>;
 
 /**
+ * What a profile stores about reading practice (AMENDMENTS-ROMANIZATION-FADE section 3.1): three choices, where
+ * `RomanizationMode` stays the two values a surface shows. The choice is never passed to a surface.
+ */
+export const ROMANIZATION_CHOICES = ['auto', 'always', 'tap'] as const;
+export const RomanizationChoiceSchema = z.enum(ROMANIZATION_CHOICES);
+export type RomanizationChoice = z.infer<typeof RomanizationChoiceSchema>;
+
+/**
  * Challenge mode clock scales (F-VOC-004 §3.1, S8): the one Challenge clock is
  * 60 s x scale. Labelled "Normal / A bit longer / Twice as long" in the UI.
  */
@@ -37,6 +45,14 @@ export const ProfileSettingsSchema = z.object({
    */
   uiLocale: UiLocaleSchema.optional(),
   romanizationMode: RomanizationModeSchema.default('always'),
+  /**
+   * The learner's reading choice (AMENDMENTS-ROMANIZATION-FADE section 3.1). Absent: read the legacy field above
+   * (section 3.2). A value this version does not know reads as absent instead of failing the record. `romanizationMode`
+   * stays strict and is kept as a mirror of the choice, so an older cached build reads every record unchanged.
+   */
+  romanizationChoice: RomanizationChoiceSchema.optional().catch(undefined),
+  /** When Hoya's reading line was shown (section 3.9), ISO 8601; absent: not shown yet. */
+  romanizationNoticeAt: z.string().datetime({ offset: true }).optional().catch(undefined),
   /**
    * Story reader "Read to me" (F-STORY-002 §3.4, PR 2.5). Additive and optional:
    * absent means "use the level default" (`readToMeDefault`), so settings stored

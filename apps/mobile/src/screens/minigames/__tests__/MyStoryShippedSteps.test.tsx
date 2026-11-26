@@ -43,7 +43,8 @@ vi.mock('../TraceWordGame', () => ({ TraceWordGame: () => null }));
 vi.mock('../../use-practice-session', () => ({ usePracticeSession: () => undefined }));
 vi.mock('../../../content', async () => {
   const { ALL_LESSON_STEPS: steps } = await import('../../../content/__tests__/helpers/lesson-stages');
-  return { questById: (id: string) => (steps[id] ? { id, steps: steps[id] } : undefined) };
+  // The hook's reading of the course (the romanization fade) needs the two lists; this screen's course is the shipped steps below.
+  return { episodesAll: [], questsAll: [], questById: (id: string) => (steps[id] ? { id, steps: steps[id] } : undefined) };
 });
 vi.mock('../../../logic/minigame-config', async () => {
   const { ALL_LESSON_SCOPES: scopes } = await import('../../../content/__tests__/helpers/lesson-stages');

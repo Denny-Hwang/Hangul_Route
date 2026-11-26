@@ -19,6 +19,8 @@ import {
   prefsMessage,
   rawDeviceSettings,
   ProfileSettingsSchema,
+  ROMANIZATION_CHOICES,
+  RomanizationChoiceSchema,
   RomanizationModeSchema,
   UI_LOCALES,
   UiLocaleSchema,
@@ -124,6 +126,51 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
     const withChallenge = { romanizationMode: 'always', challengeMode: true, clockScale: 1.5 };
     expect(ProfileSettingsSchema.parse(withChallenge)).toEqual(withChallenge);
+  });
+
+  it('the reading choice has three values; the shown mode keeps two (AMENDMENTS-ROMANIZATION-FADE section 3.1)', () => {
+    expect([...ROMANIZATION_CHOICES]).toEqual(['auto', 'always', 'tap']);
+    expect(RomanizationChoiceSchema.options).toEqual(['auto', 'always', 'tap']);
+    expect(RomanizationModeSchema.options).toEqual(['always', 'tap']);
+  });
+
+  it('romanizationChoice and romanizationNoticeAt are additive: {} still parses to the default mode alone', () => {
+    const parsed = ProfileSettingsSchema.parse({});
+    expect(parsed).toEqual({ romanizationMode: 'always' });
+    expect('romanizationChoice' in parsed).toBe(false);
+    expect('romanizationNoticeAt' in parsed).toBe(false);
+  });
+
+  it('romanizationChoice round-trips each value, with the legacy mirror beside it', () => {
+    for (const choice of ROMANIZATION_CHOICES) {
+      const stored = { romanizationMode: choice === 'tap' ? 'tap' : 'always', romanizationChoice: choice };
+      expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
+    }
+  });
+
+  it('an unknown choice or a bad notice time reads as absent and the rest of the record survives', () => {
+    const read = ProfileSettingsSchema.parse({
+      romanizationMode: 'tap',
+      romanizationChoice: 'never',
+      romanizationNoticeAt: 'yesterday',
+      readToMe: true,
+      challengeMode: true,
+    });
+    expect(read.romanizationChoice).toBeUndefined();
+    expect(read.romanizationNoticeAt).toBeUndefined();
+    expect(JSON.parse(JSON.stringify(read))).toEqual({ romanizationMode: 'tap', readToMe: true, challengeMode: true });
+    expect(ProfileSettingsSchema.parse({ romanizationChoice: 7, romanizationNoticeAt: 5 })).toEqual({ romanizationMode: 'always' });
+  });
+
+  it('romanizationNoticeAt keeps an ISO instant, with an offset', () => {
+    const stored = { romanizationMode: 'always', romanizationNoticeAt: '2026-11-25T09:30:00+09:00' };
+    expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
+    expect(ProfileSettingsSchema.parse({ romanizationNoticeAt: '2026-11-25T00:30:00Z' }).romanizationNoticeAt).toBe('2026-11-25T00:30:00Z');
+  });
+
+  it('the legacy romanizationMode stays strict: an unknown value still fails the record', () => {
+    expect(ProfileSettingsSchema.safeParse({ romanizationMode: 'auto' }).success).toBe(false);
+    expect(ProfileSettingsSchema.safeParse({ romanizationMode: 'never', romanizationChoice: 'auto' }).success).toBe(false);
   });
 
   it('DeviceSettings: locale optional (absent = never chosen), an unknown one reads as never chosen', () => {
