@@ -1,4 +1,4 @@
-import { allomorphOrBoth, fillFrame, romanize, SLOT_MARKER } from '@hangul-route/content-schema';
+import { allomorphOrBoth, fillFrame, romanizeReviewed, SLOT_MARKER } from '@hangul-route/content-schema';
 import type { HostMode } from '../../screens/minigames/host';
 
 /**
@@ -46,7 +46,7 @@ export function sentenceKo(frame: string, words: readonly string[]): string {
 
 /** The finished sentence's romanization, from the converter (the frame's own line has `___`). */
 export function sentenceRomanization(frame: string, words: readonly string[]): string {
-  return romanize(sentenceKo(frame, words)).text;
+  return romanizeReviewed(sentenceKo(frame, words)).text;
 }
 
 /** The frame's gloss with each `___` replaced, in order, by `fills[i]` (a pick's gloss, a name's romanization). */
@@ -57,7 +57,7 @@ export function fillGloss(gloss: string, fills: readonly string[]): string {
 
 /** A name in an English gloss: its romanization from the converter, each part capitalised as a proper noun ("My name is Hoya."). */
 export function nameGloss(name: string): string {
-  return romanize(name.trim())
+  return romanizeReviewed(name.trim())
     .text.split(' ')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');

@@ -4,7 +4,7 @@ import {
   isRolePlayEnd,
   fillFrame,
   parseNarration,
-  romanize,
+  romanizeReviewed,
   SLOT_MARKER,
   storyOrderPictures,
   syllableSplit,
@@ -1041,7 +1041,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (picks.some((pick) => pick === undefined)) throw new Error(`write-frame round ${round.id}: a slot has an empty bank`);
     // fillFrame throws when the frame's gaps and the slots differ; `attempt` makes that a counted skip.
     const ko = fillFrame(round.frame.ko, picks as string[]);
-    const romanization = romanize(ko).text;
+    const romanization = romanizeReviewed(ko).text;
     return { variant: 'frame', frame, banks: round.slots.map((slot) => slot.bank.map(sheetText)), example: { ko, romanization, spoken: { text: ko, romanization } } };
   };
 

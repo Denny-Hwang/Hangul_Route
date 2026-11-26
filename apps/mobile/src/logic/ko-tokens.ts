@@ -1,4 +1,4 @@
-import { romanize, romanizeWord } from '@hangul-route/content-schema';
+import { romanizeReviewed, romanizeWord } from '@hangul-route/content-schema';
 
 /**
  * `{ko:}` tokens in UI-language content text (F-CURR-001 §3.4): a Discover pattern note, and the
@@ -13,13 +13,12 @@ export type KoTokenPart = { text: string } | { ko: string; romanization: string 
 const KO_TOKEN = /\{ko:([^}]*)\}/g;
 
 /**
- * A token's romanization: one word as `romanizeWord` reads it; a token of several words (a note's
+ * A token's romanization (the reviewed one, AMENDMENTS-ROMANIZER-GAPS RG-2a): one word as `romanizeWord` reads it; a token of several words (a note's
  * two-word token, jeopgo jallayo) word by word, so long as every word can be read. Otherwise empty.
  */
 function tokenRomanization(ko: string): string {
-  const word = romanizeWord(ko);
-  if (word !== null) return word;
-  const words = romanize(ko);
+  if (romanizeWord(ko) !== null) return romanizeReviewed(ko).text;
+  const words = romanizeReviewed(ko);
   return /\s/.test(ko) && words.unknown.length === 0 ? words.text : '';
 }
 

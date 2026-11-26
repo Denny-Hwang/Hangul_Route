@@ -268,6 +268,14 @@ describe('Write Frame: the name round (Write Your Name q3)', () => {
     expect(texts(r, 'write-frame-my-page')).toEqual(expect.arrayContaining(['제 이름은 호야예요.', 'My name is Hoya.']));
   });
 
+  it('iOS: the typed name is read with its reviewed romanization where the word has an entry (AMENDMENTS-ROMANIZER-GAPS RG-2a)', async () => {
+    setPlatform('ios');
+    const { r } = await play(['name']);
+    await tap(r, 'write-frame-tab-keyboard');
+    await typeWord(r, 'ㅅㅗㄹㅇㅣㅍㅇ');
+    expect(screenReader.announceForScreenReader).toHaveBeenLastCalledWith('You typed: 솔잎, sollip');
+  });
+
   it('says when the name is at its longest', async () => {
     const { r } = await play(['name']);
     for (let i = 0; i < 9; i += 1) await tap(r, 'write-frame-tile-나');
