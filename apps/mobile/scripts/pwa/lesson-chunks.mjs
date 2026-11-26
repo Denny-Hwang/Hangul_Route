@@ -351,7 +351,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (CI=1) measures 4,573,615 B raw / 1,258,181 B gzip, 3,715 B over main's line (about 7.7 KB over main's own size; the whole
   // feature in the start bundle was about 13 KB). The line is that measurement plus a 3,985 B margin (one measured raise). Moving the
   // game's inline contrast branches into the chunk too is the work of the start bundle shrink row (SB-4), planned after phase 2.
-  startBundleRaw: 4_577_600,
+  // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1a (the trace page's logic behind `writeOnce`: `stage1/discover-write.ts`, the trace page's
+  // view model, state, two events and render in `discover-flow.ts`, which `DiscoverStep` carries; `content/jamo-strokes` was already in
+  // the start bundle through `TraceStrokeGame`): on main with MP-2a (4,568,178 B measured on 32dd7af8f) the release `build:web` (CI=1)
+  // measures 4,569,996 B raw (+1,818 B); on top of main with MP-2a (line 4,577,600 B) it measures 4,579,228 B raw / 1,259,979 B gzip,
+  // 1,628 B over the line. The line is that measurement plus a 6,072 B margin (one measured raise; a wider margin than before, so every
+  // PR stops tripping the line until the start bundle shrink row SB-4, planned after phase 2).
+  startBundleRaw: 4_585_300,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
