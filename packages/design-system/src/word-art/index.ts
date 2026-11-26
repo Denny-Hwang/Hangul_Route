@@ -19,7 +19,7 @@ export type { FaceOptions, Pt } from './builders';
 export { WORD_ART_TONES, isWordArtTone, resolveTone } from './tones';
 export { glyphToSvgString, toRenderList } from './render';
 export type { RenderOptions, RenderShape } from './render';
-export { WORD_ART, WORD_ART_FAMILIES, WORD_ART_KEYS, WORD_ART_KEY_RE, WORD_ART_PLAN, buildRegistry, getWordArt, wordArtKeyOf } from './registry';
+export { ACT_FAMILIES, ACT_KEYS, WORD_ART, WORD_ART_FAMILIES, WORD_ART_KEYS, WORD_ART_KEY_RE, WORD_ART_PLAN, addWordArt, buildRegistry, getWordArt, wordArtKeyOf } from './registry';
 export type { WordArtEntry, WordArtMetaOverrides, WordArtSource } from './registry';
 export { COLOR_CONFUSION_PAIRS } from './color-confusion';
 export { placeGlyph, placePath, placeShape } from './place';

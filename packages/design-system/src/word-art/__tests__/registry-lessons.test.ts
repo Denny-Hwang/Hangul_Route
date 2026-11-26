@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { WORD_ART, WORD_ART_KEYS, getWordArt } from '../registry';
+import { loadActWordArt } from '../glyphs/act';
+import { ACT_KEYS, WORD_ART, WORD_ART_KEYS, getWordArt } from '../registry';
 
 /**
  * Lesson pictures outside the vocabulary topics (F-VOC-002 §3.9): Stage 2
@@ -31,6 +32,15 @@ describe('lesson pictures (Playground Words)', () => {
     // A new reserved key (a v1.1 key, say) lands here first: list it, and check the
     // reserved-card note on /design-preview/word-art (word-art-sheet.test.tsx) still fits.
     expect(WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.reserved === true).sort()).toEqual([...LESSON_KEYS].sort());
+  });
+
+  it('[PV] the level check\'s action pictures are reserved too, outside the start registry (they load with its chunk)', () => {
+    expect(WORD_ART_KEYS.filter((k) => k.startsWith('act-'))).toEqual([]);
+    const act = loadActWordArt();
+    for (const key of ACT_KEYS) {
+      expect(act[key]!.meta, key).toEqual({ family: 'act', status: 'review', reserved: true });
+      expect(topicVisuals, key).not.toContain(`word:${key}`);
+    }
   });
 
   it('the swing hangs a red seat from two ropes under a frame; the slide has a ladder and a yellow chute; the sand has a bucket', () => {
