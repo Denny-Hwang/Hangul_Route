@@ -12,6 +12,7 @@ const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/u;
 const en = getMessages('en').learner;
 const es = getMessages('es').learner;
 const ko = getMessages('ko').learner;
+const a11y = { en: getMessages('en').a11y, es: getMessages('es').a11y, ko: getMessages('ko').a11y };
 
 describe('letter questions say the letter name: copy (JV-A4)', () => {
   it('the bubble of a letter question names the letter; a sound question keeps its line', () => {
@@ -36,7 +37,21 @@ describe('letter questions say the letter name: copy (JV-A4)', () => {
     expect(ko.presenter.slide.letterName('nieun', '니은')).toBe('글자 이름: 니은 (nieun)');
   });
 
-  it("Discover's second button on a consonant page plays the letter on a vowel", () => {
+  it("Discover's second button on a consonant page plays the letter's name (SF-1)", () => {
+    expect(en.quest.discover.hearName.cta).toBe('Hear the name');
+    expect(es.quest.discover.hearName.cta).toBe('Escuchar el nombre');
+    expect(ko.quest.discover.hearName.cta).toBe('글자 이름 들어 보기');
+    expect(a11y.en.hearNameLabel('Korean letter g/k')).toBe('Hear the name. Korean letter g/k');
+  });
+
+  it('label in name: the accessible name of Hear it and Hear the name starts with the visible label, in every locale (WCAG 2.5.3)', () => {
+    for (const [locale, m] of [['en', en], ['es', es], ['ko', ko]] as const) {
+      expect(a11y[locale].hearItLabel('x').startsWith(m.quest.discover.hearIt.cta), `${locale} hearIt`).toBe(true);
+      expect(a11y[locale].hearNameLabel('x').startsWith(m.quest.discover.hearName.cta), `${locale} hearName`).toBe(true);
+    }
+  });
+
+  it("the presenter's letter slide keeps Hear it with a vowel (Discover no longer uses it)", () => {
     expect(en.quest.discover.soundWith.cta).toBe('Hear it with a vowel');
     expect(es.quest.discover.soundWith.cta).toBe('Escúchala con una vocal');
     expect(ko.quest.discover.soundWith.cta).toBe('모음과 함께 들어 봐요');
@@ -48,6 +63,7 @@ describe('letter questions say the letter name: copy (JV-A4)', () => {
       expect(m.audio.finalLine('n', 'an')).not.toMatch(HANGUL);
       expect(m.presenter.slide.letterName('nieun', 'x')).not.toMatch(HANGUL);
       expect(m.quest.discover.soundWith.cta).not.toMatch(HANGUL);
+      expect(m.quest.discover.hearName.cta).not.toMatch(HANGUL);
     }
   });
 });

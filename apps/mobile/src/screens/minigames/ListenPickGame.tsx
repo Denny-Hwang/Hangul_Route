@@ -462,7 +462,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
   // The round's header node (§3.4): the heading, the scaffold line and, in the text prompt mode, the Korean it shows by
   // its romanization (never its Hangul); never a button.
-  const headingText = textPrompt ? textPrompt.heading : spellingKit === null ? copy.listenPick.heading : copy.spellingPick.heading;
+  // A round framed `startsWith` (a quest Check's consonant sound round, SF-1) asks which letter starts the sound.
+  const listenHeading = round.frame === 'startsWith' ? m.learner.audio.heading.startsWith : copy.listenPick.heading;
+  const headingText = textPrompt ? textPrompt.heading : spellingKit === null ? listenHeading : copy.spellingPick.heading;
   const roundLabel = m.a11y.answer.round(
     roundIdx + 1,
     rounds.length,

@@ -553,6 +553,7 @@ export const learner = {
     },
     discover: {
       hearIt: { cta: 'Escuchar' },
+      hearName: { cta: 'Escuchar el nombre' },
       soundWith: { cta: 'Escúchala con una vocal' },
       sayLine: (spoken: string) => `Se dice así: ${spoken}`,
       showHowToSay: { cta: 'Ver cómo se dice' },

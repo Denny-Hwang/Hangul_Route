@@ -83,6 +83,8 @@ export const a11y = {
   /** The close control of the Quest player, and the Discover labels (`label` is already-built screen-reader text). */
   leaveQuest: 'Leave quest',
   hearItLabel: (label: string) => `Hear it. ${label}`,
+  /** Discover's second button (SF-1): `letter` is `discoverLetter(romanization)` without the hint. The visible label leads (WCAG 2.5.3). */
+  hearNameLabel: (letter: string) => `Hear the name. ${letter}`,
   hearExample: (spoken: string) => `Hear it: ${spoken}`,
   /** A Discover symbol: `romanization` is the sound value; `soundHint` is the optional content hint. */
   discoverLetter: (romanization: string, soundHint?: string) =>

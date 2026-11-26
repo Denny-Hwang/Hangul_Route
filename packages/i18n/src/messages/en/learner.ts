@@ -786,8 +786,11 @@ export const learner = {
     },
     /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
     discover: {
+      /** The big button: the letter's sound (ㄱ said ga; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1). The taught line under it is content. */
       hearIt: { cta: 'Hear it' },
-      /** A consonant page's second button: the letter's sound on a vowel (ㄴ said na); the taught line under it is content. */
+      /** A consonant page's second button: the letter's name (ㄱ said giyeok); the taught line under it is content. */
+      hearName: { cta: 'Hear the name' },
+      /** No longer on Discover (SF-1); the presenter's letter slide still uses it (`LetterSlide.tsx`): the letter's sound on a vowel (ㄴ said na). */
       soundWith: { cta: 'Hear it with a vowel' },
       /** Shown for a button whose audio could not play; `spoken` is a romanization. */
       sayLine: (spoken: string) => `Say it out loud: ${spoken}`,

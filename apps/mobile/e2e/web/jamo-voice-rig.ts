@@ -143,9 +143,9 @@ export async function openQuestOneDiscover(page: Page): Promise<void> {
   await expect(page.getByText(en.learner.quest.step.discover.pill, { exact: true })).toBeVisible();
 }
 
-/** Discover's two buttons for one letter (`jamo:nieun`): Hear it, and Hear it with a vowel. */
+/** Discover's two buttons for one letter (`jamo:nieun`): Hear it (its sound), and Hear the name (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1). */
 export const hearIt = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|sound`);
-export const hearWithVowel = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|vowel`);
+export const hearName = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|name`);
 
 /** Continue to the next Discover page, the one that shows `jamoId`. */
 export async function discoverPageOf(page: Page, jamoId: string): Promise<void> {

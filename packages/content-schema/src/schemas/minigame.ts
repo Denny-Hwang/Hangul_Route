@@ -142,6 +142,12 @@ export const ListenPickRoundSchema = z
      * heard. The lint checks the shape (`readPickRoundIssues`, lesson-lint.ts), so the start bundle carries only the field.
      */
     promptShown: z.literal(true).optional(),
+    /**
+     * AMENDMENTS-DISCOVER-SOUND-FIRST SF-1: a quest Check's consonant round that plays the letter's sound (차) and asks
+     * "Which letter starts this sound?" (`lp.symSound`). Its heading says so, instead of "Listen, then pick". The
+     * name follows the lecture quiz's `frame: 'endsWith'`.
+     */
+    frame: z.literal('startsWith').optional(),
   })
   .superRefine((round, ctx) => {
     const ids = new Set<string>();
