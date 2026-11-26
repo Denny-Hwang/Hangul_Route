@@ -34,6 +34,12 @@ export interface Pip {
   isCursor: boolean;
   isStart: boolean;
   /**
+   * The quest is one of its cell's `optionalQuestIds` (F-CURR-002 section 4.2, AMENDMENTS-BATCHIM-COMPLETE section 3.9):
+   * the pip still shows and fills when played, but a cell, a stage and the narrow bar are complete without it.
+   * Absent on a required quest and on a cell pip.
+   */
+  optional?: true;
+  /**
    * Why a `later` pip cannot be played (Learning Route amendment section 4.5):
    * `soon` for a cell with no playable content yet ("Coming later"),
    * `notOpen` for a playable quest the learner cannot start yet ("Not open

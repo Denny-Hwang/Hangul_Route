@@ -512,7 +512,10 @@ function mergeGroup(id: string, identity: Identity, all: readonly ItemOccurrence
   const inOrder = [...new Set([...list, ...later].map((o) => o.cell))];
   const discovered = new Set(all.filter((o) => o.source === 'discover').map((o) => o.cell));
   const firstEpisode = inOrder.find((cell) => cell.startsWith('episode:'));
-  const cells = inOrder.filter((cell, i) => i === 0 || cell === firstEpisode || discovered.has(cell));
+  // The first cell with an occurrence outside an optional quest: when an optional quest teaches the item first (AMENDMENTS-
+  // BATCHIM-COMPLETE section 3.9 item 5), the cell that asks it next keeps it in its denominator. It is `inOrder[0]` otherwise.
+  const firstRequired = inOrder.find((cell) => all.some((o) => o.cell === cell && o.optionalQuest === undefined));
+  const cells = inOrder.filter((cell, i) => i === 0 || cell === firstEpisode || cell === firstRequired || discovered.has(cell));
   // A drop that teaches an item the route teaches too adds a cell, never a lower stage or volume (row CM-48).
   const teaching = own.filter((o) => cells.includes(o.cell));
   const item: ReviewItem = {
@@ -529,6 +532,13 @@ function mergeGroup(id: string, identity: Identity, all: readonly ItemOccurrence
     soundChange: all.some((o) => o.soundChange === true) || (identity.kind !== 'sym' && identity.kind !== 'rea' && hasSoundChange(lead.ko)),
     homophoneOf: [],
   };
+  // A cell every occurrence of which sits in an optional quest teaches the item only through optional quests (§3.9 item 5).
+  const optionalIn: Record<string, string[]> = {};
+  for (const cell of cells) {
+    const here = all.filter((o) => o.cell === cell);
+    if (here.length > 0 && here.every((o) => o.optionalQuest !== undefined)) optionalIn[cell] = [...new Set(here.map((o) => o.optionalQuest as string))];
+  }
+  if (Object.keys(optionalIn).length > 0) item.optionalIn = optionalIn;
   const en = word?.en ?? glossed?.en;
   if (en !== undefined) item.en = en;
   const sameEnglish = (o: { en?: string; glossKey?: string }): boolean => o.glossKey !== undefined && o.en === glossed?.en;

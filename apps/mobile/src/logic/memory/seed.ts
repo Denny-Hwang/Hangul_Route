@@ -1,5 +1,5 @@
 import { effectiveRoute, requiredQuestIds, type CatalogCell, type CatalogQuest, type MemoryItemState, type ProgressSnapshot } from '@hangul-route/content-schema';
-import type { ReviewItem } from '@hangul-route/content-schema/review-items';
+import { cellHoldsItem, type ReviewItem } from '@hangul-route/content-schema/review-items';
 import { latchQuests } from '../quest-progress';
 import { addDays } from '../vocab/srs';
 import { MEMORY_MIN_BOX } from './spacing';
@@ -147,6 +147,8 @@ export function deriveSeed(input: SeedInput): Seed {
     for (const cell of [...item.cells, ...item.asked]) {
       const c = byCell.get(cell);
       if (!c) continue;
+      // A cell that teaches it only through optional quests has shown it once one of them is done (BC-OD-16).
+      if (!cellHoldsItem(item, cell, done) && item.cells.includes(cell)) continue;
       latest = Math.max(latest, c.latest);
       earliest = Math.min(earliest, c.earliest);
       if (!item.cells.includes(cell)) continue;

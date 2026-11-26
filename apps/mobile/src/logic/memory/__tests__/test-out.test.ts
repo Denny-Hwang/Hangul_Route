@@ -23,6 +23,22 @@ const perDay = (states: Iterable<{ state: { d: string | null } }>): Map<string, 
   return out;
 };
 
+describe('an item only an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a, BC-OD-16)', () => {
+  const plain = { ...(ITEMS.find((i) => i.cells.includes(CELL) && !i.id.startsWith('vocab:')) as (typeof ITEMS)[number]), id: 'lex:plain-x', cells: [CELL], asked: [] };
+  const optional = { ...plain, id: 'lex:opt-only', optionalIn: { [CELL]: ['quest:stage2-letters-q8'] } };
+
+  it('cellStoreItems leaves it out until a quest that teaches it is completed', () => {
+    expect(cellStoreItems([plain, optional], new Set(), CELL)).toEqual(['lex:plain-x']);
+    expect(cellStoreItems([plain, optional], new Set(), CELL, new Set(['quest:stage2-letters-q1']))).toEqual(['lex:plain-x']);
+    expect(cellStoreItems([plain, optional], new Set(), CELL, new Set(['quest:stage2-letters-q8']))).toEqual(['lex:plain-x', 'lex:opt-only']);
+  });
+
+  it('a tested-out cell derives no state for it: it played no quest', () => {
+    const states = deriveTestedOut({ testedOut: { [CELL]: AT }, items: [plain, optional], retired: new Set(), seeded: new Map(), dayOf: utcDay });
+    expect([...states.keys()]).toEqual(['lex:plain-x']);
+  });
+});
+
 describe('asked items: placed by their result (testOutPlacement)', () => {
   it('a right first try goes to box 2, due in 3 days, with its rung passed', () => {
     const st = testOutPlacement({ correct: true, rung: 'read' }, true, DAY, AT);

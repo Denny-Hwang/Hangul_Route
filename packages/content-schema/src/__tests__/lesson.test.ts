@@ -27,6 +27,72 @@ function messages(input: unknown): string[] {
   return r.success ? [] : r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
 }
 
+/** A cell of `n` quests (a Volume 1 cell unless `extra` says otherwise), with the quests named q1..qn. */
+const cellOf = (n: number, extra: Record<string, unknown> = {}) => {
+  const cell = lessonCell('stage2', 'letters', extra) as Json;
+  cell.quests = Array.from({ length: n }, (_, i) => lessonQuest('stage2', 'letters', i + 1));
+  return cell;
+};
+const questIdsOf = (n: number, from = 1): string[] => Array.from({ length: n - from + 1 }, (_, i) => `quest:stage2-letters-q${from + i}`);
+
+describe('optional quests in a lesson cell (AMENDMENTS-BATCHIM-COMPLETE BC-2a)', () => {
+  it('takes no optionalQuestIds by default, and a 7 to 9 quest cell only when the quests past the sixth are optional', () => {
+    expect(messages(cellOf(6))).toEqual([]);
+    expect(messages(cellOf(7))).toEqual([expect.stringMatching(/^quests: a cell holds 6 required quests at most/)]);
+    expect(messages(cellOf(9))).toEqual([expect.stringMatching(/^quests: a cell holds 6 required quests at most/)]);
+    expect(messages(cellOf(10))).toEqual(expect.arrayContaining([expect.stringMatching(/^quests:/)]));
+  });
+
+  it('accepts optionalQuestIds that are a suffix of the quest order (Word Builder: 6 required, 3 optional)', () => {
+    expect(messages(cellOf(9, { optionalQuestIds: questIdsOf(9, 7) }))).toEqual([]);
+    expect(messages(cellOf(8, { optionalQuestIds: questIdsOf(8, 7) }))).toEqual([]);
+    expect(messages(cellOf(7, { optionalQuestIds: questIdsOf(7, 7) }))).toEqual([]);
+    expect(messages(cellOf(5, { optionalQuestIds: questIdsOf(5, 5) }))).toEqual([]);
+    const cell = LessonCellSchema.parse(cellOf(9, { optionalQuestIds: questIdsOf(9, 7) }));
+    expect(cell.optionalQuestIds).toEqual(['quest:stage2-letters-q7', 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
+  });
+
+  it('rejects an id that is not one of the cell\'s quests', () => {
+    expect(messages(cellOf(7, { optionalQuestIds: ['quest:stage2-letters-q8'] }))).toEqual(
+      expect.arrayContaining(['optionalQuestIds: optionalQuestIds names a quest that is not one of the cell\'s quests']),
+    );
+  });
+
+  it('rejects a list that is not the last quests in order', () => {
+    const notSuffix = (ids: string[]) => messages(cellOf(9, { optionalQuestIds: ids }));
+    expect(notSuffix(['quest:stage2-letters-q7', 'quest:stage2-letters-q9'])).toEqual(
+      expect.arrayContaining(['optionalQuestIds: optionalQuestIds are the last quests of the cell, in order']),
+    );
+    expect(notSuffix(['quest:stage2-letters-q9', 'quest:stage2-letters-q8', 'quest:stage2-letters-q7'])).toEqual(
+      expect.arrayContaining(['optionalQuestIds: optionalQuestIds are the last quests of the cell, in order']),
+    );
+    expect(messages(cellOf(9, { optionalQuestIds: questIdsOf(9, 7).slice(0, 2) })).join()).toMatch(/optionalQuestIds are the last quests/);
+  });
+
+  it('rejects a cell whose every quest is optional, an empty list, and more than 3 optional quests', () => {
+    expect(messages(cellOf(3, { optionalQuestIds: questIdsOf(3) }))).toEqual(
+      expect.arrayContaining(['optionalQuestIds: a cell needs at least one quest that is not optional']),
+    );
+    expect(messages(cellOf(6, { optionalQuestIds: [] }))).toEqual([expect.stringMatching(/^optionalQuestIds:/)]);
+    expect(messages(cellOf(9, { optionalQuestIds: questIdsOf(9, 4) }))).toEqual(
+      expect.arrayContaining(['optionalQuestIds: a cell holds at most 3 optional quests']),
+    );
+  });
+
+  it('holds at least 3 required quests', () => {
+    expect(messages(cellOf(4, { optionalQuestIds: questIdsOf(4, 3) }))).toEqual([expect.stringMatching(/^quests: a cell holds at least 3 required quests/)]);
+  });
+
+  it('rejects the field on a Volume 2 file', () => {
+    const v2 = lessonCell('stage2', 'letters', { id: 'episode:stage2-letters-v2', volume: 2 }) as Json;
+    v2.quests = Array.from({ length: 4 }, (_, i) => lessonQuest('stage2', 'letters', i + 1)).map((q, i) => ({
+      ...JSON.parse(JSON.stringify(q).replaceAll(`stage2-letters-q${i + 1}`, `stage2-letters-v2-q${i + 1}`).replaceAll(`s2-letters-q${i + 1}`, `s2-letters-v2-q${i + 1}`)),
+    }));
+    expect(messages(v2)).toEqual([]);
+    expect(messages({ ...v2, optionalQuestIds: ['quest:stage2-letters-v2-q4'] })).toEqual(['optionalQuestIds: a Volume 2 file has no optional quests']);
+  });
+});
+
 describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
   it('parses a valid draft cell and applies defaults', () => {
     const cell = LessonCellSchema.parse(lessonCell());
@@ -54,7 +120,7 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(messages({ ...lessonCell(), estimatedMinutes: 13 })).toEqual([expect.stringContaining('Unrecognized key')]);
   });
 
-  it('caps the title lengths and needs 3-6 quests', () => {
+  it('caps the title lengths and needs 3-9 quests', () => {
     expect(messages(lessonCell('stage3', 'letters', { titleEn: 'x'.repeat(29) }))).toHaveLength(1);
     const two = lessonCell();
     two.quests = two.quests.slice(0, 2);

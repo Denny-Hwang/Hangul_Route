@@ -74,6 +74,14 @@ describe('the gate and the reads', () => {
     expect(await createCellCheckApi(fake({ items: async () => Promise.reject(new Error('offline')) }).deps).readWorld('p1')).toEqual({ kind: 'unreadable' });
   });
 
+  it('reads the completed quests of the snapshot into the context (an optional quest\'s items join a Check once played)', async () => {
+    const done = { 'quest:stage2-letters-q1': '2026-10-01T00:00:00.000Z', 'quest:stage2-letters-q8': '2026-10-02T00:00:00.000Z' };
+    const snapshot = { vocab: undefined, quests: [], questDoneAt: done } as unknown as ProgressSnapshot;
+    expect([...((await world(fake({ snapshot: () => snapshot }))).ctx.doneQuestIds ?? [])].sort()).toEqual(['quest:stage2-letters-q1', 'quest:stage2-letters-q8']);
+    expect([...((await world(fake({ snapshot: () => undefined }))).ctx.doneQuestIds ?? [])]).toEqual([]);
+    expect([...((await world(fake())).ctx.doneQuestIds ?? [])]).toEqual([]);
+  });
+
   it('offerable: a cell with 5 or more playable rounds; Test out only where topic words are few; never while off; a Stage 5 book never', async () => {
     const api = createCellCheckApi(fake().deps);
     // Stage 2 Letters: 46 of its 89 items are topic words, so a Check and no Test out.

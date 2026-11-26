@@ -1,4 +1,5 @@
 import type { ReviewEntry, StageKey } from '@hangul-route/content-schema';
+import { cellHoldsItem } from '@hangul-route/content-schema/review-items';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { checkResult, type CheckResult } from './cell-check';
 import type { RoundAnswer } from './daily-review';
@@ -41,13 +42,15 @@ export interface PlannedStageCheck {
 
 /**
  * The items a Stage Check of the stage may ask, cell by cell in the order given (the stage's grid cells, theme order):
- * those each cell teaches, not retired. An item two cells teach belongs to the first.
+ * those each cell teaches, not retired. An item two cells teach belongs to the first. An item a cell teaches only through
+ * optional quests is that cell's once the learner has completed one of them (`done`, `cellHoldsItem`): a Check never asks
+ * what an unplayed optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 5).
  */
-export function stageCheckItemIds(index: EngineContext['index'], cells: readonly string[]): string[][] {
+export function stageCheckItemIds(index: EngineContext['index'], cells: readonly string[], done?: ReadonlySet<string>): string[][] {
   const taken = new Set<string>();
   return cells.map((cell) =>
     index.items.flatMap((item) => {
-      if (!item.cells.includes(cell) || index.retired.has(item.id) || taken.has(item.id)) return [];
+      if (!cellHoldsItem(item, cell, done) || index.retired.has(item.id) || taken.has(item.id)) return [];
       taken.add(item.id);
       return [item.id];
     }),
@@ -71,7 +74,7 @@ export function shares(capacity: readonly number[], size: number): number[] {
 
 /** The items to ask: each cell's share, chosen box first by the Check selector over that cell's items. */
 export function stageCheckSelection(ctx: EngineContext, cells: readonly string[], skipped: ReadonlySet<string>): string[] {
-  const perCell = stageCheckItemIds(ctx.index, cells).map((ids) => ids.filter((id) => !skipped.has(id)));
+  const perCell = stageCheckItemIds(ctx.index, cells, ctx.doneQuestIds).map((ids) => ids.filter((id) => !skipped.has(id)));
   // What each cell can ask at all (the selector leaves out what this device cannot play or show).
   const askable = perCell.map((ids) => buildCheck(ctx, { itemIds: ids, size: ids.length }).questions.length);
   const quota = shares(askable, STAGE_CHECK_SIZE);

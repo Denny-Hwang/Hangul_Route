@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { masteryDenominator } from '../review-items/review-item';
 import { reviewItemsOf, serializeSnapshot, serializeStage1Table, stage1Table } from '../review-items/build';
 import type { ItemOccurrence } from '../review-items/extract';
 import {
@@ -134,6 +135,62 @@ describe('allowedFormats (§4.3 rungs by kind, §4.5)', () => {
     expect(allowedFormats({ ...base, kind: 'pat', ko: '가 나 다 라 마 바 사' })).toEqual(['hear-pick', 'read-pick', 'cloze-pick']);
     expect(allowedFormats({ ...base, kind: 'exc', ko: '뭐 먹어요?', reply: { ko: '밥 먹어요.', romanization: '' } })).toEqual(['hear-pick', 'read-pick', 'sentence-builder']);
     expect(allowedFormats({ ...base, kind: 'exc', ko: '안녕?', reply: { ko: '안녕!', romanization: '' } })).toEqual(['hear-pick', 'read-pick']);
+  });
+});
+
+describe('buildReviewItems: items an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a)', () => {
+  const build = (list: ItemOccurrence[]) => buildReviewItems(list, EMPTY_SNAPSHOT, vocab).items;
+  const optional = (o: Partial<ItemOccurrence> & Pick<ItemOccurrence, 'kind' | 'ko'>, quest: string) => occ({ ...o, optionalQuest: quest });
+
+  it('names the cells an item is taught in by optional quests alone, with those quests', () => {
+    const items = build([
+      occ({ kind: 'lex', ko: '사과', romanization: 'sagwa', en: 'apple', source: 'discover' }),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken', source: 'discover' }, 'quest:stage2-life-q8'),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }, 'quest:stage2-life-q8'),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }, 'quest:stage2-life-q9'),
+    ]);
+    expect(items.find((i) => i.ko === '사과')?.optionalIn).toBeUndefined();
+    expect(items.find((i) => i.ko === '닭')?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q8', 'quest:stage2-life-q9'] });
+  });
+
+  it('a required quest of the same cell that teaches the item too leaves it a plain item of the cell', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken', source: 'discover' }, 'quest:stage2-life-q8'),
+      occ({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }),
+    ]);
+    expect(items[0]?.optionalIn).toBeUndefined();
+  });
+
+  it('keeps the other cells of an item taught elsewhere: only the cell whose occurrences are all optional is listed', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '좋아요', romanization: 'joayo', en: 'good', source: 'discover' }, 'quest:stage2-life-q9'),
+      occ({ kind: 'lex', ko: '좋아요', romanization: 'joayo', en: 'good', source: 'discover', cell: 'episode:stage3-life', stage: 3 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage2-life', 'episode:stage3-life']);
+    expect(items[0]?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q9'] });
+  });
+
+  it('an optional quest that becomes the first teacher leaves the later cell that asks it a cell of the item (its first required cell)', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', source: 'discover' }, 'quest:stage2-life-q9'),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage3-life', stage: 3 }),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage4-life', stage: 4 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage2-life', 'episode:stage3-life']);
+    expect(items[0]?.asked).toEqual(['episode:stage4-life']);
+    expect(items[0]?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q9'] });
+    // The later cell's mastery still holds it, whatever the learner played in Word Builder.
+    expect(masteryDenominator(items, 'episode:stage3-life', [1], [])).toEqual([items[0]?.id]);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1], [])).toEqual([]);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1], [], new Set(['quest:stage2-life-q9']))).toEqual([items[0]?.id]);
+  });
+
+  it('without an optional quest the first cell and the first grid cell are what they were', () => {
+    const items = build([
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage3-life', stage: 3 }),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage4-life', stage: 4 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage3-life']);
   });
 });
 

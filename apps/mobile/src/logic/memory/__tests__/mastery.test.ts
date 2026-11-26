@@ -177,6 +177,41 @@ describe('deriveMastery: the started-volume denominator and the New volume marke
   });
 });
 
+describe('deriveMastery: an item only an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a, BC-OD-16)', () => {
+  // Cell q1, q2 required; q3 optional teaches lex:opt in this cell only; lex:both is taught by q3 here and by a required quest of another cell.
+  const OPT_CELLS = [{ episodeId: CELL, questIds: ['q1', 'q2', 'q3'], optionalQuestIds: ['q3'] }];
+  const OPT_QUESTS = [
+    { id: 'q1', episodeId: CELL },
+    { id: 'q2', episodeId: CELL },
+    { id: 'q3', episodeId: CELL },
+  ];
+  const OPT_ITEMS = [
+    { id: 'lex:a', cells: [CELL] },
+    { id: 'lex:b', cells: [CELL] },
+    { id: 'lex:opt', cells: [CELL], optionalIn: { [CELL]: ['q3'] } },
+  ];
+  const base = (questDoneAt: Record<string, string>): MasteryInput => ({ cells: OPT_CELLS, quests: OPT_QUESTS, items: OPT_ITEMS, retired: new Set(), rows: {}, snapshot: snap({ questDoneAt }) });
+
+  it('is outside the denominator while the optional quest is unplayed, so the cell levels over what it required', () => {
+    const m = deriveMastery(base(done('q1', 'q2'))).get(CELL);
+    expect(m?.denominator).toEqual(['lex:a', 'lex:b']);
+    const rows = { 'lex:a': { st: st() }, 'lex:b': { st: st() } };
+    expect(deriveMastery({ ...base(done('q1', 'q2')), rows }).get(CELL)?.level).toBe(2);
+  });
+
+  it('joins the denominator once the optional quest is completed, and counts from then on', () => {
+    const m = deriveMastery(base(done('q1', 'q2', 'q3'))).get(CELL);
+    expect(m?.denominator).toEqual(['lex:a', 'lex:b', 'lex:opt']);
+    const rows = { 'lex:a': { st: st() }, 'lex:b': { st: st() } };
+    // 2 of 3 held is under 80%: the share now reads the word the learner played.
+    expect(deriveMastery({ ...base(done('q1', 'q2', 'q3')), rows }).get(CELL)?.level).toBe(1);
+  });
+
+  it('playing only the optional quest starts nothing: a cell starts on its required quests, as before', () => {
+    expect(deriveMastery(base(done('q3'))).has(CELL)).toBe(false);
+  });
+});
+
 describe('the derivation reads only monotonic fields (section 4.4, F-VOC-005 P2)', () => {
   it('property: any change of the current box b, the next rung c or the due day d leaves every level unchanged', () => {
     const arbState = fc.record({ s: fc.integer({ min: 0, max: 7 }), n: fc.integer({ min: 0, max: 5 }), r: fc.integer({ min: 0, max: 7 }) });

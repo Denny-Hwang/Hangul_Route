@@ -113,7 +113,8 @@ export function buildStageRows(input: MyRouteInput, ctx: StageRowsContext): Stag
         latched,
         cardComplete: completeCards.has(`${stage}-complete`),
         allPlayableDone: allPlayableDone(stage, ctx.gridEpisodes, input.snapshot),
-        questPips: questPips.map((p) => p.state),
+        // The required quests only: an unplayed optional quest keeps neither a `known` stage nor an open one waiting.
+        questPips: questPips.filter((p) => p.optional !== true).map((p) => p.state),
       }),
       availability,
       latched,

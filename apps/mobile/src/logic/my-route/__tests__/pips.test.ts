@@ -33,6 +33,67 @@ describe('pipStateOf (F-ROUTE-001 section 3.4 precedence)', () => {
   });
 });
 
+/** BUNDLE_8 with Stage 1 Life's second quest optional (the shape of `quest:stage1-crafts-q4` and Word Builder q7-q9). */
+const OPTIONAL_LIFE = ['quest:stage1-life-q2'];
+const withOptionalLife = BUNDLE_8.episodes.map((e) => (e.id === 'episode:stage1-life' ? { ...e, optionalQuestIds: OPTIONAL_LIFE } : e));
+const optionalCtx = (over: Partial<PipContext> = {}) => ctxOf({ optionalQuestIds: new Set(OPTIONAL_LIFE), ...over });
+
+describe('cellRowsOf: optional quests (AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 4)', () => {
+  const life = (ctx: PipContext) => cells('stage1', ctx, withOptionalLife)[1];
+
+  it('marks an optional quest pip and no other: the pip still shows, in route order', () => {
+    const row = life(optionalCtx());
+    expect(row?.pips.map((p) => [p.questId, p.optional])).toEqual([
+      ['quest:stage1-life-q1', undefined],
+      ['quest:stage1-life-q2', true],
+    ]);
+    expect(life(ctxOf())?.pips.every((p) => p.optional === undefined)).toBe(true);
+  });
+
+  it('a cell whose required quests are done is complete with an unplayed optional quest, and its pip stays open', () => {
+    const row = life(optionalCtx({ done: new Set(['quest:stage1-life-q1']) }));
+    expect(row?.state).toBe('complete');
+    expect(row?.pips.map((p) => p.state)).toEqual(['done', 'open']);
+    expect(row?.done).toBe(1);
+    // Without the optional list the same progress reads partial: the gap this closes.
+    expect(life(ctxOf({ done: new Set(['quest:stage1-life-q1']) }))?.state).toBe('partial');
+  });
+
+  it('the optional pip fills when played, and the cell stays complete', () => {
+    const row = life(optionalCtx({ done: new Set(['quest:stage1-life-q1', 'quest:stage1-life-q2']) }));
+    expect(row?.state).toBe('complete');
+    expect(row?.pips.map((p) => p.state)).toEqual(['done', 'done']);
+    expect(row?.done).toBe(2);
+  });
+
+  it('a required quest left undone keeps the cell partial, and an optional one played alone makes it partial, not complete', () => {
+    expect(life(optionalCtx({ done: new Set(['quest:stage1-life-q2']) }))?.state).toBe('partial');
+    expect(life(optionalCtx())?.state).toBe('open');
+  });
+
+  it('known over the required quests: the placed-out required quests read known, whether the optional one is played or not', () => {
+    const row = life(optionalCtx({ placedOut: new Set(['quest:stage1-life-q1']) }));
+    expect(row?.state).toBe('known');
+    const mixed = life(optionalCtx({ placedOut: new Set(['quest:stage1-life-q1']), done: new Set(['quest:stage1-life-q2']) }));
+    expect(mixed?.state).toBe('known');
+  });
+
+  it('Stage 1 on the shipped bundle: Crafts is complete with quest:stage1-crafts-q4 (the optional addition) unplayed', () => {
+    const live = { episodes: episodesAll, quests: questsAll };
+    const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
+    expect([...optional]).toContain('quest:stage1-crafts-q4');
+    const required = episodesAll.filter((e) => e.stage === 'stage1').flatMap((e) => e.questIds).filter((id) => !optional.has(id));
+    const crafts = (ctx: PipContext) => cells('stage1', ctx, episodesAll).find((c) => c.theme === 'crafts');
+    expect(crafts(ctxOf({ done: new Set(required), optionalQuestIds: optional }, live))?.state).toBe('complete');
+    expect(crafts(ctxOf({ done: new Set(required) }, live))?.state).toBe('partial');
+  });
+
+  it('a cell of optional pips only is later', () => {
+    const only = cellRowsOf('stage1', gridEpisodesOf(withOptionalLife), THEME_DEFS, optionalCtx({ optionalQuestIds: new Set(['quest:stage1-life-q1', 'quest:stage1-life-q2']) }))[1];
+    expect(only?.state).toBe('later');
+  });
+});
+
 describe('cellRowsOf', () => {
   it('draws one pip per grid quest of each playable cell and one later pip per other cell', () => {
     const s1 = cells('stage1', ctxOf());

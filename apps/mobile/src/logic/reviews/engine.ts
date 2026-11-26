@@ -105,6 +105,11 @@ export interface EngineContext {
   seed?: string;
   visibility?: SourceVisibility;
   /**
+   * The quests the learner has completed, for a Check: an item a cell teaches only through optional quests is asked in
+   * that cell's Check once one of them is done, never before (`cellHoldsItem`). Absent: none done.
+   */
+  doneQuestIds?: ReadonlySet<string>;
+  /**
    * The highest rung the session asks (row CM-15): the warm-up (30 s or less) and Try these again are quick pick
    * rounds, so an item the ladder would ask at produce is asked at read there, and the ladder moves on in the
    * Daily Review and the Checks. A spaced right answer at any rung raises the box (CM-12), so the schedule is the same.
