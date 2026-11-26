@@ -101,6 +101,7 @@ Card    = { pillar, title, image_url, source { institution, license, attribution
   - **띄어쓰기**는 한국어 표준 띄어쓰기를 따르고, 한국어 한 단어에 로마자 한 단어 (`손 씻기` → `son ssitgi`, `가족 식탁` → `gajok siktak`).
   - **영어 문장 속** 로마자 한국어 단어도 같은 규칙 (`sebaetdon`, `jongihak`, `gangaji`), 하이픈 없이. 제목·영어 gloss 는 굳어진 영어 이름을 쓴다 (`K-pop`, `Hangul Day`); `romanization` 필드는 RR (`keipap`).
   - 낱자모의 `romanization` 은 단어가 아니라 소리값 표 (`g/k`, `silent/ng` …, `JAMO_SOUND_VALUES`). 변환기가 모르는 단어는 이유를 적어 `ROMANIZATION_EXCEPTIONS` 에 넣는다 (`packages/content-schema/src/romanization/exceptions.ts`). 검사: `corepack pnpm --filter @hangul-route/content-schema test romanization`.
+  - `romanization-gap` 발견 (ㄴ 첨가, 사이시옷, 절음, 하다 용언의 ㅎ) 은 `ROMANIZATION_EXCEPTIONS` 항목이 있어야 통과한다. 단어를 표준국어대사전에서 찾아 발음을 확인하고, 에러 메시지가 출력하는 줄(`ko`, `allowed`, `gap`, 조항이나 사전 발음을 적은 `reason`)을 붙인다. 변환기 값을 그대로 복사하지 않는다 (F-CNT-002 §3.2·§3.3, `AMENDMENTS-ROMANIZER-GAPS.md`).
 - **Gloss** (UI 언어; 기본 English) 또는 visual 항상 동반
 
 예:
