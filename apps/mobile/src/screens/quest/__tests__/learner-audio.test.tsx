@@ -107,7 +107,7 @@ describe('DiscoverStep: a Hear it the browser drops (blocked)', () => {
   });
 });
 
-describe('DiscoverStep: a lone letter is heard by its name first (AMENDMENTS-AUDIO-CLIPS JV-A5)', () => {
+describe('DiscoverStep: a letter is heard by its sound first, its name on the second button (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)', () => {
   const page: DiscoverPage = {
     items: [
       { type: 'jamo', jamoId: 'jamo:nieun', example: { ko: '나무', romanization: 'namu', en: 'tree' } },
@@ -120,25 +120,32 @@ describe('DiscoverStep: a lone letter is heard by its name first (AMENDMENTS-AUD
     });
   };
 
-  it('ㄴ: Hear it says 니은 (shown 니은 · nieun); Hear it with a vowel says 나 under 나 = ㄴ + ㅏ · na; the final shows its line', async () => {
+  it('ㄴ: Hear it says 나 under 나 = ㄴ + ㅏ · na; Hear the name says 니은 under 니은 · nieun; the final shows its line', async () => {
     rig.current = createAudioRig({ voices: [KO_VOICE] });
     const r = await render(<DiscoverStep pages={[page]} onDone={() => undefined} />);
     mounted.push(r);
     const spokenLine = textOf(byTestId(r.root, 'discover-spoken-jamo:nieun')[0]!);
-    expect(spokenLine).toContain('니은');
-    expect(spokenLine).toContain('nieun');
-    const card = textOf(byTestId(r.root, 'discover-item-jamo:nieun')[0] ?? r.root);
-    expect(card).toContain('나 = ㄴ + ㅏ');
-    expect(buttonsNamed(r.root, getMessages('en').learner.quest.discover.soundWith.cta).length).toBeGreaterThan(0);
+    expect(spokenLine).toContain('나 = ㄴ + ㅏ');
+    expect(spokenLine).toContain('na');
+    const nameLine = textOf(byTestId(r.root, 'discover-name-jamo:nieun')[0]!);
+    expect(nameLine).toContain('니은');
+    expect(nameLine).toContain('nieun');
+    const discover = getMessages('en').learner.quest.discover;
+    expect(buttonsNamed(r.root, discover.hearName.cta).length).toBeGreaterThan(0);
+    expect(buttonsNamed(r.root, discover.soundWith.cta)).toHaveLength(0);
+    // The second button's accessible name leads with its visible label (WCAG 2.5.3).
+    expect(pressable(r.root, 'discover-hear-jamo:nieun|name').props['aria-label']).toBe(getMessages('en').a11y.hearNameLabel('Korean letter n'));
+    // The carrier line reads as the syllable and its romanization only, never the lone ㄴ as its name.
+    expect(byTestId(r.root, 'discover-spoken-jamo:nieun')[0]!.findAll((n) => n.props['aria-label'] === '나, na').length).toBeGreaterThan(0);
     expect(textOf(byTestId(r.root, 'discover-final-line-jamo:nieun-batchim')[0]!)).toBe('ㄴ at the bottom: 안 · an');
 
     await press(pressable(r.root, 'discover-hear-jamo:nieun|sound'));
     await settle();
-    await press(pressable(r.root, 'discover-hear-jamo:nieun|vowel'));
+    await press(pressable(r.root, 'discover-hear-jamo:nieun|name'));
     await settle();
     await press(pressable(r.root, 'discover-hear-jamo:nieun-batchim|sound'));
     await settle();
-    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['니은', '나', '안']);
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['나', '니은', '안']);
   });
 });
 

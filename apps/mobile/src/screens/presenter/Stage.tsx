@@ -126,6 +126,7 @@ export function Stage(props: StageProps): ReactElement {
     activity: (preset) => messages.learner.presenter.activity[preset],
     slot: messages.a11y.presenter.slot,
     listen: messages.learner.presenter.quiz.listen,
+    listenStartsWith: messages.learner.audio.heading.startsWith,
     reply: messages.learner.presenter.quiz.reply,
     build: messages.learner.presenter.slide.build.next,
     particle: messages.learner.presenter.slide.build.particle,

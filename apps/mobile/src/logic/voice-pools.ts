@@ -58,6 +58,25 @@ export function soundTileAllowed(target: Jamo, tile: Jamo): boolean {
   return !syllablesOf(targetText).some((s) => componentAt(s, tile.kind) === tile.char);
 }
 
+/**
+ * The consonant series of a sound question (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1): plain, aspirated and tense
+ * (ㄱ ㅋ ㄲ, ㄷ ㅌ ㄸ, ㅂ ㅍ ㅃ, ㅈ ㅊ ㅉ) and ㅅ ㅆ. They differ only by aspiration or tension, the contrast an English or
+ * Spanish ear and a device voice blur, so a quest Check does not ask one against another.
+ */
+const SERIES: ReadonlyArray<ReadonlySet<string>> = [
+  new Set(['jamo:giyeok', 'jamo:kieuk', 'jamo:ssanggiyeok']),
+  new Set(['jamo:digeut', 'jamo:tieut', 'jamo:ssangdigeut']),
+  new Set(['jamo:bieup', 'jamo:pieup', 'jamo:ssangbieup']),
+  new Set(['jamo:jieut', 'jamo:chieut', 'jamo:ssangjieut']),
+  new Set(['jamo:siot', 'jamo:ssangsiot']),
+];
+
+/** Whether two different consonants are in one series (finals, vowels and a letter with itself are in none). */
+export function sameSeries(a: Pick<Jamo, 'id' | 'kind'>, b: Pick<Jamo, 'id' | 'kind'>): boolean {
+  if (a.id === b.id || a.kind !== 'consonant' || b.kind !== 'consonant') return false;
+  return SERIES.some((series) => series.has(a.id) && series.has(b.id));
+}
+
 export function tileAllowed(question: PoolQuestion, target: Jamo, tile: Jamo): boolean {
   return question === 'letter' ? letterTileAllowed(target, tile) : soundTileAllowed(target, tile);
 }

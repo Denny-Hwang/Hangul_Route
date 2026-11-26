@@ -470,6 +470,19 @@ describe('slideDetail: the Role Play slide (F-CURR-002 section 8, row CM-35)', (
   });
 });
 
+describe("slideDetail: a 'startsWith' listen question (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)", () => {
+  const quest4 = expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage1-life-q1' }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+  const listens = quest4.filter((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && s.prompt.ask === 'listen');
+  const names = { activity: () => '', listen: 'Which one did you hear?', listenStartsWith: 'Which letter starts this sound?', reply: 'Which answer fits?' };
+
+  it('is announced by the question the slide shows, not "Which one did you hear?"', () => {
+    const framed = listens.find((s) => (s.prompt as { frame?: string }).frame === 'startsWith')!;
+    expect(slideDetail(framed, names)).toBe('Which letter starts this sound?');
+    const plain = listens.find((s) => (s.prompt as { frame?: string }).frame === undefined)!;
+    expect(slideDetail(plain, names)).toBe('Which one did you hear?');
+  });
+});
+
 describe('slideDetail: the question slides (LV-S2)', () => {
   const slides = expandDeck(
     deckOf([

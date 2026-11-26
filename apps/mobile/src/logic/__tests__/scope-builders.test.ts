@@ -26,6 +26,47 @@ vi.mock('../../content/jamo', async (importOriginal) => {
 const word = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
 const TAUGHT_L1 = ['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun'];
 
+describe('lp.symSound (heard sound -> the letter that starts it; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)', () => {
+  const TAUGHT_F1 = [...TAUGHT_L1, 'jamo:digeut', 'jamo:jieut', 'jamo:chieut', 'jamo:mieum', 'jamo:o', 'jamo:u'];
+
+  it('is a sound question: the prompt is the syllable 차 with its clip and the "sound of the letter" gloss, framed startsWith', () => {
+    const r = lp.symSound('jamo:chieut', TAUGHT_F1, { optionIds: ['jamo:chieut', 'jamo:nieun', 'jamo:giyeok', 'jamo:digeut'] });
+    const voice = jamoVoice(findJamo('jamo:chieut')!, 'sound');
+    expect(r.prompt).toEqual({ ko: '차', romanization: 'cha', en: 'the sound of the letter chieut', audioRef: voice.audioRef });
+    expect(voice.audioRef).toBe('audio/jamo/chieut.mp3');
+    expect(r.frame).toBe('startsWith');
+    expect(r.id).toBe('lp:sym:jamo:chieut');
+    expect(r.answerId).toBe('jamo:chieut');
+    expect(r.options.map((o) => o.id)).toEqual(['jamo:chieut', 'jamo:nieun', 'jamo:giyeok', 'jamo:digeut']);
+    expect(r.options[0]!.text).toMatchObject({ ko: 'ㅊ', romanization: 'ch', en: 'the letter chieut' });
+    expect(ListenPickRoundSchema.safeParse(r).success).toBe(true);
+    expect(listenPickSpeech(r)).toEqual({ text: '차', kind: 'sound', source: 'listen-pick', audioRef: 'audio/jamo/chieut.mp3' });
+  });
+
+  it('needs explicit options', () => {
+    expect(() => (lp.symSound as (id: string, taught: readonly string[]) => unknown)('jamo:chieut', TAUGHT_F1)).toThrow(/optionIds/);
+  });
+
+  it('throws for a vowel, the silent ㅇ and a final', () => {
+    expect(() => lp.symSound('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:a'] })).toThrow(/vowel|sound/i);
+    expect(() => lp.symSound('jamo:ieung', [...TAUGHT_L1, 'jamo:ieung'], { optionIds: ['jamo:ieung', 'jamo:nieun'] })).toThrow(/ieung|sound/i);
+    expect(() => lp.symSound('jamo:nieun-batchim', TAUGHT_L1, { optionIds: ['jamo:nieun-batchim', 'jamo:rieul-batchim'] })).toThrow();
+  });
+
+  it("throws for an option in the target's series (ㅈ and ㄱ... for ㅊ and ㅋ) and for an option that breaks rule 2", () => {
+    expect(() => lp.symSound('jamo:chieut', TAUGHT_F1, { optionIds: ['jamo:chieut', 'jamo:jieut', 'jamo:giyeok'] })).toThrow(/series/i);
+    expect(() => lp.symSound('jamo:kieuk', [...TAUGHT_F1, 'jamo:kieuk'], { optionIds: ['jamo:kieuk', 'jamo:giyeok', 'jamo:nieun'] })).toThrow(/series/i);
+    // A vowel option is another kind of tile: rule 2.
+    expect(() => lp.symSound('jamo:chieut', TAUGHT_F1, { optionIds: ['jamo:chieut', 'jamo:a', 'jamo:nieun'] })).toThrow(/JV-A3|rule 2|beside/i);
+  });
+
+  it('keeps two distractors that are partners of each other (the ㅋ round keeps ㅌ and ㄷ)', () => {
+    const taught = [...TAUGHT_F1, 'jamo:kieuk', 'jamo:tieut'];
+    const r = lp.symSound('jamo:kieuk', taught, { optionIds: ['jamo:kieuk', 'jamo:nieun', 'jamo:tieut', 'jamo:digeut'] });
+    expect(r.options.map((o) => o.id)).toEqual(['jamo:kieuk', 'jamo:nieun', 'jamo:tieut', 'jamo:digeut']);
+  });
+});
+
 describe('lp.sym (heard letter -> written symbol)', () => {
   it("is a letter question: the prompt is the letter's name, never the carrier syllable (AMENDMENTS-AUDIO-CLIPS M10)", () => {
     const r = lp.sym('jamo:eo', TAUGHT_L1);
@@ -117,10 +158,15 @@ describe('lp.sym (heard letter -> written symbol)', () => {
         if (!round.id.startsWith('lp:sym:')) continue;
         seen += 1;
         const jamo = findJamo(round.answerId)!;
-        const voice = jamoVoice(jamo, 'letter');
+        // SF-1: a round framed `startsWith` is a sound question (차, "the sound of the letter chieut"); the rest are letter questions.
+        const voice = jamoVoice(jamo, round.frame === 'startsWith' ? 'sound' : 'letter');
         const { audioRef, ...rest } = round.prompt;
         expect(audioRef, round.id).toBe(voice.audioRef);
-        expect(rest, round.id).toEqual({ ko: voice.text, romanization: voice.romanization, en: `the letter ${jamo.nameEn}` });
+        expect(rest, round.id).toEqual({
+          ko: voice.text,
+          romanization: voice.romanization,
+          en: round.frame === 'startsWith' ? `the sound of the letter ${jamo.nameEn}` : `the letter ${jamo.nameEn}`,
+        });
         // The prompt carries the ref whether or not a file is bundled for it (AC-7 ships 32 of the 43 jamo-s1 clips, the
         // rest play through the voice, F-AUDIO-004 AD4): a ref with no file is just absent from the map.
         if (audioRef !== undefined) expect(typeof Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef), round.id).toBe('boolean');

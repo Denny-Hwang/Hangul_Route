@@ -10,7 +10,9 @@
 //   - Learner-facing English copy never contains a shaming word
 //     (F-HW-001 §3.3 anti-shame contract).
 //   - content/placement/** follows the placement-bank rules in
-//     scripts/placement-rules.mjs (F-PLC-001 §3.4).
+//     scripts/placement-rules.mjs (F-PLC-001 §3.4), and its items the validity lint of
+//     AMENDMENTS-PLC-VALIDITY §3.4 (row PV-3): a finding that is not in the shrinking baseline
+//     scripts/placement-lint-baseline.json fails, and a baseline entry that no longer fails must leave it.
 //   - content/episodes/stage-<n>/*.json (n = 2, 3, 4, 6, 7) are lesson cells (F-CURR-001):
 //     the lesson-* rules of packages/content-schema/src/lesson-lint.ts (loaded through
 //     scripts/ts-loader.mjs, one implementation): schema, no speaking, review sign-offs,
@@ -26,8 +28,8 @@
 //     warning for a shipped story. Each rule that reports prints its description once, for
 //     MAR, and culture-source always does (its description asks MAR to check institution names
 //     as of the access date). The report-only rules print one line each (`--reports` for
-//     details); freq-coverage reads the NIKL grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, a local
-//     file that must lie outside the repo (its licence is not yet checked).
+//     details); freq-coverage reads the NIKL grade-A words from scripts/nikl-vocab-2003.json (KOGL Type 1,
+//     AMENDMENTS-PLC-VALIDITY §3.3).
 //   - A gloss never opens with the romanization of the Korean it glosses ("gimbap (seaweed
 //     rice roll)" is "seaweed rice roll"): rule gloss-repeats-romanization, the one
 //     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-001 §3), with
@@ -53,9 +55,9 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import nodeModule from "node:module";
-import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { checkPlacementTree } from "./placement-rules.mjs";
+import { PLACEMENT_BASELINE_FILE, checkPlacementLint, checkPlacementTree, niklIndex } from "./placement-rules.mjs";
 import { bannedWordIn, checkOverlayTree, glossRepeatsRomanization, glossRepeatsRule } from "./overlay-rules.mjs";
 // The one list of places a lone letter is shown and never spoken, shared with the audio scripts' content walker.
 import { isLoneLetter, isShownOnlyLetter, spokenTextOf } from "../apps/mobile/scripts/audio/content-sources.mjs";
@@ -287,8 +289,37 @@ for (const file of files) {
   parsedByRel.set(rel, parsed);
 }
 
+// scripts/nikl-vocab-2003.json (KOGL Type 1; AMENDMENTS-PLC-VALIDITY §3.3): the placement lint grades heard words
+// against it, and freq-coverage reads its grade A. Read from the validated root, so a root without it skips both.
+const NIKL_FILE = "scripts/nikl-vocab-2003.json";
+const readJsonIfPresent = (rel) => (existsSync(join(ROOT, rel)) ? JSON.parse(readFileSync(join(ROOT, rel), "utf8")) : undefined);
+const nikl = (() => {
+  try {
+    const json = readJsonIfPresent(NIKL_FILE);
+    return json === undefined ? null : niklIndex(json);
+  } catch (err) {
+    violations.push({ file: NIKL_FILE, path: "(root)", rule: `invalid-json: ${err.message}` });
+    return null;
+  }
+})();
+
 // F-PLC-001 §3.4: structure of content/placement/**.
 violations.push(...checkPlacementTree(parsedByRel));
+
+// AMENDMENTS-PLC-VALIDITY §3.4: the item-validity lint, with the shrinking baseline of what fails today.
+let placementBaseline;
+try {
+  placementBaseline = readJsonIfPresent(PLACEMENT_BASELINE_FILE);
+} catch (err) {
+  violations.push({ file: PLACEMENT_BASELINE_FILE, path: "(root)", rule: `invalid-json: ${err.message}` });
+}
+const placementLint = checkPlacementLint(parsedByRel, { nikl, baseline: placementBaseline });
+violations.push(...placementLint.violations);
+const baselined = Object.entries(placementLint.reported).sort(([a], [b]) => (a < b ? -1 : 1));
+if (baselined.length > 0) {
+  const total = baselined.reduce((n, [, count]) => n + count, 0);
+  console.log(`placement-lint (baselined): ${total} known finding(s), to shrink: ${baselined.map(([rule, count]) => `${rule} ${count}`).join(", ")}`);
+}
 
 // F-CURR-001 section 5: the lesson rules of every lesson cell file. F-CURR-002 §9.3: the rules for
 // Volume 1 cells (row CM-3B), Volume 2 cells, pack levels and new stories (errors), and for shipped stories (warnings).
@@ -345,29 +376,16 @@ if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.l
 
 /**
  * The report-only rules (F-CURR-002 §9.3): one summary line each, and with --reports one line per
- * stage or story tier. freq-coverage reads the NIKL grade-A list from a local file outside the repo
- * (HANGUL_ROUTE_NIKL_GRADE_A), never from content/ (§19 assumption 4).
+ * stage or story tier. freq-coverage reads the grade-A words of the committed NIKL list
+ * (scripts/nikl-vocab-2003.json, KOGL Type 1; AMENDMENTS-PLC-VALIDITY §3.3).
  */
 function curriculumReports(lint) {
   const lines = [];
   const detail = process.argv.includes("--reports");
-  const listPath = process.env.HANGUL_ROUTE_NIKL_GRADE_A;
-  const fromRoot = listPath ? relative(ROOT, resolve(listPath)) : "";
-  const inRepo = Boolean(listPath) && !fromRoot.startsWith("..") && !isAbsolute(fromRoot);
-  if (!listPath) {
-    lines.push("freq-coverage (report only): skipped; set HANGUL_ROUTE_NIKL_GRADE_A to a local copy of the NIKL grade-A list");
-  } else if (inRepo) {
-    // §19 assumption 4: the list's licence is not checked yet, so it never sits in the repo.
-    violations.push({
-      file: fromRoot.split(sep).join("/"),
-      path: "",
-      rule: "freq-coverage: the NIKL grade-A list stays outside the repo until its licence is checked (F-CURR-002 §19 assumption 4); move it and point HANGUL_ROUTE_NIKL_GRADE_A there",
-    });
-    lines.push("freq-coverage (report only): skipped; HANGUL_ROUTE_NIKL_GRADE_A points inside the repo");
-  } else if (!existsSync(listPath)) {
-    lines.push(`freq-coverage (report only): skipped; ${listPath} does not exist`);
+  if (nikl === null) {
+    lines.push(`freq-coverage (report only): skipped; ${NIKL_FILE} is missing`);
   } else {
-    const rows = lint.freqCoverage(parsedByRel, lint.parseGradeAList(readFileSync(listPath, "utf8")));
+    const rows = lint.freqCoverage(parsedByRel, nikl.gradeA);
     const taught = rows.reduce((n, r) => n + r.taught, 0);
     const onList = rows.reduce((n, r) => n + r.onList, 0);
     lines.push(`freq-coverage (report only): ${onList} of ${taught} taught words are on the grade-A list`);
