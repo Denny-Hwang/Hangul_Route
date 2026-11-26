@@ -1,4 +1,5 @@
 import { CURR_TELEMETRY_PAYLOADS, type ReviewEntry } from '@hangul-route/content-schema';
+import { cellHoldsItem } from '@hangul-route/content-schema/review-items';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { memoryAnswerOf, sessionResult, type RoundAnswer } from './daily-review';
 import { buildCheck, type EngineContext } from './engine';
@@ -54,9 +55,13 @@ export interface PlannedCheck {
   cells?: readonly string[];
 }
 
-/** The items a Check of the cell may ask: those the cell teaches (its own `cells`), topic words included. */
-export function cellCheckItemIds(index: EngineContext['index'], cellId: string): string[] {
-  return index.items.filter((i) => i.cells.includes(cellId) && !index.retired.has(i.id)).map((i) => i.id);
+/**
+ * The items a Check of the cell may ask: those the cell teaches (its own `cells`), topic words included. An item the cell
+ * teaches only through optional quests is asked once the learner has completed one of them (`done`, the completed quest
+ * ids; AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 5), so a Check never asks what an unplayed optional quest teaches.
+ */
+export function cellCheckItemIds(index: EngineContext['index'], cellId: string, done?: ReadonlySet<string>): string[] {
+  return index.items.filter((i) => cellHoldsItem(i, cellId, done) && !index.retired.has(i.id)).map((i) => i.id);
 }
 
 /** Plays the engine's Check of the items `idsOf` gives, leaving out those that cannot be played; null below `min` rounds. */
@@ -82,8 +87,8 @@ function planRounds(
 }
 
 /** Whether the cell's topic words are few enough for Test out (`TEST_OUT_MAX_TOPIC_SHARE`). */
-export function testOutFits(index: EngineContext['index'], cellId: string): boolean {
-  const ids = cellCheckItemIds(index, cellId);
+export function testOutFits(index: EngineContext['index'], cellId: string, done?: ReadonlySet<string>): boolean {
+  const ids = cellCheckItemIds(index, cellId, done);
   const topic = ids.filter((id) => id.startsWith('vocab:')).length;
   return ids.length > 0 && topic * 100 <= TEST_OUT_MAX_TOPIC_SHARE * ids.length;
 }
@@ -116,14 +121,14 @@ export function planCellCheck(
   rounds: Omit<RoundInput, 'index'>,
   exclude: ReadonlySet<string> = new Set(),
 ): PlannedCheck | null {
-  const all = cellCheckItemIds(ctx.index, cellId);
+  const all = cellCheckItemIds(ctx.index, cellId, ctx.doneQuestIds);
   const best = planRounds(ctx, (skipped) => all.filter((id) => !skipped.has(id)), CELL_CHECK_SIZE, CELL_CHECK_MIN_ROUNDS, rounds, exclude);
   return best === null ? null : { cellId, mode, rounds: best, soundNotice: best.some((r) => r.question.voiceFallback) };
 }
 
 /** The items a Stage Jump of these cells may ask: each cell's own, in the order of `cells`, each item once. */
-export function stageJumpItemIds(index: EngineContext['index'], cells: readonly string[]): string[] {
-  return [...new Set(cells.flatMap((cell) => cellCheckItemIds(index, cell)))];
+export function stageJumpItemIds(index: EngineContext['index'], cells: readonly string[], done?: ReadonlySet<string>): string[] {
+  return [...new Set(cells.flatMap((cell) => cellCheckItemIds(index, cell, done)))];
 }
 
 /**
@@ -144,9 +149,10 @@ export function planStageJump(
 ): PlannedCheck | null {
   // CM-21's narrowing 4, cell by cell: a cell whose topic words are more than 30% of its items cannot be tested out, so
   // a stage with one (every Stage 2 cell today) has no jump.
-  if (cells.some((cell) => cellCheckItemIds(ctx.index, cell).length > 0 && !testOutFits(ctx.index, cell))) return null;
+  const done = ctx.doneQuestIds;
+  if (cells.some((cell) => cellCheckItemIds(ctx.index, cell, done).length > 0 && !testOutFits(ctx.index, cell, done))) return null;
   const idsOf = (skipped: ReadonlySet<string>): string[] => {
-    const orders = cells.map((cell) => buildCheck(ctx, { itemIds: cellCheckItemIds(ctx.index, cell).filter((id) => !skipped.has(id)), size: STAGE_JUMP_SIZE }).questions.map((q) => q.itemId));
+    const orders = cells.map((cell) => buildCheck(ctx, { itemIds: cellCheckItemIds(ctx.index, cell, done).filter((id) => !skipped.has(id)), size: STAGE_JUMP_SIZE }).questions.map((q) => q.itemId));
     const picked = new Set<string>();
     for (let i = 0; picked.size < STAGE_JUMP_SIZE && orders.some((o) => i < o.length); i += 1) {
       for (const order of orders) if (i < order.length && picked.size < STAGE_JUMP_SIZE) picked.add(order[i] as string);
@@ -159,7 +165,7 @@ export function planStageJump(
   // left out (its lesson chunk could not load offline, or none of its rounds can play here) means no jump: a cell is
   // never marked tested out without a question on it.
   const asked = new Set(best.flatMap((r) => ctx.index.byId.get(r.question.itemId)?.cells ?? []));
-  if (cells.some((cell) => cellCheckItemIds(ctx.index, cell).length > 0 && !asked.has(cell))) return null;
+  if (cells.some((cell) => cellCheckItemIds(ctx.index, cell, done).length > 0 && !asked.has(cell))) return null;
   return { cellId: stage, mode: 'jump', rounds: best, soundNotice: best.some((r) => r.question.voiceFallback), cells: [...cells] };
 }
 

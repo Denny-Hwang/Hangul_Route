@@ -294,6 +294,13 @@ export const isLessonSignedOff = (review: LessonReview): boolean =>
 
 // ---- the cell ---------------------------------------------------------------------------------------
 
+/** The most quests a cell holds: {@link MAX_REQUIRED_QUESTS} required, then up to {@link MAX_OPTIONAL_QUESTS} optional ones. */
+export const MAX_REQUIRED_QUESTS = 6;
+export const MAX_OPTIONAL_QUESTS = 3;
+export const MAX_CELL_QUESTS = MAX_REQUIRED_QUESTS + MAX_OPTIONAL_QUESTS;
+/** The fewest required quests a cell holds. */
+export const MIN_REQUIRED_QUESTS = 3;
+
 export const LessonCellObjectSchema = z
   .object({
     id: z.string().regex(LESSON_CELL_ID_RE),
@@ -310,7 +317,14 @@ export const LessonCellObjectSchema = z
     // (a wrong tag is worse than none; the shipped stage2-life precedent, S3-2).
     pillarTags: z.array(PillarTagSchema),
     rewardCardIds: z.array(CardIdSchema).default([]),
-    quests: z.array(LessonQuestSchema).min(3).max(6),
+    /** 3 to 6 required quests, then up to 3 optional ones (`optionalQuestIds`, below): 9 at most (AMENDMENTS-BATCHIM-COMPLETE §3.9). */
+    quests: z.array(LessonQuestSchema).min(3).max(MAX_CELL_QUESTS),
+    /**
+     * The quests that joined the cell after it shipped, the last ones of `quests` (a suffix, in order): played in place,
+     * never needed for the cell or its stage to be done (`requiredQuestIds`, as the Stage 1 additions of F-CURR-002 §4.2).
+     * Volume 1 only; absent = none.
+     */
+    optionalQuestIds: z.array(z.string()).min(1).optional(),
     culture: z.array(LessonNoteSchema).max(12),
     review: LessonReviewSchema,
     contentVer: z.number().int().min(1),
@@ -333,6 +347,23 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
   if (cell.order !== themeOrder(theme)) issue(['order'], `a cell in ${theme} has order ${themeOrder(theme)}`);
   if (cell.status === 'ready' && !isLessonSignedOff(cell.review)) {
     issue(['review'], 'lesson-review-unsigned: a ready cell needs both multi-agent review sign-offs, reviewedBy and reviewedAt');
+  }
+  const optional = cell.optionalQuestIds ?? [];
+  if (optional.length > 0) {
+    const ids = cell.quests.map((q) => q.id);
+    const suffix = ids.slice(ids.length - optional.length);
+    if (cell.volume !== undefined) issue(['optionalQuestIds'], 'a Volume 2 file has no optional quests');
+    else if (optional.some((id) => !ids.includes(id))) issue(['optionalQuestIds'], 'optionalQuestIds names a quest that is not one of the cell\'s quests');
+    else if (optional.length >= ids.length) issue(['optionalQuestIds'], 'a cell needs at least one quest that is not optional');
+    else if (optional.some((id, i) => id !== suffix[i])) issue(['optionalQuestIds'], 'optionalQuestIds are the last quests of the cell, in order');
+    else if (optional.length > MAX_OPTIONAL_QUESTS) issue(['optionalQuestIds'], `a cell holds at most ${MAX_OPTIONAL_QUESTS} optional quests`);
+  }
+  const required = cell.quests.length - optional.length;
+  if (cell.quests.length > MAX_REQUIRED_QUESTS && required > MAX_REQUIRED_QUESTS) {
+    issue(['quests'], `a cell holds ${MAX_REQUIRED_QUESTS} required quests at most: the quests past the ${MAX_REQUIRED_QUESTS}th must all be optional`);
+  }
+  if (optional.length > 0 && required < MIN_REQUIRED_QUESTS) {
+    issue(['quests'], `a cell holds at least ${MIN_REQUIRED_QUESTS} required quests`);
   }
   const noteIds = cell.culture.map((c) => c.id);
   if (new Set(noteIds).size !== noteIds.length) issue(['culture'], 'note ids must be unique');

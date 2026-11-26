@@ -343,9 +343,12 @@ const buildsOf = (skills: readonly Skill[], m: Messages['learner']['myRoute']) =
 
 const questPips = (row: StageRow): Pip[] => [...row.pips.filter((p) => p.kind === 'quest'), ...row.newPips];
 
-/** The narrow bar: done quests out of the stage's quests; a latched stage keeps its full bar (the earned group stays full). */
+/**
+ * The narrow bar: done quests out of the stage's required quests (an optional quest's pip shows and fills when played,
+ * but never holds the bar back); a latched stage keeps its full bar (the earned group stays full).
+ */
 export function stageFill(row: StageRow): { value: number; max: number } | null {
-  const quests = questPips(row);
+  const quests = questPips(row).filter((p) => p.optional !== true);
   if (quests.length === 0) return null;
   if (row.latched) return { value: 1, max: 1 };
   return { value: quests.filter((p) => p.state === 'done').length, max: quests.length };

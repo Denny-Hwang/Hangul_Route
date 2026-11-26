@@ -28,11 +28,22 @@ export type GeneratedQuestRow = readonly [title: string, minutes: number, teache
 /**
  * A generated upper-stage cell, compact: its quests in order (none for a "Coming soon" cell). A row of a cell's
  * Volume 2 (`<theme>.v2.json`, F-CURR-002 row CM-40) ends with its volume, 2; a Volume 1 row has none, so the rows
- * of a catalogue with no Volume 2 are what they were.
+ * of a catalogue with no Volume 2 are what they were. A cell with optional quests (AMENDMENTS-BATCHIM-COMPLETE BC-2a)
+ * adds a last slot after the volume (1 for Volume 1): how many of its trailing quests are optional.
  */
 export type GeneratedCellRow =
   | readonly [stage: StageKey, theme: ThemeKey, title: string, status: CatalogCell['status'], minutes: number, quests: readonly GeneratedQuestRow[]]
-  | readonly [stage: StageKey, theme: ThemeKey, title: string, status: CatalogCell['status'], minutes: number, quests: readonly GeneratedQuestRow[], volume: number];
+  | readonly [stage: StageKey, theme: ThemeKey, title: string, status: CatalogCell['status'], minutes: number, quests: readonly GeneratedQuestRow[], volume: number]
+  | readonly [
+      stage: StageKey,
+      theme: ThemeKey,
+      title: string,
+      status: CatalogCell['status'],
+      minutes: number,
+      quests: readonly GeneratedQuestRow[],
+      volume: number,
+      optionalCount: number,
+    ];
 
 /**
  * A later volume of a cell (row CM-40): its episode (`<cellId>-v2`) and its quests in order. It joins its cell's
@@ -57,10 +68,11 @@ export function expandCellRows(rows: readonly GeneratedCellRow[]): { cells: Cata
   for (const row of rows) {
     const [stage, theme, title, status, minutes, rowQuests] = row;
     const volume = row[6] ?? 1;
+    const optionalCount = row[7] ?? 0;
     const cellId = `episode:${stage}-${theme}`;
     const episodeId = volumeEpisodeId(cellId, volume);
     const questIds = rowQuests.map((_, i) => `quest:${episodeId.slice('episode:'.length)}-q${i + 1}`);
-    if (volume === 1) cells.push({ stage, theme, episodeId, title, status, minutes, questIds });
+    if (volume === 1) cells.push({ stage, theme, episodeId, title, status, minutes, questIds, ...(optionalCount > 0 ? { optionalQuestIds: questIds.slice(-optionalCount) } : {}) });
     else volumes.push({ cellId, episodeId, volume, title, minutes, questIds });
     rowQuests.forEach(([questTitle, questMinutes, teaches], i) => {
       quests.push({ id: questIds[i] as string, episodeId, stage, theme, title: questTitle, minutes: questMinutes, teaches: [...teaches], kind: 'lesson' });

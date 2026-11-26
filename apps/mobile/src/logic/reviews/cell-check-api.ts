@@ -2,6 +2,7 @@ import type { ProgressSnapshot, ReviewEntry, UiLocale } from '@hangul-route/cont
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MemoryFile } from '../memory/memory-file';
 import { stampOf, type MemoryAnswer } from '../memory/memory-runtime';
+import { latchQuests } from '../quest-progress';
 import { localDay, vocabOf } from '../vocab/progress';
 import {
   cellCheckCompleteEvent,
@@ -135,6 +136,8 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
       const states = engineStates(file.rows, snap ? vocabOf(snap) : undefined);
+      // The completed quests: an item only an optional quest teaches is asked once the learner played one of them.
+      const doneQuestIds = new Set(snap === undefined ? [] : Object.keys(latchQuests(snap).questDoneAt ?? {}));
       const ctx: EngineContext = {
         // Row CM-33: a pair round only when this learner met the letter's look-alike too.
         index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }, states),
@@ -143,6 +146,7 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
         voice: deps.voice(),
         seed: `${profileId}|${today}`,
         visibility: deps.visibility(profileId),
+        doneQuestIds,
       };
       return { kind: 'ready', world: { profileId, ctx } };
     } catch {
@@ -182,21 +186,21 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       if (read.kind !== 'ready') return NO_OFFERS;
       const { ctx } = read.world;
       // The English plan says whether 5 rounds can play (a missing meaning in es or ko only changes which ones).
-      const check = cellCheckItemIds(ctx.index, cellId).length > 0 && planCellCheck(ctx, cellId, 'check', { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
-      return { check, testOut: check && testOutFits(ctx.index, cellId) };
+      const check = cellCheckItemIds(ctx.index, cellId, ctx.doneQuestIds).length > 0 && planCellCheck(ctx, cellId, 'check', { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
+      return { check, testOut: check && testOutFits(ctx.index, cellId, ctx.doneQuestIds) };
     },
 
     async jumpOfferable(profileId, stage, cells) {
       const read = await readWorld(profileId);
       if (read.kind !== 'ready') return false;
       const { ctx } = read.world;
-      return stageJumpItemIds(ctx.index, cells).length > 0 && planStageJump(ctx, stage, cells, { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
+      return stageJumpItemIds(ctx.index, cells, ctx.doneQuestIds).length > 0 && planStageJump(ctx, stage, cells, { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
     },
 
     async startSession(world, cellId, mode, locale, cells = []) {
       const { ctx, profileId } = world;
       if (!deps.on(profileId)) return null;
-      if (mode === 'testout' && !(testOutFits(ctx.index, cellId) && testOutAllowed(deps.testOutCell(profileId, cellId)))) return null;
+      if (mode === 'testout' && !(testOutFits(ctx.index, cellId, ctx.doneQuestIds) && testOutAllowed(deps.testOutCell(profileId, cellId)))) return null;
       if (mode === 'jump' && !jumpAllowed(profileId, cellId, cells)) return null;
       const seed = `${ctx.seed ?? ''}|${cellId}`;
       const planOf = (gloss: ReturnType<typeof glossFrom>, out?: ReadonlySet<string>): PlannedCheck | null =>
@@ -207,7 +211,7 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
         // English. A Check asks one cell's items, so their chunks load first and an item none of whose chunks loads
         // (offline, not cached) is left out; then the chunks of the options beside each answer, and the plan is built again.
         const tried = new Map<string, boolean>();
-        const ids = mode === 'jump' ? stageJumpItemIds(ctx.index, cells) : cellCheckItemIds(ctx.index, cellId);
+        const ids = mode === 'jump' ? stageJumpItemIds(ctx.index, cells, ctx.doneQuestIds) : cellCheckItemIds(ctx.index, cellId, ctx.doneQuestIds);
         await loadCells(ids, ctx, tried);
         const out = new Set(unloadable(ids, ctx, tried));
         const gloss = (): ReturnType<typeof glossFrom> => glossFrom(deps.overlays(locale));

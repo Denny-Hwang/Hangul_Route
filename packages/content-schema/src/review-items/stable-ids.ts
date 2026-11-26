@@ -529,6 +529,13 @@ function mergeGroup(id: string, identity: Identity, all: readonly ItemOccurrence
     soundChange: all.some((o) => o.soundChange === true) || (identity.kind !== 'sym' && identity.kind !== 'rea' && hasSoundChange(lead.ko)),
     homophoneOf: [],
   };
+  // A cell every occurrence of which sits in an optional quest teaches the item only through optional quests (§3.9 item 5).
+  const optionalIn: Record<string, string[]> = {};
+  for (const cell of cells) {
+    const here = all.filter((o) => o.cell === cell);
+    if (here.length > 0 && here.every((o) => o.optionalQuest !== undefined)) optionalIn[cell] = [...new Set(here.map((o) => o.optionalQuest as string))];
+  }
+  if (Object.keys(optionalIn).length > 0) item.optionalIn = optionalIn;
   const en = word?.en ?? glossed?.en;
   if (en !== undefined) item.en = en;
   const sameEnglish = (o: { en?: string; glossKey?: string }): boolean => o.glossKey !== undefined && o.en === glossed?.en;

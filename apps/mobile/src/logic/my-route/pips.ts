@@ -51,6 +51,11 @@ export interface PipContext {
   cursorId: string | null;
   /** The start marker's quest (R-7a); absent or null when there is none. */
   startId?: string | null;
+  /**
+   * The quests the cells list as optional (`optionalQuestIds`): drawn as pips, never counted against a cell being
+   * complete (AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 4). Absent means every quest is required.
+   */
+  optionalQuestIds?: ReadonlySet<string>;
   /** F-ENT-003's quest access (Learning Route amendment section 4.5); absent means every quest is open. */
   isQuestOpen?: (questId: string) => boolean;
 }
@@ -72,6 +77,7 @@ function questPip(entry: RouteEntry, ctx: PipContext): Pip {
     state,
     isCursor: entry.questId === ctx.cursorId,
     isStart: ctx.startId != null && entry.questId === ctx.startId,
+    ...(ctx.optionalQuestIds?.has(entry.questId) === true ? { optional: true as const } : {}),
     // A quest the access check closed reads "Not open yet", never "Coming later" (section 4.5).
     // A quest that is `later` for another reason (a stage the learner is not entitled to under
     // the `tier` cursor rule) carries no reason, as before this amendment.
@@ -89,15 +95,22 @@ const cellPip = (key: string, episodeId: string | undefined): Pip => ({
   laterReason: 'soon',
 });
 
+/**
+ * The cell word, counted over the cell's required quests: an optional quest's pip shows and fills when played, but a
+ * cell whose required quests are done is `complete` whether or not it was (F-CURR-002 section 4.2, the Stage 1 addition
+ * `quest:stage1-crafts-q4`; AMENDMENTS-BATCHIM-COMPLETE section 3.9 item 4). An optional quest played alone still
+ * makes the cell `partial`.
+ */
 function cellStateOf(pips: readonly Pip[]): CellState {
-  const quests = pips.filter((p) => p.kind === 'quest');
+  const all = pips.filter((p) => p.kind === 'quest');
+  const quests = all.filter((p) => p.optional !== true);
   if (quests.length === 0) return 'later';
   const count = (state: PipState) => quests.filter((p) => p.state === state).length;
   const done = count('done');
   const known = count('known');
   if (done === quests.length) return 'complete';
   if (known > 0 && done + known === quests.length) return 'known';
-  if (done > 0) return 'partial';
+  if (all.some((p) => p.state === 'done')) return 'partial';
   if (count('later') === quests.length) return 'later';
   return 'open';
 }

@@ -137,6 +137,39 @@ describe('allowedFormats (§4.3 rungs by kind, §4.5)', () => {
   });
 });
 
+describe('buildReviewItems: items an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a)', () => {
+  const build = (list: ItemOccurrence[]) => buildReviewItems(list, EMPTY_SNAPSHOT, vocab).items;
+  const optional = (o: Partial<ItemOccurrence> & Pick<ItemOccurrence, 'kind' | 'ko'>, quest: string) => occ({ ...o, optionalQuest: quest });
+
+  it('names the cells an item is taught in by optional quests alone, with those quests', () => {
+    const items = build([
+      occ({ kind: 'lex', ko: '사과', romanization: 'sagwa', en: 'apple', source: 'discover' }),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken', source: 'discover' }, 'quest:stage2-life-q8'),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }, 'quest:stage2-life-q8'),
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }, 'quest:stage2-life-q9'),
+    ]);
+    expect(items.find((i) => i.ko === '사과')?.optionalIn).toBeUndefined();
+    expect(items.find((i) => i.ko === '닭')?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q8', 'quest:stage2-life-q9'] });
+  });
+
+  it('a required quest of the same cell that teaches the item too leaves it a plain item of the cell', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken', source: 'discover' }, 'quest:stage2-life-q8'),
+      occ({ kind: 'lex', ko: '닭', romanization: 'dak', en: 'chicken' }),
+    ]);
+    expect(items[0]?.optionalIn).toBeUndefined();
+  });
+
+  it('keeps the other cells of an item taught elsewhere: only the cell whose occurrences are all optional is listed', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '좋아요', romanization: 'joayo', en: 'good', source: 'discover' }, 'quest:stage2-life-q9'),
+      occ({ kind: 'lex', ko: '좋아요', romanization: 'joayo', en: 'good', source: 'discover', cell: 'episode:stage3-life', stage: 3 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage2-life', 'episode:stage3-life']);
+    expect(items[0]?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q9'] });
+  });
+});
+
 describe('buildReviewItems: merge and frozen ids', () => {
   const occs: ItemOccurrence[] = [
     occ({ kind: 'lex', ko: '사과', romanization: 'sagwa', en: 'apple', loose: true, cell: 'episode:stage3-life', stage: 3 }),

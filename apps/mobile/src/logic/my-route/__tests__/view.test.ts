@@ -25,6 +25,7 @@ import {
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 import { seed } from './fixtures/route';
 
+type StageRowOf<M extends MyRouteModel> = M['stages'][number];
 const EN = getMessages('en');
 const THEME_TITLES: Record<ThemeKey, string> = { letters: 'Letters', life: 'Life', rites: 'Rites', nature: 'Nature', crafts: 'Crafts' };
 const APPENDIX_C = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1'];
@@ -334,6 +335,19 @@ describe('the pieces', () => {
     const s3 = m.stages.find((s) => s.stage === 'stage3');
     expect(s3 && stageGroups(s3).map((g) => g.map((p) => p.state))).toEqual([['later', 'later', 'later', 'later', 'later']]);
     expect(s3 && stageFill(s3)).toBeNull();
+  });
+
+  it('stageFill counts the required quests: an unplayed optional quest never holds the bar back, a played one is no extra step', () => {
+    const optionalLife: Bundle = {
+      ...BUNDLE_8,
+      episodes: BUNDLE_8.episodes.map((e) => (e.id === 'episode:stage1-life' ? { ...e, optionalQuestIds: ['quest:stage1-life-q2'] } : e)),
+    };
+    const required = STAGE1_8.filter((id) => id !== 'quest:stage1-life-q2');
+    const stage1 = (m: MyRouteModel) => m.stages.find((s) => s.stage === 'stage1') as StageRowOf<MyRouteModel>;
+    expect(stageFill(stage1(model(required, {}, optionalLife, {})))).toEqual({ value: 7, max: 7 });
+    expect(stageFill(stage1(model(STAGE1_8, {}, optionalLife)))).toEqual({ value: 7, max: 7 });
+    expect(stageFill(stage1(model(required.slice(0, 3), {}, optionalLife)))).toEqual({ value: 3, max: 7 });
+    expect(stageFill(stage1(model(required, {}, BUNDLE_8)))).toEqual({ value: 7, max: 8 });
   });
 
   it('withConnectors: solid into every row whose first stage is reached', () => {
