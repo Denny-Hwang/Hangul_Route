@@ -72,3 +72,33 @@ describe('content/episodes/stage-1/jamo.json agrees with src/content/jamo.ts (M9
     });
   });
 });
+
+/**
+ * Four hints the CF-2 review found weak (AMENDMENTS-STAGE1-CONTENT-FIXES CF-4). The es hints for the two
+ * "yo" vowels said the same thing; the ko hint for ㄹ had no "between r and l" anchor and a clumsy verb; the
+ * ko hint for ㅅ defined s by s. The values are pinned, and so is what the review asked of them.
+ */
+describe('the CF-4 sound hints (es yeo / yo, ko rieul / siot)', () => {
+  const read = (locale: string) => JSON.parse(readFileSync(join(repoRoot, `content/i18n/${locale}/stage1-jamo.json`), 'utf8')) as OverlayFile;
+  const es = read('es').entries;
+  const ko = read('ko').entries;
+
+  it('es: ㅕ sits between «yo» and «ya» with an open mouth; ㅛ is «yo» with round lips; the two differ', () => {
+    expect(es['jamo:yeo']?.soundHint).toBe('entre «yo» y «ya», con la boca bien abierta');
+    expect(es['jamo:yeo']?.gloss).toBe(es['jamo:yeo']?.soundHint);
+    expect(es['jamo:yo']?.soundHint).toBe('como «yo» en «yogur», con los labios redondos');
+    expect(es['jamo:yo']?.gloss).toBe(es['jamo:yo']?.soundHint);
+    expect(es['jamo:yeo']?.soundHint).not.toBe(es['jamo:yo']?.soundHint);
+  });
+
+  it('ko: ㄹ is anchored between r and l, taps once and no longer says "튕겨요"', () => {
+    expect(ko['jamo:rieul']?.soundHint).toBe('‘라면’의 첫소리. r과 l 사이 소리예요. 혀끝이 윗잇몸에 한 번 살짝 닿았다 떨어져요.');
+    expect(ko['jamo:rieul']?.gloss).toBe(ko['jamo:rieul']?.soundHint);
+    expect(ko['jamo:rieul']?.soundHint).not.toContain('튕');
+  });
+
+  it('ko: ㅅ says where the air passes instead of defining s by s', () => {
+    expect(ko['jamo:siot']?.soundHint).toBe('‘산’의 첫소리. 혀끝과 윗잇몸 사이로 바람을 가볍게 내보내는 s 소리예요.');
+    expect(ko['jamo:siot']?.gloss).toBe(ko['jamo:siot']?.soundHint);
+  });
+});
