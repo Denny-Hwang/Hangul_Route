@@ -1,0 +1,273 @@
+/*
+ * TC-0b: static design mock of the "Trace the new letters" page of a Stage 1 Discover step (not shipped code).
+ * Spec: docs/specs/AMENDMENTS-STAGE1-TRACE-COVERAGE.md (sections 3.3, 3.4). Wireframe: design/wireframes/quest/discover.md,
+ * section "[TC] Trace the new letters". Note: ../trace-new-letters.md.
+ *
+ * Every value below is a token of packages/design-system/src/tokens.ts, copied once as a custom property named after it
+ * (the values of design/screens/minigame-writing/mock/writing.css, checked against tokens.ts on this commit):
+ * --spacing-xl is spacing.xl, --colors-brand-primary is colors.brand.primary. The few numbers that are not tokens are in
+ * the second block, each with the code constant it comes from (../trace-new-letters.md, "Constants").
+ *
+ * Type follows the app's text size engine (packages/design-system/src/text-size.ts): reading sizes (caption .. prompt)
+ * are rem, so they grow with the root (the html class sets f); large type (title) grows half as much through
+ * --head-ratio. Heights of buttons, gaps and the canvas are px (dp), so they do not grow with the text, as in the app.
+ * Each device frame is a size container; container queries stand in for the app's onLayout measurements.
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-brand-primaryDark: #8D3A11;
+  --colors-brand-primaryLight: #FAD9C6;
+  --colors-brand-secondary: #2672A6;
+  --colors-brand-secondaryDark: #1D5881;
+  --colors-brand-secondaryLight: #CDE5F4;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-surface-paper: #FFFFFF;
+  --colors-surface-sunken: #F2EBDE;
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-muted: #6F614D;
+  --colors-text-onPrimary: #FFFFFF;
+  --colors-text-onSecondary: #FFFFFF;
+  --colors-feedback-success: #397952;
+  --colors-feedback-successDark: #2C5E3F;
+  --colors-feedback-successLight: #D6EFDF;
+  --colors-feedback-nudge: #F2B33D;
+  --colors-feedback-nudgeLight: #FCEED1;
+  --colors-border-subtle: #E8DFCD;
+  --colors-border-strong: #C5B8A1;
+  --colors-border-focus: #3A7FB5;
+  --colors-border-shape: #857360;
+  --colors-hoya-fur: #F2B33D;
+  --colors-hoya-furDark: #B5862A;
+  --colors-hoya-stripes: #2A1F14;
+  --colors-hoya-belly: #FCF8F1;
+  --colors-hoya-nose: #2A1F14;
+  --colors-hoya-cheek: #F8B4B4;
+  --spacing-none: 0px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 48px;
+  --radii-sm: 8px;
+  --radii-md: 12px;
+  --radii-lg: 16px;
+  --radii-xxl: 32px;
+  --radii-pill: 999px;
+  --radii-circle: 9999px;
+  --size-caption: 0.875rem; /* 14 */
+  --size-bodySm: 1rem; /* 16 */
+  --size-body: 1.125rem; /* 18 */
+  --size-bodyLg: 1.25rem; /* 20 */
+  --size-prompt: 1.375rem; /* 22 */
+  --size-title: 1.75rem; /* 28 */
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.35;
+  --family-mono: Menlo, Courier, monospace;
+  --touch-min: 64px;
+  --touch-child: 80px;
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --max-width-reading: 720px;
+  --gutter-compact: 16px;
+  --gutter-regular: 24px;
+  --gutter-wide: 32px;
+  --motion-crawl: 600ms;
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+:root {
+  /* Constants (../trace-new-letters.md, "Constants") */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') on the web build */
+  --trace-canvas-min: 160px;    /* TRACE_CANVAS_MIN, logic/trace-layout.ts */
+  --trace-canvas-max: 320px;    /* TRACE_CANVAS_MAX (phones and short windows) */
+  --ghost-opacity: 0.12;        /* the trace ghost's strokeOpacity in TraceStrokeGame.tsx */
+  --ghost-stroke: 18;           /* the trace ghost's strokeWidth (viewBox 200) */
+  --ink-stroke: 8;              /* the learner's strokeWidth (viewBox 200) */
+  --hint-stroke: 14;            /* StrokeHint's stroke width (viewBox 200) */
+  --hint-opacity: 0.6;          /* StrokeHint's untaught group opacity (SO-0c) */
+  --hoya-strip: 40px;           /* the Hoya figure in TraceFeedback (TraceStrokeGame.tsx, roomy only) */
+  --dot: var(--spacing-md);
+  --disabled-opacity: 0.6;      /* Button.tsx: a disabled or soft-disabled button's opacity */     /* Progress dots: height 12 (Progress.tsx default) = spacing.md */
+  /* The app's text size step (text-size.ts): f for reading sizes, 1 + (f - 1) / 2 for large type. */
+  --f: 1;
+  --head-ratio: 1;
+}
+html.ts-largest { --f: 1.5; --head-ratio: calc((1 + (1.5 - 1) / 2) / 1.5); font-size: 150%; }
+html.ts-200 { --f: 2; --head-ratio: calc((1 + (2 - 1) / 2) / 2); font-size: 200%; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Base and the design board (annotations are board notes, not UI)                             */
+/* ------------------------------------------------------------------------------------------ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-stack); color: var(--colors-text-primary); background: var(--colors-surface-sunken); line-height: var(--leading-normal); }
+.board { padding: var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-xl); }
+.board-title { font-family: var(--family-mono); font-size: calc(var(--size-bodySm) / var(--f)); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.board-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spacing-xxl); }
+.board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-label, .note { font-family: var(--family-mono); font-size: calc(var(--size-caption) / var(--f)); color: var(--colors-text-secondary); max-width: 352px; line-height: var(--leading-normal); }
+.note { border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-sm); }
+.visually-hidden { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* A device: the window the app gets. Board devices have a fixed size. */
+.device { container-type: size; container-name: device; position: relative; overflow: hidden; background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); flex: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Screen (QuestPlayerView's Screen, scrollable={false} on Discover): gutter on every side,     */
+/* the reading cap; the ScreenHeader, the step dots row, the step title slot.                   */
+/* ------------------------------------------------------------------------------------------ */
+.scr { height: 100%; display: flex; flex-direction: column; padding: var(--gutter-compact); }
+.scr > * { width: 100%; max-width: var(--max-width-reading); margin-left: auto; margin-right: auto; }
+@container device (min-width: 600px) { .scr { padding: var(--gutter-regular); } }
+@container device (min-width: 900px) { .scr { padding: var(--gutter-wide); } }
+
+.hdr { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); margin-bottom: var(--spacing-xs); flex: none; }
+@container device (min-width: 600px) { .hdr { margin-bottom: var(--spacing-none); } }
+.hdr-close { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-xs); margin-left: calc(-1 * var(--spacing-xs)); border-radius: var(--radii-pill); font-size: var(--size-body); font-weight: var(--weight-semibold); color: var(--colors-text-primary); background: transparent; border: var(--border-width-base) solid transparent; }
+.hdr-fill { flex: 1; min-width: 0; }
+.hdr-aa { flex: none; width: var(--touch-min); height: var(--touch-min); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); display: inline-flex; align-items: center; justify-content: center; font-size: calc(var(--size-prompt) / var(--f)); font-weight: var(--weight-bold); color: var(--colors-text-primary); }
+.icon { display: block; flex: none; }
+
+.stepbar { display: flex; align-items: center; gap: var(--spacing-md); flex: none; }
+.dots { flex: 1; display: flex; align-items: center; gap: var(--spacing-sm); }
+.dots > i { display: block; width: var(--dot); height: var(--dot); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); flex: none; }
+.dots > i.on { background: var(--colors-brand-primary); }
+.pill { display: inline-flex; align-items: center; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); color: var(--colors-text-secondary); font-size: var(--size-caption); line-height: var(--leading-normal); flex: none; }
+.gap-lg { height: var(--spacing-lg); flex: none; }
+.step-title { font-size: calc(var(--size-title) * var(--head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); flex: none; }
+
+
+/* ------------------------------------------------------------------------------------------ */
+/* DiscoverStep on the trace page: a fixed column (no ScrollView) above the pinned row.         */
+/* ------------------------------------------------------------------------------------------ */
+.ds { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.tp { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-md); }
+.band { display: flex; flex-direction: column; gap: var(--spacing-sm); flex: none; }
+.pagerow { display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; }
+.pagerow .lbl { font-size: var(--size-caption); color: var(--colors-text-secondary); line-height: var(--leading-normal); }
+.pagerow .dots { flex: none; }
+/* The letter row: decorative, not buttons; one summary for screen readers (the visually hidden line). */
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); }
+.chip { position: relative; min-width: var(--spacing-xxl); min-height: var(--spacing-xxl); padding: 0 var(--spacing-xs); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radii-sm); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); line-height: var(--leading-tight); color: var(--colors-text-primary); }
+/* The letter shown now: a ring (thick, brand): the border's width tells it, not only its colour. */
+.chip.now { border: var(--border-width-thick) solid var(--colors-brand-primary); }
+/* Traced to the end on this visit: filled, with a check mark in the corner. It only fills (never taken back). */
+.chip.done { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.chip.done.now { border-color: var(--colors-brand-primary); }
+.chip .mark { position: absolute; right: calc(-1 * var(--spacing-xs)); top: calc(-1 * var(--spacing-xs)); width: var(--spacing-lg); height: var(--spacing-lg); border-radius: var(--radii-circle); background: var(--colors-feedback-successDark); display: flex; align-items: center; justify-content: center; }
+.chip .mark svg { width: var(--spacing-md); height: var(--spacing-md); }
+.headrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); }
+.heading { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); display: grid; }
+.heading > * { grid-area: 1 / 1; }
+.heading .sizer, .final-line.sizer { visibility: hidden; }
+.final-line { flex-basis: 100%; font-size: var(--size-body); color: var(--colors-text-secondary); line-height: var(--leading-normal); }
+
+/* The work area: the canvas slot (flex 1) and, from the compact arrangement, Show me and Clear beside it. */
+.work { flex: 1 1 auto; min-height: 0; display: flex; gap: var(--spacing-md); }
+.helpers { display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-sm); flex: none; }
+/* The canvas is the largest square that fits its slot, never below TRACE_CANVAS_MIN, never above the cap (traceCanvasSize).
+   The slot is a size container so the square can read both sides. */
+.slot { flex: 1 1 auto; min-height: 0; min-width: 0; container-type: size; container-name: slot; display: flex; align-items: center; justify-content: center; }
+.canvas { --side: clamp(var(--trace-canvas-min), min(100cqw, 100cqh), var(--cap, var(--trace-canvas-max))); width: var(--side); height: var(--side); flex: none; position: relative; border-radius: var(--radii-xxl); border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-brand-primaryLight); overflow: hidden; }
+.canvas svg { width: 100%; height: 100%; display: block; }
+.canvas.pass { border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.canvas .ghost { fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.canvas .ink { fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.canvas .reveal { opacity: var(--hint-opacity); }
+.canvas .reveal path { fill: none; stroke: var(--colors-feedback-nudge); stroke-width: var(--hint-stroke); stroke-linecap: round; stroke-linejoin: round; }
+@container device (min-width: 600px) { .canvas { --cap: calc(var(--trace-canvas-max) * 1.2); } } /* traceCanvasMax: 320 x layout.mediaScale.regular */
+@container device (min-width: 900px) { .canvas { --cap: calc(var(--trace-canvas-max) * 1.4); } } /* 320 x layout.mediaScale.wide */
+@container device (max-height: 479px) { .canvas { --cap: var(--trace-canvas-max); } } /* layout.shortHeight: mediaScale 1 */
+
+/* Hoya's strip. It keeps the height of the tallest line it can show (invisible copies of the other lines sit under the
+   shown one), and at least touchTarget.min (the status row that takes its place when a play cannot sound), so the canvas
+   never moves when the line changes. */
+.strip { flex: none; display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-normal); min-height: calc(var(--touch-min) + 2 * var(--border-width-base)); }
+.strip.cheering { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.strip .hoya { display: none; flex: none; }
+.strip .lines { flex: 1; min-width: 0; display: grid; }
+.strip .lines > * { grid-area: 1 / 1; align-self: center; }
+.strip .lines .sizer { visibility: hidden; }
+/* The status row (PromptPanel compact) in the strip's place: the panel's own look, the strip's box. */
+.strip.status { background: var(--colors-surface-paper); border-color: var(--colors-border-subtle); padding-top: var(--spacing-none); padding-bottom: var(--spacing-none); }
+.strip.status .detail { font-size: var(--size-caption); font-weight: var(--weight-regular); color: var(--colors-text-muted); }
+.strip.status .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+
+/* TraceControls (scrolls always on): one wrapping row of buttons. */
+.controls { flex: 0 1 auto; min-height: 0; overflow-y: auto; margin: calc(-1 * (var(--border-width-thick) + var(--spacing-xxs))); padding: calc(var(--border-width-thick) + var(--spacing-xxs)); }
+.ctrlrow { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-sm); }
+
+/* Buttons as the design-system Button draws them: heights are touch targets (px), labels follow the text size. */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-base) solid transparent; font-size: var(--size-body); font-weight: var(--weight-semibold); line-height: var(--leading-normal); text-align: center; background: transparent; color: var(--colors-text-primary); font-family: inherit; }
+.btn-sm { font-size: var(--size-bodySm); padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.btn-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.btn-primary { background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
+.btn-secondary { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.btn-ghost { border-color: var(--colors-brand-primary); color: var(--colors-brand-primary); background: transparent; }
+/* Button's disabled look: its own tone at opacity 0.6 (Button.tsx), still focusable on the web (aria-disabled). */
+.btn[aria-disabled="true"] { opacity: var(--disabled-opacity); }
+.btn.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* The pinned row (StepActions with Previous): Previous one share, Continue two; wraps upward when they cannot share. */
+.pinned { flex: none; padding-top: var(--spacing-md); }
+.actions { display: flex; flex-wrap: wrap-reverse; gap: var(--spacing-sm); }
+.actions .prev { flex: 1 1 auto; max-width: 100%; }
+.actions .main { flex: 2 1 auto; max-width: 100%; }
+.pinned-gap { height: var(--spacing-lg); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Arrangements (../trace-new-letters.md, "Arrangements"). The app takes the first one whose     */
+/* canvas slot is at least TRACE_CANVAS_MIN, from its measured box (as traceLayoutMode does);     */
+/* the board sets them by class so each can be measured (../tools/measure.mjs).                   */
+/* ------------------------------------------------------------------------------------------ */
+/* full: spec section 3.4 rules 1-4. The chips have their own row; Hoya's figure shows in the strip on a tall window. */
+.a-full.roomy .strip .hoya { display: block; }
+.a-full:not(.a-spec-a) .headrow .chips { display: none; }
+.a-compact .band > .chips, .a-short .band > .chips { display: none; }
+/* beside / compact: Hear it and Show me beside the canvas; the chips at the end of the heading's line when they fit (fallback a),
+   else on the line under it; compact also draws no step title. */
+.a-full .helpers, .a-side .helpers, .a-side-short .helpers { display: none; }
+/* short: the step dots ride in the header; no page row (its label stays for screen readers); the page's gaps step down to spacing.sm. short-b also drops the chips (fallback b). */
+.a-short .tp, .a-short .work { gap: var(--spacing-sm); }
+.a-short .gap-lg, .a-side-short .gap-lg { height: var(--spacing-sm); }
+/* short (and side-short): Previous and Continue step down to md (touchTarget.min) with no spacer under them. Tied to the
+   arrangement, not to a window height (StepActions gets a size for it in TC-1b; see the note, OQ-1). */
+.a-short .pinned .btn-lg, .a-side-short .pinned .btn-lg { min-height: var(--touch-min); font-size: var(--size-body); }
+.a-short .pinned-gap { display: none; }
+.a-short .pinned { padding-top: var(--spacing-sm); }
+
+/* side (landscape, layout sideBySide): canvas left, band, strip and controls right (rule 5); the pinned row stays under
+   them. side-short (a short landscape window) also takes the pinned row into the right column, as Trace Stroke's side
+   layout keeps Done and Skip in its column. --side-min is traceSidePanelWidth(content width), set per frame. */
+.sidebox { flex: 1 1 auto; min-height: 0; display: flex; gap: var(--spacing-lg); }
+.sidebox .tp { order: -1; }
+.sidebox .tp { flex: 0 1 auto; height: 100%; aspect-ratio: 1 / 1; max-width: calc(100% - var(--side-min) - var(--spacing-lg)); min-width: 0; }
+.side-col { flex: 1 1 auto; min-width: var(--side-min); display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-sm); min-height: 0; }
+.a-side-short .side-col { justify-content: flex-end; flex: none; width: max-content; min-width: var(--side-min); max-width: 70%; }
+/* side-short: the column is as wide as its one row of controls; the canvas takes the rest, up to the column's height. */
+.a-side-short .sidebox .tp { order: -1; }
+.sidebox .tp { flex: 1 1 auto; aspect-ratio: auto; max-width: none; }
+.a-side-short .ctrlrow { flex-wrap: nowrap; }
+.a-side-short .pinned { padding-top: var(--spacing-xs); }
+.a-side-short .pinned-gap { display: none; }
+.a-side .band > .chips, .a-side-short .band > .chips { display: none; }
+.a-side-short .pagerow { display: none; }
+.a-side-short .final-line { flex-basis: auto; }
+.hdr-mid { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--spacing-md); }
+
+/* Reduced motion: nothing on the page moves (a chip fills at once; Show me is its still). */
+@media (prefers-reduced-motion: no-preference) {
+  .chip.done.just { animation: chip-fill var(--motion-crawl) var(--motion-easing-standard); }
+}
+@keyframes chip-fill { from { background-color: var(--colors-surface-paper); } to { background-color: var(--colors-feedback-successLight); } }
+.btn.slot-keep { visibility: hidden; }
+/* side: the canvas column is as wide as the box is tall, leaving the column at least --side-min (container units). */
+.a-side .sidebox { container-type: size; container-name: sidebox; }
+.a-side .sidebox .tp { flex: none; aspect-ratio: auto; max-width: none; width: min(100cqh, 100cqw - var(--side-min) - var(--spacing-lg)); }
+.a-side .side-col { flex: 1 1 0; }
