@@ -658,7 +658,7 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
         for (const f of ['', ...TAUGHT_FINALS]) {
           const syllable = composeSyllable({ initial: i, medial: MEDIALS.indexOf(v), final: f });
           if (syllable === null) continue;
-          const text = romanize(syllable).text;
+          const text = romanizeReviewed(syllable).text;
           const parts = chipParts(text) as { initial: string; medial: string; final: string } | null;
           expect(parts, `${syllable} ${text}`).not.toBeNull();
           expect(`${parts!.initial}${parts!.medial}${parts!.final}`).toBe(text);
@@ -678,7 +678,7 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
     expect(seen).toHaveLength(24);
     for (const t of seen) {
       for (const o of t.question.options) expect(chipParts(o.sound), `${t.id} ${o.sound}`).not.toBeNull();
-      expect(correctOf(t).sound, t.id).toBe(romanize(t.question.promptKo as string).text);
+      expect(correctOf(t).sound, t.id).toBe(romanizeReviewed(t.question.promptKo as string).text);
     }
   });
 
