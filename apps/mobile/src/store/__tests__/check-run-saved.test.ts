@@ -54,7 +54,7 @@ const SEED = 11;
 const check = buildHangulCheck({ seed: SEED });
 const ids = check.items.map((i) => i.id);
 const START = '2026-11-24T10:00:00.000Z';
-const context = { seed: SEED, hideRomanization: false, startedAt: START };
+const context = { seed: SEED, startedAt: START };
 const stored = (id: string): unknown => mem.get(CHECK_RUN_KEY(id)) ?? null;
 const stops: Array<() => void> = [];
 const keep = (profileId: string): void => void stops.push(keepReviewRunSaved(profileId, context));
@@ -94,7 +94,9 @@ describe('keepReviewRunSaved (OD-LR9 (b): stored after every answer)', () => {
 
     run.answer(ids[0]!, true);
     await settleSavedChecksForTests();
-    expect(stored('p1')).toEqual(savedHangulCheck({ ...context, items: ids, answers: { [ids[0]!]: { first: true, retries: 0 } } }));
+    expect(stored('p1')).toEqual(savedHangulCheck({ ...context, hideRomanization: true, items: ids, answers: { [ids[0]!]: { first: true, retries: 0 } } }));
+    // Every Check holds its romanization (DC-1a): the stored shape keeps the field as the constant true.
+    expect(stored('p1')).toMatchObject({ hideRomanization: true });
 
     run.answer(ids[1]!, false);
     run.answer(ids[1]!, true);
@@ -166,7 +168,7 @@ describe('clearSavedCheck', () => {
   });
 
   it('clears that learner only', async () => {
-    const run = savedHangulCheck({ ...context, items: ids, answers: { [ids[0]!]: { first: true, retries: 0 } } });
+    const run = savedHangulCheck({ ...context, hideRomanization: true, items: ids, answers: { [ids[0]!]: { first: true, retries: 0 } } });
     await saveCheck('p1', run);
     await saveCheck('p2', run);
     await clearSavedCheck('p1');

@@ -199,12 +199,12 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     expect(reader.announced).toEqual(['neo']);
   });
 
-  it('the Hangul Check with the switch off shows its options romanization, so the asked text is the surface\'s own: the Korean with its romanization', async () => {
-    const r = await game('review', { romanization: 'always' });
+  it.each<'always' | 'tap'>(['always', 'tap'])('the Hangul Check asks for the romanization only too, whatever the learner\'s mode (%s; DC-1a, section 3.2)', async (romanization) => {
+    const r = await game('review', { romanization });
     await showLetters(r);
-    expect(promptText(r)).toContain('너');
-    expect(promptText(r)).toContain('neo');
-    expect(reader.announced).toEqual([getMessages('en').a11y.koreanItem({ ko: '너', romanization: 'neo' })]);
+    expect(promptText(r)).toBe('neo');
+    expect(promptText(r)).not.toMatch(HANGUL);
+    expect(reader.announced).toEqual(['neo']);
   });
 
   it('a practice host is unchanged even when the learner hides the romanization', async () => {
@@ -213,11 +213,30 @@ describe('Listen & Pick in a Check (CH-1e, section 3.12, test 21)', () => {
     expect(promptText(r)).toContain('너');
   });
 
-  it('Sound off in a Check is not an ask: it keeps the surface\'s own text (AD13), and shows no link', async () => {
+  it.each<HostMode>(['check', 'review'])('Sound off in the %s host is not an ask, and its text is the romanization only, never the Hangul (DC-1a, section 3.2); no link', async (mode) => {
     useAudioStore.setState({ muted: true });
-    const r = await game('check');
-    expect(promptText(r)).toContain('너');
+    const r = await game(mode);
+    expect(promptText(r)).toBe('neo');
+    expect(promptText(r)).not.toMatch(HANGUL);
     expect(hasId(r.root, 'cant-hear')).toBe(false);
+    // A Sound-off answer is never marked hinted; once answered the Korean shows with its romanization.
+    await press(pressableById(r.root, 'listen-pick-option-neo'));
+    expect(answers).toEqual([[0, true]]);
+    expect(metas).toEqual([{ itemId: 'lp:syl:neo' }]);
+    expect(promptText(r)).toContain('너');
+  });
+
+  it('no Korean voice in a Check reads the same way: the romanization only', async () => {
+    rig.current = createAudioRig({ voices: [] });
+    const r = await game('check');
+    expect(promptText(r)).toBe('neo');
+  });
+
+  it('Sound off in a practice host keeps the surface\'s own text (AD13): the Korean with its romanization', async () => {
+    useAudioStore.setState({ muted: true });
+    const r = await game('quest');
+    expect(promptText(r)).toContain('너');
+    expect(promptText(r)).toContain('neo');
   });
 
   it('a right first answer after Show the letters counts as it does today and is identifiable as asked (CH-1f): one audio.fallback_shown asked, then the answer', async () => {

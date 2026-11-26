@@ -31,6 +31,8 @@ Binding: **D13** (Revised Romanization of the National Institute of Korean Langu
 
 > **[AU] Amended 2026-11-15 by `docs/specs/AMENDMENTS-AUDIT-2026-11.md` AU-8** (audit EDU-3): one display exception. The answer options of a quest Check show no romanization while the question is open and show it once the question is answered; the accessible label keeps it. The data rule is unchanged: every taught Korean string still carries its romanization and the validator still requires it.
 
+> **[DC] Amended 2026-11-25 by `docs/specs/AMENDMENTS-STAGE1-DECODING-CHECK.md` DC-1a** (work order WO-10 of the 2026-11 review; owner decision 2026-11-22, OD-R1, review-2026-11 README §4): AU-8's display exception widens from one quest Check to the Checks. In a Check, the romanization of the question's taught Korean, and the gloss of its Korean options, show only once the question is answered (the accessible label keeps them); DC-1a lands it for the quest Check's Listen & Pick (a text prompt and the Cloze Pick fallback included) and for the Hangul Check, DC-1b and DC-1c for the other Check surfaces and the Daily Review's read and produce rungs. A decode syllable is a sound with no gloss. The text that stands in for a sound in a Check (Show the letters, Sound off, no voice) is its romanization only. The data rule is unchanged: every taught Korean string still carries its romanization and the validator still requires it.
+
 Made in this spec:
 
 | # | Decision | Why |

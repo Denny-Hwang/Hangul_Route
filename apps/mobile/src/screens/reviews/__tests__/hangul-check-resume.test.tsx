@@ -290,7 +290,8 @@ describe('[LR] answers are stored as they are given (OD-LR9 (b)) and the check g
     await answer(r, 2);
     await settleSavedChecksForTests();
     expect(Object.keys(stored()!.answers)).toHaveLength(3);
-    expect(stored()).toMatchObject({ hideRomanization: false });
+    // Every Check holds its romanization (DC-1a): the stored shape keeps the field as the constant true.
+    expect(stored()).toMatchObject({ hideRomanization: true });
   });
 
   it('answers in the first parts are stored; a new mount reads, offers the resume page and Continue goes on at the item after the last answered', async () => {
@@ -309,7 +310,7 @@ describe('[LR] answers are stored as they are given (OD-LR9 (b)) and the check g
     expect(texts).toContain(M.resume.title);
     expect(texts).toContain(EN.common.buttons.continue);
     expect(texts).toContain(M.resume.startAgain.cta);
-    // The reading-practice switch is not shown; the run's choice is kept.
+    // No reading-practice switch any more (DC-1a).
     expect(byTestId(r.root, 'hangul-check-hide-romanization')).toHaveLength(0);
 
     await tap(r, EN.common.buttons.continue);
@@ -384,19 +385,24 @@ describe('[LR] answers are stored as they are given (OD-LR9 (b)) and the check g
     expect(stored()).toBeNull();
   });
 
-  it('the stored reading-practice choice is kept on Continue', async () => {
+  it('a run stored before the switch went (hideRomanization false or true) still resumes: the value is ignored (DC-1a)', async () => {
     const { r: a } = await open();
-    await press(byTestId(a.root, 'hangul-check-hide-romanization')[0]!);
     await tap(a, M.intro.start.cta);
     await answer(a, 2);
     await settleSavedChecksForTests();
     expect(stored()).toMatchObject({ hideRomanization: true });
+    const before = stored()!;
     await cleanup();
 
-    const { r } = await open();
-    await tap(r, EN.common.buttons.continue);
-    expect(byTestId(r.root, 'part-stub')).toHaveLength(1);
-    expect(items(r)).toHaveLength(5);
+    for (const hideRomanization of [false, true]) {
+      rig.mem.set(CHECK_RUN_KEY(ID), { ...before, hideRomanization });
+      const { r } = await open();
+      expect(byTestId(r.root, 'hangul-check-resume')).toHaveLength(1);
+      await tap(r, EN.common.buttons.continue);
+      expect(byTestId(r.root, 'part-stub')).toHaveLength(1);
+      expect(items(r)).toHaveLength(5);
+      await cleanup();
+    }
   });
 });
 
@@ -408,7 +414,7 @@ describe('[LR] Start again, Stop and Close keep the stored check; Let us go repl
     await tap(r, M.resume.startAgain.cta);
     expect(byTestId(r.root, 'hangul-check-intro')).toHaveLength(1);
     expect(buttonsNamed(r.root, M.intro.start.cta)).toHaveLength(1);
-    expect(byTestId(r.root, 'hangul-check-hide-romanization')).toHaveLength(1);
+    expect(byTestId(r.root, 'hangul-check-hide-romanization')).toHaveLength(0);
     await settleSavedChecksForTests();
     expect(stored()).not.toBeNull();
     await tap(r, M.intro.later.cta);

@@ -37,31 +37,22 @@ function run(state: ReviewFlowState, events: ReviewFlowEvent[]) {
 }
 
 describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
-  it('starts on the intro, the romanization switch off unless the profile reads in tap mode', () => {
-    expect(startReviewFlow({ chunks: 5, romanizationMode: 'always' })).toEqual({
+  it('starts on the intro, with no romanization switch: every Check holds the romanization until the answer (DC-1a)', () => {
+    expect(startReviewFlow({ chunks: 5 })).toEqual({
       phase: 'intro',
       chunk: 0,
       from: 0,
       chunks: 5,
-      hideRomanization: false,
       leaving: false,
     });
-    expect(startReviewFlow({ chunks: 5, romanizationMode: 'tap' }).hideRomanization).toBe(true);
-  });
-
-  it('the switch is for this attempt only and changes only on the intro', () => {
-    const s0 = startReviewFlow({ chunks: 5, romanizationMode: 'always' });
-    const { state } = run(s0, [{ type: 'toggle-romanization' }]);
-    expect(state.hideRomanization).toBe(true);
-    const playing = run(state, [{ type: 'start' }, { type: 'toggle-romanization' }]).state;
-    expect(playing.hideRomanization).toBe(true);
+    expect(startReviewFlow({ chunks: 5, reading: true }).phase).toBe('reading');
   });
 
   it('plays 5 chunks with a Hoya pause between them, then the result, sending started then finished once', () => {
-    const s0 = startReviewFlow({ chunks: 5, romanizationMode: 'always' });
+    const s0 = startReviewFlow({ chunks: 5 });
     const start = run(s0, [{ type: 'start' }]);
     expect(start.state).toMatchObject({ phase: 'playing', chunk: 0 });
-    expect(start.effects).toEqual([{ type: 'started', hideRomanization: false }]);
+    expect(start.effects).toEqual([{ type: 'started' }]);
     let s = start.state;
     const all: unknown[] = [];
     for (let c = 0; c < 4; c += 1) {
@@ -81,7 +72,7 @@ describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
   });
 
   it('asks before stopping mid-check; staying keeps everything, stopping exits and saves nothing', () => {
-    const playing = run(startReviewFlow({ chunks: 5, romanizationMode: 'always' }), [{ type: 'start' }]).state;
+    const playing = run(startReviewFlow({ chunks: 5 }), [{ type: 'start' }]).state;
     const asking = run(playing, [{ type: 'leave' }]);
     expect(asking.state.leaving).toBe(true);
     expect(asking.effects).toEqual([]);
@@ -93,7 +84,7 @@ describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
   });
 
   it('leaves at once from the intro (Maybe later) and from the result', () => {
-    const s0 = startReviewFlow({ chunks: 5, romanizationMode: 'always' });
+    const s0 = startReviewFlow({ chunks: 5 });
     expect(run(s0, [{ type: 'leave' }]).effects).toEqual([{ type: 'exit' }]);
     const done = run(s0, [{ type: 'start' }, ...Array.from({ length: 4 }, () => [{ type: 'chunk-done' }, { type: 'keep-going' }] as ReviewFlowEvent[]).flat(), { type: 'chunk-done' }]);
     expect(done.state.phase).toBe('result');
@@ -103,14 +94,14 @@ describe('the Hangul Check flow (F-QUEST-002 §3.9)', () => {
   });
 
   it('a one-chunk check goes straight to the result', () => {
-    const s = run(startReviewFlow({ chunks: 1, romanizationMode: 'always' }), [{ type: 'start' }, { type: 'chunk-done' }]);
+    const s = run(startReviewFlow({ chunks: 1 }), [{ type: 'start' }, { type: 'chunk-done' }]);
     expect(s.state.phase).toBe('result');
   });
 });
 
 /** [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-3a (test 18): the `reading` and `resume` phases. */
 describe('[LR] the stored check: reading, resume, Continue, Start again', () => {
-  const reading = () => startReviewFlow({ chunks: 5, romanizationMode: 'always', reading: true });
+  const reading = () => startReviewFlow({ chunks: 5, reading: true });
 
   it('starts in reading when asked to, and a read that found nothing opens the intro', () => {
     expect(reading().phase).toBe('reading');
@@ -133,23 +124,23 @@ describe('[LR] the stored check: reading, resume, Continue, Start again', () => 
     expect(run(pause, [{ type: 'read', found: true }]).state).toEqual(pause);
   });
 
-  it('Continue goes to playing at the resume point with the stored romanization choice, and sends no started effect', () => {
+  it('Continue goes to playing at the resume point and sends no started effect', () => {
     const resume = run(reading(), [{ type: 'read', found: true }]).state;
-    const out = run(resume, [{ type: 'continue', at: { chunk: 2, from: 3 }, hideRomanization: true }]);
-    expect(out.state).toMatchObject({ phase: 'playing', chunk: 2, from: 3, hideRomanization: true });
+    const out = run(resume, [{ type: 'continue', at: { chunk: 2, from: 3 } }]);
+    expect(out.state).toMatchObject({ phase: 'playing', chunk: 2, from: 3 });
     expect(out.effects).toEqual([]);
   });
 
   it('Continue with every item answered goes straight to the finish', () => {
     const resume = run(reading(), [{ type: 'read', found: true }]).state;
-    const out = run(resume, [{ type: 'continue', at: null, hideRomanization: false }]);
+    const out = run(resume, [{ type: 'continue', at: null }]);
     expect(out.state.phase).toBe('result');
     expect(out.effects).toEqual([{ type: 'finished' }]);
   });
 
   it('the offset belongs to the resumed part only: Keep going starts the next part from its first item', () => {
     const resume = run(reading(), [{ type: 'read', found: true }]).state;
-    const playing = run(resume, [{ type: 'continue', at: { chunk: 1, from: 4 }, hideRomanization: false }]).state;
+    const playing = run(resume, [{ type: 'continue', at: { chunk: 1, from: 4 } }]).state;
     const next = run(playing, [{ type: 'chunk-done' }, { type: 'keep-going' }]).state;
     expect(next).toMatchObject({ phase: 'playing', chunk: 2, from: 0 });
   });
@@ -159,9 +150,9 @@ describe('[LR] the stored check: reading, resume, Continue, Start again', () => 
     const again = run(resume, [{ type: 'start-again' }]);
     expect(again.state.phase).toBe('intro');
     expect(again.effects).toEqual([]);
-    expect(run(again.state, [{ type: 'start' }]).effects).toEqual([{ type: 'started', hideRomanization: false }]);
+    expect(run(again.state, [{ type: 'start' }]).effects).toEqual([{ type: 'started' }]);
     // Only the resume page has these two events.
-    expect(run(again.state, [{ type: 'start-again' }, { type: 'continue', at: null, hideRomanization: false }])).toEqual({ state: again.state, effects: [] });
+    expect(run(again.state, [{ type: 'start-again' }, { type: 'continue', at: null }])).toEqual({ state: again.state, effects: [] });
   });
 
   it('a leave on the reading frame or the resume page exits at once, and neither guards a back', () => {
@@ -170,11 +161,6 @@ describe('[LR] the stored check: reading, resume, Continue, Start again', () => 
     expect(run(resume, [{ type: 'leave' }]).effects).toEqual([{ type: 'exit' }]);
     expect(guardsBack(reading())).toBe(false);
     expect(guardsBack(resume)).toBe(false);
-  });
-
-  it('the romanization switch is the intro only', () => {
-    const resume = run(reading(), [{ type: 'read', found: true }]).state;
-    expect(run(resume, [{ type: 'toggle-romanization' }]).state).toEqual(resume);
   });
 });
 
@@ -245,7 +231,7 @@ describe('reviewResultView: what the learner sees', () => {
 });
 
 describe('guardsBack: a system back mid-check asks "Stop the check?" first', () => {
-  const start = startReviewFlow({ chunks: 5, romanizationMode: 'always' });
+  const start = startReviewFlow({ chunks: 5 });
   it('guards while playing and during a pause', () => {
     const playing = run(start, [{ type: 'start' }]).state;
     expect(guardsBack(playing)).toBe(true);
@@ -254,7 +240,7 @@ describe('guardsBack: a system back mid-check asks "Stop the check?" first', () 
 
   it('lets back through on the intro and on the result', () => {
     expect(guardsBack(start)).toBe(false);
-    const one = startReviewFlow({ chunks: 1, romanizationMode: 'always' });
+    const one = startReviewFlow({ chunks: 1 });
     expect(guardsBack(run(one, [{ type: 'start' }, { type: 'chunk-done' }]).state)).toBe(false);
   });
 
@@ -334,10 +320,10 @@ describe('the caregiver entry and telemetry', () => {
   });
 
   it('sends review.start and review.complete with numbers only on the analytics channel', () => {
-    expect(reviewStartEvent('p1', true)).toEqual({
+    expect(reviewStartEvent('p1')).toEqual({
       name: 'review.start',
       profileId: 'p1',
-      payload: { kind: 'stage-certificate', stageKey: 'stage1', hideRomanization: true },
+      payload: { kind: 'stage-certificate', stageKey: 'stage1' },
     });
     expect(reviewCompleteEvent('p1', tally)).toEqual({
       name: 'review.complete',

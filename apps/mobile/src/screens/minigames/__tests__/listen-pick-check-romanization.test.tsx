@@ -8,10 +8,10 @@ import type { HostMode, MinigameHost } from '../host';
 import { ListenPickGame } from '../ListenPickGame';
 
 /**
- * AMENDMENTS-AUDIT-2026-11 AU-8 (audit EDU-3): in a quest Check ("Quick check") no answer option shows its
- * romanization while the question is open, so the sound cannot be matched to Latin letters; the lines come back,
- * in the room they kept, once the question is answered. The accessible names keep the romanization. A practice
- * step of the same game is unchanged.
+ * AMENDMENTS-AUDIT-2026-11 AU-8 (audit EDU-3), widened by AMENDMENTS-STAGE1-DECODING-CHECK DC-1a: in a Check (the quest
+ * "Quick check" and the Hangul Check, whatever the learner's mode) no answer option shows its romanization while the
+ * question is open, so the sound cannot be matched to Latin letters; the lines come back, in the room they kept, once the
+ * question is answered. The accessible names keep the romanization. A practice step of the same game is unchanged.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -117,18 +117,31 @@ describe("a quest Check holds the options' romanization until the answer (AU-8)"
     expect(lines(root)).toEqual({ shown: ROMANIZATIONS, reserved: [] });
   });
 
-  it('the no-sound path is unchanged: the prompt is still readable with its romanization', async () => {
+  it('the no-sound path reads the sound only: the prompt is its romanization, no Hangul, and the options stay held (DC-1a, section 3.2)', async () => {
     rig.current = createAudioRig({ voices: [] });
     const root = await game('check');
     const prompt = byTestId(root, 'listen-pick-prompt-text');
     expect(prompt.length).toBeGreaterThan(0);
     expect(hostNodes(prompt[0]!, (n) => n.children.length === 1 && n.children[0] === 'neo' && !hidden(n) && !invisible(n)).length).toBeGreaterThan(0);
+    expect(textOf(prompt[0]!)).not.toContain('너');
     expect(lines(root)).toEqual({ shown: [], reserved: ROMANIZATIONS });
   });
 });
 
+describe('the Hangul Check holds them the same way (DC-1a)', () => {
+  it('open question: no option shows its romanization; the names keep it; the answer shows every line', async () => {
+    const root = await game('review');
+    expect(lines(root)).toEqual({ shown: [], reserved: ROMANIZATIONS });
+    expect(names(root)).toEqual(NAMES);
+    await press(pressable(root, 'listen-pick-option-na'));
+    expect(lines(root)).toEqual({ shown: [], reserved: ROMANIZATIONS });
+    await press(pressable(root, 'listen-pick-option-neo'));
+    expect(lines(root)).toEqual({ shown: ROMANIZATIONS, reserved: [] });
+  });
+});
+
 describe('every other Listen & Pick host is unchanged (AU-8)', () => {
-  it.each(['quest', 'review', 'vocab', 'preview'] as const)('%s: every option shows its romanization from the start', async (mode) => {
+  it.each(['quest', 'vocab', 'preview'] as const)('%s: every option shows its romanization from the start', async (mode) => {
     const root = await game(mode);
     expect(lines(root)).toEqual({ shown: ROMANIZATIONS, reserved: [] });
     expect(names(root)).toEqual(NAMES);

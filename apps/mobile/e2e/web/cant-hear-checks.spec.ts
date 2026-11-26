@@ -6,10 +6,10 @@ import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
- * AMENDMENTS-AUDIO-CANT-HEAR row CH-1e (section 3.12, OD-CH6 (c)): "Can't hear it?" in the Checks. In a Check whose
- * options hold or hide their romanization (the quest Check, AU-8; the Hangul Check with its "hide the romanization"
- * switch on) Show the letters prints the prompt's romanization only, never the Hangul; with the switch off the Hangul
- * Check shows its own text (the Korean with its romanization). Looked at on a 320 x 568 and a 360 x 740 phone.
+ * AMENDMENTS-AUDIO-CANT-HEAR row CH-1e (section 3.12, OD-CH6 (c)): "Can't hear it?" in the Checks. In a Check (the quest
+ * Check, AU-8; the Hangul Check, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a: it has no romanization switch any more, every
+ * Check holds its romanization until the answer) Show the letters prints the prompt's romanization only, never the
+ * Hangul. Looked at on a 320 x 568 and a 360 x 740 phone.
  */
 
 const SIZES = [
@@ -132,7 +132,7 @@ const stage1Done = (profileId: string): ProgressSnapshot => ({
   streakDays: 0,
 });
 
-async function openHangulCheck(page: Page, hide: boolean): Promise<void> {
+async function openHangulCheck(page: Page): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
@@ -149,19 +149,23 @@ async function openHangulCheck(page: Page, hide: boolean): Promise<void> {
   await expect(page.getByTestId('journey-stage-pill-stage1')).toHaveText('Complete');
   await page.getByTestId('journey-hangul-check').click();
   await expect(page.getByTestId('hangul-check-intro')).toBeVisible();
-  if (hide) await page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' }).click();
+  // No attempt switch on the Hangul Check's intro (DC-1a).
+  await expect(page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' })).toHaveCount(0);
   await page.getByRole('button', { name: "Let's go" }).click();
   await expect(page.getByTestId('listen-pick-options')).toBeVisible();
 }
 
 for (const size of SIZES) {
-  test(`the Hangul Check at ${size.width} x ${size.height} with the hide switch on: Show the letters prints the romanization only`, async ({ page }) => {
+  test(`the Hangul Check at ${size.width} x ${size.height}: Show the letters prints the romanization only, the options hold theirs`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await koreanVoice(page);
     await page.setViewportSize(size);
-    await openHangulCheck(page, true);
+    await openHangulCheck(page);
     await expect(page.getByTestId('cant-hear')).toBeVisible();
+    // Before any answer every option's romanization line is the reserved, invisible one (DC-1a).
+    const options = page.locator('[data-testid^="listen-pick-option-"]');
+    await expect(options.locator('[data-testid="korean-text-romanization-reserved"]')).toHaveCount(await options.count());
     await askForTheLetters(page);
     await page.getByTestId('cant-hear-show-letters').click();
     await expect(page.getByTestId(PROMPT_TEXT)).toBeVisible();
@@ -170,21 +174,6 @@ for (const size of SIZES) {
     expect(hidden).not.toMatch(HANGUL);
     await expectNoHorizontalOverflow(page);
     await shot(page, `ch-1e-hangul-check-hidden-${size.width}x${size.height}`);
-    expect(errors).toEqual([]);
-  });
-
-  test(`the Hangul Check at ${size.width} x ${size.height} with the switch off: its options show their romanization, so the asked text is the Korean with its romanization`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
-    await koreanVoice(page);
-    await page.setViewportSize(size);
-    await openHangulCheck(page, false);
-    await askForTheLetters(page);
-    await page.getByTestId('cant-hear-show-letters').click();
-    await expect(page.getByTestId(PROMPT_TEXT)).toBeVisible();
-    expect(await promptText(page)).toMatch(HANGUL);
-    await expectNoHorizontalOverflow(page);
-    await shot(page, `ch-1e-hangul-check-shown-${size.width}x${size.height}`);
     expect(errors).toEqual([]);
   });
 }

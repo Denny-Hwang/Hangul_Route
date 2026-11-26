@@ -163,10 +163,9 @@ test('the Hangul Check from the Journey: intro, 35 items in 5 parts, then stars,
   await page.getByTestId('journey-stage-stage1').screenshot({ path: test.info().outputPath('journey-hangul-check.png') });
   await openFromJourney(page);
 
-  // Intro: words only, a switch for this attempt.
+  // Intro: words only, and no romanization switch: every item holds its romanization until it is answered (DC-1a).
   await expect(page.getByText('About four minutes. Pictures and sounds. No timer.')).toBeVisible();
-  const toggle = page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' });
-  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await expect(page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' })).toHaveCount(0);
   await shot(page, 'hangul-check-intro');
   await page.screenshot({ path: test.info().outputPath('hangul-check-intro.png'), fullPage: true });
   await page.getByRole('button', { name: "Let's go" }).click();
