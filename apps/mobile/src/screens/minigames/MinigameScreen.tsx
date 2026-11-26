@@ -6,6 +6,7 @@ import type { ReactElement } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { RomanizationCheckScope } from '../../i18n/use-romanization-mode';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { gameFlagOf, playedScope as fallbackScope } from '../../logic/game-fallback';
 import { gameFinishIsReported, minigameFinishedEvent } from '../../logic/minigame-finished';
@@ -313,7 +314,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   return (
     <BackGuardScopeContext.Provider value={backScope}>
-      {drawn()}
+      {/* A quest's Check reads the romanization `check` mode (RF section 3.7); the one wrapper, shared with DC's hold. */}
+      <RomanizationCheckScope active={step?.kind === 'check'}>{drawn()}</RomanizationCheckScope>
       {guarding ? (
         <ConfirmSheet
           visible={asking}
