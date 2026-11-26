@@ -29,9 +29,10 @@ export type PlacementForm = z.infer<typeof PlacementFormSchema>;
 export const GateResultSchema = z.object({
   gate: PlacementGateSchema,
   form: PlacementFormSchema,
-  asked: z.number().int().min(0).max(3),
-  correct: z.number().int().min(0).max(3),
-  assisted: z.number().int().min(0).max(3),
+  // 4 for a `sentence` row once `SENTENCE_QUESTIONS` is 4 (AMENDMENTS-PLC-VALIDITY section 3.7); every other rung asks 3.
+  asked: z.number().int().min(0).max(4),
+  correct: z.number().int().min(0).max(4),
+  assisted: z.number().int().min(0).max(4),
   result: z.enum(['pass', 'fail', 'not-run']),
   reason: z.enum(['unavailable', 'stopped']).optional(),
 });
@@ -77,7 +78,7 @@ export const PlacementResultSchema = z.object({
   bankVersion: z.number().int().positive(),
   contentVer: z.string(),
   motivation: MotivationSchema.optional(),
-  /** Deep asks up to 42 (two draws per route-moving rung); Short and Standard stay within 24. */
+  /** Deep asks up to 42 (two draws per route-moving rung), 45 with four sentence questions; Short and Standard stay within 24, 25 with four. The worst case is 48. */
   responses: z.array(AssessmentResponseSchema).max(48),
   /** Deep stores one row per draw (up to 15); Short and Standard stay within 9. */
   gates: z.array(GateResultSchema).max(16),
@@ -147,7 +148,7 @@ const PROMPT_FORMATS: readonly Format[] = ['see-pick-sound', 'hear-pick-picture'
 const SYMBOL_GROUPS: Readonly<Record<'basic' | 'rest', readonly string[]>> = { basic: RUNG_SYMBOLS.basic, rest: RUNG_SYMBOLS.rest };
 const ALL_SYMBOLS: ReadonlySet<string> = new Set([...RUNG_SYMBOLS.basic, ...RUNG_SYMBOLS.rest, ...RUNG_SYMBOLS.finals]);
 const KNOWN_TAG =
-  /^(group:(basic|rest|final)|syl:[a-z]+|shape:(cv|cvc)|word:[a-z]+(-[a-z]+)*|topic:(letters|life|rites|nature|crafts)|pattern:(n-ieyo|n-eul-v|reply)|look-alike)$/;
+  /^(group:(basic|rest|final)|syl:[a-z]+|shape:(cv|cvc)|word:[a-z]+(-[a-z]+)*|topic:(letters|life|rites|nature|crafts)|pattern:(n-ieyo|n-eul-v|n-i-v|reply)|nikl:\d+|look-alike)$/;
 
 const TemplateIdSchema = z.string().regex(/^pitem:[a-z0-9-]+$/);
 

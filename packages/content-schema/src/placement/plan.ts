@@ -1,6 +1,6 @@
 import type { GateResult, PlacementForm, PlacementGate } from '../schemas/placement';
-import { drawsFor, type PlacementMode } from './rungs';
-import { rowsPassed } from './scoring';
+import { MAIN_STEPS, drawsFor, type PlacementMode } from './rungs';
+import { rowsPassed, stepPassed } from './scoring';
 
 /**
  * Which rung comes next (F-PLC-001 section 3.5). Pure and adaptive: it only
@@ -30,15 +30,7 @@ export interface PlanState {
 
 type Step = readonly [PlacementGate, PlacementForm];
 
-/** The route-moving steps after `recog`, in order: each is asked only while every step before it passed. */
-const MAIN: readonly Step[] = [
-  ['sound-basic', 'decode'],
-  ['syl-cv', 'decode'],
-  ['sound-rest', 'decode'],
-  ['syl-cvc', 'decode'],
-  ['vocab', 'read'],
-  ['sentence', 'read'],
-];
+const MAIN = MAIN_STEPS;
 
 export const nextRung = (state: PlanState): PlanRung | null => {
   const rows = (gate: PlacementGate, form: PlacementForm): PlanDone[] =>
@@ -95,7 +87,8 @@ export const nextRung = (state: PlanState): PlanRung | null => {
   // through to `vocab` read, and once after a `vocab` read that did not pass.
   const pending = (gate: PlacementGate): PlanRung | null => (has(gate, 'oral') ? null : first([gate, 'oral']));
   const oralPair = (): PlanRung | null => pending('vocab') ?? pending('sentence');
-  const readsWords = clean(['vocab', 'read']);
+  // A `vocab` read pass counts only when every step before it passed too (E-1: a Deep confirmation may have failed after it).
+  const readsWords = stepPassed(state.done, 'vocab', 'read');
   if (delay) {
     if (!readsWords) return oralPair();
     if (!has('sentence', 'oral')) return first(['sentence', 'oral']);

@@ -256,6 +256,18 @@ describe('PlacementTemplateSchema', () => {
     expect(messages(change(soundHear, (t) => t.question.tags.push('look-alike')))).toEqual([]);
   });
 
+  it('PV-1b tags: nikl:<rank> and pattern:n-i-v are known; a malformed rank or pattern is not', () => {
+    expect(messages(change(soundHear, (t) => t.question.tags.push('nikl:3237')))).toEqual([]);
+    expect(messages(change(soundHear, (t) => t.question.tags.push('pattern:n-i-v')))).toEqual([]);
+    rejects(soundHear, (t) => t.question.tags.push('nikl:'), 'unknown tag nikl:');
+    rejects(soundHear, (t) => t.question.tags.push('nikl:abc'), 'unknown tag nikl:abc');
+    rejects(soundHear, (t) => t.question.tags.push('nikl:12a'), 'unknown tag nikl:12a');
+    rejects(soundHear, (t) => t.question.tags.push('nikl:-3'), 'unknown tag nikl:-3');
+    rejects(soundHear, (t) => t.question.tags.push('pattern:n-x-v'), 'unknown tag pattern:n-x-v');
+    // the three tags a bank already carries stay known
+    for (const tag of ['pattern:n-ieyo', 'pattern:n-eul-v', 'pattern:reply']) expect(messages(change(soundHear, (t) => t.question.tags.push(tag)))).toEqual([]);
+  });
+
   it('recognition: three tiles show one letter, one differs, two symbols and look-alike', () => {
     rejects(recog, (t) => (t.question.options[1]!.ko = 'ㅂ'), 'three tiles must show the same letter');
     rejects(recog, (t) => (t.question.options[2]!.ko = 'ㄴ'), 'the correct tile must differ');

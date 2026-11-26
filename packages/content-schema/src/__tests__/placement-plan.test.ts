@@ -200,6 +200,24 @@ describe('nextRung: Deep', () => {
     const { path } = play('deep', PASS(...LADDER), ['sound-basic:2']);
     expect(path).toContain('sound-rest');
   });
+
+  it('E-1: a syl-cvc confirmation that fails after a passed first vocab read draw asks the oral pair', () => {
+    const { path, asked } = play('deep', { ...PASS(...LADDER, 'vocab:read'), 'syl-cvc:2': 'fail' });
+    expect(path.slice(-4)).toEqual(['vocab:read', 'syl-cvc:2', 'vocab:oral', 'sentence:oral']);
+    expect(path).not.toContain('sentence:read');
+    expect(asked).toBe(36);
+  });
+
+  it('E-1: an earlier confirmation that fails after the first sentence read draw still asks the oral pair', () => {
+    const { path } = play('deep', { ...PASS(...LADDER, 'vocab:read', 'sentence:read'), 'vocab:read:2': 'fail' });
+    expect(path.slice(-2)).toEqual(['vocab:oral', 'sentence:oral']);
+  });
+
+  it('E-1: a vocab read pass whose second draw is unavailable or stopped still stands (sentences only)', () => {
+    const { path } = play('deep', PASS(...LADDER, 'vocab:read', 'sentence:read'), ['vocab:read:2']);
+    expect(path).not.toContain('vocab:oral');
+    expect(path.at(-1)).toBe('sentence:oral');
+  });
 });
 
 describe('every mode always ends, never repeats a draw, and stays within its bounds', () => {

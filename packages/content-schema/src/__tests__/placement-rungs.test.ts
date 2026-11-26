@@ -3,10 +3,12 @@ import {
   IDLE_PAUSE_MS,
   QUESTIONS_PER_RUNG,
   RUNG_SYMBOLS,
+  SENTENCE_QUESTIONS,
   RUNG_TABLE,
   STRAND_GATES,
   DEEP_REST_AT,
   LISTEN_FIRST_FORMATS,
+  MAIN_STEPS,
   PLACEMENT_MODES,
   PlacementModeSchema,
   backstopMs,
@@ -16,6 +18,7 @@ import {
   modeOf,
   passAtFor,
   questionCap,
+  questionsFor,
   strandOfGate,
   PLACEMENT_GATES,
   PlacementStrandSchema,
@@ -76,6 +79,54 @@ describe('limits', () => {
     expect(backstopMs('deep', false)).toBe(1_200_000);
     for (const mode of PLACEMENT_MODES) expect(backstopMs(mode, true)).toBeNull();
     expect(DEEP_REST_AT).toBe(18);
+  });
+});
+
+describe('SENTENCE_QUESTIONS: one switch, everything derived from it (AMENDMENTS-PLC-VALIDITY section 3.6)', () => {
+  it('is 3 in PV-1b (PV-1c turns it to 4), so the engine asks what it asked before', () => {
+    expect(SENTENCE_QUESTIONS).toBe(3);
+  });
+
+  it('questionsFor: the switch for sentence, three for every other gate', () => {
+    expect(questionsFor('sentence')).toBe(SENTENCE_QUESTIONS);
+    expect(questionsFor('sentence', 4)).toBe(4);
+    for (const gate of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab'] as const) {
+      expect(questionsFor(gate)).toBe(QUESTIONS_PER_RUNG);
+      expect(questionsFor(gate, 4)).toBe(3);
+    }
+  });
+
+  it('passAtFor: one fewer than the sentence size (2 at size 3, 3 at size 4); the other gates are as before', () => {
+    expect(passAtFor('standard', 'sentence')).toBe(SENTENCE_QUESTIONS - 1);
+    expect(passAtFor('standard', 'sentence', 3)).toBe(2);
+    expect(passAtFor('standard', 'sentence', 4)).toBe(3);
+    expect(passAtFor('deep', 'sentence', 4)).toBe(3);
+    expect(passAtFor('short', 'syl-cv', 4)).toBe(3);
+    expect(passAtFor('standard', 'vocab', 4)).toBe(2);
+    expect(passAtFor('short', 'sound-basic', 4)).toBe(2);
+  });
+
+  it('questionCap: the longest normal path, Standard 21 + n and Deep 33 + 3n', () => {
+    expect(questionCap('standard')).toBe(21 + SENTENCE_QUESTIONS);
+    expect(questionCap('deep')).toBe(33 + 3 * SENTENCE_QUESTIONS);
+    expect(questionCap('standard', 3)).toBe(24);
+    expect(questionCap('deep', 3)).toBe(42);
+    expect(questionCap('standard', 4)).toBe(25);
+    expect(questionCap('deep', 4)).toBe(45);
+    expect(questionCap('short', 4)).toBeNull();
+  });
+});
+
+describe('MAIN_STEPS', () => {
+  it('is the route-moving ladder after recog, in asking order', () => {
+    expect(MAIN_STEPS).toEqual([
+      ['sound-basic', 'decode'],
+      ['syl-cv', 'decode'],
+      ['sound-rest', 'decode'],
+      ['syl-cvc', 'decode'],
+      ['vocab', 'read'],
+      ['sentence', 'read'],
+    ]);
   });
 });
 

@@ -40,6 +40,20 @@ export const STRAND_GATES: Readonly<Record<PlacementStrand, readonly PlacementGa
 };
 
 /**
+ * The route-moving steps after `recog`, in asking order (F-PLC-001 section 3.5): each is
+ * asked only while every step before it has passed. The planner walks this ladder and
+ * `stepPassed` (scoring) counts a step as passed only when every step before it did.
+ */
+export const MAIN_STEPS: readonly (readonly [PlacementGate, PlacementForm])[] = [
+  ['sound-basic', 'decode'],
+  ['syl-cv', 'decode'],
+  ['sound-rest', 'decode'],
+  ['syl-cvc', 'decode'],
+  ['vocab', 'read'],
+  ['sentence', 'read'],
+];
+
+/**
  * The 30 symbol keys of the F-QUEST-002 accounting: 14 consonants, 10 vowels,
  * 6 finals. A final is `'<consonant>/final'`.
  */
@@ -49,8 +63,23 @@ export const RUNG_SYMBOLS = {
   finals: ['ㄴ/final', 'ㄹ/final', 'ㅇ/final', 'ㄱ/final', 'ㅁ/final', 'ㅂ/final'],
 } as const;
 
-/** Every rung is exactly three questions. */
+/** Every rung is three questions, except `sentence` (see `SENTENCE_QUESTIONS`). */
 export const QUESTIONS_PER_RUNG = 3;
+
+/**
+ * The one switch of the sentence gate (AMENDMENTS-PLC-VALIDITY section 3.6): how many
+ * questions a `sentence` rung asks, in both forms. 3 in PV-1b, so the engine asks what
+ * it asked before; PV-1c turns it to 4 (pass at 3 of 4) in the same change that lands
+ * the sentence bank. Everything below that depends on it is derived from it.
+ */
+export const SENTENCE_QUESTIONS: number = 3;
+
+/**
+ * Questions in a rung of `gate`. `sentenceQuestions` is the switch and defaults to it;
+ * a test may pass another value to exercise the derived rules at the next size.
+ */
+export const questionsFor = (gate: PlacementGate, sentenceQuestions: number = SENTENCE_QUESTIONS): number =>
+  gate === 'sentence' ? sentenceQuestions : QUESTIONS_PER_RUNG;
 
 /** The session inactivity pause: nothing touched for this long (unless Take my time). It records nothing. */
 export const IDLE_PAUSE_MS = 45_000;
@@ -85,9 +114,11 @@ export const modeCeiling = (mode: PlacementMode): PlacementLevel =>
 /**
  * The most questions a mode can ask; a run that ends there is labelled `cap`.
  * Short has no cap label: every Short run that reaches `syl-cv` ends `complete`.
+ * The longest normal paths, derived from the sentence switch: Standard 21 + n
+ * (24 at 3, 25 at 4), Deep 33 + 3n (42 at 3, 45 at 4).
  */
-export const questionCap = (mode: PlacementMode): number | null =>
-  mode === 'short' ? null : mode === 'standard' ? 24 : 42;
+export const questionCap = (mode: PlacementMode, sentenceQuestions: number = SENTENCE_QUESTIONS): number | null =>
+  mode === 'short' ? null : mode === 'standard' ? 21 + sentenceQuestions : 33 + 3 * sentenceQuestions;
 
 /** Gates whose pass moves the route; Deep confirms each with a second draw of three. */
 const CONFIRMED: readonly PlacementGate[] = ['sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'];
@@ -102,8 +133,16 @@ export const drawsFor = (mode: PlacementMode, gate: PlacementGate, form: Placeme
   return mode === 'standard' && gate === 'vocab' && form === 'read' ? 2 : 1;
 };
 
-/** Correct answers (of three) a draw needs. Short asks all three CV syllables right. */
-export const passAtFor = (mode: PlacementMode, gate: PlacementGate): 2 | 3 => (mode === 'short' && gate === 'syl-cv' ? 3 : 2);
+/**
+ * Correct answers a draw needs. Short asks all three CV syllables right; a `sentence`
+ * rung passes at one fewer than its size (2 of 3, 3 of 4); every other rung 2 of 3.
+ * `size` is the size of the rung actually asked (a run saved under another switch
+ * keeps the size of its own questions); it defaults to the switch.
+ */
+export const passAtFor = (mode: PlacementMode, gate: PlacementGate, size: number = questionsFor(gate)): 2 | 3 => {
+  if (mode === 'short' && gate === 'syl-cv') return 3;
+  return gate === 'sentence' ? (Math.min(3, Math.max(2, size - 1)) as 2 | 3) : 2;
+};
 
 /**
  * Formats a listen-first run may draw (Short, and any mode for a *Pictures
