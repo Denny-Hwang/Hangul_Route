@@ -296,7 +296,7 @@ async function runContrastListen(opts, deps) {
   const resultPath = join(outDir, OWNER_CONTRAST_FILE);
   let record = deps.exists(resultPath) ? JSON.parse(deps.readText(resultPath)) : null;
   const date = deps.now().toISOString().slice(0, 10);
-  deps.out(`audio:tts:listen --contrast: ${sets.length} set${sets.length === 1 ? '' : 's'}, sound from the ${opts.speaker}. Press the number you heard after each play; the answers are shown at the end of the set. q stops.`);
+  deps.out(`audio:tts:listen --contrast: ${sets.length} set(s), sound from the ${opts.speaker}. Press the number you heard after each play; the answers are shown at the end of the set. q stops.`);
 
   const outcomes = { pass: [], fail: [], skipped: [] };
   sets: for (const [i, set] of sets.entries()) {
