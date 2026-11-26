@@ -36,10 +36,12 @@ import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
   DISCOVER_AUDIO_SOURCE,
+  actionSpecs,
   autoHearAllowed,
   autoHearId,
   buildDiscover,
   pageRender,
+  playInOrder,
   startDiscover,
   stepDiscover,
   type DiscoverEffect,
@@ -49,12 +51,13 @@ import {
   type DiscoverStart,
   type DiscoverState,
   type HearAction,
+  type HearSpec,
 } from '../../logic/stage1/discover-flow';
 import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { exampleWordLabel } from '../../logic/stage1/example-label';
 import { afterScreenSettles } from '../../logic/audio/settle';
-import { hasClipFor, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop as stopAudio, warmClips, type PlayResult } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait, isScreenReaderEnabled } from '../../platform/screen-reader';
 import { useAudioStore } from '../../store/audio-store';
@@ -80,7 +83,7 @@ import { StepActions } from './StepActions';
 interface CardSlot {
   play: PromptSlot['play'];
 }
-/** The card an action id belongs to: `<item key>|sound`, `|name`, `|example` or `|line<n>`. */
+/** The card an action id belongs to: `<item key>|sound`, `|name`, `|vowels`, `|example` or `|line<n>`. */
 const cardKeyOf = (actionId: string): string => actionId.split('|')[0] ?? actionId;
 
 interface Props {
@@ -118,6 +121,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
       for (const item of page.items) {
         map.set(item.hear.id, item.hear);
         if (item.nameButton) map.set(item.nameButton.action.id, item.nameButton.action);
+        if (item.vowelsButton) map.set(item.vowelsButton.action.id, item.vowelsButton.action);
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
       for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
@@ -139,7 +143,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
 
   // Recordings for every Hear it on these pages are fetched and decoded ahead (§3.10).
   useEffect(() => {
-    void warmClips(clipRefsOf([...actions.values()].map((a) => a.spec)));
+    // [SF-3] Every sound of a button that says several (Hear it with vowels), so 오 and 우 do not load cold.
+    void warmClips(clipRefsOf([...actions.values()].flatMap(actionSpecs)));
   }, [actions]);
 
   const romanizationMode = useRomanizationMode();
@@ -154,13 +159,42 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** [QS-3] Drops the page's own first sound while it still waits for the screen; `null` when none waits. */
   const pendingAutoHear = useRef<(() => void) | null>(null);
+  /**
+   * [SF-3] The button that says several sounds in a row (Hear it with vowels, §12.3): `run` counts plays, so a newer
+   * play, a stop, a page change or leaving ends the run in progress (a cut-off prompt still resolves as `played`);
+   * `series` is set while a run plays and `cancelGap` ends the wait between two of its sounds at once.
+   */
+  const seriesRun = useRef({ run: 0, series: false, cancelGap: null as (() => void) | null });
+  const endSeries = useCallback((): number => {
+    const s = seriesRun.current;
+    s.run += 1;
+    s.series = false;
+    s.cancelGap?.();
+    s.cancelGap = null;
+    return s.run;
+  }, []);
+  const seriesGap = useCallback(
+    (ms: number): Promise<void> =>
+      new Promise((resolve) => {
+        const handle = setTimeout(() => {
+          seriesRun.current.cancelGap = null;
+          resolve();
+        }, ms);
+        seriesRun.current.cancelGap = () => {
+          clearTimeout(handle);
+          resolve();
+        };
+      }),
+    [],
+  );
   // Leaving the step (Continue on the last page, Leave, Back) stops a word or sentence mid-way.
   useEffect(
     () => () => {
       if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
+      endSeries();
       stopAudio();
     },
-    [],
+    [endSeries],
   );
 
   // Each card's prompt slot, and the button it played last (its panel's action plays that one again).
@@ -184,6 +218,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
           return;
         case 'stopAudio':
           if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
+          endSeries();
           stopAudio();
           return;
         case 'pause':
@@ -199,16 +234,34 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
           pendingAutoHear.current = null;
           const card = cardKeyOf(effect.id);
           lastPlayed.current.set(card, effect.id);
-          const run = () => playPrompt({ ...action.spec, kind: action.kind, source: DISCOVER_AUDIO_SOURCE });
+          // [SF-3] Any play ends a run of Hear it with vowels still going; a new one starts its own.
+          const mine = endSeries();
+          const say = (spec: HearSpec): Promise<PlayResult> => playPrompt({ ...spec, kind: action.kind, source: DISCOVER_AUDIO_SOURCE });
+          let superseded = false;
+          const { series } = action;
+          const run = series
+            ? async (): Promise<PlayResult> => {
+                seriesRun.current.series = true;
+                const result = await playInOrder(series, say, { wait: seriesGap, live: () => seriesRun.current.run === mine });
+                if (seriesRun.current.run === mine) seriesRun.current.series = false;
+                // A run ended by something newer reports nothing: no heard mark, no text line.
+                if (result === 'superseded') {
+                  superseded = true;
+                  return 'played';
+                }
+                return result;
+              }
+            : () => say(action.spec);
           const slot = cardSlots.current.get(card);
-          void (slot ? slot.play(run) : run()).then((result) =>
-            dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) }),
-          );
+          void (slot ? slot.play(run) : run()).then((result) => {
+            if (superseded) return;
+            dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) });
+          });
           return;
         }
       }
     },
-    [actions, exchanges],
+    [actions, exchanges, endSeries, seriesGap],
   );
 
   const dispatch = useCallback(
@@ -239,6 +292,16 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [state.page]);
+
+  // [SF-3] A run of Hear it with vowels never outlives its page (Continue, Previous): it stops, and nothing more plays.
+  useEffect(
+    () => () => {
+      if (!seriesRun.current.series) return;
+      endSeries();
+      stopAudio();
+    },
+    [state.page, endSeries],
+  );
 
   // [AU] Row AU-10: a letter page says its first letter once as it opens. Once per page, whatever re-renders (a new
   // locale rebuilds the model); never with sound off, with a screen reader on or when the sound cannot play; and when
@@ -406,8 +469,9 @@ interface CardAudio {
  * line), so a button without a clip still says "No Korean voice" on a device without one.
  */
 function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio, cantHear = false): PromptSlot {
-  const playable = actions.filter((a): a is HearAction => a !== undefined);
-  const clip = playable.length > 0 && playable.every((a) => hasClipFor(a.spec));
+  // [SF-3] Every sound of every button: Hear it with vowels counts all three of its clips.
+  const specs = actions.filter((a): a is HearAction => a !== undefined).flatMap(actionSpecs);
+  const clip = specs.length > 0 && specs.every((spec) => hasClipFor(spec));
   // `cantHear` is the page's one guidance-only "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1d, OD-CH3): the card prints
   // its Korean, so the sheet has no Show the letters, and "Always show the letters" brings nothing up here.
   const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true, cantHear, guidanceOnly: cantHear });
@@ -484,7 +548,7 @@ function DiscoverItemCard({
 }): ReactElement {
   const { item } = render;
   const audioCopy = useMessages().learner.audio;
-  const slot = useCardSlot(item.key, [item.hear, item.nameButton?.action, item.example?.hear], audio, cantHear);
+  const slot = useCardSlot(item.key, [item.hear, item.nameButton?.action, item.vowelsButton?.action, item.example?.hear], audio, cantHear);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -563,6 +627,26 @@ function DiscoverItemCard({
           {/* The letter's name with its romanization is content, never inside the UI string. */}
           <View testID={`discover-name-${item.key}`}>
             <KoreanText ko={item.nameButton.ko} romanization={item.nameButton.romanization} size="sm" />
+          </View>
+        </View>
+      ) : null}
+
+      {item.vowelsButton ? (
+        // [SF-3] The initial ㅇ's second button, in Hear the name's place and look (AMENDMENTS-DISCOVER-SOUND-FIRST §12.5).
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <HearButton
+            action={item.vowelsButton.action}
+            label={copy.hearVowels.cta}
+            accessibilityLabel={a11y.hearVowelsLabel(a11y.discoverLetter(item.romanization))}
+            size="md"
+            tone="ghost"
+            dispatch={dispatch}
+          />
+          {/* The three carrier lines (아 = ㅇ + ㅏ, a) are content; each reads its syllable only, never the lone ㅇ as 이응. */}
+          <View testID={`discover-vowels-${item.key}`} style={{ alignItems: 'center', gap: spacing.xs }}>
+            {item.vowelsButton.lines.map((line) => (
+              <KoreanText key={line.ko} ko={line.ko} romanization={line.romanization} size="sm" accessibilityLabel={line.accessibilityLabel} />
+            ))}
           </View>
         </View>
       ) : null}

@@ -18,7 +18,8 @@ import { decompose, symbolsOf } from './hangul';
  * but the first letter's sound (AU-10);
  * Hear it says the SOUND (ㄴ is na, a vowel its sound, ㅇ its name, a final its closed
  * syllable; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1), and a consonant's second, optional
- * button, Hear the name, says the letter's name (nieun); unavailable or muted audio
+ * button, Hear the name, says the letter's name (nieun); the initial ㅇ's second button, Hear it with vowels, says
+ * 아, 오, 우 one after the other, so its silence can be heard (SF-3); unavailable or muted audio
  * switches that item to a "say it out loud" text line and changes nothing else; Continue is enabled at once and
  * never waits for a Hear it; an item that cannot be resolved is skipped, and
  * a step with nothing left still has a Continue.
@@ -33,11 +34,20 @@ export type DiscoverA11y = Pick<Messages['a11y'], 'discoverLetter' | 'discoverFi
 /** The surface id of Discover for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
 export const DISCOVER_AUDIO_SOURCE = 'discover';
 
-/** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
+/** One thing a button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
+export interface HearSpec {
+  text: string;
+  audioRef?: string;
+}
+
+/** What a Hear it button says. */
 export interface HearAction {
-  /** Stable per button: `<item key>|sound` (the main Hear it), `|name` (Hear the name) or `|example`. */
+  /** Stable per button: `<item key>|sound` (the main Hear it), `|name` (Hear the name), `|vowels` (Hear it with vowels) or `|example`. */
   id: string;
-  spec: { text: string; audioRef?: string };
+  /** What it says; for a button that says several things in a row, the first of `series`. */
+  spec: HearSpec;
+  /** [SF-3] A button that says several things one after the other (ㅇ's 아, 오, 우), in order. */
+  series?: readonly HearSpec[];
   /**
    * The speech rate (F-AUDIO-004 §3.3): `sound` for a symbol and its name, `sentence` for a
    * sentence, a pattern example and an exchange line, `word` for everything else.
@@ -94,6 +104,12 @@ export interface DiscoverItemView {
    * its romanization (nieun), drawn as content. Only a consonant whose name differs from its sound has one.
    */
   nameButton?: { action: HearAction; ko: string; romanization: string };
+  /**
+   * [SF-3] The initial ㅇ's second button, Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12): 아, 오, 우 in a
+   * row, from the vowel cards' own clips, with a carrier line for each ("아 = ㅇ + ㅏ", a), drawn as content. Its
+   * `accessibilityLabel` is the syllable and its romanization only, so a Korean voice never reads the lone ㅇ as 이응.
+   */
+  vowelsButton?: { action: HearAction; lines: Array<{ ko: string; romanization: string; accessibilityLabel: string }> };
   block?: DiscoverBlockView;
   batchimLine?: string;
   example?: DiscoverExampleView;
@@ -146,8 +162,72 @@ const SYLLABLE_SEPARATOR = '·';
 const teachingRomanization = (text: KoText): string =>
   text.syllables ? text.syllables.join(SYLLABLE_SEPARATOR) : text.romanization;
 
+const specOf = (text: string, audioRef: string | undefined): HearSpec => (audioRef === undefined ? { text } : { text, audioRef });
+
 function hear(id: string, text: string, audioRef: string | undefined, kind: PromptKind): HearAction {
-  return { id, spec: audioRef === undefined ? { text } : { text, audioRef }, kind };
+  return { id, spec: specOf(text, audioRef), kind };
+}
+
+/** Everything a button says, in order: its `series`, or its one `spec`. Warm-up, clip checks and play read all of it. */
+export function actionSpecs(action: HearAction): readonly HearSpec[] {
+  return action.series ?? [action.spec];
+}
+
+/** [SF-3] The vowels the initial ㅇ's Hear it with vowels says, in order (SF-OD-8): all taught before ㅇ (quests 1, 2). */
+const SILENT_IEUNG_VOWELS = ['jamo:a', 'jamo:o', 'jamo:u'] as const;
+
+/** [SF-3] Hear it with vowels on the initial ㅇ: each vowel's own sound (`jamoVoice(v, 'sound')`) and its carrier line. */
+function vowelsButton(key: string, ieung: Jamo): DiscoverItemView['vowelsButton'] {
+  const voices = SILENT_IEUNG_VOWELS.flatMap((id) => {
+    const vowel = findJamo(id);
+    return vowel ? [{ vowel, voice: jamoVoice(vowel, 'sound') }] : [];
+  });
+  const series = voices.map(({ voice }) => specOf(voice.text, voice.audioRef));
+  const first = series[0];
+  if (first === undefined) return undefined;
+  return {
+    action: { id: `${key}|vowels`, spec: first, series, kind: 'sound' },
+    lines: voices.map(({ vowel, voice }) => ({
+      ko: `${voice.shown} = ${ieung.char} + ${vowel.char}`,
+      romanization: voice.romanization,
+      accessibilityLabel: `${voice.shown}, ${voice.romanization}`,
+    })),
+  };
+}
+
+/**
+ * [SF-3] How long Hear it with vowels waits after one sound has finished before the next (§12.3). Each vowel clip
+ * already holds about 0.35 s of silence at each end, so the voices land about 0.85 s apart; the wait keeps a device
+ * voice (no silence of its own) from running them together.
+ */
+export const SERIES_GAP_MS = 150;
+
+/**
+ * [SF-3] Plays `steps` one after the other, waiting `SERIES_GAP_MS` between two. Stops at the first step that does
+ * not play and reports it (a throw counts as `unavailable`). A prompt cut off by a newer one still resolves as
+ * `played` (F-AUDIO-004), so `live()` is asked after every play and every wait: a run that is no longer live plays
+ * nothing more and reports `superseded`, and the screen reports nothing for it.
+ */
+export async function playInOrder<T>(
+  steps: readonly T[],
+  play: (step: T) => Promise<PlayResult>,
+  opts: { wait: (ms: number) => Promise<void>; live: () => boolean },
+): Promise<PlayResult | 'superseded'> {
+  let result: PlayResult = 'played';
+  for (const [i, step] of steps.entries()) {
+    if (i > 0) {
+      await opts.wait(SERIES_GAP_MS);
+      if (!opts.live()) return 'superseded';
+    }
+    try {
+      result = await play(step);
+    } catch {
+      result = 'unavailable';
+    }
+    if (!opts.live()) return 'superseded';
+    if (result !== 'played') return result;
+  }
+  return result;
 }
 
 function wordSpec(key: string, suffix: string, word: KoText, kind: PromptKind = 'word'): HearAction {
@@ -242,10 +322,17 @@ function symbolItem(
     ...(name && nameDiffers
       ? { nameButton: { action: hear(`${key}|name`, name.text, name.audioRef, 'sound'), ko: name.shown, romanization: name.romanization } }
       : {}),
+    // [SF-3] The initial ㅇ (never the final ㅇ, a separate record) has no sound of its own: its second button lets it be heard.
+    ...(jamo.id === 'jamo:ieung' ? withVowels(key, jamo) : {}),
     ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
+}
+
+function withVowels(key: string, ieung: Jamo): Pick<DiscoverItemView, 'vowelsButton'> {
+  const button = vowelsButton(key, ieung);
+  return button ? { vowelsButton: button } : {};
 }
 
 function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, kind: PromptKind = 'word'): DiscoverItemView {
@@ -617,7 +704,7 @@ export function pageRender(
     return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, page: 0, hasPrevious: false, isLast: true, continueEnabled: true };
   }
   const items = page.items.map((item, index): DiscoverItemRender => {
-    const ids = [item.hear.id, item.nameButton?.action.id, item.example?.hear.id];
+    const ids = [item.hear.id, item.nameButton?.action.id, item.vowelsButton?.action.id, item.example?.hear.id];
     const sayLines: string[] = [];
     if (state.text.includes(item.hear.id)) sayLines.push(copy.sayLine(item.spokenRomanization));
     if (item.example && state.text.includes(item.example.hear.id)) {

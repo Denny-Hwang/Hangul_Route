@@ -13,6 +13,7 @@ import {
   hear,
   hearIt,
   hearName,
+  hearVowels,
   JAMO,
   LETTER_OF,
   NAME,
@@ -96,7 +97,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     expect(errors).toEqual([]);
   });
 
-  test('Quest 2 Discover: ㅇ says 이응 and has no second button; ㅁ says 마, then its name', async ({ page }) => {
+  test('Quest 2 Discover: ㅇ says 이응, has no Hear the name, and Hear it with vowels says 아, 오, 우; ㅁ says 마, then its name', async ({ page }) => {
     await captureSpeech(page);
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await page.goto('/');
@@ -115,6 +116,12 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     expect(await hear(page, hearIt(page, 'jamo:ieung'))).toBe('이응');
     await expect(hearName(page, 'jamo:ieung')).toHaveCount(0);
     await expect(shown(page, 'discover-spoken-jamo:ieung')).toContainText('이응');
+    // [SF-3] Its second button lets the silence be heard: 아, 오, 우, one after the other, under 아 = ㅇ + ㅏ and its sisters.
+    await expect(hearVowels(page, 'jamo:ieung')).toHaveAccessibleName('Hear it with vowels. Korean letter silent/ng');
+    await expect(shown(page, 'discover-vowels-jamo:ieung')).toContainText('아 = ㅇ + ㅏ');
+    const beforeVowels = await saidCount(page);
+    await hearVowels(page, 'jamo:ieung').click();
+    await expect.poll(async () => (await said(page)).slice(beforeVowels).map((u) => u.text)).toEqual(['아', '오', '우']);
     // ㅁ on the same page: its sound 마, then its name 미음 on the second button.
     expect(await hear(page, hearIt(page, 'jamo:mieum'))).toBe('마');
     expect(await hear(page, hearName(page, 'jamo:mieum'))).toBe('미음');
