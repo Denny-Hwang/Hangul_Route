@@ -767,6 +767,26 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - 처음 한 번만 공개 모델을 내려받는다 (약 5 GB, 모두 git 이 무시하는 `apps/mobile/recordings/models/` 안). 설치 방법은 [`tts-qa-setup.md`](tts-qa-setup.md) (영문) 에 있다.
 - 결과는 같은 폴더의 `qa-report.md` 다. 떨어진 클립은 다시 만들 명령 (`... audio:tts:generate ... --only <키>`) 이 함께 나온다. 그 명령은 M-2 처럼 **별도 터미널** 에서, 그 명령 하나에만 자격 증명을 주고 실행한다.
 
+**M-7. 대립 세트 (가/카, 달/탈/딸 …): 새 클립 8개 만들기, 눈 감고 듣기, 승인 (AMENDMENTS-MINIMAL-PAIRS MP-1b 와 MP-3, 15분 + 20분)**
+
+대립 세트는 첫 소리만 다른 두세 개의 클립이다 (가/카, 달/탈/딸 …, 18개, 목록은 `content/audio/contrast-sets.json`). 앱의 "소리 구별하기" 단계는 **오너가 눈 감고 듣고 승인한 세트만** 재생한다. 승인이 없는 세트는 건너뛰고, 기기 목소리로 채우지 않는다. 그래서 위 M-4 의 선택 듣기와 달리 이 듣기는 **필수** 다.
+
+1. **새 클립 8개 만들기 (MP-1b, 15분).** 새 세트에 필요한 클립 중 아직 없는 것은 8개다 (딸 뿔 방 깨 자다 차다 사다 싸다). 목록에는 18개 세트가 있고, 나머지 클립은 이미 있다. M-2 와 같은 규칙으로 **Claude Code 가 아닌 새 터미널** 에서 한다. 먼저 미리보기:
+   `pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice Seoyeon --only 11cf51a3ca8b5108,015be332bf5c41d8,76102fe82462d111,6ed2af0841197365,023aa5fb34178979,d8eb940a7794fc46,ee0ee072926e06fc,b291179e0fe019b6 --dry-run`
+   끝에 `8 requests`, `376 billed characters`, `spend guard: --max-chars 414` 가 나오면 된다 (약 $0.01). 실제 실행은 M-2 의 3 (SSO) 이나 4 (IAM 키) 와 같고, 명령 끝에 같은 `--only ...` 와 `--max-chars 414` 를 붙인다. 끝나면 에이전트에게 **"contrast clips generated"** 만 알린다 (키나 프로필 이름은 보내지 않는다). 에이전트가 처리, 두 번의 음향 검사 (`audio:tts:qa --contrast all`, M-6), MAR 을 하고 `content(audio): contrast clips` PR 을 연다. 검사에서 떨어진 세트는 다시 만들 명령과 함께 PR 에 적힌다.
+2. **눈 감고 듣기 (MP-3, 약 20분).** 위 PR 이 머지된 뒤, 새 터미널에서 (AWS 로그인은 필요 없다. 컴퓨터 스피커나 이어폰은 필요하다):
+   `pnpm --filter @hangul-route/mobile audio:tts:listen --contrast all --engine polly --voice Seoyeon`
+   세트마다 약 1분이다.
+   - **(a) 눈 감고 알아맞히기.** 화면에 그 자리의 소리 묶음 전체가 번호로 나온다 (`1 가 ga`, `2 카 ka`, `3 까 kka`: 세트가 둘뿐이어도 세 개가 나온다). 클립마다 세 번씩, 섞인 순서로 재생된다 (둘이면 6번, 셋이면 9번). 들은 번호를 누른다. 맞았는지는 세트가 끝날 때까지 보이지 않는다. 화면의 글자를 보지 말고 소리만 듣는다. 번호가 아닌 키나 `r` 은 그 클립을 다시 들려 주고, `q` 는 멈춘다 (진행 중인 세트는 기록되지 않는다).
+   - **(b) 나란히 듣기.** 세트를 차례로 들려 주고 `y` 나 `n` 으로 답한다. 첫째 "같은 차분한 목소리, 같은 속도와 억양이고 첫 소리만 다른가?" (질문처럼, 외침처럼, 끊기거나 늘어지게 들리는 클립이 없어야 한다). 둘째 소리 설명 ("가 soft and lower at the start; 카 a clear puff and higher" 처럼. 사다/싸다 는 숨이 섞인 사 / 더 길고 날카로운 쉬 소리 ). 단어 세트는 셋째 "각각 그 단어처럼 들리는가?" 가 더 나온다.
+   - **(c) 결과.** 알아맞히기를 모두 맞히고 `y` 만 답하면 **통과**, 하나라도 아니면 **실패** 이고 메모를 적을 수 있다 (안 적어도 된다).
+3. **휴대폰 스피커로 한 번 더 (같은 20분 안에, 순서만 나중).** 기식음의 소음은 높은 소리라서 작은 스피커에서 먼저 사라진다. 컴퓨터 소리를 휴대폰 크기의 스피커로 보내거나 (블루투스 등), 같은 명령 끝에 `--speaker phone` 을 붙여 한 번 더 한다:
+   `pnpm --filter @hangul-route/mobile audio:tts:listen --contrast all --engine polly --voice Seoyeon --speaker phone`
+   여기서만 실패하는 세트도 실패다.
+4. **결과는** `apps/mobile/recordings/tts/polly/Seoyeon/owner-contrast.json` (git 이 무시하는 폴더) 에 세트마다, `computer` 와 `phone` 따로 남는다 (날짜, 모든 재생과 답, 두 답, 메모, 들은 MP3 의 sha256). 같은 스피커로 다시 들으면 그 결과로 바뀐다. 에이전트에게는 **"contrast listen done"** 과 통과/실패 세트 이름만 알린다. 에이전트가 `content(audio): approve contrast sets` PR 에서 **컴퓨터와 휴대폰 둘 다 통과한** 세트의 승인을 `content/audio/contrast-sets.json` 에 옮기고, 각 sha 가 `tts-lock.json` 의 것과 같은지 먼저 확인한다 (듣고 나서 바뀐 파일은 승인되지 않는다). 실패한 세트는 PR 본문에 메모와 함께 적히고 다음 키 세션 목록에 올라간다.
+5. **다시 만들면 승인이 풀린다.** 승인한 세트의 클립을 다시 만들면 (sha 가 달라지면) 그 세트는 저절로 재생되지 않고, 다시 들어야 한다. 끄고 싶은 세트는 에이전트에게 한 줄 PR 로 `approval` 을 `lapsed` 로 옮기게 한다 (원격 스위치는 없다). 팩 스위치 (`audioPack.<pack>`) 로 한 팩의 클립을 끄면 그 팩의 클립을 쓰는 세트도 건너뛴다.
+6. **메시지가 나오면.** `set ... skipped. ...: no processed MP3 at ...`: 그 클립이 아직 처리되어 들어오지 않았다 (1 의 PR 이 머지되기 전이다). `... is not the MP3 the lock holds ... (finish the hand-off first)`: 처리된 MP3 가 잠금 파일과 다르다. 에이전트의 hand-off 가 끝나기 전이다. `refused: the contrast listen ... needs a terminal`: 키를 누르며 답해야 해서 Claude Code 나 파이프가 아닌 터미널 창에서 해야 한다. `refused: ... is not gitignored`: `--out` 을 빼고 기본 폴더를 쓴다.
+
 ## N. 네이티브 앱의 어른 로그인 — API Worker 스위치 (F-AUTH-004 NS-1, section 9.4)
 
 > NS-1 은 iOS·Android 앱이 어른 로그인을 하기 **전에** API Worker 에 먼저 나간다. 대시보드에서 할 일은 **없다**: 두 변수 모두 없으면 켜짐이고, 그것이 기본값이다. Stripe 와는 무관하다 (Live 는 계속 꺼 둔다, `BILLING_LIVE_ALLOWED` 는 그대로 비워 둔다). 네이티브 앱의 로그인 자체는 앱 빌드 변수 `EXPO_PUBLIC_NATIVE_SIGNIN` 이 켜는데, 그것은 NS-8 까지 꺼져 있다 (오너 단계 O-1 ~ O-6 은 NS-2 가 이 런북에 넣는다).

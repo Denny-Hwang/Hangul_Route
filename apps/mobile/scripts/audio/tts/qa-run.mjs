@@ -4,19 +4,22 @@
 // Exit codes: 0 every selected row has a clip that passes; 1 a clip fails or is missing; 2 a usage error or a refusal.
 import { join, relative, resolve, sep } from 'node:path';
 import { AUDIO_PACKS } from '@hangul-route/content-schema';
+import { CONTRAST_SETS_FILE, parseContrastSets } from '../content-sources.mjs';
 import { PACK_SET_LIMITS, clipKbpsOf, evaluateSet, fileIdOf, parseBitrate, recordingGroupOf } from '../lib.mjs';
 import { OUTPUT_ROOT, selectRows } from './generate-lib.mjs';
 import { LOCK_FILE, emptyLock, parseLock } from './lock-lib.mjs';
 import { MANIFEST_FILE, OVERRIDES_FILE } from './manifest-lib.mjs';
 import { parseOverrides } from './overrides-schema.mjs';
-import { CTC_MARGIN_NATS, clipVerdict, closedSetOf, evaluatePass1, evaluatePass2, targetFormsOf } from './qa-lib.mjs';
-import { OWNER_LISTEN_FILE, REPORT_JSON, REPORT_MD, buildReport, evaluateSignal, identityChecks, parseMeasure, renderReportMarkdown, reportPasses } from './qa-report.mjs';
+import { CTC_MARGIN_NATS, clipVerdict, closedSetOf, evaluateContrastSet, evaluatePass1, evaluatePass2, targetFormsOf, withSeriesForms } from './qa-lib.mjs';
+import { OWNER_CONTRAST_FILE, OWNER_LISTEN_FILE, REPORT_JSON, REPORT_MD, activeVetoes, buildReport, evaluateSignal, identityChecks, parseMeasure, renderReportMarkdown, reportPasses } from './qa-report.mjs';
 
 export const QA_USAGE =
-  'usage: qa.mjs --engine <id> --voice <name> (--pack <pack>[,<pack>] | --pilot | --only <key>[,<key>]) [--dir <folder>[,<folder>]]\n' +
+  'usage: qa.mjs --engine <id> --voice <name> (--pack <pack>[,<pack>] | --pilot | --only <key>[,<key>] | --contrast <set id>[,<set id>]|all) [--dir <folder>[,<folder>]]\n' +
   '              [--out <folder>] [--margin <nats>] [--say-bitrate 48|64] [--whisper-cli <path>] [--whisper-model <path>] [--grammar-penalty <n>]\n' +
   '              [--ctc-model <folder>] [--ctc-model-id <id>] [--ctc-licence <spdx>] [--python <path>]\n' +
-  '              [--manifest <path>] [--overrides <path>] [--lock <path>]';
+  '              [--manifest <path>] [--overrides <path>] [--lock <path>] [--contrast-sets <path>]\n' +
+  '       --contrast checks the members of the named contrast sets (section 3.2 of AMENDMENTS-MINIMAL-PAIRS) on the processed MP3s\n' +
+  '       (apps/mobile/assets/audio/jamo and /say unless --dir is given) and adds the set gate G2-G6 to the report';
 
 /** Where the local models live by default: inside the gitignored apps/mobile/recordings/ (docs/launch/tts-qa-setup.md). */
 export const MODELS_ROOT = 'apps/mobile/recordings/models';
@@ -26,7 +29,7 @@ export const DEFAULT_PYTHON = `${MODELS_ROOT}/venv/bin/python`;
 
 const VALUE_FLAGS = new Set([
   '--engine', '--voice', '--pack', '--only', '--dir', '--out', '--margin', '--say-bitrate', '--whisper-cli', '--whisper-model', '--grammar-penalty',
-  '--ctc-model', '--ctc-model-id', '--ctc-licence', '--python', '--manifest', '--overrides', '--lock',
+  '--ctc-model', '--ctc-model-id', '--ctc-licence', '--python', '--manifest', '--overrides', '--lock', '--contrast', '--contrast-sets',
 ]);
 const list = (value) => value.split(',').map((s) => s.trim()).filter((s) => s !== '');
 const camel = (flag) => flag.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -51,10 +54,16 @@ export function parseQaArgs(argv) {
   out.packs = opts.pack === undefined ? undefined : list(opts.pack);
   out.only = opts.only === undefined ? undefined : list(opts.only);
   out.dirs = opts.dir === undefined ? undefined : list(opts.dir);
+  out.contrast = opts.contrast === undefined ? undefined : list(opts.contrast);
   delete out.pack;
   delete out.dir;
-  if (out.pilot && out.packs !== undefined) return { error: '--pilot and --pack cannot be combined' };
-  if (!out.pilot && out.packs === undefined && out.only === undefined) return { error: 'name what to check: --pack, --pilot or --only' };
+  if (out.contrast !== undefined) {
+    // The set gate has its own row selection: the members of the named sets, across packs.
+    if (out.pilot || out.packs !== undefined || out.only !== undefined) return { error: '--contrast selects its own rows (the members of the sets) and cannot be combined with --pilot, --pack or --only' };
+    if (out.contrast.length === 0) return { error: '--contrast needs a set id or all' };
+    if (out.contrast.includes('all') && out.contrast.length > 1) return { error: '--contrast all cannot be combined with set ids' };
+  } else if (out.pilot && out.packs !== undefined) return { error: '--pilot and --pack cannot be combined' };
+  else if (!out.pilot && out.packs === undefined && out.only === undefined) return { error: 'name what to check: --pack, --pilot or --only (or --contrast for the contrast sets)' };
   if (out.packs !== undefined) {
     const unknown = out.packs.filter((p) => !AUDIO_PACKS.includes(p));
     if (unknown.length > 0 || out.packs.length === 0) return { error: `unknown pack ${unknown.join(', ') || '(none)'}; packs: ${AUDIO_PACKS.join(', ')}` };
@@ -124,7 +133,31 @@ function processedGroupOf(dir) {
 const isProcessedFolder = (dir) => processedGroupOf(dir) !== null;
 
 const describeSelection = (opts) =>
-  [opts.pilot ? 'the pilot' : null, opts.packs ? `packs ${opts.packs.join(', ')}` : null, opts.only ? `only ${opts.only.join(', ')}` : null].filter(Boolean).join(', ');
+  [
+    opts.pilot ? 'the pilot' : null,
+    opts.packs ? `packs ${opts.packs.join(', ')}` : null,
+    opts.only ? `only ${opts.only.join(', ')}` : null,
+    opts.contrast ? `contrast sets ${opts.contrast.join(', ')}` : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+/** The processed clip folders the set gate reads by default (the MP3s that ship; section 3.2). */
+export const CONTRAST_CLIP_DIRS = ['apps/mobile/assets/audio/jamo', 'apps/mobile/assets/audio/say'];
+
+/** The catalogue's sets named by --contrast (a set id list or `all`), or throws naming the unknown id. */
+export function selectContrastSets(catalogue, names) {
+  if (names.length === 1 && names[0] === 'all') return catalogue.sets;
+  const unknown = names.filter((n) => !catalogue.sets.some((s) => s.id === n));
+  if (unknown.length > 0) throw new Error(`--contrast: no set ${unknown.join(', ')}; sets: ${catalogue.sets.map((s) => s.id).join(', ')}`);
+  return catalogue.sets.filter((s) => names.includes(s.id));
+}
+
+/** The manifest rows of the members of `sets`, across packs, once each (a row's ref names it). */
+export function contrastRows(manifestRows, sets) {
+  const refs = new Set(sets.flatMap((s) => s.members.map((m) => m.ref)));
+  return manifestRows.filter((r) => refs.has(r.ref));
+}
 
 /** Groups closed-set clips that share one candidate list, so each forced-choice grammar runs once. */
 function byCandidates(items) {
@@ -161,7 +194,7 @@ export async function runQa(argv, env, deps) {
     return rel.startsWith('..') ? p : rel.split(sep).join('/');
   };
   const masterDir = abs(join(OUTPUT_ROOT, opts.engine, opts.voice));
-  const dirs = (opts.dirs ?? [masterDir]).map(abs);
+  const dirs = (opts.dirs ?? (opts.contrast === undefined ? [masterDir] : CONTRAST_CLIP_DIRS)).map(abs);
   const outDir = abs(opts.out ?? shown(masterDir));
   if (!deps.isIgnored(outDir)) {
     deps.err(`refused: ${shown(outDir)} is not gitignored. The report stays local, next to the masters (${OUTPUT_ROOT}/<engine>/<voice>/).`);
@@ -174,8 +207,13 @@ export async function runQa(argv, env, deps) {
   const lockPath = abs(opts.lock ?? LOCK_FILE);
   const lock = deps.exists(lockPath) ? parseLock(JSON.parse(deps.readText(lockPath))) : emptyLock();
   let rows;
+  let contrastSets = null;
   try {
-    rows = selectRows(manifest.rows, opts, deps.keys);
+    if (opts.contrast === undefined) rows = selectRows(manifest.rows, opts, deps.keys);
+    else {
+      contrastSets = selectContrastSets(parseContrastSets(JSON.parse(deps.readText(abs(opts.contrastSets ?? CONTRAST_SETS_FILE)))), opts.contrast);
+      rows = contrastRows(manifest.rows, contrastSets);
+    }
   } catch (e) {
     deps.err(e instanceof Error ? e.message : String(e));
     return 2;
@@ -196,7 +234,9 @@ export async function runQa(argv, env, deps) {
     for (const f of clipFilesOf(deps.listDir(dir))) {
       const file = join(dir, f.name);
       const rowKey = rowKeyOf(f.key, dir);
-      clips.push({ key: rowKey ?? f.key, known: rowKey !== null, processedFolder: isProcessedFolder(dir), ext: f.ext, file, shownFile: shown(file), sha256: await deps.sha256File(file) });
+      // Only a clip of this run's rows is hashed (a processed say/ folder holds every clip of the app).
+      const sha256 = rowKey !== null && wanted.has(rowKey) ? await deps.sha256File(file) : '';
+      clips.push({ key: rowKey ?? f.key, known: rowKey !== null, processedFolder: isProcessedFolder(dir), ext: f.ext, file, shownFile: shown(file), sha256 });
     }
   }
   const selected = clips.filter((c) => c.known && wanted.has(c.key));
@@ -210,7 +250,7 @@ export async function runQa(argv, env, deps) {
   });
   // A master folder holds generated clips only, so a file of no row is extra (an identity failure). A processed group
   // folder also holds recorded clips the manifest does not generate: those are listed, not checked.
-  const extra = opts.only === undefined ? clips.filter((c) => !c.known && !c.processedFolder).map((c) => c.shownFile) : [];
+  const extra = opts.only === undefined && opts.contrast === undefined ? clips.filter((c) => !c.known && !c.processedFolder).map((c) => c.shownFile) : [];
   const notGenerated = clips.filter((c) => !c.known && c.processedFolder).map((c) => c.shownFile);
 
   let recognizers;
@@ -224,7 +264,9 @@ export async function runQa(argv, env, deps) {
   for (const row of rows) {
     const clip = selected.find((c) => c.key === row.key);
     if (clip === undefined) continue;
-    items.push({ row, clip, file: clip.file, forms: targetFormsOf(row, overrides), closedSet: closedSetOf(row, overrides) });
+    // The set gate's forced choice (G2) is over the whole series at the member's place and vowel.
+    const closedSet = closedSetOf(row, overrides);
+    items.push({ row, clip, file: clip.file, forms: targetFormsOf(row, overrides), closedSet: contrastSets === null ? closedSet : withSeriesForms(closedSet, row.text) });
   }
   deps.out(`audio:tts:qa: ${items.length} clips of ${rows.length} rows (${describeSelection(opts)}), ${stage === 'masters' ? 'WAV masters' : 'processed MP3s'}`);
 
@@ -290,6 +332,20 @@ export async function runQa(argv, env, deps) {
 
   const listenPath = join(outDir, OWNER_LISTEN_FILE);
   const ownerListen = deps.exists(listenPath) ? JSON.parse(deps.readText(listenPath)) : null;
+  const contrastPath = join(outDir, OWNER_CONTRAST_FILE);
+  const ownerContrast = contrastSets !== null && deps.exists(contrastPath) ? JSON.parse(deps.readText(contrastPath)) : null;
+  // Mark a vetoed member before the set gate reads it (G1: a veto is honoured, as for any clip).
+  const vetoedKeys = new Set(activeVetoes(ownerListen, results).map((v) => v.key));
+  const setResults =
+    contrastSets === null
+      ? null
+      : contrastSets.map((set) =>
+          evaluateContrastSet(set, {
+            rowByRef: new Map(manifest.rows.map((r) => [r.ref, r])),
+            resultByRef: new Map(results.map((r) => [r.ref, { ...r, vetoed: vetoedKeys.has(r.key) }])),
+            packOrder: AUDIO_PACKS,
+          }),
+        );
   const [p1Info, p2Info] = await Promise.all([recognizers.pass1.describe(), recognizers.pass2.describe()]);
   const report = buildReport({
     meta: {
@@ -299,7 +355,7 @@ export async function runQa(argv, env, deps) {
       stage,
       folders: dirs.map(shown),
       masterDir: shown(masterDir),
-      selection: { pilot: opts.pilot, packs: opts.packs ?? null, only: opts.only ?? null },
+      selection: { pilot: opts.pilot, packs: opts.packs ?? null, only: opts.only ?? null, contrast: opts.contrast ?? null },
       selectionLabel: describeSelection(opts),
       recognizers: { pass1: p1Info, pass2: p2Info },
     },
@@ -309,6 +365,8 @@ export async function runQa(argv, env, deps) {
     notGenerated,
     ownerListen,
     packTotals,
+    contrastSets: setResults,
+    ownerContrast,
   });
   deps.writeAtomic(join(outDir, REPORT_JSON), `${JSON.stringify(report, null, 2)}\n`);
   deps.writeAtomic(join(outDir, REPORT_MD), renderReportMarkdown(report));
@@ -321,5 +379,13 @@ export async function runQa(argv, env, deps) {
   }
   if (report.extra.length > 0) deps.out(`${report.extra.length} extra files have no manifest row (an identity failure): remove them.`);
   for (const p of report.packTotals.filter((x) => !x.ok)) deps.out(`pack ${p.pack}: ${p.failures.join('; ')}`);
+  if (report.contrastSets !== null) {
+    const c = report.summary.contrastSets;
+    deps.out(`${c.pass} of ${c.sets} contrast sets pass the set gate (G1-G6).`);
+    for (const set of report.contrastSets.filter((x) => !x.ok)) {
+      const failed = Object.entries(set.gates).filter(([, g]) => !g.ok).map(([name]) => name);
+      deps.out(`  set ${set.id} fails ${failed.join(', ')}${set.regenerate.length === 0 ? ' (nothing to regenerate: a content decision, section 3.2 "When a set fails")' : ''}`);
+    }
+  }
   return reportPasses(report) ? 0 : 1;
 }
