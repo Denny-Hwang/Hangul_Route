@@ -1849,3 +1849,90 @@ describe('controller: the first utterance after the engine was idle is deferred 
     expect(engine.requests).toHaveLength(3);
   });
 });
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-MINIMAL-PAIRS section 3.6 (row MP-2a): a clip-only prompt is its clip or nothing
+// ---------------------------------------------------------------------------
+
+describe('controller: clipOnly (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6)', () => {
+  const REF = 'audio/jamo/giyeok.mp3';
+  const spec = { text: '가', audioRef: REF, kind: 'sound' as const, clipOnly: true, source: 'listen-pick' };
+
+  it('plays its one clip, counts it, and never touches the engine', async () => {
+    const r = rig();
+    await expect(r.ctl.playPrompt(spec)).resolves.toBe('played');
+    expect(r.clips.played).toEqual([REF]);
+    expect(r.engine.requests).toEqual([]);
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 1, say: 0, tts: 0, text: 0 });
+  });
+
+  it('never looks up the say clip of its text, even when that clip is bundled', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('가'));
+    r.state.assets.delete(REF);
+    await expect(r.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests).toEqual([]);
+    expect(r.failures).toEqual(['clip-only']);
+  });
+
+  it.each(['missing', 'fetch', 'decode', 'blocked'] as const)('a clip that fails (%s) is unavailable: no voice, nothing counted, the failure still reported', async (reason) => {
+    const r = rig();
+    r.clips.script = [reason];
+    await expect(r.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    expect(r.engine.requests).toEqual([]);
+    expect(r.failures).toEqual(['clip-only']);
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 0, say: 0, tts: 0, text: 0 });
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'clip', reason, code: 'none', source: 'listen-pick' } }]);
+  });
+
+  it('a clip that is not bundled, clips switched off, no clip player and a pack switched off are all unavailable, with no voice', async () => {
+    const off = rig();
+    off.state.clipsEnabled = false;
+    await expect(off.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    const none = rig({ clips: false });
+    await expect(none.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    const pack = rig();
+    pack.state.packs.set(REF, 'jamo-s1');
+    pack.state.packsOff.add('jamo-s1');
+    await expect(pack.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    const missing = rig();
+    missing.state.assets.clear();
+    await expect(missing.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    for (const r of [off, none, pack, missing]) {
+      expect(r.engine.requests).toEqual([]);
+      expect(r.failures).toEqual(['clip-only']);
+    }
+  });
+
+  it('a muted device is unavailable too, with no voice and no clip', async () => {
+    const r = rig();
+    r.state.muted = true;
+    await expect(r.ctl.playPrompt(spec)).resolves.toBe('unavailable');
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests).toEqual([]);
+    expect(r.failures).toEqual(['clip-only']);
+  });
+
+  it('a prompt without clipOnly is as before: it falls to the voice when its clip fails', async () => {
+    const r = rig();
+    r.clips.script = ['decode'];
+    await expect(r.ctl.playPrompt({ ...spec, clipOnly: false })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+  });
+
+  it('waits for a pack chunk on its way, as any clip does, then plays', async () => {
+    const r = rig();
+    r.state.assets.delete(REF);
+    let release = (): void => undefined;
+    r.state.pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const played = r.ctl.playPrompt(spec);
+    await Promise.resolve();
+    r.state.assets.add(REF);
+    release();
+    await expect(played).resolves.toBe('played');
+    expect(r.clips.played).toEqual([REF]);
+  });
+});

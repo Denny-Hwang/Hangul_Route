@@ -328,6 +328,11 @@ export const a11y = {
    */
   romanizationOr: 'or',
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
+  /**
+   * A contrast round's member after the answer, and in its compare row (AMENDMENTS-MINIMAL-PAIRS section 3.7): "{item}, {kind}".
+   * `item` is the member by its romanization, never its Hangul (AF-4b); `kind` is one of `learner.minigame.contrast.kind`.
+   */
+  contrastItem: (item: string, kind: string) => `${item}, ${kind}`,
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined
       ? `Korean: ${item.ko}, ${item.romanization}`

@@ -3,6 +3,7 @@ import type { AudioCapability } from '../capability';
 import {
   INITIAL_PROMPT_STATE,
   fallbackAction,
+  noTextReducer,
   promptReducer,
   showText,
   type PromptEvent,
@@ -162,5 +163,36 @@ describe('fallbackAction', () => {
     [null, 'none'],
   ] as const)('%s -> %s', (reason, action) => {
     expect(fallbackAction(reason)).toBe(action);
+  });
+});
+
+describe('noTextReducer (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6)', () => {
+  const runNoText = (events: PromptEvent[]): PromptState => events.reduce(noTextReducer, INITIAL_PROMPT_STATE);
+
+  it('behaves as promptReducer while nothing would show text', () => {
+    expect(runNoText(['play'])).toEqual(run(['play']));
+    expect(runNoText(['play', { result: 'played' }])).toEqual({ phase: 'ok', reason: null, attempts: 1 });
+    expect(runNoText(['reset'])).toEqual(INITIAL_PROMPT_STATE);
+  });
+
+  it.each<[string, PromptEvent[]]>([
+    ['an unavailable play', ['play', { result: 'unavailable', failure: 'clip-only' }]],
+    ['a blocked play', ['play', { result: 'unavailable', failure: 'blocked' }]],
+    ['a muted play', ['play', { result: 'muted' }]],
+    ['sound turned off', [{ muted: true }]],
+    ['no Korean voice', [{ capability: noneCap }]],
+  ])('%s never enters the text phase and carries no reason', (_name, events) => {
+    const s = runNoText(events);
+    expect(s.phase).not.toBe('text');
+    expect(s.reason).toBeNull();
+  });
+
+  it('keeps the attempts, so a failed play reads as played once, not as nothing', () => {
+    expect(runNoText(['play', { result: 'unavailable', failure: 'clip-only' }])).toEqual({ phase: 'ok', reason: null, attempts: 1 });
+    expect(runNoText([{ muted: true }])).toEqual({ phase: 'idle', reason: null, attempts: 0 });
+  });
+
+  it('ignores Show the letters: a contrast round has no such ask', () => {
+    expect(runNoText(['show_text'])).toEqual(INITIAL_PROMPT_STATE);
   });
 });

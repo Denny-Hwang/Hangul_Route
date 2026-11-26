@@ -209,6 +209,7 @@ export const a11y = {
     round: (n: number, total: number, prompt: string) => `${total}문제 중 ${n}번째 문제. ${prompt}`,
   },
   romanizationOr: '또는',
+  contrastItem: (item: string, kind: string) => `${item}, ${kind}`,
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `숫자 ${digit}`,

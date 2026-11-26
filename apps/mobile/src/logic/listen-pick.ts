@@ -21,6 +21,16 @@ export function roundItemId(round: ItemRound): string {
   return round.itemId ?? round.id;
 }
 
+/** A contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5): it names its set. The start bundle needs only this to know when to load the contrast chunk. */
+export function isContrastRound(round: Pick<ListenPickRound, 'contrastSet'>): boolean {
+  return round.contrastSet !== undefined;
+}
+
+/** Every round of a scope is a contrast round (a contrast step's scope; a content test keeps the two kinds apart). */
+export function isContrastScope(rounds: readonly Pick<ListenPickRound, 'contrastSet'>[]): boolean {
+  return rounds.length > 0 && rounds.every(isContrastRound);
+}
+
 /** mulberry32: a small, well-spread seeded generator. Shared with the other games' shuffles. */
 export function seededRandom(seed: number): () => number {
   let a = seed >>> 0;

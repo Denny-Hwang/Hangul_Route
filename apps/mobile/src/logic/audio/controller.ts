@@ -48,10 +48,16 @@ export interface PlaySpec {
   slow?: boolean;
   /** Surface id for telemetry: 'match-sound' | 'discover' | 'trace' | ... */
   source?: string;
+  /**
+   * Play `audioRef` and nothing else (AMENDMENTS-MINIMAL-PAIRS section 3.6, row MP-2a): a contrast round's sound is its
+   * approved clip or it is not played. No say-clip lookup, no device voice, no text: anything but the clip playing, a
+   * muted, missing, failed or blocked one included, resolves `unavailable` with the reason `'clip-only'`.
+   */
+  clipOnly?: boolean;
 }
 
-/** What decides which clips a prompt may play: the spoken text, the record's clip and the language. */
-export type ClipLookup = Pick<PlaySpec, 'text' | 'audioRef' | 'language'>;
+/** What decides which clips a prompt may play: the spoken text, the record's clip, the language and `clipOnly`. */
+export type ClipLookup = Pick<PlaySpec, 'text' | 'audioRef' | 'language' | 'clipOnly'>;
 
 /**
  * The clips a prompt may play, in the AMENDMENTS-AUDIO-CLIPS AC-B7 order: the record's clip (`audioRef`), then the
@@ -62,6 +68,8 @@ export type ClipLookup = Pick<PlaySpec, 'text' | 'audioRef' | 'language'>;
 export function clipRefsFor(spec: ClipLookup): string[] {
   const refs: string[] = [];
   if (spec.audioRef !== undefined && spec.audioRef !== '') refs.push(spec.audioRef);
+  // A clip-only prompt (a contrast round) has the one clip it names: its text never finds another.
+  if (spec.clipOnly === true) return refs;
   if ((spec.language ?? 'ko-KR') === 'ko-KR' && spec.text.trim() !== '') {
     const said = sayRef(spec.text);
     if (!refs.includes(said)) refs.push(said);
@@ -629,7 +637,9 @@ export function createAudioController(deps: ControllerDeps): AudioController {
   // --- public ----------------------------------------------------------------
 
   const runPrompt = async (spec: PlaySpec): Promise<PlayResult> => {
-    if (deps.isMuted()) return fail('muted', 'muted');
+    const clipOnly = spec.clipOnly === true;
+    // A contrast round never shows the sound-off text (it would print the answer): muted is just "no clip" there.
+    if (deps.isMuted()) return clipOnly ? fail('unavailable', 'clip-only') : fail('muted', 'muted');
 
     const ticket: Ticket = { superseded: false, hooks: new Set() };
     const previous = current;
@@ -650,6 +660,8 @@ export function createAudioController(deps: ControllerDeps): AudioController {
         count(viaClip);
         return 'played';
       }
+      // Never the device voice, never the text, and nothing counted as either (AMENDMENTS-MINIMAL-PAIRS section 3.6).
+      if (clipOnly) return fail('unavailable', 'clip-only');
       const viaTts = await speakTts(ticket, spec, wasBusy, inTap);
       // An interrupted prompt never drives the fallback, and is not counted.
       if (viaTts === SUPERSEDED) return 'played';

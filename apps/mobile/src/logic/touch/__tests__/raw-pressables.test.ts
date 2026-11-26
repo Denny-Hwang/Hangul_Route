@@ -18,6 +18,8 @@ const FOLDERS = ['screens/minigames', 'screens/quest', 'screens/placement', 'scr
 /** Pressables and GuardedPressables that answer nothing; named by their `testID` (or `onPress`) as written. */
 const CONTROLS: Readonly<Record<string, readonly string[]>> = {
   'screens/minigames/BuildLetterGame.tsx': ['build-letter-speaker'],
+  // A contrast round's compare row: each item plays its member's clip again; none answers (AMENDMENTS-MINIMAL-PAIRS 3.7).
+  'screens/minigames/ContrastCompare.tsx': ['`contrast-compare-${item.id}`'],
   'screens/minigames/ListenPickGame.tsx': ['listen-pick-speaker'],
   'screens/minigames/MatchSoundGame.tsx': ['match-sound-speaker'],
   'screens/minigames/MyStoryGame.tsx': ['my-story-so-far-folded'],

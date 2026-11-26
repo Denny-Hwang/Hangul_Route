@@ -45,3 +45,11 @@ describe('clipRefsFor (the clips a prompt may play, in AC-B7 order)', () => {
     expect(clipRefsFor({ text: '가', audioRef: '' })).toEqual([sayRef('가')]);
   });
 });
+
+describe('clipRefsFor with clipOnly (AMENDMENTS-MINIMAL-PAIRS section 3.6)', () => {
+  it('is the record clip alone: the say clip of the text is never a candidate', () => {
+    expect(clipRefsFor({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', clipOnly: true })).toEqual(['audio/jamo/giyeok.mp3']);
+    expect(clipRefsFor({ text: '가', clipOnly: true })).toEqual([]);
+    expect(clipRefsFor({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', clipOnly: false })).toEqual(['audio/jamo/giyeok.mp3', sayRef('가')]);
+  });
+});

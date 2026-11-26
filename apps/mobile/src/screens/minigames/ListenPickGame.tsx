@@ -38,9 +38,12 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '../../logic/answer-feedback';
+import type { ContrastEnv } from '../../logic/audio/contrast-sets';
+import type { ContrastMemberKind } from '../../logic/listen-pick-contrast';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
+  LISTEN_PICK_TIMING,
   askedTextIsRomanizationOnly,
   checkHoldsRomanization,
   headerView,
@@ -57,13 +60,16 @@ import {
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
-import { roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
+import { isContrastRound, isContrastScope, roundItemId, seededRandom, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
+import { useAudioStore } from '../../store/audio-store';
 import { AnswerAnnouncer } from './answer-announcer';
+import { useContrastKit, type ContrastKit } from './contrast-entry';
+import { LessonWaiting } from '../lesson-content';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
 import type { HostMode, MinigameHost } from './host';
@@ -145,12 +151,79 @@ const CHECK_ASK_SOURCE: Partial<Record<HostMode, string>> = { check: 'quest-chec
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
-export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null }: Props): ReactElement {
-  const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
-  const rounds = useMemo(
-    () => validRounds(scope).map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i)),
-    [scope, seed, spelling],
+/**
+ * A scope that holds contrast rounds among others (not a contrast step: a content test keeps the two kinds apart, so this is
+ * defence): each contrast round that plays now is expanded into its set's own round with a drawn target, so a stub never
+ * shows its placeholder options; the rest stay. A contrast round that cannot play is left out (section 3.6).
+ */
+function mixedRounds(contrast: ContrastKit, rounds: readonly ListenPickRound[], env: ContrastEnv, seed: number): ListenPickRound[] {
+  const random = seededRandom(seed);
+  return rounds.flatMap((r) => {
+    if (!isContrastRound(r)) return [r];
+    return contrast.contrastRoundPlayable(r, env) ? [contrast.withTarget(r, undefined, random)] : [];
+  });
+}
+
+/**
+ * Listen & Pick. A scope that holds a contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a) loads the contrast
+ * chunk first (`contrast-entry.ts`: the catalogue, the draw, the compare row), so the start bundle carries none of it; any
+ * other scope plays at once and never imports it. While the chunk loads the step shows the lesson's waiting state; a chunk
+ * that cannot load drops the contrast rounds silently, as any round whose clip cannot play is dropped (section 3.6), and a
+ * step with none left completes having scored nothing.
+ */
+export function ListenPickGame(props: Props): ReactElement {
+  const { scope, host } = props;
+  const needed = (scope.listenPick?.rounds ?? []).some(isContrastRound);
+  const kit = useContrastKit(needed);
+  const stripped = useMemo(
+    () => (needed && kit === 'failed' ? { ...scope, listenPick: { ...scope.listenPick, rounds: (scope.listenPick?.rounds ?? []).filter((r) => !isContrastRound(r)) } } : scope),
+    [needed, kit, scope],
   );
+  const nothingLeft = needed && kit === 'failed' && (stripped.listenPick?.rounds.length ?? 0) === 0;
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  useEffect(() => {
+    if (nothingLeft) hostRef.current.complete();
+  }, [nothingLeft]);
+  if (needed && (kit === null || nothingLeft)) return <LessonWaiting />;
+  return <ListenPickBoard {...props} scope={stripped} contrast={kit === 'failed' ? null : kit} />;
+}
+
+function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null, contrast }: Props & { contrast: ContrastKit | null }): ReactElement {
+  /** What a contrast round's option is in its set (its kind and the set's consonant series), for the line under it. */
+  const noteOf = (round: ListenPickRound, option: ListenPickRound['options'][number]): ContrastMemberKind | undefined =>
+    option.text === undefined || contrast === null ? undefined : contrast.contrastNote(round, option.text.ko);
+  const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const hostForContrast = useRef(host);
+  hostForContrast.current = host;
+  // A contrast round plays only on approved clips that can play now (AMENDMENTS-MINIMAL-PAIRS section 3.6), read from the device
+  // at the moment of asking, so a switch turned off since is seen.
+  const contrastEnv = useCallback(
+    (): ContrastEnv => ({
+      // The clip of a contrast member is its own ref and nothing else (`clipOnly`), asked as `hasClipFor` asks for what plays.
+      hasClip: (ref) => hasClipFor({ text: '', audioRef: ref, clipOnly: true }),
+      soundOn: !useAudioStore.getState().muted,
+      alwaysShowLetters: useAudioStore.getState().showLetters,
+      host: hostForContrast.current.mode,
+    }),
+    [],
+  );
+  // The rounds the step opens with. A contrast scope draws its rounds and their targets when it starts (section 3.5: six
+  // of the playable sets, targets balanced, seeded); a round that cannot be played is not drawn, so it is never shown.
+  const initialRounds = useMemo(() => {
+    const valid = validRounds(scope);
+    const playing =
+      contrast === null || !valid.some(isContrastRound)
+        ? valid
+        : isContrastScope(valid)
+          ? contrast.drawContrastRounds(valid, contrastEnv(), seed)
+          : mixedRounds(contrast, valid, contrastEnv(), seed);
+    return playing.map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i));
+  }, [scope, seed, spelling, contrastEnv, contrast]);
+  // The contrast rounds dropped since the step opened (a clip that did not play, a pack switched off, Can't hear it?): the
+  // count shrinks with them (section 3.6, 3.9). Never a round the learner has answered.
+  const [dropped, setDropped] = useState<readonly string[]>([]);
+  const rounds = useMemo(() => (dropped.length === 0 ? initialRounds : initialRounds.filter((r) => !dropped.includes(r.id))), [initialRounds, dropped]);
 
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -177,6 +250,17 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   hostRef.current = host;
   const roundsRef = useRef(rounds);
   roundsRef.current = rounds;
+  /** Drop rounds by id from the step now (the ref first, so the flow's next effect reads the new list); the rounds still held. */
+  const dropRounds = useCallback((ids: readonly string[]): number => {
+    const kept = roundsRef.current.filter((r) => !ids.includes(r.id));
+    roundsRef.current = kept;
+    setDropped((prev) => [...prev, ...ids.filter((id) => !prev.includes(id))]);
+    return kept.length;
+  }, []);
+  /** The member whose clip plays in the compare row now (the outline and the speaker glyph, section 3.7). */
+  const [sounding, setSounding] = useState<string | null>(null);
+  /** A new round, a replay of the compare row or a leave drops the compare row's chain still waiting. */
+  const compareRun = useRef(0);
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
   // F-A11Y-001 AF-4b: each result is said once, by the answer announcer; with a screen reader on a right answer shows Next.
   const a = useAnswerAnnouncement();
@@ -227,6 +311,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   textModeRef.current = textMode;
   const current = rounds[state.roundIdx];
   const spellingNow = !textMode && spelling !== null && current !== undefined && isSpellingRound(current);
+  // A contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.6): its Korean is the answer, so its slot never shows text, and its
+  // "Can't hear it?" is guidance only (section 3.9).
+  const contrastNow = !textMode && current !== undefined && isContrastRound(current);
   const checkSource = CHECK_ASK_SOURCE[host.mode];
   const slot = usePromptSlot({
     source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
@@ -236,7 +323,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     // "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1b, CH-1e): on every host, the Checks included, never on a text
     // prompt round (no speaker). The spelling round's link is guidance only (the cue rule).
     cantHear: !textMode,
-    guidanceOnly: spellingNow,
+    guidanceOnly: spellingNow || contrastNow,
+    noText: contrastNow,
     // A Check stays sound-first (owner decision 2026-11-25): "Always show the letters" does not reach it, and its ask is
     // counted under its own surface id.
     soundFirst: checkSource !== undefined,
@@ -269,12 +357,49 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         const roundIdx = current.roundIdx;
         const speech = listenPickSpeech(round);
         lastCap.current = soundCapMs(speech.kind);
-        void pacing.track(slotPlay(() => playPrompt(speech))).then((result) =>
-          dispatchRef.current({ type: 'audio', round: roundIdx, result }),
+        void pacing.track(slotPlay(() => playPrompt(speech))).then((result) => {
+          if (!isContrastRound(round)) {
+            dispatchRef.current({ type: 'audio', round: roundIdx, result });
+            return;
+          }
+          // A contrast round never turns to text (it would print the answer): a prompt that did not play from its clip ends
+          // the round with nothing scored, and the next one takes its place (section 3.6). Only an open, untouched round,
+          // and only the prompt the learner or the round itself asked for, not the clip after a right answer.
+          const now = stateRef.current;
+          const open = now.roundIdx === roundIdx && now.status === 'asking' && now.wrongIds.length === 0 && roundsRef.current[roundIdx]?.id === round.id;
+          if (result !== 'played' && open && (effect.why === 'autoplay' || effect.why === 'manual')) {
+            dispatchRef.current({ type: 'drop', total: dropRounds([round.id]) });
+          }
+        });
+        return;
+      }
+      case 'compare': {
+        const round = roundsRef.current[stateRef.current.roundIdx];
+        if (round?.contrastSet === undefined) return;
+        const specs = [effect.rightId, effect.tappedId].flatMap((id) => {
+          const text = round.options.find((o) => o.id === id)?.text;
+          const spec = text === undefined ? undefined : contrast?.contrastMemberSpec(round.contrastSet!, text.ko);
+          return spec === undefined ? [] : [{ id, spec }];
+        });
+        const mine = (compareRun.current += 1);
+        // The right clip, then the tapped one 400 ms after it; tracked, so the next round waits for both (QS-4).
+        void pacing.track(
+          (async (): Promise<void> => {
+            for (const [i, { id, spec }] of specs.entries()) {
+              if (mine !== compareRun.current || !mounted.current) return;
+              setSounding(id);
+              await playPrompt(spec);
+              if (i < specs.length - 1) await new Promise<void>((resolve) => setTimeout(resolve, LISTEN_PICK_TIMING.compareGapMs));
+            }
+            if (mine === compareRun.current && mounted.current) setSounding(null);
+          })(),
         );
         return;
       }
       case 'answer': {
+        // A contrast round's result is its own (drawn, announced, advanced from) and is reported to no host: no star, no
+        // missed list, no memory store, no "Keep playing?" (AMENDMENTS-MINIMAL-PAIRS section 3.8).
+        if (effect.scored === false) return;
         const round = roundsRef.current[effect.roundKey];
         // The Hangul Check names the item a symbol round credits (`itemId`, M7); any other round credits its own id.
         // Hinted with a right answer only: a miss after the ask stays a plain miss, and the stars follow `correct`.
@@ -308,14 +433,15 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         hostRef.current.complete();
         return;
     }
-  }, [slotPlay, slotReset, pacing]);
+  }, [slotPlay, slotReset, pacing, dropRounds]);
 
   /** What a result needs from this render: read when the tap comes, so `dispatch` keeps one identity. */
-  const latest = useRef({ a, next: nextButton, a11y: m.a11y, labelOf: undefined as OptionItemLabel });
+  const latest = useRef({ a, next: nextButton, a11y: m.a11y, contrast: copy.contrast, labelOf: undefined as OptionItemLabel });
   latest.current = {
     a,
     next: nextButton,
     a11y: m.a11y,
+    contrast: copy.contrast,
     labelOf: spellingNow ? (text) => spelling.spellingOptionLabel(text, m.a11y.romanizationOr) : undefined,
   };
 
@@ -354,6 +480,24 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         return;
       }
       const item = optionItem(option, a11y, { gloss: false, labelOf });
+      if (isContrastRound(round)) {
+        // Listen to both (section 3.7): the result is Hoya's line and the compare row's items, said once, in order, by their
+        // romanization. A pair ends after its miss with Next as for a right answer; a triple stays open.
+        const lines = contrast?.compareItems(round, after, latest.current.contrast, a11y, (o) => noteOf(round, o)) ?? [];
+        const result: AnswerResult = { kind: 'line', text: [latest.current.contrast.missHoya, ...lines.map((l) => l.label)].join(' ') };
+        if (advanceNow?.type === 'schedule-advance') {
+          if (say.readerOn) {
+            next.show();
+            void next.afterFocus(() => say.announce(result));
+          } else {
+            void say.announce(result);
+            runEffect(advanceNow);
+          }
+          return;
+        }
+        afterMiss({ readerOn: say.readerOn, announce: () => say.announce(result) });
+        return;
+      }
       const answerOption = round.options.find((o) => o.id === round.answerId);
       // The miss that turns the ring on carries the look-here line; every other miss names a retry by the prompt's kind.
       const result: AnswerResult =
@@ -368,21 +512,31 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   );
 
   const dispatch = useCallback(
-    (event: FlowEvent): void => {
+    (incoming: FlowEvent): void => {
       const before = stateRef.current;
+      let event = incoming;
+      if (incoming.type === 'advance' && roundsRef.current.some(isContrastRound)) {
+        // Just before the next round opens, look again: a clip that can no longer play (a pack switched off, sound turned
+        // off) drops the contrast rounds after this one, so the count and the step follow what can be heard now.
+        const env = contrastEnv();
+        const later = roundsRef.current.slice(before.roundIdx + 1).filter((r) => !(contrast?.contrastRoundPlayable(r, env) ?? false)).map((r) => r.id);
+        event = { type: 'advance', total: later.length === 0 ? roundsRef.current.length : dropRounds(later) };
+      }
       const out = stepFlow(before, event);
       stateRef.current = out.state;
       setState(out.state);
       if (event.type === 'tap' && out.effects.some((e) => e.type === 'answer')) settle(before, out.state, event.optionId, out.effects);
       else out.effects.forEach(runEffect);
     },
-    [runEffect, settle],
+    [runEffect, settle, contrastEnv, dropRounds],
   );
   dispatchRef.current = dispatch;
 
   useEffect(
     () => () => {
       if (replayTimer.current) clearTimeout(replayTimer.current);
+      // The compare row's chain still waiting for its second clip goes with the screen.
+      compareRun.current += 1;
       stop();
     },
     [],
@@ -393,6 +547,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const roundIdx = state.roundIdx;
   useEffect(() => {
     clear();
+    // A new round drops a compare row's clips still to come, and its outline.
+    compareRun.current += 1;
+    setSounding(null);
     if (roundIdx > 0) {
       if (latest.current.a.readerOn) focusPrompt();
       else speakerRef.current?.focus?.();
@@ -409,6 +566,13 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     );
   }, [reducedMotion, pulse]);
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+
+  // A contrast step with nothing to play when it opens (no clip can play now) completes as usual, having scored nothing
+  // (AMENDMENTS-MINIMAL-PAIRS section 3.6); the quest's own pass-by decides before the step opens (row MP-2b).
+  const nothingToPlay = useRef(initialRounds.length === 0 && (scope.listenPick?.rounds ?? []).some(isContrastRound));
+  useEffect(() => {
+    if (nothingToPlay.current) hostRef.current.complete();
+  }, []);
 
   const round = rounds[roundIdx];
   if (state.status === 'empty' || !round) {
@@ -469,7 +633,29 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   // Below 640 tall the spelling round's speaker is its one sound control (it replays on every tap), as the design's
   // single [ (speaker) Hear it ] reads, so the meaning, the speaker and both spellings fit the first screen.
   const hearAgainShown = spellingKit === null || !(layoutClass.windowHeight > 0 && layoutClass.windowHeight < layout.compactHeight);
-  const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
+  // A contrast round keeps its Hoya line over the compare row when the round ends on a pair's miss too (it resolves then).
+  const contrastRound = isContrastRound(round);
+  // A pair ends on its miss, so Hoya stays over the compare row; a triple that resolves resolved on the right answer, which is not "Listen to both."
+  const missEndedRound = contrastRound && state.status === 'resolved' && round.options.length <= 2;
+  const showMissHoya = host.mode !== 'review' && (state.status === 'asking' || missEndedRound) && state.wrongIds.length > 0;
+  const compare = contrastRound && contrast !== null ? contrast.compareItems(round, state, copy.contrast, m.a11y, (o) => noteOf(round, o)) : [];
+  /** Plays one member of the round's set from its own clip (a compare item, an answered option), outlined while it sounds. */
+  const playMember = (id: string): void => {
+    const text = round.options.find((o) => o.id === id)?.text;
+    const spec = text === undefined || round.contrastSet === undefined ? undefined : contrast?.contrastMemberSpec(round.contrastSet, text.ko);
+    if (spec === undefined) return;
+    compareRun.current += 1;
+    setSounding(id);
+    void pacing.track(playPrompt(spec)).then(() => {
+      if (mounted.current) setSounding((now) => (now === id ? null : now));
+    });
+  };
+  /** Can't hear it? opened: the step's later contrast rounds are dropped after this one (section 3.9). */
+  const trimLater = (): void => {
+    if (!contrastRound) return;
+    const later = roundsRef.current.slice(roundIdx + 1).filter(isContrastRound).map((r) => r.id);
+    if (later.length > 0) dispatch({ type: 'total', total: dropRounds(later) });
+  };
   // The round's header node (§3.4): the heading, the scaffold line and, in the text prompt mode, the Korean it shows by
   // its romanization (never its Hangul); never a button.
   // A round framed `startsWith` (a quest Check's consonant sound round, SF-1) asks which letter starts the sound.
@@ -576,7 +762,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
               {slot.cantHear ? (
                 // Centred under Hear again, as the speaker above it.
                 <View style={{ alignSelf: 'center' }}>
-                  {spellingKit !== null ? (
+                  {contrastRound ? (
+                    // A contrast round's Korean is its answer (AMENDMENTS-MINIMAL-PAIRS section 3.9): guidance only, and the
+                    // step's later contrast rounds are dropped once the learner opens it.
+                    <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} onOpen={trimLater} />
+                  ) : spellingKit !== null ? (
                     // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
                     <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
                   ) : (
@@ -636,10 +826,16 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
             <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
               {round.options.map((option) => {
                 const view = optionView(round, option, state, optionContext, m.a11y.minigame);
+                // Once a contrast round is answered every member shows its meaning and its kind line, is named by both
+                // (`contrastItem`) and has a button that plays its own clip (section 3.7).
+                const note = contrastRound && resolved ? noteOf(round, option) : undefined;
+                const kindLine = note === undefined || contrast === null ? undefined : contrast.contrastKindLine(copy.contrast, note);
+                const sound = note === undefined || option.text === undefined ? undefined : a11yRomanization(option.text.romanization, m.a11y.romanizationOr);
+                const named = kindLine === undefined || sound === undefined ? undefined : m.a11y.contrastItem(sound, kindLine);
                 return (
                   <View
                     key={option.id}
-                    style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}
+                    style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero, gap: spacing.sm }}
                   >
                     <ChoiceCard
                       testID={`listen-pick-option-${option.id}`}
@@ -648,15 +844,46 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                       // A held line (AU-8) keeps its room, so the cards do not move when the answer shows it.
                       romanization={view.heldRomanization === '' ? view.romanization : view.heldRomanization}
                       romanizationReserved={view.heldRomanization !== ''}
+                      {...(note === undefined || option.text === undefined || contrast === null ? {} : { gloss: contrast.memberGloss(copy.contrast, option.text) })}
                       label={view.label}
                       art={
                         view.pictureRef !== undefined ? (
                           <PictureArt pictureRef={view.pictureRef} gloss={view.gloss ?? ''} size={pictureSize} />
                         ) : undefined
                       }
-                      accessibilityLabel={view.accessibilityLabel}
-                      onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
+                      accessibilityLabel={
+                        named === undefined
+                          ? view.accessibilityLabel
+                          : view.cardState === 'correct' || view.cardState === 'wrong'
+                            ? m.a11y.minigame.option[view.cardState](named)
+                            : named
+                      }
+                      onPress={() =>
+                        dispatch({
+                          type: 'tap',
+                          optionId: option.id,
+                          answerId: round.answerId,
+                          at: Date.now(),
+                          ...(contrastRound ? { contrast: { optionCount: round.options.length } } : {}),
+                        })
+                      }
                     />
+                    {kindLine === undefined || sound === undefined ? null : (
+                      <>
+                        <Body tone="secondary" testID={`contrast-kind-${option.id}`}>
+                          {kindLine}
+                        </Body>
+                        <Button
+                          label={m.learner.audio.hearIt.cta}
+                          tone="ghost"
+                          size="sm"
+                          leading={<Icon name="speaker" size={spacing.xl} color={colors.brand.secondaryDark} />}
+                          accessibilityLabel={m.a11y.minigame.hear(sound)}
+                          onPress={() => playMember(option.id)}
+                          testID={`contrast-hear-${option.id}`}
+                        />
+                      </>
+                    )}
                   </View>
                 );
               })}
@@ -684,9 +911,19 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
               <>
                 <Spacer size="lg" />
                 {/* The announcer says the result once, so this result bubble is not a live region too (§3.3). */}
-                <HoyaBubble tone="thinking" live={false} message={textPrompt ? textPrompt.missLine : spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss} />
+                <HoyaBubble
+                  tone="thinking"
+                  live={false}
+                  message={contrastRound ? copy.contrast.missHoya : textPrompt ? textPrompt.missLine : spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss}
+                />
               </>
             ) : null}
+            {compare.length === 0 ? null : (
+              <>
+                <Spacer size="md" />
+                {contrast === null ? null : <contrast.ContrastCompare items={compare} soundingId={sounding} onPlay={playMember} />}
+              </>
+            )}
           </View>
         }
       />
