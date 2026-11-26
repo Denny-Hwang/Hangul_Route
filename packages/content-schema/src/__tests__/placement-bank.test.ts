@@ -2,8 +2,19 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import * as builder from '../../../../scripts/build-placement-bank.mjs';
-// @ts-expect-error plain-Node script (no declaration file)
-import { PLACEMENT_RULES } from '../../../../scripts/placement-rules.mjs';
+import {
+  EAR_RULED_OUT,
+  HOMONYMS,
+  PERSON_PICTURES,
+  PLACEMENT_BASELINE_FILE,
+  PLACEMENT_LINT_MINIMA,
+  PLACEMENT_RULES,
+  TEXT_PICTURES,
+  chipParts,
+  lintPlacementTree,
+  niklIndex,
+  // @ts-expect-error plain-Node script (no declaration file)
+} from '../../../../scripts/placement-rules.mjs';
 import {
   PLACEMENT_AUDIO_FORMATS,
   PLACEMENT_FORMATS,
@@ -562,5 +573,122 @@ describe('the validator and the schema agree on the gate table', () => {
     expect([...rules.audioFormats].sort()).toEqual([...PLACEMENT_AUDIO_FORMATS].sort());
     expect([...rules.noLeakFormats].sort()).toEqual([...PLACEMENT_NO_LEAK_FORMATS].sort());
     for (const spec of RUNG_TABLE) expect(rules.strandOfGate[spec.gate]).toBe(spec.strand);
+  });
+});
+
+describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', () => {
+  const readJson = (rel: string): unknown => JSON.parse(readFileSync(join(REPO_ROOT, rel), 'utf8'));
+  const jsonIn = (dir: string): string[] => readdirSync(join(REPO_ROOT, dir)).filter((f) => f.endsWith('.json')).sort().map((f) => `${dir}/${f}`);
+  const tree = new Map<string, unknown>([...jsonIn('content/placement'), ...jsonIn('content/episodes/stage-2')].map((rel) => [rel, readJson(rel)]));
+  const nikl = niklIndex(readJson('scripts/nikl-vocab-2003.json'));
+  type Finding = { rule: string; templateId: string };
+  const findings = lintPlacementTree(tree, { nikl }) as Finding[];
+  const baseline = readJson(PLACEMENT_BASELINE_FILE) as Finding[];
+  const pairs = (list: Finding[]): string[] => list.map((f) => `${f.rule} ${f.templateId}`).sort();
+
+  it('the baseline lists exactly the pairs that fail today: none missing, none stale', () => {
+    expect(pairs(baseline)).toEqual(pairs(findings));
+    expect(new Set(pairs(baseline)).size).toBe(baseline.length);
+  });
+
+  it("counts today's findings per rule (each row that fixes a rule empties its count; PV-7 deletes the file)", () => {
+    const counts: Record<string, number> = {};
+    for (const f of findings) counts[f.rule] = (counts[f.rule] ?? 0) + 1;
+    expect(counts).toEqual({
+      'placement-decode-balanced': 60,
+      'placement-decode-ear': 29,
+      'placement-pools': 2,
+      'placement-reply-echo': 5,
+      'placement-sentence-family': 1,
+      'placement-sentence-options': 44,
+      'placement-vocab-frequency': 29,
+      'placement-vocab-pictures': 29,
+      'placement-vocab-read-share': 1,
+    });
+  });
+
+  it('keeps the warm-up out of the lint, and the read items clear of the pictures that show letters', () => {
+    expect(findings.some((f) => f.templateId === warmup.id)).toBe(false);
+    expect(findings.some((f) => f.rule === 'placement-text-picture')).toBe(false);
+  });
+
+  it('every template the lint names is a template of the bank (or a bank, pool, picture or family id)', () => {
+    const ids = new Set(all.map((t) => t.id));
+    for (const f of findings) expect(ids.has(f.templateId) || /^(bank|pool|picture|family):/.test(f.templateId), f.templateId).toBe(true);
+  });
+
+  it('the pool floors of the lint are the ones of spec sections 3.1 and 3.2, and the schema floor holds', () => {
+    const m = PLACEMENT_LINT_MINIMA as Record<string, number>;
+    expect(m).toMatchObject({ sentenceReadPicture: 24, sentenceReply: 6, sentenceOralPicture: 24, vocabOral: 24, vocabRead: 18, families: 10, predicates: 5, maxPredicateShare: 0.4 });
+    for (const spec of RUNG_TABLE) for (const form of spec.forms) expect(ready.filter((t) => t.gate === spec.gate && t.form === form).length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('the pictures the lint names exist in the art: a card id, or a WordArt glyph key', () => {
+    const cards = readFileSync(join(REPO_ROOT, 'packages/design-system/src/components/HeritageCardArt/card-ids.ts'), 'utf8');
+    const dir = join(REPO_ROOT, 'packages/design-system/src/word-art/glyphs');
+    const glyphs = readdirSync(dir)
+      .map((f) => readFileSync(join(dir, f), 'utf8'))
+      .join('\n');
+    for (const ref of [...(TEXT_PICTURES as string[]), ...(PERSON_PICTURES as string[])]) {
+      if (ref.startsWith('card:')) expect(cards, ref).toContain(`'${ref}'`);
+      else expect(glyphs, ref).toContain(`'${ref.slice('word:'.length)}'`);
+    }
+  });
+
+  it('the homonym list holds Hangul words and not the warm-up word', () => {
+    for (const word of HOMONYMS as string[]) expect(word).toMatch(/^[가-힣]+$/);
+    expect((HOMONYMS as string[]).includes('밥')).toBe(false);
+  });
+
+  it('the ear lists use Stage 1 symbols only, and finals only the six taught ones', () => {
+    const ruled = EAR_RULED_OUT as { initials: string[]; vowels: string[]; finalClasses: string[]; sibilants: string[] };
+    for (const pair of [...ruled.initials, ...ruled.sibilants]) for (const ch of pair) expect(CONSONANTS, pair).toContain(ch);
+    for (const pair of ruled.vowels) for (const ch of pair) expect(VOWELS, pair).toContain(ch);
+    for (const cls of ruled.finalClasses) for (const ch of cls) expect(TAUGHT_FINALS, cls).toContain(ch);
+  });
+
+  it('a Latin chip reads as the parts of the syllable the converter romanized: one jamo, one token, in every syllable', () => {
+    const initial = new Map<string, Set<string>>();
+    const medial = new Map<string, Set<string>>();
+    const final = new Map<string, Set<string>>();
+    const note = (m: Map<string, Set<string>>, jamo: string, token: string): void => void m.set(jamo, (m.get(jamo) ?? new Set()).add(token));
+    let checked = 0;
+    for (const i of [...CONSONANTS, 'ㅇ']) {
+      for (const v of VOWELS) {
+        for (const f of ['', ...TAUGHT_FINALS]) {
+          const syllable = composeSyllable({ initial: i, medial: MEDIALS.indexOf(v), final: f });
+          if (syllable === null) continue;
+          const text = romanize(syllable).text;
+          const parts = chipParts(text) as { initial: string; medial: string; final: string } | null;
+          expect(parts, `${syllable} ${text}`).not.toBeNull();
+          expect(`${parts!.initial}${parts!.medial}${parts!.final}`).toBe(text);
+          note(initial, i, parts!.initial);
+          note(medial, v, parts!.medial);
+          note(final, f, parts!.final);
+          checked += 1;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(1000);
+    for (const m of [initial, medial, final]) for (const [jamo, tokens] of m) expect([...tokens], jamo).toHaveLength(1);
+  });
+
+  it('every see-pick-sound chip of the bank reads as one syllable, and the right chip is the converter romanization of the prompt', () => {
+    const seen = all.filter((t) => t.question.format === 'see-pick-sound' && (t.gate === 'syl-cv' || t.gate === 'syl-cvc'));
+    expect(seen).toHaveLength(24);
+    for (const t of seen) {
+      for (const o of t.question.options) expect(chipParts(o.sound), `${t.id} ${o.sound}`).not.toBeNull();
+      expect(correctOf(t).sound, t.id).toBe(romanize(t.question.promptKo as string).text);
+    }
+  });
+
+  it('the committed NIKL list grades the words as the spec says (section 1.1 row 3, section 3.2)', () => {
+    const byRank = nikl.byRank as Map<number, { word: string; grade: string }>;
+    const gradeA = nikl.gradeA as Set<string>;
+    expect(byRank.get(353)).toEqual({ word: '밥', grade: 'A' });
+    expect(byRank.get(3237)).toEqual({ word: '사과', grade: 'A' });
+    expect(byRank.get(4064)).toEqual({ word: '사과', grade: 'C' });
+    for (const word of ['물', '엄마', '학교', '친구', '책', '나무', '꽃', '하늘', '공']) expect(gradeA.has(word), word).toBe(true);
+    for (const word of ['청자', '가야금', '연등']) expect(gradeA.has(word), word).toBe(false);
   });
 });

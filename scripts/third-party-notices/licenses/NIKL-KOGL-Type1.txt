@@ -1,0 +1,29 @@
+Korean Learning Vocabulary List (한국어 학습용 어휘 목록), 2003
+
+Source (출처):
+  국립국어원 (National Institute of Korean Language), 「한국어 학습용 어휘 목록」,
+  published May 2003 (the page: "국립국어연구원에서 2003년 5월에 발표한 한국어 학습용 어휘 목록").
+  Download page: https://www.korean.go.kr/front_eng/down/down_02V.do?etc_seq=70
+
+Licence (이용허락):
+  The download page states that the work may be used under the terms of the
+  Korea Open Government Licence (공공누리, KOGL) Type 1, once the source of the
+  work has been stated in full. The page reads: "공공저작물 자유이용허락 표시 기준
+  (공공누리, KOGL) 제1 유형 조건에 따라 저작물의 출처를 구체적으로 표시한 후
+  이용할 수 있습니다." (read 2026-11-25).
+
+  KOGL Type 1 is the attribution type: the work may be used, commercial use and
+  adaptation included, as long as its source is stated.
+
+Attribution (출처 표시):
+  국립국어원, 「한국어 학습용 어휘 목록」(2003), 공공누리 제1유형.
+  Source: National Institute of Korean Language, Korean Learning Vocabulary List
+  (2003), KOGL Type 1.
+
+Use in this repository:
+  scripts/nikl-vocab-2003.json holds the list's 5,965 words (rank, word, homograph
+  number, part of speech, gloss, grade A, B or C) converted to UTF-8 JSON by
+  scripts/build-nikl-vocab.mjs, without any change to a word, a rank or a grade.
+  It is development data: the placement lint (scripts/placement-rules.mjs) and the
+  freq-coverage report of scripts/validate-content.mjs read it; no app bundle
+  includes it. AMENDMENTS-PLC-VALIDITY §3.3.
