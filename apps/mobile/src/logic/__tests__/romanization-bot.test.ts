@@ -1,6 +1,7 @@
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { questsAll } from '../../content/quests';
 import { STAGE1_QUESTS } from '../stage1/curriculum';
 import { buildHangulCheck } from '../stage1/hangul-check';
 import { checkHoldsRomanization, optionView, promptView, startFlow, textPromptView, type OptionView } from '../listen-pick-flow';
@@ -13,6 +14,18 @@ import type { Rung } from '../memory/spacing';
 import type { EngineContext, ReviewQuestion } from '../reviews/engine';
 import { roundFor, surfaceIndex, type PickRound, type ReviewRound, type RoundInput } from '../reviews/review-rounds';
 import { keyboardSoundHeld, roundLook } from '../reviews/round-look';
+import { startCloze } from '../cloze-pick/flow';
+import { clozeToListenPick, validClozeRounds } from '../cloze-pick/round';
+import { clozeView } from '../cloze-pick/view';
+import { startFlow as startPicWordFlow, validBoards, wordTileView } from '../pic-word-flow';
+import { drawnRomanization, lineViews, playableRealia, realiaHeld, realiaOptionView, startRealiaRead } from '../realia-read-flow';
+import { buildRounds } from '../sentence-builder/progression';
+import { startFlow as startBuilderFlow, stepFlow as stepBuilderFlow } from '../sentence-builder/reducer';
+import { isRightTile } from '../sentence-builder/scoring';
+import { trayView } from '../sentence-builder/view';
+import { tapRespondTurnView } from '../tap-respond-look';
+import { typeHangulLook } from '../type-hangul/look';
+import type { TypeHangulRound } from '@hangul-route/content-schema';
 
 /**
  * The romanization-only bot (AMENDMENTS-STAGE1-DECODING-CHECK section 3.9, row DC-1a): a responder that understands
@@ -460,5 +473,277 @@ describe('review rounds, control: the same bot with the hold off', () => {
     const tally = playReviewPicks('practice', 20, (round) => round.ask !== 'sound');
     expect(tally.trials).toBeGreaterThan(300);
     expect(tally.right / tally.trials).toBeGreaterThanOrEqual(0.9);
+  });
+});
+
+
+// ---- quest Checks on other games (row DC-1c, OD-DC4) ---------------------------------------------------------------------
+
+/**
+ * The same bot over the quest Checks on the other games (Stages 2 to 7: Cloze Pick, Order It, Pic-Word Match, Realia Read, Tap
+ * Respond and Type Hangul; every Check of the content, not one). Write Frame and My Story are excluded (open writing). The bot reads only
+ * what the pure views draw: a held line is not drawn, so it names nothing. Each game builds, from the drawn lines alone, the option
+ * the bot's inference points at (`inferred`: a lexicon match of a drawn romanization to the drawn meaning, the oracle's knowledge
+ * of the sound it hears, a line's value read off the sheet); with nothing drawn it guesses. A Check's exact check is that no
+ * romanization line and no option meaning is drawn and no inference exists; the pooled limit is chance + 0.03; the control, the same
+ * bot with the hold off, is right on at least 0.9 of the rounds it can infer.
+ */
+
+interface GameRound {
+  where: string;
+  options: Array<{ id: string }>;
+  answerId: string;
+  /** The option the drawn lines point at, or undefined when they name none. */
+  inferred: string | undefined;
+  /** Every Latin romanization line and option meaning drawn before the answer. */
+  drawn: string[];
+}
+
+const tokensOf = (text: string): string => ` ${norm(text).replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ')} `;
+/** Whether the English `meaning` (a lexicon entry) appears as whole words in `sentence`. */
+const mentions = (sentence: string, meaning: string): boolean => meaning.trim() !== '' && tokensOf(sentence).includes(tokensOf(meaning));
+
+function checkScopes(kind: string): Array<{ quest: string; scope: NonNullable<ReturnType<typeof scopeFor>> }> {
+  const out: Array<{ quest: string; scope: NonNullable<ReturnType<typeof scopeFor>> }> = [];
+  for (const quest of questsAll) {
+    for (const step of quest.steps) {
+      if (step.kind !== 'check' || step.minigameRef === undefined) continue;
+      const scope = scopeFor(step.minigameRef);
+      if (scope?.kind === kind) out.push({ quest: quest.id, scope });
+    }
+  }
+  return out;
+}
+
+/** The only option the predicate accepts, else undefined (an inference that cannot tell is no inference). */
+function only<T extends { id: string }>(options: readonly T[], accept: (option: T) => boolean): string | undefined {
+  const hits = options.filter(accept);
+  return hits.length === 1 ? hits[0]!.id : undefined;
+}
+
+function clozeRounds(hold: boolean): GameRound[] {
+  const out: GameRound[] = [];
+  for (const { quest, scope } of checkScopes('cloze-pick')) {
+    const rounds = validClozeRounds(scope);
+    // The bot's lexicon: what each tile's romanization means (it understands the words it reads in Latin letters).
+    const lexicon = new Map(rounds.flatMap((r) => r.tiles.map((t) => [norm(t.romanization), norm(t.en ?? '')] as const)));
+    rounds.forEach((round, i) => {
+      const pick = clozeToListenPick(round);
+      const state = startCloze(1);
+      const view = clozeView(round, state, { mode: 'check', romanizationMode: 'always', hold, a11y: A11Y.clozePick });
+      const options = pick.options.map((option) => ({
+        id: option.id,
+        latin: optionView(pick, option, state, { mode: 'check', romanizationMode: 'always', holdRomanization: hold }, A11Y).romanization,
+      }));
+      out.push({
+        where: `${quest}#${i} ${round.id}`,
+        options,
+        answerId: pick.answerId,
+        inferred: only(options, (o) => o.latin !== '' && mentions(round.sentence.en, lexicon.get(norm(o.latin)) ?? '')),
+        drawn: [view.romanization, ...options.map((o) => o.latin)].filter((t) => t !== ''),
+      });
+    });
+  }
+  return out;
+}
+
+function picWordRounds(hold: boolean): GameRound[] {
+  const out: GameRound[] = [];
+  for (const { quest, scope } of checkScopes('pic-word-match')) {
+    const boards = validBoards(scope);
+    const state = startPicWordFlow(boards.map((b) => b.pairs.length));
+    boards.forEach((board, b) => {
+      const lexicon = new Map(board.pairs.map((p) => [norm(p.word.romanization), norm(p.word.en)] as const));
+      const words = board.pairs.map((pair) => ({ id: pair.id, latin: wordTileView(pair, { ...state, boardIdx: b }, { romanizationMode: 'always', hold }, A11Y).romanization }));
+      // One round per picture: its meaning is drawn (the stimulus); the words are the options.
+      for (const pair of board.pairs) {
+        out.push({
+          where: `${quest}#${b} ${pair.id}`,
+          options: words,
+          answerId: pair.id,
+          inferred: only(words, (w) => w.latin !== '' && lexicon.get(norm(w.latin)) === norm(pair.word.en)),
+          drawn: words.map((w) => w.latin).filter((t) => t !== ''),
+        });
+      }
+    });
+  }
+  return out;
+}
+
+function realiaRounds(hold: boolean): GameRound[] {
+  const out: GameRound[] = [];
+  for (const { quest, scope } of checkScopes('realia-read')) {
+    const play = playableRealia(scope);
+    if (play === null) continue;
+    const lexicon = new Map(play.realia.entries.map((e) => [norm(e.text.romanization), norm(e.text.en)] as const));
+    play.rounds.forEach((round, i) => {
+      const state = startRealiaRead(play.rounds.length);
+      const context = { romanizationMode: 'always' as const, romanizationOr: 'or', held: realiaHeld(hold, state) };
+      const lines = lineViews(play.realia, round, state, context, A11Y);
+      const options = round.options.map((option) => {
+        const view = realiaOptionView(round, option, state, context, A11Y, getMessages('en').a11y.koreanItem);
+        return { id: option.id, latin: norm(view.romanization) };
+      });
+      // The bot finds the line whose drawn romanization means what the question asks, and reads its value off the sheet.
+      const line = lines.find((l) => mentions(round.questionEn, lexicon.get(norm(drawnRomanization(l.text))) ?? ''));
+      const value = line?.value === undefined ? '' : norm(drawnRomanization(line.value));
+      const sheet = lines.flatMap((l) => [drawnRomanization(l.text), ...(l.value ? [drawnRomanization(l.value)] : [])]);
+      out.push({
+        where: `${quest}#${i} ${round.id}`,
+        options,
+        answerId: round.answerId,
+        inferred: value === '' ? undefined : only(options, (o) => o.latin === value),
+        drawn: [...sheet, ...options.map((o) => o.latin)].filter((t) => t !== ''),
+      });
+    });
+  }
+  return out;
+}
+
+function tapRespondRounds(hold: boolean): GameRound[] {
+  const out: GameRound[] = [];
+  for (const { quest, scope } of checkScopes('tap-respond')) {
+    (scope.dialogue ?? []).forEach((turn, i) => {
+      const view = tapRespondTurnView(turn, { hold, answered: false });
+      const options = view.options.map((o, k) => ({ id: String(k), latin: o.romanization, gloss: o.gloss }));
+      const answer = turn.options.findIndex((o) => o.isCorrect);
+      const drawn = [view.npc.romanization, ...options.flatMap((o) => [o.latin, o.gloss])].filter((t) => t !== '');
+      // A Latin reader with English finds the reply to a line from the line's drawn Latin and the replies' drawn Latin and meanings
+      // (the upper bound: perfect pragmatics). With nothing drawn the replies are Korean strings it cannot read.
+      out.push({ where: `${quest}#${i} ${turn.npcKo}`, options, answerId: String(answer), inferred: drawn.length > 0 ? String(answer) : undefined, drawn });
+    });
+  }
+  return out;
+}
+
+/** The slots of every Order It Check, the bot placing the right tile before each (a slot's chance is 1 / the tiles left). */
+function builderRounds(hold: boolean): GameRound[] {
+  const out: GameRound[] = [];
+  for (const { quest, scope } of checkScopes('order-it')) {
+    buildRounds(scope.orderIt?.rounds, 1).forEach((round, i) => {
+      let state = startBuilderFlow(1);
+      let at = 1000;
+      round.open.forEach((wordIdx, slot) => {
+        const tray = trayView(round, state, { romanizationMode: 'always', hold }, A11Y);
+        const right = round.tray.find((t) => !state.placed.includes(t.id) && isRightTile(round, state.placed.length, t));
+        if (right === undefined) return;
+        // The bot hears the sentence, so it knows the next word's romanization; it can use it only if a tile draws one.
+        const next = norm(round.words[wordIdx]!.romanization);
+        const options = tray.map((t) => ({ id: t.id, latin: norm(t.romanization) }));
+        out.push({
+          where: `${quest}#${i} slot ${slot}`,
+          options,
+          answerId: right.id,
+          inferred: only(options, (o) => o.latin !== '' && o.latin === next),
+          drawn: options.map((o) => o.latin).filter((t) => t !== ''),
+        });
+        at += 600;
+        state = stepBuilderFlow(state, [round], { type: 'tap', tileId: right.id, at }).state;
+      });
+    });
+  }
+  return out;
+}
+
+interface GameTally {
+  trials: number;
+  right: number;
+  chance: number;
+  leaks: string[];
+  /** Rounds the bot could infer (control). */
+  inferable: number;
+  inferredRight: number;
+}
+
+function playGame(make: (hold: boolean) => GameRound[], hold: boolean, seeds: number): GameTally {
+  const rounds = make(hold);
+  const tally: GameTally = { trials: 0, right: 0, chance: 0, leaks: [], inferable: 0, inferredRight: 0 };
+  for (const r of rounds) {
+    if (r.drawn.length > 0 || r.inferred !== undefined) tally.leaks.push(r.where);
+    if (r.inferred !== undefined) {
+      tally.inferable += 1;
+      if (r.inferred === r.answerId) tally.inferredRight += 1;
+    }
+  }
+  for (let seed = 1; seed <= seeds; seed += 1) {
+    const rnd = seededRandom(seed * 982451653);
+    for (const r of rounds) {
+      const answered = r.inferred ?? r.options[Math.floor(rnd() * r.options.length)]!.id;
+      tally.trials += 1;
+      tally.chance += 1 / r.options.length;
+      if (answered === r.answerId) tally.right += 1;
+    }
+  }
+  return tally;
+}
+
+const GAMES: Array<[string, (hold: boolean) => GameRound[], number]> = [
+  ['Cloze Pick', clozeRounds, 40],
+  ['Pic-Word Match', picWordRounds, 9],
+  ['Realia Read', realiaRounds, 11],
+  ['Tap Respond', tapRespondRounds, 11],
+  ['Order It (Sentence Builder)', builderRounds, 27],
+];
+
+describe.each(GAMES)('quest Checks on other games: %s', (_name, make, checks) => {
+  const hold = holdsRomanization('quest-check');
+
+  it(`has Check rounds to test (${checks} Checks in the content)`, () => {
+    expect(make(hold).length).toBeGreaterThanOrEqual(checks);
+  });
+
+  it('exact check: before the answer no romanization line or option meaning is drawn and nothing names the answer, in every Check', () => {
+    const tally = playGame(make, hold, 1);
+    expect(tally.leaks).toEqual([]);
+  });
+
+  it('pooled: over 200 seeds the bot is no better than chance + 0.03', () => {
+    const tally = playGame(make, hold, SEEDS);
+    expect(tally.trials).toBeGreaterThan(1000);
+    expect(tally.right / tally.trials).toBeLessThanOrEqual(tally.chance / tally.trials + 0.03);
+  });
+
+  it('control: with the hold off the bot infers the answer on the rounds it can read, and is right on at least 0.9 of them', () => {
+    const tally = playGame(make, false, 1);
+    expect(tally.inferable).toBeGreaterThanOrEqual(3);
+    expect(tally.inferredRight / tally.inferable).toBeGreaterThanOrEqual(0.9);
+  });
+});
+
+describe('quest Checks on other games: Type Hangul (production)', () => {
+  const rounds = checkScopes('type-hangul').flatMap(({ quest, scope }) => (scope.typeHangul?.rounds ?? []).map((round) => ({ quest, round })));
+  /** The modes a round can be drawn in: a Dictation round is heard, or the `see` round of its word (no voice, Sound off, Show the letters). */
+  const modesOf = (round: TypeHangulRound): Array<'hear' | 'see' | 'picture'> =>
+    round.mode === 'hear' ? ['hear', 'see'] : round.pictureRef !== undefined ? ['picture'] : ['see'];
+  const lookOf = (mode: 'hear' | 'see' | 'picture', hold: boolean) => typeHangulLook({ mode, hold, solved: false, romanizationMode: 'always', revealed: false });
+
+  it('has Type Hangul Check rounds (the content of the 30 Checks)', () => {
+    expect(rounds.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it("exact check: in a Check no romanization of the word is drawn before the answer, whichever way the round is drawn, and the keyboard's Latin line is held", () => {
+    const hold = holdsRomanization('quest-check');
+    for (const { quest, round } of rounds) {
+      for (const mode of modesOf(round)) {
+        const look = lookOf(mode, hold);
+        expect(look.romanizationVisible, `${quest} ${round.id} ${mode}`).toBe(false);
+        expect(look.canReveal, `${quest} ${round.id} ${mode}`).toBe(false);
+        expect(look.keyboardSoundHeld, `${quest} ${round.id} ${mode}`).toBe(true);
+      }
+    }
+  });
+
+  it('a picture round (practice content today, a Check tomorrow) holds its cue too', () => {
+    expect(lookOf('picture', true)).toMatchObject({ romanizationVisible: false, romanizationReserved: true, keyboardSoundHeld: true });
+    expect(lookOf('picture', false)).toMatchObject({ romanizationVisible: true, keyboardSoundHeld: false });
+  });
+
+  it('control: with the hold off, a Latin-only typist can spell the word shown from its drawn romanization and the keyboard line', () => {
+    const shown = rounds.filter(({ round }) => modesOf(round).includes('see'));
+    expect(shown.length).toBeGreaterThan(10);
+    for (const { quest, round } of shown) {
+      const look = lookOf('see', false);
+      expect(look.romanizationVisible && !look.keyboardSoundHeld, `${quest} ${round.id}`).toBe(true);
+    }
   });
 });

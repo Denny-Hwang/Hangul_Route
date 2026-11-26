@@ -65,6 +65,16 @@ describe('koreanTextView (what the component draws)', () => {
     expect(koreanTextView({ ...base, romanization: '', romanizationShown: false, romanizationReserved: true }).reserveRomanization).toBe(false);
   });
 
+  it("glossReserved keeps a held gloss line's room, and only a non-empty gloss (DC-1c)", () => {
+    expect(koreanTextView(base)).toMatchObject({ showGloss: true, reserveGloss: false });
+    const held = koreanTextView({ ...base, glossReserved: true });
+    expect(held).toMatchObject({ showGloss: false, reserveGloss: true, showRomanization: true });
+    // The accessible name is the caller's, unchanged: the hold is visual.
+    expect(held.label).toBe('강아지, gangaji');
+    expect(koreanTextView({ ...base, gloss: undefined, glossReserved: true })).toMatchObject({ showGloss: false, reserveGloss: false });
+    expect(koreanTextView({ ...base, gloss: '  ', glossReserved: true })).toMatchObject({ showGloss: false, reserveGloss: false });
+  });
+
   it('draws no romanization line for an empty romanization, shown or not', () => {
     expect(koreanTextView({ ...base, romanization: '' }).showRomanization).toBe(false);
     expect(koreanTextView({ ...base, romanization: '  ' }).showRomanization).toBe(false);

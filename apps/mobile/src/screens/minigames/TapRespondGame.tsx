@@ -26,6 +26,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { afterMiss, afterRightAnswer, answerItem, answerOptionLabel } from '../../logic/answer-feedback';
 import { replyOptionLabel } from '../../logic/korean-labels';
 import { koSpeech } from '../../logic/audio/ko-speech';
+import { tapRespondTurnView } from '../../logic/tap-respond-look';
 import { ADVANCE_MAX_MS, ADVANCE_MIN_MS, afterSound } from '../../logic/audio/reply-advance';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
@@ -33,15 +34,22 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { useAudioStore } from '../../store/audio-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { AnswerAnnouncer } from './answer-announcer';
+import { HeldText } from './held-line';
 import { useAnswerAnnouncement } from './use-answer-announcement';
 import { useRoundNext } from './use-round-next';
 
 interface Props {
   scope: MinigameScope;
   onFinish: () => void;
+  /**
+   * A quest Check (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1c): the NPC line's romanization and every reply's
+   * romanization and meaning are held until the turn's right reply. Tap Respond has no host (it records through the run
+   * store itself), so it takes a boolean, not a host. Default `false`: practice.
+   */
+  hold?: boolean;
 }
 
-export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
+export function TapRespondGame({ scope, onFinish, hold = false }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const turns = useMemo(() => scope.dialogue ?? [], [scope]);
@@ -109,6 +117,7 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
     );
   }
 
+  const view = tapRespondTurnView(turn, { hold, answered: feedback === 'correct' });
   const last = turnIdx >= turns.length - 1;
   const advance = (): void => {
     if (movedFrom.current === turnIdx) return;
@@ -190,7 +199,11 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
           <Caption tone="muted">{copy.tapRespond.someoneSays}</Caption>
           <Spacer size="xs" />
           <Heading level="title">{turn.npcKo}</Heading>
-          {turn.npcRomanization ? <Body tone="muted">{turn.npcRomanization}</Body> : null}
+          {view.npc.romanization !== '' ? (
+            <Body tone="muted">{view.npc.romanization}</Body>
+          ) : view.npc.romanizationHeld !== '' ? (
+            <HeldText size="body" tone="muted">{view.npc.romanizationHeld}</HeldText>
+          ) : null}
           <Spacer size="xxs" />
           <Body tone="secondary">{turn.npcEn}</Body>
         </View>
@@ -223,15 +236,19 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       <TapBoard lock="board" held={!slot.settled}>
         {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
         <View style={{ gap: spacing.md }}>
-          {turn.options.map((opt) => {
+          {turn.options.map((opt, i) => {
+            const shown = view.options[i]!;
             const state = feedback === 'correct' && opt.isCorrect ? 'correct' : lockedWrong.includes(opt.ko) ? 'wrong' : 'idle';
             return (
               <ChoiceCard
                 key={opt.ko}
                 state={state}
                 ko={opt.ko}
-                romanization={opt.romanization ?? ''}
+                // A held line (DC-1c) keeps its room, so the replies do not move when the right one is tapped.
+                romanization={shown.romanizationHeld ? (opt.romanization ?? '') : shown.romanization}
+                romanizationReserved={shown.romanizationHeld}
                 gloss={opt.en}
+                glossReserved={shown.glossHeld}
                 accessibilityLabel={answerOptionLabel(state, replyOptionLabel(opt), m.a11y.minigame.option)}
                 onPress={() => handleTap(opt, opt.isCorrect)}
                 testID={`tap-respond-option-${opt.ko}`}

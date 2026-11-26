@@ -64,6 +64,8 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { AnswerAnnouncer } from './answer-announcer';
 import { DiscMark, LookHereRing } from './answer-marks';
+import { holdsRomanization, hostSurface } from '../../logic/locale/check-hold';
+import { HeldText } from './held-line';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { useAnswerAnnouncement } from './use-answer-announcement';
@@ -326,7 +328,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   }
 
   const header = headerView(host.mode, state, copy);
-  const ctx = { romanizationMode };
+  // A quest Check holds every tile's and word's romanization until the sentence is built (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c).
+  const ctx = { romanizationMode, hold: holdsRomanization(hostSurface(host.mode)) };
   const line = lineView(round, state, ctx, m.a11y.minigame);
   const tray = trayView(round, state, ctx, m.a11y.minigame);
   const hint = hintView(state, copy, patternNote);
@@ -452,7 +455,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
 }
 
 /** The Korean of a tile (or a placed word) with its romanization line under it. */
-function TileFace({ ko, romanization }: { ko: string; romanization: string }): ReactElement {
+function TileFace({ ko, romanization, held = '' }: { ko: string; romanization: string; /** The line a Check holds: its room is kept, nothing is drawn. */ held?: string }): ReactElement {
   const textScale = useTypeScale();
   return (
     <>
@@ -471,6 +474,8 @@ function TileFace({ ko, romanization }: { ko: string; romanization: string }): R
       </Text>
       {romanization !== '' ? (
         <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
+      ) : held !== '' ? (
+        <HeldText size="caption" tone="muted" weight="medium">{held}</HeldText>
       ) : null}
     </>
   );
@@ -532,7 +537,7 @@ function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion 
           backgroundColor: placed || complete ? colors.feedback.successLight : colors.surface.sunken,
         }}
       >
-        <TileFace ko={unit.ko} romanization={unit.romanization} />
+        <TileFace ko={unit.ko} romanization={unit.romanization} held={unit.heldRomanization} />
         {placed ? <PlacedMark /> : null}
       </View>
     );
@@ -620,7 +625,7 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
                 transform: pressTransform(p),
               }}
             >
-              <TileFace ko={tile.ko} romanization={tile.romanization} />
+              <TileFace ko={tile.ko} romanization={tile.romanization} held={tile.heldRomanization} />
               {/* Tried here, still tappable (OD-AF8 (c)): `dash` on a disc straddling the corner, in `text.primary`. */}
               {tried ? <DiscMark mark="tried" answerBorder={p?.borderWidth ?? borderWidth.base} testID={`sentence-builder-tried-${tile.id}`} /> : null}
               {tile.look === 'ring' ? <LookHereRing radius={radii.md} answerBorder={p?.borderWidth ?? borderWidth.base} testID="sentence-builder-ring-dashed" /> : null}

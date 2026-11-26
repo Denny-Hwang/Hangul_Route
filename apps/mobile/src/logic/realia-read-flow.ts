@@ -276,10 +276,23 @@ export function lineGloss(entry: RealiaEntry): string {
 
 export type RealiaLineMarkView = 'none' | 'found' | 'lookHere';
 
+/**
+ * A piece of realia text as the sheet draws it: its romanization is drawn, or, with `romanizationReserved`, held (a Check's
+ * open question, row DC-1c): the line keeps its room, draws nothing and is off the accessibility tree.
+ */
+export interface RealiaTextView {
+  ko: string;
+  romanization: string;
+  romanizationReserved?: boolean;
+}
+
+/** The romanization a sighted learner reads in a piece of realia text now: none while it is held. */
+export const drawnRomanization = (text: RealiaTextView): string => (text.romanizationReserved === true ? '' : text.romanization);
+
 export interface RealiaLineView {
   id: string;
-  text: { ko: string; romanization: string };
-  value: { ko: string; romanization: string } | undefined;
+  text: RealiaTextView;
+  value: RealiaTextView | undefined;
   dir: 'left' | 'right' | undefined;
   goods: 'apples' | 'fan' | 'hanji' | undefined;
   mark: RealiaLineMarkView;
@@ -290,8 +303,22 @@ export interface RealiaLineView {
 
 export interface RealiaViewContext {
   romanizationMode: RomanizationMode;
+  /**
+   * The question is open on a surface that holds (a quest Check, `realiaHeld`): the sheet's, the key word's and the options'
+   * romanization lines are held (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1c); a line tap says the line and does
+   * not show its romanization. Absent: nothing held.
+   */
+  held?: boolean;
   /** The UI locale's word read between romanization alternatives (`a11y.romanizationOr`, OD-SO10). */
   romanizationOr: string;
+}
+
+/** Whether a quest Check's question is open (a missed option does not end it): the lines are held. */
+export const realiaHeld = (hold: boolean, state: RealiaReadState): boolean => hold && state.status === 'asking';
+
+/** A piece of realia text with the romanization the learner's mode shows, held while the question is open. */
+function textView(text: { ko: string; romanization: string }, shown: boolean, held: boolean): RealiaTextView {
+  return held && shown ? { ko: text.ko, romanization: text.romanization, romanizationReserved: true } : { ko: text.ko, romanization: shown && !held ? text.romanization : '' };
 }
 
 function markOf(entry: RealiaEntry, round: RealiaReadRound | undefined, state: RealiaReadState): RealiaLineMarkView {
@@ -318,8 +345,8 @@ export function lineViews(
       mark === 'found' ? `${base}. ${gloss}. ${a11y.realia.found}` : mark === 'lookHere' ? `${base}. ${a11y.realia.lookHere}` : base;
     return {
       id: entry.id,
-      text: { ko: entry.text.ko, romanization: shown ? entry.text.romanization : '' },
-      value: entry.value ? { ko: entry.value.ko, romanization: shown ? entry.value.romanization : '' } : undefined,
+      text: textView(entry.text, shown, context.held === true),
+      value: entry.value ? textView(entry.value, shown, context.held === true) : undefined,
       dir: entry.dir,
       goods: entry.goods,
       mark,
@@ -330,14 +357,17 @@ export function lineViews(
 }
 
 /** The realia's title with its romanization (hidden in `tap` mode) and its name. */
-export function titleView(realia: Realia, context: RealiaViewContext): { ko: string; romanization: string; label: string } | undefined {
+export function titleView(realia: Realia, context: RealiaViewContext): (RealiaTextView & { label: string }) | undefined {
   const { title } = realia;
   if (!title) return undefined;
-  return {
-    ko: title.ko,
-    romanization: context.romanizationMode === 'always' ? title.romanization : '',
-    label: spoken(title, context.romanizationOr).join(', '),
-  };
+  return { ...textView(title, context.romanizationMode === 'always', context.held === true), label: spoken(title, context.romanizationOr).join(', ') };
+}
+
+/** The question's key word: its romanization line as the mode shows it, held while a Check's question is open. */
+export function keyView(key: KoText, context: Pick<RealiaViewContext, 'romanizationMode' | 'held'>): { shown: boolean; reserved: boolean } {
+  const modeShows = context.romanizationMode === 'always';
+  const held = context.held === true;
+  return { shown: modeShows && !held, reserved: modeShows && held && key.romanization.trim() !== '' };
 }
 
 /** The text a line tap speaks (`playPrompt`): the line's Korean, then its value. */
@@ -356,6 +386,8 @@ export interface RealiaOptionView {
   ko: string | undefined;
   /** Empty string draws no line (ChoiceCard). */
   romanization: string;
+  /** The line a Check holds while the question is open: its room is kept, nothing is drawn; '' when nothing is held. */
+  heldRomanization: string;
   /** A figure ("3:00") or a picture's name. */
   label: string | undefined;
   pictureRef: string | undefined;
@@ -387,16 +419,18 @@ export function realiaOptionView(
   let view: Omit<RealiaOptionView, 'accessibilityLabel'>;
   let base: string;
   if (option.text) {
-    const romanization = context.romanizationMode === 'always' || touched ? option.text.romanization : '';
-    view = { id: option.id, cardState, ko: option.text.ko, romanization, label: undefined, pictureRef: undefined };
+    // What the learner's mode shows, and what a Check's open question holds back of it (a missed option waits too).
+    const shown = context.romanizationMode === 'always' || touched ? option.text.romanization : '';
+    const held = context.held === true && state.status === 'asking';
+    view = { id: option.id, cardState, ko: option.text.ko, romanization: held ? '' : shown, heldRomanization: held ? shown : '', label: undefined, pictureRef: undefined };
     base = koreanItem({ ko: option.text.ko, romanization: a11yRomanization(option.text.romanization, context.romanizationOr) });
   } else if (option.pictureRef !== undefined) {
     const name = option.labelEn ?? a11y.picture;
-    view = { id: option.id, cardState, ko: undefined, romanization: '', label: name, pictureRef: option.pictureRef };
+    view = { id: option.id, cardState, ko: undefined, romanization: '', heldRomanization: '', label: name, pictureRef: option.pictureRef };
     base = name;
   } else {
     const figure = option.figure ?? '';
-    view = { id: option.id, cardState, ko: undefined, romanization: '', label: figure, pictureRef: undefined };
+    view = { id: option.id, cardState, ko: undefined, romanization: '', heldRomanization: '', label: figure, pictureRef: undefined };
     base = figure;
   }
   const accessibilityLabel = cardState === 'correct' || cardState === 'wrong' ? a11y.option[cardState](base) : base;

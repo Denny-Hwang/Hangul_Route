@@ -23,6 +23,11 @@ export interface ChoiceCardProps {
   romanizationReserved?: boolean;
   /** Meaning of `ko` in the UI language. */
   gloss?: string;
+  /**
+   * `true` keeps the gloss line's room but draws it invisible and unannounced (`KoreanText` `glossReserved`): the meaning
+   * of a Korean option while a quest Check's question is open (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c). Default `false`.
+   */
+  glossReserved?: boolean;
   /** Picture slot above the texts. Absent or `null`: the texts alone. */
   art?: ReactNode;
   state: ChoiceCardState;

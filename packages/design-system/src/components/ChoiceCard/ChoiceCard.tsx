@@ -33,6 +33,7 @@ export function ChoiceCard({
   romanization = '',
   romanizationReserved = false,
   gloss,
+  glossReserved = false,
   art,
   state,
   wrongMark = 'replay',
@@ -93,6 +94,7 @@ export function ChoiceCard({
               romanizationShown={!romanizationReserved}
               romanizationReserved={romanizationReserved}
               gloss={gloss}
+              glossReserved={glossReserved}
               size="sm"
             />
           </View>

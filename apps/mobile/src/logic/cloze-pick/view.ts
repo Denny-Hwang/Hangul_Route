@@ -16,6 +16,9 @@ import { filledSentence, labelSentence, spokenGap } from './round';
  * - **found**: the gap holds the tile with the check glyph, the romanization and a value gap's meaning complete,
  *   and Hear it replays the sentence.
  * - With `romanizationMode: 'tap'` the sentence's romanization waits for the answer, as the tiles' does.
+ * - In a quest Check (`hold`, AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1c) the sentence's romanization is held
+ *   while the question is open: it keeps its room, draws nothing and is off the accessibility tree (`heldRomanization`);
+ *   the meaning, the input the round reads from, stays. A missed tile does not end the hold.
  */
 
 export type ClozeHoyaLine = 'miss' | 'missParticle' | 'missValue' | 'lookHere';
@@ -29,6 +32,8 @@ export interface ClozePromptView {
   found: boolean;
   /** The romanization line: with `___` while asking, completed once found; '' while `tap` mode hides it. */
   romanization: string;
+  /** The romanization line held back while a Check's question is open: it keeps its room and draws nothing; '' when nothing is held. */
+  heldRomanization: string;
   /** The meaning line in the UI language: a value gap keeps its gap until found. */
   meaning: string;
   /** The card's accessible name: the romanization with its gap read as a word, and the meaning. */
@@ -44,6 +49,8 @@ export interface ClozePromptView {
 export interface ClozeViewContext {
   mode: HostMode;
   romanizationMode: RomanizationMode;
+  /** A Check holds the sentence's romanization until the gap is filled (row DC-1c). Absent: nothing held. */
+  hold?: boolean;
   /** `a11y.minigame.clozePick`: the group label and the word read for the gap. */
   a11y: {
     sentence: (sentence: string, meaning: string) => string;
@@ -67,6 +74,9 @@ export function clozeView(round: ClozePickRound, state: ClozeFlowState, ctx: Clo
   const [before = '', after = ''] = round.sentence.ko.split(CLOZE_GAP);
   const romanization = found ? done.romanization : round.sentence.romanization;
   const meaning = found ? done.en : round.sentence.en;
+  // What the learner's mode shows, and what a Check's open question holds back of it.
+  const shown = ctx.romanizationMode === 'always' || found ? romanization : '';
+  const held = ctx.hold === true && !found;
   const label = found
     ? ctx.a11y.sentenceDone(labelSentence(done.romanization, ctx.a11y.blank), done.en)
     : ctx.a11y.sentence(labelSentence(round.sentence.romanization, ctx.a11y.blank), spokenGap(round.sentence.en, ctx.a11y.blank));
@@ -75,7 +85,8 @@ export function clozeView(round: ClozePickRound, state: ClozeFlowState, ctx: Clo
     after,
     gapText: found ? (round.tiles[round.answerIndex]?.ko ?? null) : null,
     found,
-    romanization: ctx.romanizationMode === 'always' || found ? romanization : '',
+    romanization: held ? '' : shown,
+    heldRomanization: held ? shown : '',
     meaning,
     label,
     instruction: round.gapKind,

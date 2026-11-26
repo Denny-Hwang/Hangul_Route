@@ -26,15 +26,16 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import { romanizationShown } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, MutableRefObject, Ref } from 'react';
 import { ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { holdsRomanization, hostSurface } from '../../logic/locale/check-hold';
 import { chunkRows, compareGrid } from '../../logic/type-hangul/compare-grid';
 import { fieldView, startFlow, stepFlow, type TypeHangulEffect, type TypeHangulEvent, type TypeHangulState } from '../../logic/type-hangul/flow';
+import { typeHangulLook, type TypeHangulLook } from '../../logic/type-hangul/look';
 import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { nudge, success } from '../../platform/haptics';
@@ -42,6 +43,7 @@ import { announceForScreenReader } from '../../platform/screen-reader';
 import { switchedFromHear } from '../../logic/game-switches';
 import type { DictationKit } from './dictation-entry';
 import type { HearRound } from './dictation-chunk';
+import { HeldText } from './held-line';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { focusPanel, koreanSpeech, srOnly, type Focusable } from './korean-speech';
@@ -217,8 +219,11 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   const skip = (): void => dispatch({ type: 'skip' });
   const done = (): void => dispatch({ type: 'done' });
   // In "see" mode the learner's romanization setting applies ("tap to show"); a picture round always
-  // shows it, because with the Korean hidden the romanization and gloss are the cue.
-  const romanizationVisible = mode === 'picture' || romanizationShown(romanizationMode, revealed);
+  // shows it, because with the Korean hidden the romanization and gloss are the cue. A quest Check holds the word's
+  // romanization, the picture round's cue and the keyboard's Latin line until the round is passed (AMENDMENTS-STAGE1-DECODING-CHECK
+  // DC-1c): the picture and its meaning stay, so a picture round becomes spelling from meaning.
+  const look = typeHangulLook({ mode, hold: holdsRomanization(hostSurface(host.mode)), solved: state.phase === 'pass', romanizationMode, revealed });
+  const romanizationVisible = look.romanizationVisible;
   const reveal = (): void => setRevealed(true);
   const kit = hearing ? hear : null;
   const notice = hearRound && heard !== null && hear !== null && heard.mode === 'see' ? <hear.SeeNotice hear={heard} /> : null;
@@ -242,10 +247,10 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {mode === 'picture' ? <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} /> : null}
         {mode === 'see' ? (
-          <WordLine round={round} romanizationVisible={romanizationVisible} onReveal={reveal} wrap={askedWord} testID="type-hangul-prompt" />
+          <WordLine round={round} romanizationVisible={romanizationVisible} romanizationReserved={look.romanizationReserved} onReveal={look.canReveal ? reveal : undefined} wrap={askedWord} testID="type-hangul-prompt" />
         ) : (
           <View style={{ flexShrink: 1 }} testID="type-hangul-prompt">
-            <Body weight="bold">{round.target.romanization}</Body>
+            <PictureCue look={look} romanization={round.target.romanization} />
             <Caption tone="secondary">{round.target.en}</Caption>
           </View>
         )}
@@ -260,19 +265,21 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
           gloss={round.target.en}
           size="md"
           romanizationShown={romanizationVisible}
-          accessibilityLabel={romanizationVisible ? undefined : m.a11y.vocab.cards.word(round.target.ko)}
+          romanizationReserved={look.romanizationReserved}
+          // The name keeps the romanization a held line waits to show; a mode that hides it until a tap reads the Korean alone.
+          accessibilityLabel={romanizationVisible || look.romanizationReserved ? undefined : m.a11y.vocab.cards.word(round.target.ko)}
           testID="type-hangul-prompt"
         />,
       )}
-      {romanizationVisible ? null : (
+      {look.canReveal ? (
         <Button label={t.showRomanization.cta} tone="ghost" size="sm" onPress={reveal} testID="type-hangul-reveal" />
-      )}
+      ) : null}
     </View>
   ) : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1 }} testID="type-hangul-prompt">
       <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} />
       <View style={{ flexShrink: 1 }}>
-        <Body weight="bold">{round.target.romanization}</Body>
+        <PictureCue look={look} romanization={round.target.romanization} />
         <Caption tone="secondary">{round.target.en}</Caption>
       </View>
     </View>
@@ -384,6 +391,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
           width={kbWidth}
           layoutClass={keyboardClass}
           soundOf={keySound}
+          soundHeld={look.keyboardSoundHeld}
           speakSound={(sound) => a11yRomanization(sound, m.a11y.romanizationOr)}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
           // While a hear round holds its opening (at most 1.5 s) a key types nothing and is not queued.
@@ -582,6 +590,8 @@ interface WordLineProps {
   round: Pick<TypeHangulRound, 'target'>;
   /** The learner's setting (`romanizationShown`); the result panel always passes true. */
   romanizationVisible: boolean;
+  /** A quest Check holds the line: it keeps its room, draws nothing and is off the accessibility tree (its name keeps it). */
+  romanizationReserved?: boolean;
   /** Shows the romanization when the setting hides it until a tap. */
   onReveal?: () => void;
   /** Wraps the word itself (not its "Show romanization" button), for "Can't hear it?" to focus it. */
@@ -590,17 +600,19 @@ interface WordLineProps {
 }
 
 /** A word on one line, as the mock draws it: the Korean, its romanization and `· gloss`, read as one item. */
-function WordLine({ round, romanizationVisible, onReveal, wrap = (node) => node, testID }: WordLineProps): ReactElement {
+function WordLine({ round, romanizationVisible, romanizationReserved = false, onReveal, wrap = (node) => node, testID }: WordLineProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const { ko, romanization, en } = round.target;
   const hidden = !romanizationVisible;
+  // A held line is still part of the item's name: the hold is visual.
+  const named = !hidden || romanizationReserved;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, flexShrink: 1 }}>
       {/* One item with its romanization; while the setting hides it, the Korean (Korean voice) and the gloss are read in turn. */}
       {wrap(<View
-        accessible={!hidden}
-        accessibilityLabel={hidden ? undefined : m.a11y.koreanItem({ ko, romanization, gloss: en })}
+        accessible={named}
+        accessibilityLabel={named ? m.a11y.koreanItem({ ko, romanization, gloss: en }) : undefined}
         style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm, flexShrink: 1 }}
         testID={testID}
       >
@@ -609,7 +621,11 @@ function WordLine({ round, romanizationVisible, onReveal, wrap = (node) => node,
         <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {ko}
         </Text>
-        {hidden ? null : <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
+        {hidden ? (
+          romanizationReserved ? <HeldText size="bodySm" tone="secondary" italic>{romanization}</HeldText> : null
+        ) : (
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>
+        )}
         <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
       </View>)}
       {hidden && onReveal ? (
@@ -619,3 +635,8 @@ function WordLine({ round, romanizationVisible, onReveal, wrap = (node) => node,
   );
 }
 
+/** The picture round's cue: the target's romanization, drawn; held in a quest Check until the round is passed (the picture and its meaning stay). */
+function PictureCue({ look, romanization }: { look: TypeHangulLook; romanization: string }): ReactElement | null {
+  if (look.romanizationVisible) return <Body weight="bold">{romanization}</Body>;
+  return look.romanizationReserved ? <HeldText size="body" tone="secondary" weight="bold">{romanization}</HeldText> : null;
+}

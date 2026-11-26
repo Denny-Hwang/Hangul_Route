@@ -42,6 +42,7 @@ import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { ClozePickRound } from '@hangul-route/content-schema';
 import { afterMiss, afterRightAnswer, lookHereLine } from '../../logic/answer-feedback';
 import { koSpeech } from '../../logic/audio/ko-speech';
+import { holdsRomanization, hostSurface } from '../../logic/locale/check-hold';
 import { startCloze, stepCloze, type ClozeEffect, type ClozeEvent, type ClozeFlowState } from '../../logic/cloze-pick/flow';
 import { clozeToListenPick, filledSentence, validClozeRounds } from '../../logic/cloze-pick/round';
 import { clozeColumns, clozeView, type ClozeHoyaLine } from '../../logic/cloze-pick/view';
@@ -55,6 +56,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { AnswerAnnouncer } from './answer-announcer';
 import { ClozeRealia } from './ClozeRealia';
 import { GameColumns } from './GameColumns';
+import { HeldText } from './held-line';
 import type { MinigameHost } from './host';
 import { useAnswerAnnouncement } from './use-answer-announcement';
 import { useRoundNext } from './use-round-next';
@@ -294,7 +296,9 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
 
   const { round, pick } = current;
   const header = headerView(host.mode, state, copy);
-  const view = clozeView(round, state, { mode: host.mode, romanizationMode, a11y: a11y.clozePick });
+  // A quest Check holds the sentence's, the card's and the tiles' romanization until the gap is filled (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c).
+  const hold = holdsRomanization(hostSurface(host.mode));
+  const view = clozeView(round, state, { mode: host.mode, romanizationMode, hold, a11y: a11y.clozePick });
   const columns = clozeColumns(round, layoutClass.windowWidth);
   const koSize = layoutClass.width === 'compact' ? textScale.size.prompt : textScale.size.title;
   const hoyaLine: Record<ClozeHoyaLine, string> = {
@@ -371,7 +375,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
             <View ref={a.promptRef} testID="cloze-pick-round" accessible accessibilityRole="header" accessibilityLabel={roundLabel}>
               <Heading level="prompt">{copy.clozePick.heading}</Heading>
             </View>
-            {round.gapKind === 'value' && realia ? <ClozeRealia realia={realia} testID="cloze-pick-realia" /> : null}
+            {round.gapKind === 'value' && realia ? <ClozeRealia realia={realia} held={hold && !view.found} testID="cloze-pick-realia" /> : null}
             <View
               ref={(node) => {
                 cardRef.current = node as unknown as Focusable | null;
@@ -399,6 +403,8 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                 <Body size="sm" tone="secondary" testID="cloze-pick-romanization">
                   {view.romanization}
                 </Body>
+              ) : view.heldRomanization !== '' ? (
+                <HeldText size="bodySm" tone="secondary">{view.heldRomanization}</HeldText>
               ) : null}
               <Body size="sm" tone="secondary" testID="cloze-pick-meaning">
                 {view.meaning}
@@ -433,7 +439,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
               {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
               <View testID="cloze-pick-tiles" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
                 {pick.options.map((option) => {
-                  const card = optionView(pick, option, state, { mode: host.mode, romanizationMode }, a11y);
+                  const card = optionView(pick, option, state, { mode: host.mode, romanizationMode, holdRomanization: hold }, a11y);
                   const look = choiceCardStyle(card.cardState);
                   return (
                     <View key={option.id} style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}>
@@ -483,6 +489,8 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                                   <Body size="sm" tone="secondary">
                                     {card.romanization}
                                   </Body>
+                                ) : card.heldRomanization !== '' ? (
+                                  <HeldText size="bodySm" tone="secondary">{card.heldRomanization}</HeldText>
                                 ) : null}
                               </View>
                               {look.mark ? (
