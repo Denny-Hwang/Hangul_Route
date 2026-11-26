@@ -115,8 +115,8 @@ describe('a Stage Check', () => {
     const plan = (await api.startSession(w, 'stage2', 'en'))!;
     expect(plan.rounds).toHaveLength(20);
     expect(f.events).toEqual([]);
-    api.begin(w, plan, false);
-    expect(f.events).toEqual([{ name: 'review.start', profileId: 'p1', payload: { kind: 'stage-certificate', stageKey: 'stage2', hideRomanization: false } }]);
+    api.begin(w, plan);
+    expect(f.events).toEqual([{ name: 'review.start', profileId: 'p1', payload: { kind: 'stage-certificate', stageKey: 'stage2' } }]);
     const answers = all(20, 17);
     const recorded = [...answers].map(([i, a]) => api.recordRound(w, plan, i, a));
     expect(f.recorded).toHaveLength(20);
@@ -235,7 +235,7 @@ describe('a Stage Check', () => {
     const api = createStageCheckApi(f.deps);
     const w = await world(f);
     const plan = (await api.startSession(w, 'stage2', 'en'))!;
-    api.begin(w, plan, false);
+    api.begin(w, plan);
     on = false;
     expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toBeNull();
     on = true;
@@ -317,13 +317,13 @@ describe('resumeSession and savedRun (LR-3b)', () => {
     const w = await world(f);
     const plan = (await api.startSession(w, 'stage3', locale))!;
     const answers = new Map(Array.from({ length: answered }, (_, i): [number, RoundAnswer] => [i, i % 3 === 0 ? { correct: false } : { correct: true, ...(i % 4 === 0 ? { hinted: true } : {}), ...(i % 5 === 1 ? { asked: true } : {}) }]));
-    const run = api.savedRun(plan, { locale, answers, hideRomanization: true, startedAt: START });
+    const run = api.savedRun(plan, { locale, answers, startedAt: START });
     // The stored value is JSON, as the storage keeps it.
     const saved = JSON.parse(JSON.stringify(run)) as SavedStageCheck;
     return { f, api, w, plan, answers, run, saved };
   }
 
-  it('savedRun holds the stage, the language, the items hash, the plan rounds, the answers by index, the choice and the start time', async () => {
+  it('savedRun holds the stage, the language, the items hash, the plan rounds, the answers by index, the constant hideRomanization and the start time', async () => {
     const { plan, run, answers } = await stored();
     expect(run).toMatchObject({ v: 1, kind: 'stage', stage: 'stage3', locale: 'en', itemsHash: 'hash-1', hideRomanization: true, startedAt: START });
     expect(run.rounds).toEqual(plan.rounds);
@@ -331,14 +331,20 @@ describe('resumeSession and savedRun (LR-3b)', () => {
     expect(Object.fromEntries(run.answers)).toEqual(Object.fromEntries(answers));
   });
 
-  it('the stored rounds come back as stored, with the answers, the choice, the start time and the next round', async () => {
+  it('the stored rounds come back as stored, with the answers, the start time and the next round', async () => {
     const { api, w, plan, saved, answers } = await stored();
     const found = await api.resumeSession(w, saved, 'en', 'stage3', LATER);
     expect(found.kind).toBe('run');
     if (found.kind !== 'run') return;
     expect(found.run.plan).toEqual({ stage: 'stage3', rounds: plan.rounds, soundNotice: plan.soundNotice } satisfies PlannedStageCheck);
     expect(found.run.answers).toEqual(answers);
-    expect(found.run).toMatchObject({ hideRomanization: true, startedAt: START, next: 8 });
+    expect(found.run).toMatchObject({ startedAt: START, next: 8 });
+    expect(found.run).not.toHaveProperty('hideRomanization');
+  });
+
+  it('a run stored with hideRomanization false (while the attempt switch existed) still resumes; the value is ignored (DC-1b)', async () => {
+    const { api, w, saved } = await stored();
+    expect((await api.resumeSession(w, { ...saved, hideRomanization: false }, 'en', 'stage3', LATER)).kind).toBe('run');
   });
 
   it('a round answered after the learner\'s own ask keeps it through the stored value, and a stored `asked` that is not a boolean drops the run (CH-1f)', async () => {
@@ -359,7 +365,7 @@ describe('resumeSession and savedRun (LR-3b)', () => {
       const w = await world(f);
       const plan = (await api.startSession(w, stage, 'en'))!;
       plan.rounds.forEach((r) => types.add(r.type));
-      const saved = JSON.parse(JSON.stringify(api.savedRun(plan, { locale: 'en', answers: new Map([[0, { correct: true }]]), hideRomanization: false, startedAt: START })));
+      const saved = JSON.parse(JSON.stringify(api.savedRun(plan, { locale: 'en', answers: new Map([[0, { correct: true }]]), startedAt: START })));
       expect((await api.resumeSession(w, saved, 'en', stage, LATER)).kind, stage).toBe('run');
     }
     expect([...types]).toEqual(expect.arrayContaining(['pick', 'type', 'order']));
@@ -486,8 +492,8 @@ describe('resumeSession and savedRun (LR-3b)', () => {
 
   it('savedRun carries finishedAt only when given', async () => {
     const { api, plan, answers } = await stored();
-    expect(api.savedRun(plan, { locale: 'en', answers, hideRomanization: false, startedAt: START })).not.toHaveProperty('finishedAt');
-    expect(api.savedRun(plan, { locale: 'en', answers, hideRomanization: false, startedAt: START, finishedAt: LATER.toISOString() }).finishedAt).toBe(LATER.toISOString());
+    expect(api.savedRun(plan, { locale: 'en', answers, startedAt: START })).not.toHaveProperty('finishedAt');
+    expect(api.savedRun(plan, { locale: 'en', answers, startedAt: START, finishedAt: LATER.toISOString() }).finishedAt).toBe(LATER.toISOString());
   });
 
   it('finishSession awaits afterRecorded after the entry and the latch and before the complete event; a rejection is ignored', async () => {

@@ -76,11 +76,9 @@ vi.mock('../../../platform/screen-reader', async (importOriginal) => ({ ...(awai
 vi.mock('../../reviews/DailyReviewRoute', async () => {
   const { createElement } = await import('react');
   const { SaveFailedPage } = await import('../../reviews/SaveFailedPage');
-  const { useRomanizationMode } = await import('../../../i18n/use-romanization-mode');
-  function RoundView({ round, onFirst, onSolved }: { round: { question: { itemId: string } }; onFirst: (a: { correct: boolean }) => void; onSolved: () => void }) {
-    const mode = useRomanizationMode();
+  function RoundView({ round, onFirst, onSolved, holdSurface }: { round: { question: { itemId: string } }; onFirst: (a: { correct: boolean }) => void; onSolved: () => void; holdSurface?: string }) {
     // One tap answers the round and solves it, as a round that ends.
-    return createElement('button', { 'data-testid': 'round-stub', 'data-item': round.question.itemId, 'data-mode': mode, role: 'button', onClick: () => (onFirst({ correct: rig.right }), onSolved()) }, 'answer');
+    return createElement('button', { 'data-testid': 'round-stub', 'data-item': round.question.itemId, 'data-hold': holdSurface ?? '', role: 'button', onClick: () => (onFirst({ correct: rig.right }), onSolved()) }, 'answer');
   }
   return {
     dailyReviewChunk: async () => ({
@@ -288,7 +286,7 @@ describe('[LR] a Stage Check stores each first answer once its recording has set
     expect(stored()).toBeNull();
     await answerRounds(r, 1);
     await settleSavedChecksForTests();
-    expect(stored()).toMatchObject({ v: 1, kind: 'stage', stage: 'stage2', locale: 'en', itemsHash: 'hash-1', hideRomanization: false });
+    expect(stored()).toMatchObject({ v: 1, kind: 'stage', stage: 'stage2', locale: 'en', itemsHash: 'hash-1', hideRomanization: true });
     expect(stored()!.rounds).toHaveLength(7);
     expect(stored()!.answers.map(([i]) => i)).toEqual([0]);
     await answerRounds(r, 2);
@@ -330,7 +328,7 @@ describe('[LR] a stored Stage Check is offered, and Continue goes on', () => {
     expect(screenTexts(r.root)).toContain(EN.learner.stageCheck.title);
     expect(buttonsNamed(r.root, EN.common.buttons.continue)).toHaveLength(1);
     expect(buttonsNamed(r.root, M.resume.startAgain.cta)).toHaveLength(1);
-    // The run keeps its romanization choice: no switch; no count of rounds, no fraction, no percent.
+    // No switch (every Check holds its romanization); no count of rounds, no fraction, no percent.
     expect(r.root.findAll((n) => n.props.role === 'switch')).toHaveLength(0);
     expect(screenTexts(r.root).join(' ')).not.toMatch(/\d+\s*\/\s*\d+|%/);
     expect(rig.planned).toBe(0);
@@ -399,18 +397,18 @@ describe('[LR] a stored Stage Check is offered, and Continue goes on', () => {
     expect(stored()).toBeNull();
   });
 
-  it('the romanization choice of the run is kept: a hidden round stays hidden', async () => {
-    const first = await open();
-    await press(first.r.root.findAll((n) => n.props.role === 'switch')[0]!);
-    await tapId(first.r, 'stage-check-go');
-    expect(round(first.r)!.props['data-mode']).toBe('tap');
-    await answerRounds(first.r, 2);
+  it('a run stored while the attempt switch existed (hideRomanization false) resumes, holds like any Check, and a new run stores the constant true (DC-1b)', async () => {
+    await playSome(3);
+    expect(stored()!.hideRomanization).toBe(true);
+    // The value an older build stored: the readers ignore it.
+    rig.mem.set(CHECK_RUN_KEY(ID), { ...stored()!, hideRomanization: false });
+    const { r } = await open();
+    expect(byTestId(r.root, 'stage-check-resume')).toHaveLength(1);
+    await tap(r, EN.common.buttons.continue);
+    expect(round(r)!.props['data-hold']).toBe('stage-check');
+    await answerRounds(r, 1);
     await settleSavedChecksForTests();
     expect(stored()!.hideRomanization).toBe(true);
-    await cleanup();
-    const { r } = await open();
-    await tap(r, EN.common.buttons.continue);
-    expect(round(r)!.props['data-mode']).toBe('tap');
   });
 
   it('a second tap on Continue does nothing: the stored answers are not put back over the new ones', async () => {

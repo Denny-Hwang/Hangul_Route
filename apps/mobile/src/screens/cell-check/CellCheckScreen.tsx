@@ -206,6 +206,7 @@ export function CellCheckScreen({ navigation, route }: Props): ReactElement {
                 reducedMotion={reducedMotion}
                 cantHear
                 check="cell-check"
+                holdSurface="cell-check"
                 onFirst={(answer) => onFirst(index, answer)}
                 onSolved={onSolved}
                 grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}

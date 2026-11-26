@@ -199,6 +199,7 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
               round={round}
               reducedMotion={reducedMotion}
               cantHear
+              holdSurface="practice"
               onFirst={(answer) => {
                 if (answers.current.has(index) || profileId === null) return;
                 answers.current.set(index, answer);

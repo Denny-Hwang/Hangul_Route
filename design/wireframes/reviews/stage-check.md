@@ -67,15 +67,15 @@ D. Stage Check intro (route StageCheck { stageKey })
 |   all five places. No timer.   |
 |   Take it again any time. Your |
 |   best result is kept.         |
-|   (o-) Reading practice: hide  |  <- the Hangul Check switch, reused
-|        the romanization until  |
-|        I tap                   |
 |   [[ LET'S GO ]]               |
 |   [ Maybe later ]              |
 +--------------------------------+
 
 E. A part (4 parts of 5 rounds): reviews/daily-review.md B and B2, with the dots row showing the part's
    5 rounds only, and the theme line (the items mix all five themes)
+   Every round holds the romanization of its question until it is answered (the line keeps its room and draws nothing;
+   the keyboard's Latin sound line likewise; the screen-reader names keep it); there is no switch for it
+   (AMENDMENTS-STAGE1-DECODING-CHECK, rows DC-1a and DC-1b).
 
 E2. Pause between parts (3 times)
 |        [hoya - cheering]       |
@@ -127,7 +127,7 @@ H. Stop the check? (over E or E2; the live `learner.stageReview.leave.*` sheet, 
 - B: stage card -> `library/card-detail`; sends `stage.card_opened { stage }`. Mini cells: not targets (decorative recap).
 - B: [[ TAKE THE STAGE CHECK ]] -> D; [ See my cards ] -> Library (Cards); [ Back home ] -> Main tabs (stack reset).
 - C: [ See your prize ] -> B; [ Stage Check ] -> D.
-- D: [[ LET'S GO ]] -> E part 1; `review.start { kind: 'stage-certificate', stageKey, hideRomanization }` (the existing kind name; the UI never says "certificate"). [x] / [ Maybe later ] -> back.
+- D: [[ LET'S GO ]] -> E part 1; `review.start { kind: 'stage-certificate', stageKey }` (the existing kind name; the UI never says "certificate"). [x] / [ Maybe later ] -> back.
 - E: as `reviews/daily-review.md` B; the last round of a part -> E2 (or F after part 4). [x] or system back -> H.
 - E2: [[ KEEP GOING ]] -> the next part.
 - F: `review.complete { kind: 'stage-certificate', stageKey, stars }`; [[ BACK HOME ]] -> Main; [ See my cards ] -> Library (Cards).
@@ -215,7 +215,7 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 | `learner.stageCheck.retro.body` | Here are your stage cards. |
 | `a11y.stageCheck.best(stars)` | Stage Check, best 1 star / Stage Check, best {stars} stars (one / other by `plural()`) |
 
-**New namespace on purpose:** `learner.stageComplete.*` and `learner.results.stagePrize.cta` are the live Stage 1 strings (`results/stage1-complete.md`: "Hangul complete!", the fixed can-do line, "See your Stage 1 prize"), so Stages 2-7 get `learner.upperStageComplete.*` and `learner.results.upperStagePrize.*` and the Stage 1 leaves stay exactly as they are. The header button reuses `learner.journey.stagePrize.cta` ("See your prize"); See my cards and Back home reuse `learner.stageComplete.seeCards` / `.backHome`. The can-do lines follow the OD-12 stage wording (no speaking claim: Stage 4 is reading and answering, Stage 7 is writing). The stop sheet reuses `learner.stageReview.leave.*` as it is ("Stop the check?", "You can take it again any time.", stay "Keep going", "Stop"; H draws those words), the switch `learner.stageReview.intro.hideRomanization`, the start and later buttons `learner.stageReview.intro.start` / `.later`, and star headlines `learner.dailyReview.result.headline.*`.
+**New namespace on purpose:** `learner.stageComplete.*` and `learner.results.stagePrize.cta` are the live Stage 1 strings (`results/stage1-complete.md`: "Hangul complete!", the fixed can-do line, "See your Stage 1 prize"), so Stages 2-7 get `learner.upperStageComplete.*` and `learner.results.upperStagePrize.*` and the Stage 1 leaves stay exactly as they are. The header button reuses `learner.journey.stagePrize.cta` ("See your prize"); See my cards and Back home reuse `learner.stageComplete.seeCards` / `.backHome`. The can-do lines follow the OD-12 stage wording (no speaking claim: Stage 4 is reading and answering, Stage 7 is writing). The stop sheet reuses `learner.stageReview.leave.*` as it is ("Stop the check?", "You can take it again any time.", stay "Keep going", "Stop"; H draws those words), the start and later buttons `learner.stageReview.intro.start` / `.later`, and star headlines `learner.dailyReview.result.headline.*`.
 
 ## Open questions
 

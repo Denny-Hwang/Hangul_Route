@@ -24,6 +24,13 @@ import type { ReviewRound } from './review-rounds';
 /** The stored value's version; a row that changes what is stored changes it (a value of another version is dropped). */
 export const SAVED_CHECK_VERSION = 1;
 
+/**
+ * Both stored checks still carry `hideRomanization` (the shape check requires a boolean, so a run stored while the attempt
+ * switch existed resumes). Every Check holds its romanization now, so a new run stores this constant `true` and the readers
+ * ignore the value (AMENDMENTS-STAGE1-DECODING-CHECK section 3.8, rows DC-1a and DC-1b).
+ */
+export const STORED_HIDE_ROMANIZATION = true;
+
 /** The Hangul Check as stored. */
 export interface SavedHangulCheck {
   v: 1;

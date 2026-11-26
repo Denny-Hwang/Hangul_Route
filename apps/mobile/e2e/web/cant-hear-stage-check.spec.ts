@@ -8,11 +8,10 @@ import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
- * AMENDMENTS-AUDIO-CANT-HEAR row CH-1e, review of the PR (owner decision 2026-11-25): the Stage Check with its "hide the
- * romanization" switch on. A heard pick round holds its options' romanization until it is answered (the switch does what
- * it says), "Can't hear it?" is there, and Show the letters prints the prompt's romanization only, which matches no
- * option on screen. With the switch off the options show their romanization and the asked text is the Korean with its
- * romanization. The Stage Check is played to its first heard pick round (the plan is not fixed), the rounds before it
+ * AMENDMENTS-AUDIO-CANT-HEAR row CH-1e, review of the PR (owner decision 2026-11-25), and AMENDMENTS-STAGE1-DECODING-CHECK
+ * row DC-1b: the Stage Check holds every round's romanization until it is answered (there is no switch for it). A heard
+ * pick round holds its options' romanization, "Can't hear it?" is there, and Show the letters prints the prompt's
+ * romanization only, which matches no option on screen. The Stage Check is played to its first heard pick round (the plan is not fixed), the rounds before it
  * answered from the stage's items. A device with a Korean voice that "plays", so rounds are heard.
  */
 
@@ -130,13 +129,14 @@ async function moveOn(page: Page): Promise<void> {
 }
 
 /** Plays the Stage Check until a heard round of the wanted kind (`pick` or `dictation`) with the link is on screen. */
-async function toHeardPick(page: Page, hide: boolean, want: 'pick' | 'dictation' = 'pick'): Promise<void> {
+async function toHeardPick(page: Page, want: 'pick' | 'dictation' = 'pick'): Promise<void> {
   // The produce rung is Dictation only with `game.type-hangul-hear` on (row CM-31).
   await learner(page, want === 'dictation' ? { 'game.type-hangul-hear': { on: true, pct: 100 } } : {});
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByTestId('journey-stage-check-stage2').click();
   await expect(page.getByTestId('stage-check-intro')).toBeVisible();
-  if (hide) await page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' }).click();
+  // No attempt switch on the intro (DC-1b).
+  await expect(page.getByRole('switch', { name: 'Reading practice: hide the romanization until I tap' })).toHaveCount(0);
   await page.getByTestId('stage-check-go').click();
   await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
   for (let round = 0; round < 20; round += 1) {
@@ -156,13 +156,13 @@ async function toHeardPick(page: Page, hide: boolean, want: 'pick' | 'dictation'
 }
 
 for (const size of SIZES) {
-  test(`the Stage Check at ${size.width} x ${size.height} with the hide switch on: options hold their romanization, Show the letters prints the romanization only`, async ({ page }) => {
+  test(`the Stage Check at ${size.width} x ${size.height} holds the options' romanization, Show the letters prints the romanization only`, async ({ page }) => {
     test.setTimeout(240_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await koreanVoice(page);
     await page.setViewportSize(size);
-    await toHeardPick(page, true);
+    await toHeardPick(page);
     const options = page.locator('[data-testid^="daily-review-option-"]');
     const count = await options.count();
     // Held: every option's romanization line is the reserved, invisible one, and none is drawn.
@@ -186,16 +186,27 @@ for (const size of SIZES) {
   });
 }
 
-test('the Stage Check with the hide switch off: the options show their romanization and the asked text is the Korean with its romanization', async ({ page }) => {
+test('the Stage Check holds the options of a heard pick round until one is answered, then shows their romanization', async ({ page }) => {
   test.setTimeout(240_000);
   await koreanVoice(page);
   await page.setViewportSize(SIZES[1]);
-  await toHeardPick(page, false);
-  await expect(page.locator('[data-testid="korean-text-romanization-reserved"]')).toHaveCount(0);
-  await page.getByTestId('cant-hear').click();
-  await page.getByTestId('cant-hear-show-letters').click();
-  await expect(page.getByTestId('daily-review-prompt-panel-text')).toBeVisible();
-  expect(await page.getByTestId('daily-review-prompt-panel-text').innerText()).toMatch(HANGUL);
+  await toHeardPick(page);
+  const options = page.locator('[data-testid^="daily-review-option-"]');
+  await expect(options.locator('[data-testid="korean-text-romanization-reserved"]')).toHaveCount(await options.count());
+  // A miss does not end the hold; the right answer does. Try the options in turn until the held lines come.
+  const n = await options.count();
+  let revealed = false;
+  for (let i = 0; i < n && !revealed; i += 1) {
+    await pastTapLock(page);
+    await options.nth(i).click();
+    // Answered right: the held lines are gone and the options show their romanization (read before the round moves on).
+    if ((await page.locator('[data-testid="korean-text-romanization-reserved"]').count()) === 0) {
+      revealed = true;
+      const shown = await options.evaluateAll((els) => els.map((e) => (e as HTMLElement).innerText));
+      for (const text of shown) expect(text.replace(/\s+/g, ' ')).toMatch(/[A-Za-z]/);
+    }
+  }
+  expect(revealed).toBe(true);
 });
 
 // CH-1g (owner decision 2026-11-25): a Check's Dictation hear round has the link, but its sheet is guidance only, since
@@ -207,7 +218,7 @@ for (const size of SIZES) {
     page.on('pageerror', (e) => errors.push(String(e)));
     await koreanVoice(page);
     await page.setViewportSize(size);
-    await toHeardPick(page, false, 'dictation');
+    await toHeardPick(page, 'dictation');
     await expect(page.getByTestId('daily-review-type-target')).toHaveCount(0);
     await page.getByTestId('cant-hear').click();
     await expect(page.getByTestId('cant-hear-sheet')).toBeVisible();

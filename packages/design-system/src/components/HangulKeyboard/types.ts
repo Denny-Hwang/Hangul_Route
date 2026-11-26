@@ -23,6 +23,12 @@ export interface HangulKeyboardProps {
   /** The sound value as screen-reader words ('g or k'); default: the face value. */
   speakSound?: (sound: string) => string;
   labels: HangulKeyboardLabels;
+  /**
+   * The Latin sound line under each key is held (a Check, AMENDMENTS-STAGE1-DECODING-CHECK section 3.1): it keeps its room,
+   * draws nothing and is off the accessibility tree, and each key keeps its accessible name (the sound read as words).
+   * Default `false`: the line is drawn.
+   */
+  soundHeld?: boolean;
   /** A preview: keys drawn, presses ignored. While a result panel is up the keyboard is not drawn at all. */
   disabled?: boolean;
   testID?: string;

@@ -52,8 +52,8 @@ vi.mock('../../reviews/DailyReviewRoute', async () => {
       if (roundsGate.wait) await roundsGate.wait;
       return {
       TopRow: ({ filled, total }: { filled: number; total: number }) => createElement('div', { 'data-testid': 'top-row', 'data-filled': filled, 'data-total': total }),
-      RoundView: ({ onFirst, onSolved, cantHear }: { onFirst: (a: { correct: boolean }) => void; onSolved: () => void; cantHear?: boolean }) =>
-        createElement('button', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, role: 'button', onClick: () => (onFirst({ correct: false }), onSolved()) }, 'answer'),
+      RoundView: ({ onFirst, onSolved, cantHear, holdSurface }: { onFirst: (a: { correct: boolean }) => void; onSolved: () => void; cantHear?: boolean; holdSurface?: string }) =>
+        createElement('button', { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hold': holdSurface ?? '', role: 'button', onClick: () => (onFirst({ correct: false }), onSolved()) }, 'answer'),
       };
     },
   };
@@ -181,6 +181,13 @@ describe('WeekDropScreen (B, C, D)', () => {
     await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
     await idle();
     expect(byTestId(r.root, 'round-stub')[0]?.props['data-cant-hear']).toBe(true);
+  });
+
+  it('This week in Korea is practice: its rounds pass holdSurface practice and hold nothing (OD-DC3, DC-1b)', async () => {
+    const r = await meet();
+    await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
+    await idle();
+    expect(byTestId(r.root, 'round-stub')[0]?.props['data-hold']).toBe('practice');
   });
 
   it('a tap on Practice before the round views have loaded: waits for them and plays the rounds, never a silent Done', async () => {

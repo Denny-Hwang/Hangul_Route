@@ -216,11 +216,16 @@ interface HearPromptProps {
   compact: boolean;
   /** Round 1 waits for a tap: the speaker pulses once (static under reduced motion). */
   first: boolean;
+  /**
+   * A Check holds the word's romanization until the answer (AMENDMENTS-STAGE1-DECODING-CHECK section 3.1: a held line cannot
+   * be revealed by a tap): "Show how it sounds" is not offered. Default `false`: the hint is there (practice, Type Hangul).
+   */
+  holdRomanization?: boolean;
   testID?: string;
 }
 
 /** The hear prompt: the speaker, the meaning (and picture), and "Show how it sounds". Never the Korean before Done. */
-export function HearPrompt({ hear, round, compact, first, testID = 'dictation-prompt' }: HearPromptProps): ReactElement {
+export function HearPrompt({ hear, round, compact, first, holdRomanization = false, testID = 'dictation-prompt' }: HearPromptProps): ReactElement {
   const m = useMessages();
   const t = m.learner.minigame.typeHangul;
   const reduced = useReducedMotion();
@@ -292,15 +297,21 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
           <Pressable
             testID={`${testID}-meaning`}
             onPress={hear.reveal}
-            disabled={hear.revealed}
+            disabled={hear.revealed || holdRomanization}
             accessibilityRole="button"
-            accessibilityLabel={hear.revealed ? `${t.hear.meaning(gloss)}. ${a11yRomanization(round.target.romanization, m.a11y.romanizationOr)}` : `${t.hear.meaning(gloss)}. ${t.hear.showSound}`}
+            accessibilityLabel={
+              hear.revealed
+                ? `${t.hear.meaning(gloss)}. ${a11yRomanization(round.target.romanization, m.a11y.romanizationOr)}`
+                : holdRomanization
+                  ? t.hear.meaning(gloss)
+                  : `${t.hear.meaning(gloss)}. ${t.hear.showSound}`
+            }
             style={{ flex: 1, minWidth: 0, minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radii.md }}
           >
             <Text {...KOREAN_LINE_BREAK} numberOfLines={2} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }} testID={`${testID}-gloss`}>
               {gloss}
             </Text>
-            {hear.revealed ? romanization : <Caption tone="secondary" style={{ textDecorationLine: 'underline' }}>{t.hear.showSound}</Caption>}
+            {hear.revealed ? romanization : holdRomanization ? null : <Caption tone="secondary" style={{ textDecorationLine: 'underline' }}>{t.hear.showSound}</Caption>}
           </Pressable>
         </View>
         {link}
@@ -320,7 +331,7 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
           {t.hear.meaning(gloss)}
         </Body>
       </View>
-      {hear.revealed ? romanization : <Button label={t.hear.showSound} tone="ghost" size="sm" onPress={hear.reveal} testID={`${testID}-show-sound`} />}
+      {hear.revealed ? romanization : holdRomanization ? null : <Button label={t.hear.showSound} tone="ghost" size="sm" onPress={hear.reveal} testID={`${testID}-show-sound`} />}
       {link}
       {status}
       <VoiceHelpSheet visible={hear.helpOpen} onClose={() => hear.setHelpOpen(false)} />

@@ -393,6 +393,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
             round={round}
             reducedMotion={reducedMotion}
             cantHear
+            holdSurface="daily-review"
             onFirst={(answer) => onFirst(index, answer)}
             onSolved={onSolved}
             grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
