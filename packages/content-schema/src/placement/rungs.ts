@@ -40,6 +40,20 @@ export const STRAND_GATES: Readonly<Record<PlacementStrand, readonly PlacementGa
 };
 
 /**
+ * The route-moving steps after `recog`, in asking order (F-PLC-001 section 3.5): each is
+ * asked only while every step before it has passed. The planner walks this ladder and
+ * `stepPassed` (scoring) counts a step as passed only when every step before it did.
+ */
+export const MAIN_STEPS: readonly (readonly [PlacementGate, PlacementForm])[] = [
+  ['sound-basic', 'decode'],
+  ['syl-cv', 'decode'],
+  ['sound-rest', 'decode'],
+  ['syl-cvc', 'decode'],
+  ['vocab', 'read'],
+  ['sentence', 'read'],
+];
+
+/**
  * The 30 symbol keys of the F-QUEST-002 accounting: 14 consonants, 10 vowels,
  * 6 finals. A final is `'<consonant>/final'`.
  */

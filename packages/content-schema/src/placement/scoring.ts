@@ -8,7 +8,7 @@ import type {
   PlacementStrand,
   StrandStatus,
 } from '../schemas/placement';
-import { QUESTIONS_PER_RUNG, STRAND_GATES } from './rungs';
+import { MAIN_STEPS, QUESTIONS_PER_RUNG, STRAND_GATES } from './rungs';
 
 /**
  * Scoring (F-PLC-001 section 3.6). Nothing here is shown as a miss: "not sure",
@@ -51,10 +51,30 @@ export const gateResult = (
 export const rowsPassed = (rows: readonly Pick<GateResult, 'result'>[]): boolean =>
   rows.some((r) => r.result === 'pass') && !rows.some((r) => r.result === 'fail');
 
+/**
+ * One pure predicate for "this step passed" (F-PLC-001 sections 3.5 and 3.6, AM-28). A Deep
+ * run asks a confirming draw after the next step's first draw, so a row can pass and still lie
+ * beyond the end of the ladder once an earlier confirmation fails. That row is stored as it was
+ * answered but counts as not passed: `rowsPassed` for the gate and form **and** for every main
+ * step before it (only for the `decode` and `read` ladder steps; `recog` and the oral forms have
+ * no predecessor). In Short and Standard a step is asked only after every earlier one passed,
+ * so this equals `gatePassed` there.
+ */
+export const stepPassed = (
+  gates: readonly Pick<GateResult, 'gate' | 'form' | 'result'>[],
+  gate: PlacementGate,
+  form: PlacementForm,
+): boolean => {
+  const own = (g: PlacementGate, f: PlacementForm): boolean => rowsPassed(gates.filter((e) => e.gate === g && e.form === f));
+  if (!own(gate, form)) return false;
+  const at = MAIN_STEPS.findIndex(([g, f]) => g === gate && f === form);
+  return MAIN_STEPS.slice(0, Math.max(at, 0)).every(([g, f]) => own(g, f));
+};
+
 const ran = (entries: readonly GateResult[]): boolean => entries.some((e) => e.result !== 'not-run');
 /** The best form counts (vocabulary and sentences have read and oral). */
-const passed = (entries: readonly GateResult[]): boolean =>
-  (['decode', 'read', 'oral'] as const).some((form) => rowsPassed(entries.filter((e) => e.form === form)));
+const passed = (gates: readonly GateResult[], gate: PlacementGate): boolean =>
+  (['decode', 'read', 'oral'] as const).some((form) => stepPassed(gates, gate, form));
 
 /**
  * One status per strand. A strand's gates may have two entries (vocabulary and
@@ -64,7 +84,7 @@ export const strandStatuses = (gates: readonly GateResult[]): Record<PlacementSt
   const status = (strand: PlacementStrand): StrandStatus => {
     const perGate = STRAND_GATES[strand].map((g) => gates.filter((e) => e.gate === g));
     if (!perGate.some(ran)) return 'not-tested';
-    if (perGate.every(passed)) return 'secure';
+    if (STRAND_GATES[strand].every((g) => passed(gates, g))) return 'secure';
     const correct = perGate.reduce((n, entries) => n + entries.reduce((m, e) => m + e.correct, 0), 0);
     return correct > 0 ? 'getting-there' : 'not-yet';
   };
@@ -108,7 +128,7 @@ export const levelOf = (gates: readonly GateResult[]): PlacementLevel => {
 export const oralStageOf = (gates: readonly GateResult[]): StageKey | null => {
   if (!gates.some((e) => e.form === 'oral' && e.result !== 'not-run')) return null;
   const vocabOralAsked = gates.some((e) => e.gate === 'vocab' && e.form === 'oral' && e.result !== 'not-run');
-  const vocabHeard = vocabOralAsked ? gatePassed(gates, 'vocab', 'oral') : gatePassed(gates, 'vocab', 'read');
+  const vocabHeard = vocabOralAsked ? stepPassed(gates, 'vocab', 'oral') : stepPassed(gates, 'vocab', 'read');
   if (!vocabHeard) return 'stage1';
-  return gatePassed(gates, 'sentence', 'oral') ? 'stage3' : 'stage2';
+  return stepPassed(gates, 'sentence', 'oral') ? 'stage3' : 'stage2';
 };

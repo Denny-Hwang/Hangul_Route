@@ -5,6 +5,7 @@ import {
   oralStageOf,
   rowsPassed,
   gatePassed,
+  stepPassed,
   strandStatuses,
   type AssessmentResponse,
   type GateResult,
@@ -113,6 +114,82 @@ describe('rowsPassed (one row per draw)', () => {
   });
 });
 
+describe('stepPassed (E-1: a step counts only when every main step before it passed)', () => {
+  const P = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'pass');
+  const F = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'fail', 1);
+  const N = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'not-run', 0, 0);
+
+  it('equals rowsPassed when every earlier main step passed (Short, Standard and a confirmed Deep ladder)', () => {
+    const ladder = [P('sound-basic'), P('syl-cv'), P('sound-rest'), P('syl-cvc'), P('vocab', 'read'), P('sentence', 'read')];
+    for (const [g, f] of [['sound-basic', 'decode'], ['syl-cv', 'decode'], ['sound-rest', 'decode'], ['syl-cvc', 'decode'], ['vocab', 'read'], ['sentence', 'read']] as const) {
+      expect(stepPassed(ladder, g, f)).toBe(true);
+      expect(stepPassed(ladder, g, f)).toBe(gatePassed(ladder, g, f));
+    }
+    expect(stepPassed([], 'sound-basic', 'decode')).toBe(false);
+    expect(stepPassed([F('sound-basic')], 'sound-basic', 'decode')).toBe(false);
+  });
+
+  it('is false for a pass row when an earlier step failed its confirming draw (Deep asks the next step first)', () => {
+    const afterFailedConfirm = [P('sound-basic'), P('syl-cv'), P('sound-rest'), F('syl-cv'), P('vocab', 'read')];
+    expect(stepPassed(afterFailedConfirm, 'sound-basic', 'decode')).toBe(true);
+    expect(stepPassed(afterFailedConfirm, 'syl-cv', 'decode')).toBe(false);
+    expect(stepPassed(afterFailedConfirm, 'sound-rest', 'decode')).toBe(false);
+    expect(stepPassed(afterFailedConfirm, 'vocab', 'read')).toBe(false);
+    expect(gatePassed(afterFailedConfirm, 'vocab', 'read')).toBe(true);
+  });
+
+  it('is false when an earlier step is missing or not run', () => {
+    expect(stepPassed([P('syl-cv')], 'syl-cv', 'decode')).toBe(false);
+    expect(stepPassed([N('sound-basic'), P('syl-cv')], 'syl-cv', 'decode')).toBe(false);
+    expect(stepPassed([P('sound-basic'), P('syl-cv'), P('sound-rest'), P('syl-cvc'), P('sentence', 'read')], 'sentence', 'read')).toBe(false);
+  });
+
+  it('keeps an unavailable or stopped second draw as a pass (a not-run row never turns a pass into a fail)', () => {
+    const rows = [P('sound-basic'), N('sound-basic'), P('syl-cv')];
+    expect(stepPassed(rows, 'syl-cv', 'decode')).toBe(true);
+  });
+
+  it('has no predecessor for recog and for the oral forms', () => {
+    expect(stepPassed([P('recog')], 'recog', 'decode')).toBe(true);
+    expect(stepPassed([F('recog')], 'recog', 'decode')).toBe(false);
+    expect(stepPassed([F('sound-basic'), P('vocab', 'oral')], 'vocab', 'oral')).toBe(true);
+    expect(stepPassed([F('sound-basic'), P('sentence', 'oral')], 'sentence', 'oral')).toBe(true);
+    expect(stepPassed([F('vocab', 'oral')], 'vocab', 'oral')).toBe(false);
+  });
+});
+
+describe('strandStatuses through stepPassed (E-1)', () => {
+  const P = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'pass');
+  const F = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'fail', 1);
+
+  it('makes an unconfirmed vocab read pass getting-there, never secure', () => {
+    // Deep: vocab read 1 passed, then the syl-cvc confirmation failed.
+    const gates = [P('sound-basic'), P('sound-basic'), P('syl-cv'), P('syl-cv'), P('sound-rest'), P('sound-rest'), P('syl-cvc'), F('syl-cvc'), P('vocab', 'read')];
+    expect(strandStatuses(gates).vocabulary).toBe('getting-there');
+    expect(strandStatuses([...gates.slice(0, -2), P('syl-cvc'), P('vocab', 'read'), P('vocab', 'read')]).vocabulary).toBe('secure');
+  });
+
+  it('makes sound-letter getting-there when sound-rest is only an unconfirmed pass', () => {
+    const gates = [P('sound-basic'), P('syl-cv'), P('sound-basic'), P('sound-rest'), F('syl-cv')];
+    expect(strandStatuses(gates)['sound-letter']).toBe('getting-there');
+    expect(strandStatuses(gates)['syllable-reading']).toBe('getting-there');
+  });
+
+  it('lets the oral form of a strand stay secure whatever the reading ladder did', () => {
+    expect(strandStatuses([F('sound-basic'), P('vocab', 'oral')]).vocabulary).toBe('secure');
+  });
+});
+
+describe('oralStageOf through stepPassed (E-1)', () => {
+  const P = (g: GateResult['gate'], f: GateResult['form'] = 'decode') => gate(g, f, 'pass');
+  it('never lets an unconfirmed vocab read pass stand in for vocab oral', () => {
+    const unconfirmed = [P('sound-basic'), P('syl-cv'), P('sound-rest'), P('syl-cvc'), gate('syl-cvc', 'decode', 'fail', 1), P('vocab', 'read')];
+    expect(oralStageOf([...unconfirmed, P('sentence', 'oral')])).toBe('stage1');
+    const confirmed = [P('sound-basic'), P('syl-cv'), P('sound-rest'), P('syl-cvc'), P('syl-cvc'), P('vocab', 'read')];
+    expect(oralStageOf([...confirmed, P('sentence', 'oral')])).toBe('stage3');
+  });
+});
+
 describe('strandStatuses', () => {
   const none: GateResult[] = [];
 
@@ -133,7 +210,8 @@ describe('strandStatuses', () => {
 
   it('is secure only when every gate of the strand ran and passed', () => {
     expect(strandStatuses([gate('recog', 'decode', 'pass')])['hangul-recognition']).toBe('secure');
-    const both = [gate('sound-basic', 'decode', 'pass'), gate('sound-rest', 'decode', 'pass')];
+    // sound-rest is only asked after syl-cv passed, so a real run's rows always hold the steps before it.
+    const both = [gate('sound-basic', 'decode', 'pass'), gate('syl-cv', 'decode', 'pass'), gate('sound-rest', 'decode', 'pass')];
     expect(strandStatuses(both)['sound-letter']).toBe('secure');
   });
 
@@ -203,10 +281,12 @@ describe('levelOf (spec 3.6 table)', () => {
 
 describe('oralStageOf: a Deep reader who passed vocab read hears sentences only', () => {
   it('lets the vocab read pass stand in for the missing vocab oral row', () => {
-    const reader = [gate('vocab', 'read', 'pass'), gate('vocab', 'read', 'pass')];
+    // The ladder before `vocab` read passed, as in every real run that asks the rung.
+    const ladder = (['sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'] as const).map((g) => gate(g, 'decode', 'pass'));
+    const reader = [...ladder, gate('vocab', 'read', 'pass'), gate('vocab', 'read', 'pass')];
     expect(oralStageOf([...reader, gate('sentence', 'oral', 'pass')])).toBe('stage3');
     expect(oralStageOf([...reader, gate('sentence', 'oral', 'fail')])).toBe('stage2');
-    expect(oralStageOf([gate('vocab', 'read', 'fail'), gate('sentence', 'oral', 'pass')])).toBe('stage1');
+    expect(oralStageOf([...ladder, gate('vocab', 'read', 'fail'), gate('sentence', 'oral', 'pass')])).toBe('stage1');
     expect(oralStageOf([...reader, gate('vocab', 'oral', 'fail'), gate('sentence', 'oral', 'pass')])).toBe('stage1');
   });
 });
