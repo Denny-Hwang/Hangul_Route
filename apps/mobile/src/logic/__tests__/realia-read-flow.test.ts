@@ -26,7 +26,10 @@ import {
   lineViews,
   playableRealia,
   realiaArrangement,
+  drawnRomanization,
+  keyView,
   realiaHeaderView,
+  realiaHeld,
   realiaOptionColumns,
   realiaOptionItem,
   realiaOptionView,
@@ -286,6 +289,53 @@ describe('the sheet', () => {
     expect(hidden[2]!.text.romanization).toBe('ramyeon');
     // The setting hides a visual line, not information.
     expect(hidden[0]!.accessibilityLabel).toBe('김밥, gimbap, 2,000원, icheon won');
+  });
+
+  describe('a Check holds the sheet, the key word and the options until the question is answered (DC-1c)', () => {
+    const held = { ...always, held: true };
+
+    it('every line and value draws no romanization and keeps its room; the names keep it; a line tap reveals nothing', () => {
+      const views = lineViews(menu.realia, q1, { ...startRealiaRead(3), revealed: ['ramyeon'] }, held, A11Y);
+      for (const v of views) {
+        expect(v.text).toMatchObject({ romanizationReserved: true });
+        expect(drawnRomanization(v.text)).toBe('');
+        if (v.value) expect(drawnRomanization(v.value)).toBe('');
+      }
+      expect(views[2]!.text.romanization).toBe('ramyeon');
+      expect(views[2]!.accessibilityLabel).toBe('라면, ramyeon, 3,000원, samcheon won');
+      const tapped = lineViews(menu.realia, q1, { ...startRealiaRead(3), revealed: ['ramyeon'] }, { ...tapMode, held: true }, A11Y);
+      expect(tapped.map((v) => drawnRomanization(v.text))).toEqual(['', '', '', '']);
+      // A mode that would not show a line has nothing to hold.
+      expect(tapped[0]!.text.romanizationReserved).toBeUndefined();
+      expect(tapped[2]!.text.romanizationReserved).toBe(true);
+    });
+
+    it('the title and the key word are held; the options keep their room and a miss does not end the hold', () => {
+      expect(titleView(menu.realia, held)).toMatchObject({ romanizationReserved: true });
+      expect(titleView(menu.realia, always)?.romanizationReserved).toBeUndefined();
+      expect(keyView({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, held)).toEqual({ shown: false, reserved: true });
+      expect(keyView({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, always)).toEqual({ shown: true, reserved: false });
+      expect(keyView({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, { ...tapMode, held: true })).toEqual({ shown: false, reserved: false });
+      const text = q1.options.find((o) => o.id === 'icheon')!;
+      const asked = realiaOptionView(q1, text, startRealiaRead(3), held, A11Y, KOREAN_ITEM);
+      expect(asked).toMatchObject({ romanization: '', heldRomanization: 'icheon won', accessibilityLabel: 'Korean: 이천 원, icheon won' });
+      const missed = realiaOptionView(q1, text, run(startRealiaRead(3), [tap('icheon', 1)]).state, held, A11Y, KOREAN_ITEM);
+      expect(missed).toMatchObject({ cardState: 'wrong', romanization: '', heldRomanization: 'icheon won' });
+      const resolved = realiaOptionView(q1, text, { ...startRealiaRead(3), status: 'resolved' }, held, A11Y, KOREAN_ITEM);
+      expect(resolved).toMatchObject({ romanization: 'icheon won', heldRomanization: '' });
+    });
+
+    it('realiaHeld: a Check, while the question is open; never in practice, never once resolved', () => {
+      expect(realiaHeld(true, startRealiaRead(3))).toBe(true);
+      expect(realiaHeld(true, { ...startRealiaRead(3), status: 'resolved' })).toBe(false);
+      expect(realiaHeld(false, startRealiaRead(3))).toBe(false);
+    });
+
+    it('answered, every line shows as the mode shows it', () => {
+      const answered = { ...startRealiaRead(3), status: 'resolved' as const };
+      const open = { ...always, held: realiaHeld(true, answered) };
+      expect(lineViews(menu.realia, q1, answered, open, A11Y)[2]!.text).toEqual({ ko: '라면', romanization: 'ramyeon' });
+    });
   });
 
   it('second miss: the answer line is ringed and its name says so', () => {

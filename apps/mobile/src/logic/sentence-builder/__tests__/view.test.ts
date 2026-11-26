@@ -81,6 +81,7 @@ describe('lineView', () => {
       key: 'word-0',
       ko: '밥을',
       romanization: 'babeul',
+      heldRomanization: '',
       accessibilityLabel: 'Place 1 of 2: 밥을, babeul',
     });
     expect(lineView(eat, state, tap, a11y)[0]).toMatchObject({ romanization: '', accessibilityLabel: 'Place 1 of 2: 밥을, babeul' });
@@ -132,6 +133,35 @@ describe('widestTile', () => {
   });
 });
 
+describe('a Check holds the romanization until the sentence is built (DC-1c)', () => {
+  const held = { romanizationMode: 'always' as const, hold: true };
+
+  it('the tray draws no line and keeps its room; the names keep the romanization', () => {
+    const tray = trayView(eat, startFlow(1), held, a11y);
+    expect(tray.every((t) => t.romanization === '')).toBe(true);
+    expect(tray.find((t) => t.ko === '밥을')).toMatchObject({ heldRomanization: 'babeul', accessibilityLabel: '밥을, babeul' });
+  });
+
+  it('a placed word waits too, and a given word of a particle round; a miss does not end the hold', () => {
+    const state = tapAll(eat, ['밥을']);
+    expect(lineView(eat, state, held, a11y)[0]).toMatchObject({ kind: 'placed', romanization: '', heldRomanization: 'babeul', accessibilityLabel: 'Place 1 of 2: 밥을, babeul' });
+    expect(lineView(book, startFlow(1), held, a11y)[1]).toMatchObject({ kind: 'fixed', romanization: '', heldRomanization: 'isseoyo' });
+    const missed = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: 'd0', at: 1000 }).state;
+    expect(trayView(eat, missed, held, a11y).every((t) => t.romanization === '')).toBe(true);
+  });
+
+  it('once the sentence is built every line shows as the mode shows it', () => {
+    const done = tapAll(eat, ['밥을', '먹어요']);
+    expect(lineView(eat, done, held, a11y).map((u) => (u.kind === 'slot' ? '' : u.romanization))).toEqual(['babeul', 'meogeoyo']);
+    expect(lineView(eat, done, held, a11y).every((u) => u.kind === 'slot' || u.heldRomanization === '')).toBe(true);
+  });
+
+  it('a mode that never shows the line (tap) reserves nothing; practice and an absent hold are unchanged', () => {
+    expect(trayView(eat, startFlow(1), { romanizationMode: 'tap', hold: true }, a11y).every((t) => t.heldRomanization === '' && t.romanization === '')).toBe(true);
+    expect(trayView(eat, startFlow(1), { romanizationMode: 'always', hold: false }, a11y).every((t) => t.heldRomanization === '' && t.romanization !== '')).toBe(true);
+  });
+});
+
 describe('trayView', () => {
   it('lists the tiles still in the tray with their romanization (always) or none (tap)', () => {
     const tray = trayView(eat, startFlow(1), always, a11y);
@@ -140,6 +170,7 @@ describe('trayView', () => {
       id: idOf(eat, '밥을'),
       ko: '밥을',
       romanization: 'babeul',
+      heldRomanization: '',
       look: 'idle',
       returning: false,
       accessibilityLabel: '밥을, babeul',

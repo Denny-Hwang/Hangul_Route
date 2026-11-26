@@ -44,10 +44,20 @@ describe('letter questions say the letter name: copy (JV-A4)', () => {
     expect(a11y.en.hearNameLabel('Korean letter g/k')).toBe('Hear the name. Korean letter g/k');
   });
 
+  it("[SF-3] the initial ㅇ card's second button plays 아, 오, 우 (AMENDMENTS-DISCOVER-SOUND-FIRST §12)", () => {
+    expect(en.quest.discover.hearVowels.cta).toBe('Hear it with vowels');
+    expect(es.quest.discover.hearVowels.cta).toBe('Escuchar con vocales');
+    expect(ko.quest.discover.hearVowels.cta).toBe('모음과 함께 들어 보기');
+    expect(a11y.en.hearVowelsLabel('Korean letter silent/ng')).toBe('Hear it with vowels. Korean letter silent/ng');
+    expect(a11y.es.hearVowelsLabel('Letra coreana silent/ng')).toBe('Escuchar con vocales. Letra coreana silent/ng');
+    expect(a11y.ko.hearVowelsLabel('한글 글자 silent/ng')).toBe('모음과 함께 들어 보기. 한글 글자 silent/ng');
+  });
+
   it('label in name: the accessible name of Hear it and Hear the name starts with the visible label, in every locale (WCAG 2.5.3)', () => {
     for (const [locale, m] of [['en', en], ['es', es], ['ko', ko]] as const) {
       expect(a11y[locale].hearItLabel('x').startsWith(m.quest.discover.hearIt.cta), `${locale} hearIt`).toBe(true);
       expect(a11y[locale].hearNameLabel('x').startsWith(m.quest.discover.hearName.cta), `${locale} hearName`).toBe(true);
+      expect(a11y[locale].hearVowelsLabel('x').startsWith(m.quest.discover.hearVowels.cta), `${locale} hearVowels`).toBe(true);
     }
   });
 
@@ -64,6 +74,7 @@ describe('letter questions say the letter name: copy (JV-A4)', () => {
       expect(m.presenter.slide.letterName('nieun', 'x')).not.toMatch(HANGUL);
       expect(m.quest.discover.soundWith.cta).not.toMatch(HANGUL);
       expect(m.quest.discover.hearName.cta).not.toMatch(HANGUL);
+      expect(m.quest.discover.hearVowels.cta).not.toMatch(HANGUL);
     }
   });
 });

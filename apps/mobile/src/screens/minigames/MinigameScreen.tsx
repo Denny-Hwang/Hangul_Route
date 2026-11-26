@@ -9,6 +9,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { RomanizationCheckScope } from '../../i18n/use-romanization-mode';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { gameFlagOf, playedScope as fallbackScope } from '../../logic/game-fallback';
+import { holdsRomanization } from '../../logic/locale/check-hold';
 import { gameFinishIsReported, minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
@@ -273,7 +274,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       case 'pic-word-match':
         return <PicWordMatchGame scope={scope} host={host} onBack={exitBack} />;
       case 'tap-respond':
-        return <TapRespondGame scope={scope} onFinish={close} />;
+        // No host (it records through the run store itself): a quest Check holds the romanization and the glosses until the right reply (DC-1c).
+        return <TapRespondGame scope={scope} onFinish={close} hold={holdsRomanization(step.kind === 'check' ? 'quest-check' : 'practice')} />;
       case 'story-read':
         return <StoryReadGame scope={scope} onFinish={close} onBack={exitBack} onOpenCultureNote={openCultureNote} />;
       case 'story-check':

@@ -79,6 +79,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.gating.quest-closed': [['Suni']],
   'a11y.hearItLabel': [['Korean letter g']],
   'a11y.hearNameLabel': [['Korean letter g/k']],
+  'a11y.hearVowelsLabel': [['Korean letter silent/ng']],
   'a11y.hearExample': [['na, na, I']],
   'a11y.discoverLetter': [['g/k'], ['g/k', 'like g in go']],
   'a11y.discoverFinal': [['k']],

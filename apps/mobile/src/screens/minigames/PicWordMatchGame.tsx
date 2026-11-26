@@ -54,6 +54,7 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { AnswerAnnouncer } from './answer-announcer';
+import { holdsRomanization, hostSurface } from '../../logic/locale/check-hold';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 import { useAnswerAnnouncement } from './use-answer-announcement';
@@ -310,6 +311,8 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   // A Check has no Skip and shows the Check's header, fill-only dots (one a board) and "Quick check", never "n / N"
   // (F-QUEST-002 L2 and D3; the Stage 2 Pic-Word Match Checks, F-CURR-002 row CM-3A S2).
   const check = host.mode === 'check';
+  // A quest Check holds each word's romanization until its pair is matched right, a selected or missed word included (DC-1c).
+  const hold = holdsRomanization(hostSurface(host.mode));
   const pairById = new Map(board.pairs.map((p) => [p.id, p]));
   const select = (tileSide: Side, pairId: string) => (): void => dispatch({ type: 'select', side: tileSide, pairId });
   const showMissHoya = state.selected !== null && (state.missCounts[state.selected.pairId] ?? 0) > 0;
@@ -379,14 +382,16 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
               {order.wordOrder.map((pairId) => {
                 const pair = pairById.get(pairId);
                 if (!pair) return null;
-                const view = wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);
+                const view = wordTileView(pair, state, { romanizationMode, hold }, m.a11y.minigame);
                 return (
                   <TileFrame key={pairId} badge={view.badge} badgeCorner="start">
                     <ChoiceCard
                       testID={`pic-word-word-${pairId}`}
                       state={view.cardState}
                       ko={view.ko}
-                      romanization={view.romanization}
+                      // A held line (DC-1c) keeps its room, so the tiles do not move when the pair is matched.
+                      romanization={view.heldRomanization === '' ? view.romanization : view.heldRomanization}
+                      romanizationReserved={view.heldRomanization !== ''}
                       gloss={view.gloss}
                       layout="tile"
                       accessibilityLabel={view.accessibilityLabel}

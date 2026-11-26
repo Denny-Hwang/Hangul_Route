@@ -57,6 +57,7 @@ export const a11y = {
   leaveQuest: '퀘스트 나가기',
   hearItLabel: (label: string) => `들어 보기. ${label}`,
   hearNameLabel: (letter: string) => `글자 이름 들어 보기. ${letter}`,
+  hearVowelsLabel: (letter: string) => `모음과 함께 들어 보기. ${letter}`,
   hearExample: (spoken: string) => `들어 보기: ${spoken}`,
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `한글 글자 ${romanization}` : `한글 글자 ${romanization}. ${soundHint}`,

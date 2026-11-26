@@ -15,6 +15,11 @@ export type RealiaLineMark = 'none' | 'found' | 'lookHere';
 export interface RealiaSheetText {
   ko: string;
   romanization: string;
+  /**
+   * The romanization line keeps its room but is drawn invisible and hidden from assistive tech: a Check's open question
+   * holds it (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c). Default: drawn.
+   */
+  romanizationReserved?: boolean;
 }
 
 export interface RealiaSheetLine {

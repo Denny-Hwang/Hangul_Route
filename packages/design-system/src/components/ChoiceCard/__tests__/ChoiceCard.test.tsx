@@ -93,6 +93,12 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
     });
   });
 
+  it('glossReserved passes the held gloss through to the Korean block (DC-1c)', () => {
+    const korean = (card: El) => all(card).find((e) => e.type === 'KoreanText');
+    expect(korean(body({ ko: '사과', romanization: 'sagwa', gloss: 'apple' }))?.props).toMatchObject({ gloss: 'apple', glossReserved: false });
+    expect(korean(body({ ko: '사과', romanization: 'sagwa', gloss: 'apple', glossReserved: true }))?.props).toMatchObject({ gloss: 'apple', glossReserved: true });
+  });
+
   it('a miss carries the try-another mark by default and the dash with wrongMark="dash", in either layout', () => {
     expect(icons(body({ state: 'wrong', label: 'pear' }))[0]?.props.name).toBe('replay');
     expect(icons(body({ state: 'wrong', label: 'pear', wrongMark: 'dash' }))[0]?.props.name).toBe('dash');

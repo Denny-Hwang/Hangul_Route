@@ -177,7 +177,8 @@ describe('no direct speak from screens', () => {
   it('Discover and the vocabulary cards ask hasClipFor with what plays, so a say clip of the text counts (AMENDMENTS-AUDIO-CLIPS AC-B7)', () => {
     const discover = files.find((f) => f.rel === 'quest/DiscoverStep.tsx')!;
     expect(audioImports(discover.source)).toContain('hasClipFor');
-    expect(discover.source).toMatch(/playable\.every\(\(a\) => hasClipFor\(a\.spec\)\)/);
+    // [SF-3] Every spec of every button (Hear it with vowels says three), each with its text.
+    expect(discover.source).toMatch(/\.flatMap\(actionSpecs\);\s*const clip = specs\.length > 0 && specs\.every\(\(spec\) => hasClipFor\(spec\)\)/);
     const cards = files.find((f) => f.rel === 'vocab/VocabCardsScreen.tsx')!;
     expect(cards.source).toMatch(/hasClip: hasClipFor\(\{ text: item\.spokenKo \?\? item\.ko, audioRef: item\.audioRef \}\)/);
   });
