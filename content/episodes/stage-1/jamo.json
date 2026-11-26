@@ -3,7 +3,7 @@
     "id": "jamo:giyeok",
     "ko": "ㄱ",
     "romanization": "g/k (giyeok)",
-    "en": "G — sounds like the start of 'go'",
+    "en": "a soft, light g (between g and k)",
     "kind": "consonant",
     "order": 1,
     "exampleWord": {
@@ -16,7 +16,7 @@
     "id": "jamo:nieun",
     "ko": "ㄴ",
     "romanization": "n (nieun)",
-    "en": "N — sounds like the start of 'no'",
+    "en": "like n in \"nose\"",
     "kind": "consonant",
     "order": 2,
     "exampleWord": {
@@ -29,7 +29,7 @@
     "id": "jamo:digeut",
     "ko": "ㄷ",
     "romanization": "d/t (digeut)",
-    "en": "D — sounds like the start of 'door'",
+    "en": "a soft, light d (between d and t)",
     "kind": "consonant",
     "order": 3,
     "exampleWord": {
@@ -42,7 +42,7 @@
     "id": "jamo:rieul",
     "ko": "ㄹ",
     "romanization": "r/l (rieul)",
-    "en": "R or L — a soft sound between R and L",
+    "en": "a quick tap of the tongue, between r and l",
     "kind": "consonant",
     "order": 4,
     "exampleWord": {
@@ -55,7 +55,7 @@
     "id": "jamo:mieum",
     "ko": "ㅁ",
     "romanization": "m (mieum)",
-    "en": "M — sounds like the start of 'mom'",
+    "en": "like m in \"moon\"",
     "kind": "consonant",
     "order": 5,
     "exampleWord": {
@@ -68,7 +68,7 @@
     "id": "jamo:bieup",
     "ko": "ㅂ",
     "romanization": "b/p (bieup)",
-    "en": "B — sounds like the start of 'boy'",
+    "en": "a soft, light b (between b and p)",
     "kind": "consonant",
     "order": 6,
     "exampleWord": {
@@ -81,7 +81,7 @@
     "id": "jamo:siot",
     "ko": "ㅅ",
     "romanization": "s (siot)",
-    "en": "S — sounds like the start of 'sun'",
+    "en": "like s in \"sun\"",
     "kind": "consonant",
     "order": 7,
     "exampleWord": {
@@ -94,7 +94,7 @@
     "id": "jamo:ieung",
     "ko": "ㅇ",
     "romanization": "silent/ng (ieung)",
-    "en": "O-shape — quiet at the start, 'ng' at the end",
+    "en": "silent at the start of a block; \"ng\" in \"sing\" at the end",
     "kind": "consonant",
     "order": 8,
     "exampleWord": {
@@ -107,7 +107,7 @@
     "id": "jamo:jieut",
     "ko": "ㅈ",
     "romanization": "j (jieut)",
-    "en": "J — sounds like the start of 'jump'",
+    "en": "a soft, light j",
     "kind": "consonant",
     "order": 9,
     "exampleWord": {
@@ -120,7 +120,7 @@
     "id": "jamo:chieut",
     "ko": "ㅊ",
     "romanization": "ch (chieut)",
-    "en": "CH — sounds like the start of 'chair'",
+    "en": "like ch in \"chair\", with a puff of air",
     "kind": "consonant",
     "order": 10,
     "exampleWord": {
@@ -133,7 +133,7 @@
     "id": "jamo:kieuk",
     "ko": "ㅋ",
     "romanization": "k (kieuk)",
-    "en": "K — strong 'k', like in 'kite'",
+    "en": "like k in \"kite\", with a puff of air",
     "kind": "consonant",
     "order": 11,
     "exampleWord": {
@@ -146,7 +146,7 @@
     "id": "jamo:tieut",
     "ko": "ㅌ",
     "romanization": "t (tieut)",
-    "en": "T — sounds like the start of 'top'",
+    "en": "like t in \"top\", with a puff of air",
     "kind": "consonant",
     "order": 12,
     "exampleWord": {
@@ -159,7 +159,7 @@
     "id": "jamo:pieup",
     "ko": "ㅍ",
     "romanization": "p (pieup)",
-    "en": "P — sounds like the start of 'pop'",
+    "en": "like p in \"pie\", with a puff of air",
     "kind": "consonant",
     "order": 13,
     "exampleWord": {
@@ -172,7 +172,7 @@
     "id": "jamo:hieut",
     "ko": "ㅎ",
     "romanization": "h (hieut)",
-    "en": "H — sounds like the start of 'hi'",
+    "en": "like h in \"hat\"",
     "kind": "consonant",
     "order": 14,
     "exampleWord": {
@@ -185,7 +185,7 @@
     "id": "jamo:a",
     "ko": "ㅏ",
     "romanization": "a",
-    "en": "A — sounds like the 'a' in 'father'",
+    "en": "like the a in \"father\"",
     "kind": "vowel",
     "order": 15,
     "exampleWord": {
@@ -198,7 +198,7 @@
     "id": "jamo:ya",
     "ko": "ㅑ",
     "romanization": "ya",
-    "en": "YA — sounds like the start of 'yard'",
+    "en": "like \"ya\" in \"yacht\"",
     "kind": "vowel",
     "order": 16,
     "exampleWord": {
@@ -211,7 +211,7 @@
     "id": "jamo:eo",
     "ko": "ㅓ",
     "romanization": "eo",
-    "en": "EO — sounds like the 'u' in 'cup'",
+    "en": "like the u in \"cup\", mouth wide open",
     "kind": "vowel",
     "order": 17,
     "exampleWord": {
@@ -224,7 +224,7 @@
     "id": "jamo:yeo",
     "ko": "ㅕ",
     "romanization": "yeo",
-    "en": "YEO — sounds like the start of 'young'",
+    "en": "like \"yu\" in \"young\"",
     "kind": "vowel",
     "order": 18,
     "exampleWord": {
@@ -237,7 +237,7 @@
     "id": "jamo:o",
     "ko": "ㅗ",
     "romanization": "o",
-    "en": "O — sounds like the 'o' in 'open'",
+    "en": "like the o in \"go\", lips round",
     "kind": "vowel",
     "order": 19,
     "exampleWord": {
@@ -250,7 +250,7 @@
     "id": "jamo:yo",
     "ko": "ㅛ",
     "romanization": "yo",
-    "en": "YO — sounds like the start of 'yo-yo'",
+    "en": "like \"yo\" in \"yoga\"",
     "kind": "vowel",
     "order": 20,
     "exampleWord": {
@@ -263,7 +263,7 @@
     "id": "jamo:u",
     "ko": "ㅜ",
     "romanization": "u",
-    "en": "U — sounds like the 'oo' in 'moon'",
+    "en": "like \"oo\" in \"moon\"",
     "kind": "vowel",
     "order": 21,
     "exampleWord": {
@@ -276,7 +276,7 @@
     "id": "jamo:yu",
     "ko": "ㅠ",
     "romanization": "yu",
-    "en": "YU — sounds like the word 'you'",
+    "en": "like \"you\"",
     "kind": "vowel",
     "order": 22,
     "exampleWord": {
@@ -289,7 +289,7 @@
     "id": "jamo:eu",
     "ko": "ㅡ",
     "romanization": "eu",
-    "en": "EU — a soft sound between 'u' and 'i'",
+    "en": "say \"oo\" with flat lips",
     "kind": "vowel",
     "order": 23,
     "exampleWord": {
@@ -302,7 +302,7 @@
     "id": "jamo:i",
     "ko": "ㅣ",
     "romanization": "i",
-    "en": "I — sounds like the 'ee' in 'see'",
+    "en": "like \"ee\" in \"see\"",
     "kind": "vowel",
     "order": 24,
     "exampleWord": {
