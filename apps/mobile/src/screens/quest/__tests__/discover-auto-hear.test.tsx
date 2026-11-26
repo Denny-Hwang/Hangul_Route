@@ -126,7 +126,7 @@ describe('[AU] the first letter sounds by itself on a letter page (row AU-10)', 
     expect(spoken()).toEqual(['아']);
     await press(buttonsNamed(r.root, COPY.continue.cta)[0]!);
     await settle(AUTO_MS);
-    expect(spoken()).toEqual(['아', '니은']);
+    expect(spoken()).toEqual(['아', '나']);
   });
 
   it('it does not play again when the screen re-renders (a new UI language rebuilds the page)', async () => {
@@ -261,7 +261,7 @@ describe('[QS] the page\'s own sound waits 350 ms for the page (QS-3)', () => {
     await settle(SCREEN_SETTLE_MS - 150);
     expect(spoken()).toEqual([]);
     await settle(150 + 60);
-    expect(spoken()).toEqual(['니은']);
+    expect(spoken()).toEqual(['나']);
     // Nothing of page 1 had started, so leaving it had nothing of its own to stop (the page change's stop is the flow's).
     expect(rig.stops).toBeGreaterThanOrEqual(before);
   });
@@ -282,5 +282,24 @@ describe('[QS] the page\'s own sound waits 350 ms for the page (QS-3)', () => {
     });
     await settle(AUTO_MS);
     expect(spoken()).toEqual([]);
+  });
+
+  // AMENDMENTS-DISCOVER-SOUND-FIRST SF-1: the autoplay follows item.hear, so a consonant page opens on its sound.
+  it('a page whose first item is ㄱ says 가 once by itself, not 기역', async () => {
+    const GIYEOK: DiscoverPage = { items: [{ type: 'jamo', jamoId: 'jamo:giyeok', example: { ko: '가구', romanization: 'gagu', en: 'furniture' } }] };
+    await openNow([GIYEOK]);
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual(['가']);
+  });
+
+  it('a tap on Hear the name during the wait plays 기역 at once and drops the autoplay', async () => {
+    const GIYEOK: DiscoverPage = { items: [{ type: 'jamo', jamoId: 'jamo:giyeok', example: { ko: '가구', romanization: 'gagu', en: 'furniture' } }] };
+    const r = await openNow([GIYEOK]);
+    await settle(50);
+    await press(pressable(r.root, 'discover-hear-jamo:giyeok|name'));
+    await settle();
+    expect(spoken()).toEqual(['기역']);
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual(['기역']);
   });
 });

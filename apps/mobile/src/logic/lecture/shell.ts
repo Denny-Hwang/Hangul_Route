@@ -301,7 +301,7 @@ export function fitShown(shown: number, rowsUsed: number, maxRows: number): numb
  */
 export function slideDetail(
   slide: Slide,
-  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string; particle?: string; frame?: string; ownName?: string },
+  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; listenStartsWith?: string; reply?: string; build?: string; particle?: string; frame?: string; ownName?: string },
   reveal?: number,
 ): string {
   switch (slide.kind) {
@@ -328,7 +328,8 @@ export function slideDetail(
     case 'quiz':
       switch (slide.prompt.ask) {
         case 'listen':
-          return (slide.prompt.reply === true ? names?.reply : names?.listen) ?? '';
+          // A quest Check's consonant sound round is announced by the question it shows (SF-1).
+          return (slide.prompt.reply === true ? names?.reply : slide.prompt.frame === 'startsWith' ? (names?.listenStartsWith ?? names?.listen) : names?.listen) ?? '';
         case 'reply':
           return names?.reply ?? '';
         case 'realia':

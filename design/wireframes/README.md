@@ -26,7 +26,7 @@
 | `journey/grid-with-stories.md` · `story/cell-stories.md` · `episode/detail-cell-stories-row.md` | R | F-STORY-005 §3.6 (PR 5.0; brief `screens/27-cell-stories`, story sections in `05-journey-grid` and `06-episode-detail`) |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
-| `quest/discover.md` · `quest/check.md` | S | F-QUEST-002 §3.2-3.3 (built in Q-5a; split out of the drafted file in Q-11) |
+| `quest/discover.md` · `quest/check.md` | S | F-QUEST-002 §3.2-3.3 (built in Q-5a; split out of the drafted file in Q-11); `quest/discover.md` amended by AMENDMENTS-STAGE1-TRACE-COVERAGE §3.3 (2026-11-25, TC-0, [TC]: the Trace the new letters page after the last letter page; mock in TC-0b) |
 | `results/next-quest-teaser.md` | S | F-QUEST-002 §3.5 (Q-5b) |
 | `results/stage1-complete.md` | R | F-QUEST-002 §3.8 (Q-9: ceremony, Results prize button, Journey Complete pill and its See your prize entry) |
 | `reviews/hangul-check.md` | R | F-QUEST-002 §3.9 (Q-10b: the Stage 1 configuration of `reviews/stage-review.md`, 35 items) |

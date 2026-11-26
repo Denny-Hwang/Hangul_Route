@@ -801,7 +801,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         // answer), its pictures the options, as in the game.
         prompt: round.promptShown
           ? { ask: 'meaning', ko: round.prompt.ko, romanization: round.prompt.romanization }
-          : { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
+          : { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}), ...(round.frame === 'startsWith' ? { frame: 'startsWith' as const } : {}) },
         options: shuffleSeeded(options, seed()),
         textPrompt: textPrompt && !round.promptShown,
         // AU-8: the Check's options keep their romanization for the answer build (a shown prompt plays no sound to match).

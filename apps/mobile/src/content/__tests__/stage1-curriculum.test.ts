@@ -338,9 +338,9 @@ describe('the rebuilt Stage 1 quests', () => {
     const checkOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
     const optionTexts = (round: { options: Array<{ text?: KoText }> }): string[] => round.options.map((o) => o.text?.ko ?? '').sort();
     const table: Array<[string, string[], string, string[]]> = [
-      ['ㅊ', ['ㅊ', 'ㅈ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
+      ['ㅊ', ['ㅊ', 'ㄴ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
       ['ㅅ', ['ㅅ', 'ㅈ', 'ㅂ', 'ㅁ'], '아버지', ['아버지', '아기', '바나나', '두부']],
-      ['ㅋ', ['ㅋ', 'ㄱ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
+      ['ㅋ', ['ㅋ', 'ㄴ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
     ];
     REBUILT.slice(3, 6).forEach((quest, i) => {
       const [symbol, symbolOptions, word, wordOptions] = table[i]!;
@@ -350,6 +350,29 @@ describe('the rebuilt Stage 1 quests', () => {
       expect(second!.answerId, quest.id).toBe(word);
       expect(optionTexts(second!), quest.id).toEqual([...wordOptions].sort());
     });
+  });
+
+  it("frames exactly the four consonant rounds as sound questions (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1, 'startsWith'); every other Stage 1 Check symbol round is a letter question", () => {
+    const framed: string[] = [];
+    const plain: string[] = [];
+    // The 15 quests and the Stage 1 addition (crafts quest 4 asks ㅍ).
+    for (const quest of STAGE1_QUESTS) {
+      const check = scopesOf(quest).find((s) => s.kind === 'check')?.scope?.listenPick?.rounds ?? [];
+      for (const round of check) {
+        if (!round.id.startsWith('lp:sym:')) continue;
+        (round.frame === 'startsWith' ? framed : plain).push(`${quest.id} ${round.answerId}`);
+      }
+    }
+    expect(framed.sort()).toEqual(
+      [
+        'quest:stage1-life-q1 jamo:chieut',
+        'quest:stage1-life-q2 jamo:siot',
+        'quest:stage1-life-q3 jamo:kieuk',
+        'quest:stage1-crafts-q4 jamo:pieup',
+      ].sort(),
+    );
+    expect(plain.length).toBeGreaterThan(0);
+    for (const entry of plain) expect(findJamo(entry.split(' ')[1]!)?.kind, entry).toBe('vowel');
   });
 
   it('gives quest 4 the first Pic-Word board: four food words, each on its drawn card picture', () => {
@@ -897,5 +920,40 @@ describe('a word read in Discover and asked in a Check is the same KoText', () =
     }
     // The Food & Life Checks ask Discover words (치즈, 자두, 고추, 차, 아버지, 아기, 바나나, ...).
     expect(compared).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe('T12 the letter records (AMENDMENTS-STAGE1-CONTENT-FIXES CF-1a)', () => {
+  const letters = jamoAll.filter((j) => j.kind !== 'batchim');
+
+  it("every Stage 1 letter's example word uses only the 30 Stage 1 symbols and holds the letter itself", () => {
+    expect(letters).toHaveLength(24);
+    for (const jamo of letters) {
+      const symbols = wordSymbols(jamo.exampleWordKo ?? '');
+      expect(symbols, `${jamo.id} ${jamo.exampleWordKo}`).not.toBeNull();
+      expect(symbols, `${jamo.id} ${jamo.exampleWordKo}`).toContain(jamo.id);
+    }
+  });
+
+  it('names the four fixed example words (ㅊ ㅌ ㅏ ㅡ) with their romanization and gloss', () => {
+    const word = (id: string) => {
+      const j = findJamo(id);
+      return [j?.exampleWordKo, j?.exampleWordRomanization, j?.exampleWordEn];
+    };
+    expect(word('jamo:chieut')).toEqual(['치마', 'chima', 'skirt']);
+    expect(word('jamo:tieut')).toEqual(['토마토', 'tomato', 'tomato']);
+    expect(word('jamo:a')).toEqual(['아기', 'agi', 'baby']);
+    expect(word('jamo:eu')).toEqual(['그림', 'geurim', 'picture']);
+  });
+
+  it('marks ㄹ with the tap [ɾ], not the trill [r]', () => {
+    expect(findJamo('jamo:rieul')?.ipa).toBe('ɾ');
+  });
+
+  it('describes the final ㄹ as a clear l (not the dark l of "ball"), and no hint claims a voiced sound or "ball"', () => {
+    expect(findJamo('jamo:rieul-batchim')?.soundHint).toBe('ends in a clear l, tongue tip behind the top teeth');
+    for (const jamo of jamoAll) {
+      expect(jamo.soundHint, jamo.id).not.toMatch(/ball|voiced/i);
+    }
   });
 });

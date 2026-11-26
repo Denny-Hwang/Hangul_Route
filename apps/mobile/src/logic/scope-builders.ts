@@ -13,7 +13,7 @@ import { cardById } from '../content/heritage-cards';
 import { findJamo } from '../content/jamo';
 import { jamoVoice } from './audio/jamo-voice';
 import { checkOptionIds } from './stage1/confusables';
-import { letterTileAllowed } from './voice-pools';
+import { letterTileAllowed, sameSeries, soundTileAllowed } from './voice-pools';
 
 /**
  * Scope builders (F-QUEST-002 §3.7): short, validated constructors for the
@@ -83,6 +83,43 @@ export const lp = {
       prompt,
       options,
       answerId: jamoId,
+    });
+  },
+
+  /**
+   * Heard sound -> the letter that starts it (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1): a quest Check's consonant round, a
+   * sound question. The prompt is the letter's sound (cha) with its clip, glossed "the sound of the letter chieut" (cha is
+   * also a word, so "the letter" alone would read as a meaning), and the round is framed `startsWith`, which makes
+   * its heading "Which letter starts this sound?". The id stays `lp:sym:<id>`, so the memory store and the scaffold
+   * read it as before. `optionIds` is required: the confusables list the target's series partner first (ㅊ ㅈ), and
+   * no option may be in the target's series or break JV-A3 rule 2. Throws for a vowel, the silent ㅇ and a final.
+   */
+  symSound(jamoId: string, taughtIds: readonly string[], opts: { optionIds: readonly string[] }): ListenPickRound {
+    const jamo = findJamo(jamoId);
+    if (!jamo) throw new Error(`Unknown symbol ${jamoId}`);
+    if (jamo.kind !== 'consonant' || jamo.id === 'jamo:ieung') {
+      throw new Error(`${jamoId} has no sound of its own to ask "which letter starts it" (a vowel, the silent ㅇ or a final)`);
+    }
+    if (!Array.isArray(opts?.optionIds) || opts.optionIds.length === 0) throw new Error(`symSound needs optionIds for ${jamoId} (the confusables list its series partner first)`);
+    const ids = explicitOptionIds(jamoId, taughtIds, opts.optionIds);
+    for (const id of ids.slice(1)) {
+      const option = findJamo(id)!;
+      if (sameSeries(jamo, option)) throw new Error(`Option ${id} is in the series of ${jamoId}: it differs only by aspiration or tension (SF-1)`);
+      if (!soundTileAllowed(jamo, option)) throw new Error(`Option ${id} is heard in ${jamoId}'s sound or is another kind of tile (JV-A3 rule 2)`);
+    }
+    const spoken = jamoVoice(jamo, 'sound');
+    const options = ids.map((id) => {
+      const option = findJamo(id)!;
+      return { id, text: { ko: option.char, romanization: option.romanization, en: `the letter ${option.nameEn}` } };
+    });
+    const prompt: KoText = { ko: spoken.text, romanization: spoken.romanization, en: `the sound of the letter ${jamo.nameEn}` };
+    if (spoken.audioRef !== undefined) prompt.audioRef = spoken.audioRef;
+    return parseRound({
+      id: `lp:sym:${jamoId}`,
+      prompt,
+      options,
+      answerId: jamoId,
+      frame: 'startsWith',
     });
   },
 
