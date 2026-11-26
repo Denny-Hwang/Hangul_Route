@@ -273,6 +273,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'learner.quest.launcher.game.skip.cta',
       'learner.quest.launcher.check.go.cta',
       'learner.quest.discover.hearIt.cta',
+      'learner.quest.discover.hearName.cta',
       'learner.quest.discover.soundWith.cta',
       'learner.quest.discover.showHowToSay.cta',
       'learner.quest.discover.continue.cta',

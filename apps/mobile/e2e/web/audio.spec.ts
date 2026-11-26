@@ -349,12 +349,12 @@ test('Build a Letter says the syllable with Yuna when it is tapped, and shows no
   await fakeSpeech(page, 'korean');
   await onboardChild(page, { name: 'Dami' });
   // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: on the way, each of the two Look and learn pages said its first letter
-  // once (ㅏ by its sound, ㄱ by its name, as their Hear it does).
+  // once (ㅏ and ㄱ by their sound, as their Hear it does: 아, 가; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1).
   let discover = 0;
   await openBuildLetter(page, async (p) => {
     discover = await passDiscoverHearingItsLetters(p);
   });
-  expect((await utterances(page)).map((u) => u.text)).toEqual(['아', '기역']);
+  expect((await utterances(page)).map((u) => u.text)).toEqual(['아', '가']);
   expect(discover).toBe(2);
   // Nothing autoplays here, not even after the controller's capability wait (up to 1.5 s).
   await page.waitForTimeout(1600);
@@ -541,12 +541,12 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
   await fakeSpeech(page, 'korean');
   await onboardChild(page, { name: 'Dami', startJourney: false });
   // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: on the way, the one Look and learn page that opens on a letter (ㅋ) said
-  // it once by itself; the pages that open on a word said nothing.
+  // it once by itself, by its sound (카); the pages that open on a word said nothing.
   let discover = 0;
   await openCultureQuiz(page, 'Dami', async (p) => {
     discover = await passDiscoverHearingItsLetters(p);
   });
-  expect((await utterances(page)).map((u) => u.text)).toEqual(['키읔']);
+  expect((await utterances(page)).map((u) => u.text)).toEqual(['카']);
   expect(discover).toBe(1);
   const hear = page.getByTestId('culture-quiz-hear');
   await expect(hear).toBeVisible();

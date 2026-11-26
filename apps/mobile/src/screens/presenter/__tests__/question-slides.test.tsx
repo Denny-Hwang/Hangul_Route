@@ -69,6 +69,34 @@ const listenOf = (slides: Slide[], rows: boolean): ListenBody =>
   )!;
 const replyOf = (slides: Slide[]): ReplyBody => slides.find((s): s is ReplyBody => isListenOrReply(s) && s.prompt.ask === 'reply')!;
 
+describe("QuestionSlide: a 'startsWith' listen question (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)", () => {
+  const slide = (frame: boolean): ListenBody => {
+    const base = listenOf(stage1, false) ?? stage1.find((s): s is ListenBody => isListenOrReply(s) && s.prompt.ask === 'listen')!;
+    const prompt = base.prompt as Extract<ListenBody['prompt'], { ask: 'listen' }>;
+    return { ...base, prompt: frame ? { ...prompt, frame: 'startsWith' } : prompt };
+  };
+
+  it('asks "Which letter starts this sound?" instead of "Which one did you hear?"', async () => {
+    const r = await render(inView(<QuestionSlide slide={slide(true)} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(textOf(byTestId(r.root, 'presenter-quiz-question')[0]!)).toBe(en.learner.audio.heading.startsWith);
+    expect(byTestId(r.root, 'presenter-quiz-speaker')).toHaveLength(1);
+  });
+
+  it("a deck with quest 4 has a listen slide with the frame for its Check's round 1 (차) and none for the rest", () => {
+    const quest4 = slidesOf([{ kind: 'quest', id: 'quest:stage1-life-q1' }]);
+    const listens = quest4.filter((s): s is ListenBody => isListenOrReply(s) && s.prompt.ask === 'listen');
+    const framed = listens.filter((s) => (s.prompt as { frame?: string }).frame === 'startsWith');
+    expect(framed).toHaveLength(1);
+    expect(framed[0]!.options.map((o) => o.ko)).toEqual(expect.arrayContaining(['ㅊ', 'ㄴ', 'ㄱ', 'ㄷ']));
+    expect(listens.length).toBeGreaterThan(1);
+  });
+
+  it('every other listen question keeps "Which one did you hear?"', async () => {
+    const r = await render(inView(<QuestionSlide slide={slide(false)} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(textOf(byTestId(r.root, 'presenter-quiz-question')[0]!)).toBe(en.learner.presenter.quiz.listen);
+  });
+});
+
 describe('QuestionSlide: listen (LV-S2)', () => {
   it('the speaker and the question; what was heard joins under it only at the answer build, with the mark on the right option', async () => {
     const slide = listenOf(stage3, true);

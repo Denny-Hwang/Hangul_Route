@@ -2,6 +2,8 @@
 
 Status: **ready** (row RG-0 of work order WO-17, `docs/roadmap/review-2026-11/phase-2-hangul.md`; revision 2 after the two-lens multi-agent review, §10). Open decisions OD-RG1 to OD-RG6 (§9) are adopted provisionally as recommended until the owner confirms them. Every `file:line` below is at `origin/main` `8676b5de5`.
 
+**Owner decision 2026-11-25**: the open decisions OD-RG1 to OD-RG6 (OD-RG1: option (a), a 하다 predicate is romanized with the aspirate, RR 제3장 제1항 4) are approved as recommended ("권고대로 진행해줘"); they are no longer provisional.
+
 **Amends**: F-CNT-002 §3.2 (converter algorithm, known limits, golden vectors), §3.3 (checker rules R1 and R8, the exceptions list, decision C7), §5 (tests) · tag **[RG]**
 **Not amended**: F-CNT-002 §3.1 (the policy: Revised Romanization, pronunciation-based, unhyphenated; this amendment applies it more exactly, it does not change it), §3.4 (what is scanned), C3/C4/C8.
 **Scope**: `packages/content-schema/src/romanization/{rr.ts,compare.ts,exceptions.ts}`, `packages/content-schema/src/romanization/gaps.ts` (new), `packages/content-schema/src/__tests__/romanization-{rr,compare,gaps}.test.ts`, `packages/content-schema/src/romanization/reviewed.ts` (new), the build step, run-time call sites and tests listed in §3.3 (row RG-2a), `packages/content-schema/src/lesson-lint-items.ts`, the test files and data strings listed in §6 and §3.7 (row RG-2b), `docs/specs/F-CNT-002-romanization-policy.md` (row RG-3). No UI string, schema shape, Worker or migration change.

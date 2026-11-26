@@ -12,7 +12,7 @@ import {
   FINAL_SYLLABLES,
   hear,
   hearIt,
-  hearWithVowel,
+  hearName,
   JAMO,
   LETTER_OF,
   NAME,
@@ -59,7 +59,7 @@ const drawnColors = (target: Locator): Promise<string[]> =>
 test.describe('the voice matches the letter (release build, device voice)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture build plays clips for six letters; these tests pin the device voice');
 
-  test('Quest 1 Discover: ㄴ says 니은, Hear it with a vowel says 나; ㅏ says 아', async ({ page }) => {
+  test('Quest 1 Discover: ㄴ Hear it says 나, Hear the name says 니은; ㅏ says 아', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await captureSpeech(page);
@@ -73,31 +73,30 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     expect(await hear(page, hearIt(page, 'jamo:a'))).toBe('아');
     await expect(shown(page, 'discover-spoken-jamo:a')).toContainText('아');
     await expect(shown(page, 'discover-spoken-jamo:a')).toContainText('a');
-    await expect(hearWithVowel(page, 'jamo:a')).toHaveCount(0);
+    await expect(hearName(page, 'jamo:a')).toHaveCount(0);
 
-    // Page 2: ㄴ. Hear it says its name with the line "니은 · nieun"; the second button says the syllable 나.
+    // Page 2: ㄴ. Hear it says the sound 나 with the line "나 = ㄴ + ㅏ · na"; the second button says the name 니은.
     await discoverPageOf(page, 'jamo:nieun');
-    expect(await hear(page, hearIt(page, 'jamo:nieun'))).toBe('니은');
+    expect(await hear(page, hearIt(page, 'jamo:nieun'))).toBe('나');
     const spokenLine = shown(page, 'discover-spoken-jamo:nieun');
-    await expect(spokenLine).toContainText('니은');
-    await expect(spokenLine).toContainText('nieun');
-    await expect(spokenLine).not.toContainText(/\bna\b/);
-    const withVowel = hearWithVowel(page, 'jamo:nieun');
-    await expect(withVowel).toHaveAccessibleName(en.learner.quest.discover.soundWith.cta);
-    expect(await hear(page, withVowel)).toBe('나');
-    const item = shown(page, 'discover-item-jamo:nieun');
-    await expect(item).toContainText('나 = ㄴ + ㅏ');
-    await expect(item).toContainText('na');
-    // ㄱ on the same page: its name, never 가.
-    expect(await hear(page, hearIt(page, 'jamo:giyeok'))).toBe('기역');
-    expect(await hear(page, hearWithVowel(page, 'jamo:giyeok'))).toBe('가');
+    await expect(spokenLine).toContainText('나 = ㄴ + ㅏ');
+    await expect(spokenLine).toContainText('na');
+    const name = hearName(page, 'jamo:nieun');
+    await expect(name).toHaveAccessibleName(en.a11y.hearNameLabel('Korean letter n'));
+    expect(await hear(page, name)).toBe('니은');
+    const nameLine = shown(page, 'discover-name-jamo:nieun');
+    await expect(nameLine).toContainText('니은');
+    await expect(nameLine).toContainText('nieun');
+    // ㄱ on the same page: Hear it says 가, Hear the name says 기역.
+    expect(await hear(page, hearIt(page, 'jamo:giyeok'))).toBe('가');
+    expect(await hear(page, hearName(page, 'jamo:giyeok'))).toBe('기역');
     await shot(page, 'jamo-voice-discover-nieun');
 
     await expectNoLoneJamo(page);
     expect(errors).toEqual([]);
   });
 
-  test('Quest 2 Discover: ㅇ says 이응 and has no second button', async ({ page }) => {
+  test('Quest 2 Discover: ㅇ says 이응 and has no second button; ㅁ says 마, then its name', async ({ page }) => {
     await captureSpeech(page);
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await page.goto('/');
@@ -114,11 +113,11 @@ test.describe('the voice matches the letter (release build, device voice)', () =
 
     await discoverPageOf(page, 'jamo:ieung');
     expect(await hear(page, hearIt(page, 'jamo:ieung'))).toBe('이응');
-    await expect(hearWithVowel(page, 'jamo:ieung')).toHaveCount(0);
+    await expect(hearName(page, 'jamo:ieung')).toHaveCount(0);
     await expect(shown(page, 'discover-spoken-jamo:ieung')).toContainText('이응');
-    // ㅁ on the same page: its name, then 마 on its second button.
-    expect(await hear(page, hearIt(page, 'jamo:mieum'))).toBe('미음');
-    expect(await hear(page, hearWithVowel(page, 'jamo:mieum'))).toBe('마');
+    // ㅁ on the same page: its sound 마, then its name 미음 on the second button.
+    expect(await hear(page, hearIt(page, 'jamo:mieum'))).toBe('마');
+    expect(await hear(page, hearName(page, 'jamo:mieum'))).toBe('미음');
     await expectNoLoneJamo(page);
   });
 

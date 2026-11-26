@@ -80,7 +80,7 @@ import { StepActions } from './StepActions';
 interface CardSlot {
   play: PromptSlot['play'];
 }
-/** The card an action id belongs to: `<item key>|sound`, `|vowel`, `|example` or `|line<n>`. */
+/** The card an action id belongs to: `<item key>|sound`, `|name`, `|example` or `|line<n>`. */
 const cardKeyOf = (actionId: string): string => actionId.split('|')[0] ?? actionId;
 
 interface Props {
@@ -117,7 +117,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
     for (const page of model.pages) {
       for (const item of page.items) {
         map.set(item.hear.id, item.hear);
-        if (item.soundWith) map.set(item.soundWith.action.id, item.soundWith.action);
+        if (item.nameButton) map.set(item.nameButton.action.id, item.nameButton.action);
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
       for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
@@ -484,7 +484,7 @@ function DiscoverItemCard({
 }): ReactElement {
   const { item } = render;
   const audioCopy = useMessages().learner.audio;
-  const slot = useCardSlot(item.key, [item.hear, item.soundWith?.action, item.example?.hear], audio, cantHear);
+  const slot = useCardSlot(item.key, [item.hear, item.nameButton?.action, item.example?.hear], audio, cantHear);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -532,10 +532,16 @@ function DiscoverItemCard({
         dispatch={dispatch}
       />
 
-      {/* What Hear it says, with its romanization (AMENDMENTS-AUDIO-CLIPS JV-A5, D2): nieun with its romanization; a final its closed syllable. */}
+      {/* What Hear it says, with its romanization (SF-1, D2): the carrier line "na = ㄴ + ㅏ" on a consonant, the letter on ㅇ and a vowel; a final its closed syllable. */}
       {item.spokenLine ? (
         <View testID={`discover-spoken-${item.key}`}>
-          <KoreanText ko={item.spokenLine.ko} romanization={item.spokenLine.romanization} size="sm" />
+          <KoreanText
+            ko={item.spokenLine.ko}
+            romanization={item.spokenLine.romanization}
+            size="sm"
+            // The equation holds the lone ㄱ, which a Korean screen-reader voice would read as its name: say the syllable and its romanization only.
+            {...(item.nameButton ? { accessibilityLabel: `${item.hear.spec.text}, ${item.spokenLine.romanization}` } : {})}
+          />
         </View>
       ) : null}
       {item.finalLine ? (
@@ -544,18 +550,20 @@ function DiscoverItemCard({
         </Body>
       ) : null}
 
-      {item.soundWith ? (
+      {item.nameButton ? (
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <HearButton
-            action={item.soundWith.action}
-            label={copy.soundWith.cta}
-            accessibilityLabel={copy.soundWith.cta}
+            action={item.nameButton.action}
+            label={copy.hearName.cta}
+            accessibilityLabel={a11y.hearNameLabel(a11y.discoverLetter(item.romanization))}
             size="md"
             tone="ghost"
             dispatch={dispatch}
           />
-          {/* The taught line "na = ㄴ + ㅏ" with its romanization is content, never inside the UI string. */}
-          <KoreanText ko={item.soundWith.ko} romanization={item.soundWith.romanization} size="sm" />
+          {/* The letter's name with its romanization is content, never inside the UI string. */}
+          <View testID={`discover-name-${item.key}`}>
+            <KoreanText ko={item.nameButton.ko} romanization={item.nameButton.romanization} size="sm" />
+          </View>
         </View>
       ) : null}
 

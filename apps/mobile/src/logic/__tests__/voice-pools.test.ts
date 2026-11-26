@@ -12,7 +12,7 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, stage1Quests } from '../../content';
-import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../../content/jamo';
+import { jamoAll, jamoBatchim, jamoConsonants, jamoKnown, jamoVowels } from '../../content/jamo';
 import { jamoVoice } from '../audio/jamo-voice';
 import { lectureBundle } from '../lecture/content';
 import { expandDeck, type Slide } from '../lecture/deck-builder';
@@ -25,6 +25,7 @@ import {
   letterTileAllowed,
   poolKindFault,
   poolShortfalls,
+  sameSeries,
   soundTileAllowed,
   tileAllowed,
   type PoolQuestion,
@@ -250,6 +251,31 @@ describe('every shipped Match Sound scope (G2 = 0)', () => {
   });
 });
 
+describe('sameSeries (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)', () => {
+  it('knows the five series both ways', () => {
+    const series = [
+      ['giyeok', 'kieuk', 'ssanggiyeok'],
+      ['digeut', 'tieut', 'ssangdigeut'],
+      ['bieup', 'pieup', 'ssangbieup'],
+      ['jieut', 'chieut', 'ssangjieut'],
+      ['siot', 'ssangsiot'],
+    ];
+    const known = (id: string): Jamo => jamoKnown.find((j) => j.id === `jamo:${id}`)!;
+    for (const group of series) {
+      for (const a of group) for (const b of group) if (a !== b) expect(sameSeries(known(a), known(b)), `${a} ${b}`).toBe(true);
+    }
+  });
+
+  it('does not join different series, a letter with itself, or a vowel or final', () => {
+    expect(sameSeries(J('giyeok'), J('digeut'))).toBe(false);
+    expect(sameSeries(J('siot'), J('jieut'))).toBe(false);
+    expect(sameSeries(J('nieun'), J('mieum'))).toBe(false);
+    expect(sameSeries(J('giyeok'), J('giyeok'))).toBe(false);
+    expect(sameSeries(J('a'), J('eo'))).toBe(false);
+    expect(sameSeries(byChar('ㄱ', 'final'), J('giyeok'))).toBe(false);
+  });
+});
+
 describe('every Listen & Pick letter round (lp.sym) and the Hangul Check letter rounds', () => {
   const symRounds = Object.entries(minigameScopes).flatMap(([ref, s]) =>
     (s.listenPick?.rounds ?? []).filter((r) => r.id.startsWith('lp:sym:')).map((r) => [`${ref} ${r.id}`, r] as const),
@@ -264,7 +290,14 @@ describe('every Listen & Pick letter round (lp.sym) and the Hangul Check letter 
     for (const o of round.options) {
       const option = byId(o.id);
       expect(option.kind, o.id).not.toBe('batchim');
-      if (o.id !== round.answerId) expect(letterTileAllowed(target, option), `${o.id} beside ${round.answerId}`).toBe(true);
+      if (o.id === round.answerId) continue;
+      if (round.frame === 'startsWith') {
+        // SF-1: a sound question (a quest Check's consonant round): rule 2, and nothing of the target's series.
+        expect(soundTileAllowed(target, option), `${o.id} beside ${round.answerId} by sound`).toBe(true);
+        expect(sameSeries(target, option), `${o.id} is in the series of ${round.answerId}`).toBe(false);
+      } else {
+        expect(letterTileAllowed(target, option), `${o.id} beside ${round.answerId}`).toBe(true);
+      }
     }
   });
 

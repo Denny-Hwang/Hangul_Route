@@ -338,9 +338,9 @@ describe('the rebuilt Stage 1 quests', () => {
     const checkOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
     const optionTexts = (round: { options: Array<{ text?: KoText }> }): string[] => round.options.map((o) => o.text?.ko ?? '').sort();
     const table: Array<[string, string[], string, string[]]> = [
-      ['ㅊ', ['ㅊ', 'ㅈ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
+      ['ㅊ', ['ㅊ', 'ㄴ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
       ['ㅅ', ['ㅅ', 'ㅈ', 'ㅂ', 'ㅁ'], '아버지', ['아버지', '아기', '바나나', '두부']],
-      ['ㅋ', ['ㅋ', 'ㄱ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
+      ['ㅋ', ['ㅋ', 'ㄴ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
     ];
     REBUILT.slice(3, 6).forEach((quest, i) => {
       const [symbol, symbolOptions, word, wordOptions] = table[i]!;
@@ -350,6 +350,29 @@ describe('the rebuilt Stage 1 quests', () => {
       expect(second!.answerId, quest.id).toBe(word);
       expect(optionTexts(second!), quest.id).toEqual([...wordOptions].sort());
     });
+  });
+
+  it("frames exactly the four consonant rounds as sound questions (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1, 'startsWith'); every other Stage 1 Check symbol round is a letter question", () => {
+    const framed: string[] = [];
+    const plain: string[] = [];
+    // The 15 quests and the Stage 1 addition (crafts quest 4 asks ㅍ).
+    for (const quest of STAGE1_QUESTS) {
+      const check = scopesOf(quest).find((s) => s.kind === 'check')?.scope?.listenPick?.rounds ?? [];
+      for (const round of check) {
+        if (!round.id.startsWith('lp:sym:')) continue;
+        (round.frame === 'startsWith' ? framed : plain).push(`${quest.id} ${round.answerId}`);
+      }
+    }
+    expect(framed.sort()).toEqual(
+      [
+        'quest:stage1-life-q1 jamo:chieut',
+        'quest:stage1-life-q2 jamo:siot',
+        'quest:stage1-life-q3 jamo:kieuk',
+        'quest:stage1-crafts-q4 jamo:pieup',
+      ].sort(),
+    );
+    expect(plain.length).toBeGreaterThan(0);
+    for (const entry of plain) expect(findJamo(entry.split(' ')[1]!)?.kind, entry).toBe('vowel');
   });
 
   it('gives quest 4 the first Pic-Word board: four food words, each on its drawn card picture', () => {

@@ -15,11 +15,11 @@
       "listenPick.rounds.1.prompt": "pierna, puente"
     },
     "minigame:s1-life-q1-check": {
-      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "la letra chieut",
+      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "el sonido de la letra chieut",
       "listenPick.rounds.1.prompt": "queso"
     },
     "minigame:s1-life-q2-check": {
-      "listenPick.rounds.lp-sym-jamo-siot.prompt": "la letra siot",
+      "listenPick.rounds.lp-sym-jamo-siot.prompt": "el sonido de la letra siot",
       "listenPick.rounds.1.prompt": "padre"
     },
     "minigame:s1-life-q3-apply": {
@@ -30,7 +30,7 @@
       "cardPairs.gimbap.gloss": "Kimbap"
     },
     "minigame:s1-life-q3-check": {
-      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "la letra kieuk",
+      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "el sonido de la letra kieuk",
       "listenPick.rounds.1.prompt": "tomate"
     },
     "minigame:s1-rites-q1-play": {
@@ -172,7 +172,7 @@
       "matchShape.rounds.ms-pair-rieul.diffNote": "{ko:ㄹ} tiene tres líneas planas unidas en zigzag. {ko:ㄷ} tiene dos líneas planas y no tiene zigzag."
     },
     "minigame:s1-crafts-q4-check": {
-      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "la letra pieup",
+      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "el sonido de la letra pieup",
       "listenPick.rounds.lp-sym-jamo-o.prompt": "la letra o"
     }
   }

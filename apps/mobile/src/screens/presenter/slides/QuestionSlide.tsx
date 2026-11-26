@@ -99,7 +99,7 @@ export function QuestionSlide({
               testID="presenter-quiz-question"
               style={{ flexShrink: 1, fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}
             >
-              {listen && prompt.reply !== true ? m.listen : m.reply}
+              {listen && prompt.reply !== true ? (prompt.frame === 'startsWith' ? messages.learner.audio.heading.startsWith : m.listen) : m.reply}
             </Text>
           </View>
           <AnswerLine shown={revealed} />

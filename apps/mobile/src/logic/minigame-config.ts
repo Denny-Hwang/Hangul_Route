@@ -293,7 +293,8 @@ export const minigameScopes: Record<string, MinigameScope> = {
     kind: 'listen-pick',
     listenPick: {
       rounds: [
-        lp.sym(J('chieut'), THRU_F1, { optionIds: [J('chieut'), J('jieut'), J('giyeok'), J('digeut')] }),
+        // SF-1: a sound round (차). ㅈ is out: it differs from ㅊ only by aspiration (the series rule, `sameSeries`).
+        lp.symSound(J('chieut'), THRU_F1, { optionIds: [J('chieut'), J('nieun'), J('giyeok'), J('digeut')] }),
         lp.word(W.chijeu, [W.jadu, W.gochu, W.cha]),
       ],
     },
@@ -319,7 +320,7 @@ export const minigameScopes: Record<string, MinigameScope> = {
     kind: 'listen-pick',
     listenPick: {
       rounds: [
-        lp.sym(J('siot'), THRU_F2, { optionIds: [J('siot'), J('jieut'), J('bieup'), J('mieum')] }),
+        lp.symSound(J('siot'), THRU_F2, { optionIds: [J('siot'), J('jieut'), J('bieup'), J('mieum')] }),
         lp.word(W.abeoji, [W.agi, W.banana, W.dubu]),
       ],
     },
@@ -347,7 +348,8 @@ export const minigameScopes: Record<string, MinigameScope> = {
     kind: 'listen-pick',
     listenPick: {
       rounds: [
-        lp.sym(J('kieuk'), THRU_F3, { optionIds: [J('kieuk'), J('giyeok'), J('tieut'), J('digeut')] }),
+        // SF-1: ㄱ is out (the series rule); ㅌ and ㄷ may stay together.
+        lp.symSound(J('kieuk'), THRU_F3, { optionIds: [J('kieuk'), J('nieun'), J('tieut'), J('digeut')] }),
         lp.word(W.tomato, [W.kokoa, W.kuki, W.toseuteu]),
       ],
     },
@@ -710,7 +712,7 @@ function stage1AdditionScopes(): Record<string, MinigameScope> {
         // Heard, so no option is a look-alike told apart only by its sound (바 / 파, 어 / 오): the shapes were
         // matched in the two steps before, and a device voice must not decide this Check (owner audio report,
         // 2026-10-29; the pronunciation plan takes the lone-letter voice up for every Check).
-        rounds: [lp.sym(J('pieup'), THRU_R3, { optionIds: [J('pieup'), J('mieum'), J('rieul'), J('siot')] }), lp.sym(J('o'), THRU_R3, { optionIds: [J('o'), J('a'), J('i'), J('eu')] })],
+        rounds: [lp.symSound(J('pieup'), THRU_R3, { optionIds: [J('pieup'), J('mieum'), J('rieul'), J('siot')] }), lp.sym(J('o'), THRU_R3, { optionIds: [J('o'), J('a'), J('i'), J('eu')] })],
       },
     },
   };

@@ -8,7 +8,7 @@ import {
   en,
   expectNoJamoSaid,
   hearIt,
-  hearWithVowel,
+  hearName,
   LETTER_OF,
   openQuestOneDiscover,
   roundPill,
@@ -22,7 +22,7 @@ import {
  * AMENDMENTS-AUDIO-CLIPS JV-4, the second run: the same rule as `jamo-voice.spec.ts` on the e2e fixture
  * build, which maps the fixture tones of e2e/fixtures/audio (jamo/nieun.mp3 is ㄴ's sound clip, na, and
  * jamo/nieun-name.mp3 is in place for its name clip). A letter question never plays the sound clip, and a
- * sound question (Discover's Hear it with a vowel) does.
+ * sound question (Discover's Hear it, since SF-1) does; Discover's Hear the name plays the name clip.
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test jamo-voice-audio
@@ -153,22 +153,22 @@ async function matchSoundNieun(page: Page): Promise<Heard> {
 test.describe('the voice matches the letter (fixture tones, bundled clips)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
 
-  test('Discover: Hear it with a vowel on ㄴ plays the sound clip jamo/nieun.mp3, Hear it never does', async ({ page }) => {
+  test('Discover: Hear it on ㄴ plays the sound clip jamo/nieun.mp3, Hear the name plays jamo/nieun-name.mp3', async ({ page }) => {
     await captureSpeech(page);
     await recordClipUrls(page);
     await openQuestOneDiscover(page);
     await discoverPageOf(page, 'jamo:nieun');
 
-    // Hear it is a letter question: the name (니은, on the device voice until ㄴ has a name clip). The sound clip never stands in for it.
-    const name = await heardAfter(page, hearIt(page, 'jamo:nieun'));
-    expect(targetOf(name), JSON.stringify(name)).toBe('jamo:nieun');
-    for (const url of name.clips) expect(url).not.toMatch(clipUrl('nieun'));
-
-    // The second button is a sound question: the sound clip, and no device voice.
-    const sound = await heardAfter(page, hearWithVowel(page, 'jamo:nieun'));
+    // Hear it is the sound (SF-1): the sound clip, and no device voice.
+    const sound = await heardAfter(page, hearIt(page, 'jamo:nieun'));
     expect(sound.clips).toHaveLength(1);
     expect(sound.clips[0]).toMatch(clipUrl('nieun'));
     expect(sound.said).toEqual([]);
+
+    // The second button is the name: the name clip, never the sound clip.
+    const name = await heardAfter(page, hearName(page, 'jamo:nieun'));
+    expect(name.clips.some((u) => clipUrl('nieun-name').test(u)), JSON.stringify(name)).toBe(true);
+    for (const url of name.clips) expect(url).not.toMatch(clipUrl('nieun'));
     await expectNoJamoSaid(page);
   });
 
