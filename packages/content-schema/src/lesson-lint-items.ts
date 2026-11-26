@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import { detectGaps } from './romanization/gaps';
 import { composeSyllable, decomposeSyllable, type SyllableParts } from './romanization/hangul';
+import { romanizeReviewed } from './romanization/reviewed';
 import { romanize, romanizeWord } from './romanization/rr';
 
 /**
@@ -329,11 +331,19 @@ function hasTensification(word: string): boolean {
  * coda neutralisation (palatalisation 같이 [가치], nasalisation 국물 [궁물], ㅎ deletion 좋아 [조아],
  * tensification 학교 [학꾜]). Changes the converter does not model and the spelling does not
  * show (ㄴ-insertion: 십육 [심뉵]; tensification after ㄹ or a nasal in a compound: 물고기
- * [물꼬기], 눈사람 [눈싸람]) need the explicit `soundChange: true` flag on the round.
+ * [물꼬기], 눈사람 [눈싸람]) need the explicit `soundChange: true` flag on the round. A word the gap
+ * detectors flag, or one whose reviewed romanization differs from the converter's, counts as a
+ * sound change too (AMENDMENTS-ROMANIZER-GAPS §3.5 item 6).
  */
 export function hasSoundChange(ko: string): boolean {
   return normalizeKo(ko)
     .split(' ')
     .map((word) => word.replace(/[^가-힣]/g, ''))
-    .some((word) => hasTensification(word) || spelledReading(word) !== romanizeWord(word));
+    .some(
+      (word) =>
+        hasTensification(word) ||
+        spelledReading(word) !== romanizeWord(word) ||
+        detectGaps(word).length > 0 ||
+        romanizeReviewed(word).text !== romanizeWord(word),
+    );
 }

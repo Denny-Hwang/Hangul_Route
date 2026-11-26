@@ -12,7 +12,7 @@ Status: ready (all rows built 2026-10-12, Q-1 to Q-11)
 
 > **Amended 2026-11-25 by `AMENDMENTS-ROMANIZATION-FADE.md` [RF]** (work order WO-11 of the 2026-11 review; owner decision 2026-11-22, OD-R1) (§3.2 Discover, with §3.10 Listen & Pick and §3.11 Pic-Word Match): a Discover `word` card's romanization now follows the reading mode with the same **Show how to say it** reveal as an example word (it was always drawn); a letter card's own sound value still never folds. On the default choice **As I learn**, from the moment the learner has met the letters of quests 1 to 10 (finished or placed out), a word built only from met letters folds on Discover and on the quest steps (not the Check) of Listen & Pick and Pic-Word Match, and a word with a letter not yet met (ㄲ, ㅐ, a final ㅅ) shows as before; outside a Check, Listen & Pick shows every option's romanization once the round resolves. The quest Check and the Hangul Check are unchanged here (AU-8, `AMENDMENTS-STAGE1-DECODING-CHECK.md`). Rows RF-1b and RF-2.
 
-> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (work order WO-12 of the 2026-11 review: small accuracy fixes in the Stage 1 content; rows CF-1a, CF-1b, CF-2 and CF-3 open) (§3.6 quest list, scope table and Discover table; Appendix A): quest 6 reads 쿠키, 토마토, 고구마 goguma (sweet potato) and 도토리 dotori (acorn), its intro and blurb say "picnic words", and its Check asks 도토리 among 토마토 쿠키 고구마 (코코아 and 토스트 leave; Culture Quiz the same); quest 7's Check round 2 asks 문 among 문 물 달 산 (설날, said [설랄], stays on its theme page with a note); quests 11 and 15 get a third Discover page with one linking word and a note (얼음 eoreum, 한국어 hangugeo; Discover 60 s); quest 15's Hoya line ends "Now you can read Korean words too!"; Appendix A's final ㄹ hint becomes "ends in a clear l, tongue tip behind the top teeth". The tables below are edited in row CF-3.
+> **Amended 2026-11-25 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` [CF]** (work order WO-12 of the 2026-11 review: small accuracy fixes in the Stage 1 content; rows CF-1a #1135, CF-1b #1143, CF-2 #1145, CF-3 and CF-4 #1147 done) (§3.6 quest list, scope table and Discover table; Appendix A): quest 6 reads 쿠키, 토마토, 고구마 goguma (sweet potato) and 도토리 dotori (acorn), its intro and blurb say "picnic words", and its Check asks 도토리 among 토마토 쿠키 고구마 (코코아 and 토스트 leave; Culture Quiz the same); quest 7's Check round 2 asks 문 among 문 물 달 산 (설날, said [설랄], stays on its theme page with a note); quests 11 and 15 get a third Discover page with one linking word and a note (얼음 eoreum, 한국어 hangugeo; Discover 60 s); quest 15's Hoya line ends "Now you can read Korean words too!"; Appendix A's final ㄹ hint becomes "ends in a clear l, tongue tip behind the top teeth". The tables below were edited in row CF-3 and read true for main.
 
 > **Amended 2026-11-25 by `AMENDMENTS-DISCOVER-SOUND-FIRST.md` [SF]** (work order WO-13 of the 2026-11 review; owner decision 2026-11-22, OD-R2) (§3.2 item 1, §3.3 Round 1, §3.6 the Check options of quests 4 and 6, §3.10 the heading): Discover goes back to this spec's own order. On a consonant card **Hear it** plays the **sound** (가) with the line "가 = ㄱ + ㅏ · ga", and the second button is **Hear the name** (기역), which `AMENDMENTS-AUDIO-CLIPS.md` JV-A5 had put first (AU-OD-2, now reversed); the sound a page plays by itself as it opens (AU-10) is therefore the sound, and "Say it out loud" gives the sound's romanization (`ga`). In the quest Check, round 1 of the four quests that ask a consonant (ㅊ, ㅅ, ㅋ, ㅍ) is "hear a sound, pick the written symbol" again: the voice says 차 and the heading reads "Which letter starts this sound?" (`learner.audio.heading.startsWith`); its options leave out the target's plain / aspirated / tense partners. The vowel rounds and every other letter question keep the name (AU-OD-1). Rows SF-0 to SF-2.
 
@@ -192,16 +192,16 @@ A `check` step is a `listen-pick` scope with **exactly 2 rounds**, launched thro
 | 3 | `quest:stage1-letters-q3` (kept, **re-scoped**: was six vowels) | letters | Meet eu, i, d, r | 5 | ㅡ ㅣ ㄷ ㄹ | ㅗ ㅜ ㅁ ㅇ | 다리 dari (leg, bridge), 아이 ai (child), 어머니 eomeoni (mother), 드라마 deurama (drama) | `card:brush` |
 | 4 | `quest:stage1-life-q1` (kept; steps rebuilt) | life | Hello Kimchi & Rice | 4 | ㅈ ㅊ | ㄱ ㄴ ㄷ ㄹ | 자두 jadu (plum), 치즈 chijeu (cheese), 고추 gochu (chili pepper), 차 cha (tea) | `card:kimchi` |
 | 5 | `quest:stage1-life-q2` (kept; steps rebuilt) | life | Family at the Table | 4 | ㅂ ㅅ | ㅈ ㅊ ㅁ ㅇ | 아버지 abeoji (father), 아기 agi (baby), 바나나 banana (banana), 두부 dubu (tofu) | `card:family-table` |
-| 6 | `quest:stage1-life-q3` (**new**) | life | Picnic Snacks | 4 | ㅋ ㅌ | ㄱ ㄷ ㅂ ㅅ | 토마토 tomato (tomato), 코코아 kokoa (cocoa), 쿠키 kuki (cookie), 토스트 toseuteu (toast) | `card:kimbap` |
+| 6 | `quest:stage1-life-q3` (**new**) | life | Picnic Snacks | 4 | ㅋ ㅌ | ㄱ ㄷ ㅂ ㅅ | 토마토 tomato (tomato), 고구마 goguma (sweet potato), 쿠키 kuki (cookie), 도토리 dotori (acorn) | `card:kimbap` |
 | 7 | `quest:stage1-rites-q1` (kept; steps rebuilt) | rites | Bow & Eat Tteokguk | 4 | final ㄴ, final ㄹ | ㅁ ㅇ ㄷ ㅅ | 달 dal (moon), 물 mul (water), 문 mun (door), 설날 seollal (Lunar New Year) | `card:seollal` |
 | 8 | `quest:stage1-rites-q2` (**new**) | rites | Rice Cakes of Chuseok | 5 | ㅍ ㅑ ㅕ, final ㅇ | ㅂ ㅋ ㅏ ㅓ | 송편 songpyeon (half-moon rice cake), 포도 podo (grape), 야구 yagu (baseball), 여우 yeou (fox) | `card:chuseok` |
 | 9 | `quest:stage1-rites-q3` (**new**) | rites | Hanbok and the Bow | 5 | ㅎ ㅛ ㅠ, final ㄱ | ㅇ ㅗ ㅜ final ㄴ | 한복 hanbok (hanbok), 한국 hanguk (Korea), 효도 hyodo (respect for parents), 우유 uyu (milk) | `card:sebae` |
 | 10 | `quest:stage1-nature-q1` (kept; steps rebuilt) | nature | Tiger, Magpie, Moon | 4 | final ㅁ, final ㅂ | final ㄴ ㄹ ㅇ ㄱ | 곰 gom (bear), 봄 bom (spring), 밥 bap (rice), 집 jip (house); payoff: 김치 gimchi, 엄마 eomma | `card:magpie` |
-| 11 | `quest:stage1-nature-q2` (**new**) | nature | Mountain, River, Sea | 4 | - | all finals | 산 san (mountain), 강 gang (river), 바다 bada (sea), 하늘 haneul (sky) | `card:mountain` |
+| 11 | `quest:stage1-nature-q2` (**new**) | nature | Mountain, River, Sea | 4 | - | all finals | 산 san (mountain), 강 gang (river), 바다 bada (sea), 하늘 haneul (sky), 얼음 eoreum (ice) | `card:mountain` |
 | 12 | `quest:stage1-nature-q3` (**new**) | nature | Moon, Stars and Night | 4 | - | all finals | 달 dal (moon), 별 byeol (star), 밤 bam (night), 보름달 boreumdal (full moon) | `card:moon` |
 | 13 | `quest:stage1-crafts-q1` (kept; steps rebuilt) | crafts | Yut, Kite, Top | 4 | - | all finals | 연 yeon (kite), 공 gong (ball), 줄 jul (rope), 놀이 nori (play, game) | `card:yutnori` |
 | 14 | `quest:stage1-crafts-q2` (**new**) | crafts | Paper and Pottery | 4 | - | all finals | 한지 hanji (Korean paper), 종이 jongi (paper), 청자 cheongja (celadon), 도자기 dojagi (pottery) | `card:pottery` |
-| 15 | `quest:stage1-crafts-q3` (**new**) | crafts | Read Hangul! | 4 | - | everything | 한글 hangeul (the Korean alphabet), 호야 hoya (Hoya), 안녕 annyeong (hi), 사랑 sarang (love) | `card:kite` |
+| 15 | `quest:stage1-crafts-q3` (**new**) | crafts | Read Hangul! | 4 | - | everything | 한글 hangeul (the Korean alphabet), 호야 hoya (Hoya), 안녕 annyeong (hi), 사랑 sarang (love), 한국어 hangugeo (the Korean language) | `card:kite` |
 
 Symbol accounting: 14 consonants (ㄱㄴ L1, ㅁㅇ L2, ㄷㄹ L3, ㅈㅊ F1, ㅂㅅ F2, ㅋㅌ F3, ㅍ R2, ㅎ R3), 10 vowels (ㅏㅓ L1, ㅗㅜ L2, ㅡㅣ L3, ㅑㅕ R2, ㅛㅠ R3), 6 batchim (ㄴㄹ R1, ㅇ R2, ㄱ R3, ㅁㅂ N1) = **30**. Total time = 5 quests x 5 min + 10 quests x 4 min = 65 minutes (blueprint 04 §4.3 estimated about 52 minutes for 15 x 3.5; the Discover step and two check rounds per quest account for the difference). Episode minutes: letters 15, life 12, rites 14, nature 12, crafts 12 (today 12 / 10 / 8 / 9 / 10, `episodes.ts:25, 38, 51, 64, 77`). `episodes.ts:17` subtitle becomes "Twelve letters, and your first real words." (today "The first 14 consonants come alive." is false). Learner-facing quest titles carry romanization, never Hangul, in `titleEn` / `blurbEn` (the policy of F-CNT-001; today `quests.ts:43` puts Hangul in `blurbEn`).
 
@@ -216,8 +216,8 @@ Symbol accounting: 14 consonants (ㄱㄴ L1, ㅁㅇ L2, ㄷㄹ L3, ㅈㅊ F1, �
 | 3 | MS ㅡ ㅣ ㄷ ㄹ + review | OO consonants vs vowels (pool ㄷ ㄹ ㄱ ㄴ ㅁ ㅡ ㅣ ㅏ) | LP-sym ㅡ among {ㅡ ㅜ ㅣ ㅓ} / LP-word 다리 among {다리 아이 어머니 드라마} |
 | 4 | MS ㅈ ㅊ + review | PW 김치 gimchi `card:kimchi`, 밥 bap `card:rice`, 김밥 gimbap `card:kimbap`, 젓가락 jeotgarak `card:chopsticks` | LP-sym ㅊ among {ㅊ ㅈ ㄱ ㄷ} / LP-word 치즈 among {치즈 자두 고추 차} |
 | 5 | MS ㅂ ㅅ + review | BL 바 ba, 보 bo, 사 sa, 수 su | LP-sym ㅅ among {ㅅ ㅈ ㅂ ㅁ} / LP-word 아버지 among {아버지 아기 바나나 두부} |
-| 6 | MS ㅋ ㅌ + ㄱ ㄷ ㅂ ㅅ (twins) | CQ 토마토 tomato, 코코아 cocoa, 쿠키 cookie, 토스트 toast, 김밥 kimbap | LP-sym ㅋ among {ㅋ ㄱ ㅌ ㄷ} / LP-word 토마토 among {토마토 코코아 쿠키 토스트} |
-| 7 | LP-syl 달 단 물 문 산 살 (3 options: no final / ㄴ / ㄹ) | BL (CVC, explicit ids) 달 dal, 물 mul, 문 mun, 산 san | LP-syl 달 among {다 달 단} / LP-word 설날 among {설날 설 날 달} |
+| 6 | MS ㅋ ㅌ + ㄱ ㄷ ㅂ ㅅ (twins) | CQ 토마토 tomato, 고구마 sweet potato, 쿠키 cookie, 도토리 acorn, 김밥 kimbap | LP-sym ㅋ among {ㅋ ㄱ ㅌ ㄷ} / LP-word 도토리 among {도토리 토마토 쿠키 고구마} |
+| 7 | LP-syl 달 단 물 문 산 살 (3 options: no final / ㄴ / ㄹ) | BL (CVC, explicit ids) 달 dal, 물 mul, 문 mun, 산 san | LP-syl 달 among {다 달 단} / LP-word 문 among {문 물 달 산} |
 | 8 | MS ㅍ ㅑ ㅕ + ㅏ ㅓ ㅂ ㅋ | BL 송 song, 편 pyeon, 야 ya, 여 yeo | LP-syl 송 among {소 송 손} / LP-word 송편 among {송편 포도 야구 여우} |
 | 9 | LP mix: sym ㅎ, ㅛ, ㅠ; syl 복, 한, 학 | SS "New Year Order": 한복 입기 hanbok ipgi, 세배 드리기 sebae deurigi, 떡국 먹기 tteokguk meokgi, 세뱃돈 받기 sebaetdon batgi | LP-sym ㅛ among {ㅛ ㅗ ㅠ ㅕ} / LP-word 한복 among {한복 한국 효도 우유} |
 | 10 | LP-syl 곰 봄 밥 집 입 감 (4 options, finals from the 7 taught) | PW 호랑이 horangi `card:tiger`, 까치 kkachi `card:magpie`, 달 dal `card:moon`, 산 san `card:mountain` | LP-syl 곰 among {고 곰 공 골} / LP-word 집 among {집 밥 곰 봄} |
@@ -238,16 +238,16 @@ Symbol accounting: 14 consonants (ㄱㄴ L1, ㅁㅇ L2, ㄷㄹ L3, ㅈㅊ F1, �
 | 3 | ㅡ (드라마) · ㅣ (아이) | ㄷ (다리) · ㄹ (드라마) | - |
 | 4 | ㅈ (자두) · ㅊ (치즈) | word 고추 · word 차 | - |
 | 5 | ㅂ (바나나) · ㅅ (사자 saja, lion) | word 아버지 · word 아기 | theme words 엄마 eomma, 가족 gajok (`card:family-table`), under the caption "Family words" (as built in Q-8, 2026-10-12: a theme page carries its own caption, so it is never titled "Words you can read now") |
-| 6 | ㅋ (쿠키) with a "ㄱ plus a puff of air" note · ㅌ (토마토) with "ㄷ plus a puff" | word 코코아 · word 토스트 | - |
-| 7 | final ㄴ (문) · final ㄹ (달), both with `SyllableBlock` | theme words 설날 seollal (`card:seollal`), 떡국 tteokguk (`card:tteokguk`) | - |
+| 6 | ㅋ (쿠키) with a "ㄱ plus a puff of air" note · ㅌ (토마토) with "ㄷ plus a puff" | word 고구마 · word 도토리 | - |
+| 7 | final ㄴ (문) · final ㄹ (달), both with `SyllableBlock` | theme words 설날 seollal (`card:seollal`; a note: "Here n sounds like l: seol + nal sounds like seollal."), 떡국 tteokguk (`card:tteokguk`) | - |
 | 8 | ㅑ (야구) · ㅕ (여우) | ㅍ (포도) · final ㅇ (송편) | theme words 추석 chuseok (`card:chuseok`), 송편 (`card:songpyeon`) |
 | 9 | ㅛ (효도) · ㅠ (우유) | ㅎ (한복) · final ㄱ (한국) | - |
 | 10 | final ㅁ (곰) · final ㅂ (집) | word 봄 · word 밥 | payoff: 김치 gimchi, 엄마 eomma ("You can read these now!") |
-| 11 | words 산 (`card:mountain`) · 강 | words 바다 (`card:sea`) · 하늘 | - |
+| 11 | words 산 (`card:mountain`) · 강 | words 바다 (`card:sea`) · 하늘 | word 얼음 eoreum (ice), with the note "Read it smoothly: eol + eum sounds like eoreum." |
 | 12 | words 달 (`card:moon`) · 별 | words 밤 · 보름달 | - |
 | 13 | words 연 (`card:kite`) · 공 | words 줄 · 놀이 | - |
 | 14 | words 한지 (`card:hanji`) · 종이 | words 청자 (`card:pottery`) · 도자기 | - |
-| 15 | words 한글 (`card:hangul-day`) · 호야 (`card:tiger`) | words 안녕 · 사랑 | - |
+| 15 | words 한글 (`card:hangul-day`) · 호야 (`card:tiger`) | words 안녕 · 사랑 | word 한국어 hangugeo (the Korean language), with the note "Read it smoothly: hanguk + eo sounds like hangugeo." |
 
 **Reward cards.** All 15 quest rewards are existing cards in `heritage-cards.ts:28-68` (and have art in `HeritageCardArt` `supportedCardIds`). No card is added. Cards per episode after this spec: letters q1-3 `book hanji brush` + episode `ink origami`; life q1-3 `kimchi family-table kimbap` + episode `rice chopsticks hanbok`; rites q1-3 `seollal chuseok sebae` + episode `tteokguk songpyeon`; nature q1-3 `magpie mountain moon` + episode `mugunghwa sea`; crafts q1-3 `yutnori pottery kite` + episode `jegi top` = 15 + 11. With the 3 `stage1-complete` cards (`hangul-day`, `lantern`, `gayageum`) and the `first-launch` card (`tiger`) this makes **all 30 Stage 1 cards earnable** (today 11 of 42 cards across all stages are, audit `conf-learning`). Each episode's cards are exactly those whose `unlockedBy` is `episode:<id>` (test T9).
 
@@ -580,7 +580,7 @@ Wording rule: no "voiced English" claims for the soft stops (audit F15): ㄱ ㄷ
 | ㅈ | j | a soft, light j | ㅡ | eu | say "oo" with flat lips |
 | ㅊ | ch | like ch in "chair", with a puff of air | ㅣ | i | like "ee" in "see" |
 | ㅋ | k | like k in "kite", with a puff of air | final ㄴ | n | ends like n in "sun" |
-| ㅌ | t | like t in "top", with a puff of air | final ㄹ | l | ends like l in "ball" |
+| ㅌ | t | like t in "top", with a puff of air | final ㄹ | l | ends in a clear l, tongue tip behind the top teeth |
 | ㅍ | p | like p in "pie", with a puff of air | final ㅁ | m | ends like m in "ham" |
 | ㅎ | h | like h in "hat" | final ㅇ | ng | ends like ng in "sing" |
 | | | | final ㄱ | k | a short, closed k (like "book" cut off) |

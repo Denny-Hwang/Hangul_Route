@@ -28,8 +28,8 @@
       "steps.s2.discover.pages.2.items.0.sentence.gloss": "El verano es caluroso.",
       "steps.s2.discover.pages.2.items.1.sentence.gloss": "En primavera veo flores.",
       "steps.s2.discover.pages.1.items.0.frame.gloss": "___ es cálido.",
-      "steps.s2.discover.pages.1.items.0.examples.bomeun-ttatteuthaeyo.gloss": "La primavera es cálida.",
-      "steps.s2.discover.pages.1.items.0.examples.oneureun-ttatteuthaeyo.gloss": "Hoy hace un día cálido.",
+      "steps.s2.discover.pages.1.items.0.examples.bomeun-ttatteutaeyo.gloss": "La primavera es cálida.",
+      "steps.s2.discover.pages.1.items.0.examples.oneureun-ttatteutaeyo.gloss": "Hoy hace un día cálido.",
       "steps.s2.discover.pages.0.caption": "Dos estaciones: primero la primavera y luego el verano.",
       "steps.s2.discover.pages.0.items.0.word.gloss": "primavera",
       "steps.s2.discover.pages.0.items.1.word.gloss": "verano"
@@ -102,7 +102,7 @@
     "minigame:s7-nature-v2-q2-check": {
       "writeFrame.rounds.w1.frame.gloss": "El tiempo está ___.",
       "writeFrame.rounds.w2.frame.gloss": "A Hoya le gusta: ___",
-      "writeFrame.rounds.w1.slots.weather.bank.ttatteuthaeyo.gloss": "cálido",
+      "writeFrame.rounds.w1.slots.weather.bank.ttatteutaeyo.gloss": "cálido",
       "writeFrame.rounds.w1.slots.weather.bank.deowoyo.gloss": "caluroso",
       "writeFrame.rounds.w1.slots.weather.bank.siwonhaeyo.gloss": "fresco",
       "writeFrame.rounds.w1.slots.weather.bank.chuwoyo.gloss": "frío",
@@ -153,7 +153,7 @@
       "myStory.frames.f1.slots.season.bank.gaeul.gloss": "el otoño",
       "myStory.frames.f1.slots.season.bank.gyeoul.gloss": "el invierno",
       "myStory.frames.f1.slots.season.bank.sagyejeol.gloss": "las cuatro estaciones",
-      "myStory.frames.f2.slots.weather.bank.ttatteuthaeyo.gloss": "cálido",
+      "myStory.frames.f2.slots.weather.bank.ttatteutaeyo.gloss": "cálido",
       "myStory.frames.f2.slots.weather.bank.deowoyo.gloss": "caluroso",
       "myStory.frames.f2.slots.weather.bank.siwonhaeyo.gloss": "fresco",
       "myStory.frames.f2.slots.weather.bank.chuwoyo.gloss": "frío",
