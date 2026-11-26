@@ -1,4 +1,14 @@
-import { IDLE_PAUSE_MS, apply, currentQuestion, hashSeed, startRun, type PlacementRunState } from '@hangul-route/content-schema';
+import {
+  IDLE_PAUSE_MS,
+  PlacementResultSchema,
+  apply,
+  currentQuestion,
+  finishRun,
+  hashSeed,
+  startRun,
+  type AssessmentQuestion,
+  type PlacementRunState,
+} from '@hangul-route/content-schema';
 import { PLACEMENT_BANK } from '../../../content/placement.generated';
 import { describe, expect, it } from 'vitest';
 import {
@@ -630,6 +640,65 @@ describe('resumableRun (section 3.1 step 8)', () => {
       },
     } satisfies SavedRun;
     expect(resumableRun(silent, 2_000, 1)).toBeNull();
+  });
+});
+
+describe('resumableRun inside a four-question sentence rung (AMENDMENTS-PLC-VALIDITY section 3.6, PV-1b)', () => {
+  /** A Standard run on the real bank, answered right up to the sentence read rung, whose rung holds four questions (as PV-1c will build it). */
+  const insideFourQuestionRung = (): PlacementRunState => {
+    let state = startRun(
+      PLACEMENT_BANK,
+      { mode: 'standard', revealMode: 'tap', audio: true, visual: true, takeMyTime: true, seed: 4242, exclude: [], resolvesPicture: () => true },
+      1_000,
+    );
+    let t = 1_000;
+    const correct = (s: PlacementRunState) => (currentQuestion(s)?.options.find((o) => o.isCorrect) as { id: string }).id;
+    for (let guard = 0; guard < 100 && state.current?.gate !== 'sentence'; guard += 1) {
+      t += 2_000;
+      state = apply(state, { type: 'answer', optionId: correct(state) }, t);
+      if (state.pause !== null) state = apply(state, { type: 'keepGoing' }, t);
+    }
+    expect(state.current?.gate).toBe('sentence');
+    const open = state.current as NonNullable<PlacementRunState['current']>;
+    const extra = { ...(open.questions[0] as AssessmentQuestion), id: 'pitem:sent-extra' };
+    state = { ...state, current: { ...open, questions: [...open.questions, extra] } };
+    t += 2_000;
+    return apply(state, { type: 'answer', optionId: correct(state) }, t);
+  };
+  const savedAt = (run: PlacementRunState): SavedRun => ({ version: 1, savedAtMs: 5_000_000, testLocale: 'en', source: 'home', run: JSON.parse(JSON.stringify(run)) });
+
+  it('is offered Continue, with the same open question, when reopened within 24 hours', () => {
+    const run = insideFourQuestionRung();
+    expect(run.current?.questions).toHaveLength(4);
+    const offer = resumableRun(savedAt(run), 5_000_000 + 60_000, PLACEMENT_BANK.version);
+    expect(offer?.kind).toBe('continue');
+    const resumed = offer?.saved.run as PlacementRunState;
+    expect(resumed).toEqual(run);
+    expect(currentQuestion(resumed)).toEqual(currentQuestion(run));
+  });
+
+  it('can be finished: three more answers close the rung at four, and a stop inside it still produces a result', () => {
+    const run = insideFourQuestionRung();
+    const resumed = (resumableRun(savedAt(run), 5_000_000 + 60_000, PLACEMENT_BANK.version) as { saved: SavedRun }).saved.run;
+    let s = resumed;
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'answer', optionId: (currentQuestion(s)?.options.find((o) => o.isCorrect) as { id: string }).id }, 6_000_000 + i * 1_000);
+    expect(s.done.find((d) => d.gate === 'sentence')).toEqual({ gate: 'sentence', form: 'read', asked: 4, correct: 4, assisted: 0, result: 'pass' });
+
+    // stopped inside the rung and reopened later: offered to finish, and the result parses
+    const stopped = apply(resumed, { type: 'quit', by: 'learner' }, 6_000_000);
+    const offer = resumableRun(savedAt(stopped), 5_000_000 + 10 * RESUME_WINDOW_MS, PLACEMENT_BANK.version + 1);
+    expect(offer?.kind).toBe('finish');
+    const result = finishRun((offer as { saved: SavedRun }).saved.run, {
+      catalog: { quests: [] },
+      isEntitled: () => true,
+      completedQuestIds: new Set<string>(),
+      completedAt: '2026-11-26T10:00:00.000Z',
+      contentVer: 'test',
+      testLocale: 'en',
+      source: 'home',
+    });
+    expect(result.gates.at(-1)).toMatchObject({ gate: 'sentence', form: 'read', asked: 1, correct: 1, result: 'not-run', reason: 'stopped' });
+    expect(PlacementResultSchema.safeParse(result).success).toBe(true);
   });
 });
 

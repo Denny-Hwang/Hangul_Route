@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG_VERSION,
@@ -1139,5 +1140,142 @@ describe('resume', () => {
     expect(keysAtStart).toBeGreaterThan(0);
     expect(Object.keys(state.draws)).toEqual([]);
     expect(state.current).toBeNull();
+  });
+});
+
+const savedState = (name: string): PlacementRunState => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8')) as PlacementRunState;
+const SAVED = [
+  ['standard', 'placement-run-state-standard-sentence-read'],
+  ['deep', 'placement-run-state-deep-sentence-read-2'],
+] as const;
+
+describe('in-flight runs saved before PV-1b (frozen states of the engine before the change)', () => {
+  for (const [mode, name] of SAVED) {
+    it(`${mode}: parses unchanged, resumes at the same question and finishes with three-question sentence rows`, () => {
+      const saved = savedState(name);
+      expect(saved.current?.gate).toBe('sentence');
+      expect(saved.current?.questions).toHaveLength(3);
+      const state = PlacementRunStateSchema.parse(saved);
+      expect(JSON.parse(JSON.stringify(state))).toEqual(saved);
+      const open = saved.current as NonNullable<PlacementRunState['current']>;
+      expect(currentQuestion(state)?.id).toBe(open.questions[saved.responses.length - open.start]?.id);
+
+      const { state: end } = play(state, {}, 'correct', 100_000);
+      expect(isFinished(end)).toBe(true);
+      const result = finishRun(end, context({ catalog: FULL_ROUTE }));
+      expect(PlacementResultSchema.safeParse(result).success).toBe(true);
+      const sentenceRows = result.gates.filter((g) => g.gate === 'sentence');
+      expect(sentenceRows.length).toBeGreaterThan(0);
+      for (const row of sentenceRows) expect(row).toMatchObject({ asked: 3, correct: 3, result: 'pass' });
+      expect(result.level).toEqual({ stage: 'stage3', band: 0 });
+      // Nothing a build before PV-1b wrote or reads changes: the frozen old reader still parses a Standard result.
+      if (mode === 'standard') expect(PlacementResultSchemaV1.safeParse(result).success).toBe(true);
+    });
+
+    it(`${mode}: an answer inside the saved three-question sentence rung is scored at 2 of 3`, () => {
+      const state = PlacementRunStateSchema.parse(savedState(name));
+      const open = state.current as NonNullable<PlacementRunState['current']>;
+      let s = state;
+      s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), 200_000);
+      s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 203_000);
+      // The first answer of the saved rung was correct; one wrong in three still passes at 2 of 3.
+      const row = s.done.filter((d) => d.gate === open.gate && d.form === open.form).at(-1);
+      expect(row).toMatchObject({ asked: 3, correct: 2, result: 'pass' });
+    });
+  }
+});
+
+describe('a run saved under four sentence questions, resumed by a build whose switch is 3 (PV-1b is neutral, PV-1c may be rolled forward)', () => {
+  const fourQuestionRung = (): PlacementRunState => {
+    const saved = savedState('placement-run-state-standard-sentence-read');
+    const open = saved.current as NonNullable<PlacementRunState['current']>;
+    const extra = { ...(open.questions[2] as AssessmentQuestion), id: 'pitem:sent-read-extra' };
+    return PlacementRunStateSchema.parse({ ...saved, current: { ...open, questions: [...open.questions, extra] } });
+  };
+
+  it('closes the rung after its own four questions and passes at 3 of 4', () => {
+    let s = fourQuestionRung(); // one answer (correct) is saved
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), 200_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 203_000);
+    expect(s.current?.gate).toBe('sentence');
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 206_000);
+    expect(s.done.filter((d) => d.gate === 'sentence')).toEqual([{ gate: 'sentence', form: 'read', asked: 4, correct: 3, assisted: 0, result: 'pass' }]);
+  });
+
+  it('fails at 2 of 4, and the stored row parses with the live schema (not with the frozen pre-change one)', () => {
+    let s = fourQuestionRung();
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), 200_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), 203_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 206_000);
+    expect(s.done.find((d) => d.gate === 'sentence')).toMatchObject({ asked: 4, correct: 2, result: 'fail' });
+    const result = finishRun(play(s).state, context({ catalog: FULL_ROUTE }));
+    expect(PlacementResultSchema.safeParse(result).success).toBe(true);
+    expect(PlacementResultSchemaV1.safeParse(result).success).toBe(false);
+  });
+
+  it('a stop inside the rung keeps what was asked, scored against its own size', () => {
+    let s = fourQuestionRung();
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), 200_000);
+    s = apply(s, { type: 'quit', by: 'learner' }, 201_000);
+    const result = finishRun(s, context({ catalog: FULL_ROUTE }));
+    // one correct and one wrong of four: three can still be reached, so the row is undecided
+    expect(result.gates.at(-1)).toEqual({ gate: 'sentence', form: 'read', asked: 2, correct: 1, assisted: 0, result: 'not-run', reason: 'stopped' });
+    expect(PlacementResultSchema.safeParse(result).success).toBe(true);
+  });
+});
+
+describe('Deep: the sentence oral draw prefers nouns the read draws did not use (PV-1b)', () => {
+  /** Sentence read and oral templates share their nouns (`readNouns` and `oralNouns` of them). */
+  const sharedNouns = (readNouns: number, oralNouns: number) => {
+    const bank = makeBank();
+    let read = 0;
+    let oral = 0;
+    return {
+      ...bank,
+      templates: bank.templates.map((t) => {
+        if (t.gate !== 'sentence' || t.question.format === 'reply-pick') return t;
+        const noun = t.form === 'read' ? `n${read++ % readNouns}` : `n${oral++ % oralNouns}`;
+        const tags = t.question.tags.filter((tag) => !tag.startsWith('word:'));
+        return { ...t, question: { ...t.question, tags: [...tags, `word:${noun}`] } };
+      }),
+    };
+  };
+  const nounsOf = (bank: ReturnType<typeof sharedNouns>, questions: readonly AssessmentQuestion[]): string[] =>
+    questions.flatMap((q) => bank.templates.find((t) => t.id === q.id)!.question.tags.filter((tag) => tag.startsWith('word:')));
+  const readNounsOf = (bank: ReturnType<typeof sharedNouns>, s: PlacementRunState): string[] => [
+    ...nounsOf(bank, s.draws['sentence:read'] ?? []),
+    ...nounsOf(bank, s.draws['sentence:read:2'] ?? []),
+  ];
+
+  it('draws oral items whose noun neither Deep read draw used, whenever enough are left', () => {
+    const bank = sharedNouns(9, 12);
+    for (let seed = 1; seed <= 60; seed += 1) {
+      const s = startRun(bank, config({ mode: 'deep', seed }), 1_000);
+      const readNouns = readNounsOf(bank, s);
+      const oral = nounsOf(bank, s.draws['sentence:oral'] ?? []);
+      expect(oral).toHaveLength(3);
+      expect(readNouns.length).toBeGreaterThanOrEqual(4);
+      for (const noun of oral) expect(readNouns).not.toContain(noun);
+    }
+  });
+
+  it('is a soft preference: with too few unused nouns the oral rung is still drawn (never unavailable)', () => {
+    const bank = sharedNouns(4, 4);
+    for (let seed = 1; seed <= 30; seed += 1) {
+      const s = startRun(bank, config({ mode: 'deep', seed }), 1_000);
+      expect(s.draws['sentence:oral']).toHaveLength(3);
+    }
+  });
+
+  it('leaves Standard and Short alone: the oral draw is the one a bank without read sentences gives', () => {
+    const bank = sharedNouns(9, 12);
+    const withoutRead = only(bank, (t) => !(t.gate === 'sentence' && t.form === 'read'));
+    for (let seed = 1; seed <= 30; seed += 1) {
+      for (const mode of ['standard', 'short'] as const) {
+        const a = startRun(bank, config({ mode, seed }), 1_000);
+        const b = startRun(withoutRead, config({ mode, seed }), 1_000);
+        expect(a.draws['sentence:oral']).toEqual(b.draws['sentence:oral']);
+      }
+    }
   });
 });

@@ -94,6 +94,42 @@ describe('gateResult with passAt 3 (Short syl-cv)', () => {
   });
 });
 
+describe('gateResult with a four-question rung (size 4, pass at 3)', () => {
+  it('passes at three correct of four, and does not wait for the fourth answer to be right', () => {
+    expect(gateResult([C, C, C, W], 4, 3, 4)).toEqual({ asked: 4, correct: 3, assisted: 0, result: 'pass' });
+    expect(gateResult([C, C, C, C], 4, 3, 4).result).toBe('pass');
+    expect(gateResult([W, C, C, C], 4, 3, 4).result).toBe('pass');
+  });
+
+  it('fails at two of four, and as soon as three can no longer be reached', () => {
+    expect(gateResult([C, C, W, W], 4, 3, 4)).toEqual({ asked: 4, correct: 2, assisted: 0, result: 'fail' });
+    expect(gateResult([W, W], 2, 3, 4).result).toBe('fail');
+    expect(gateResult([C, W, W], 3, 3, 4).result).toBe('fail');
+    expect(gateResult([S, S, S, S], 4, 3, 4)).toMatchObject({ correct: 0, result: 'fail' });
+  });
+
+  it('stays not-run while three is still reachable', () => {
+    expect(gateResult([C, C], 2, 3, 4).result).toBe('not-run');
+    expect(gateResult([C, W], 2, 3, 4).result).toBe('not-run');
+    expect(gateResult([C, C, W], 3, 3, 4).result).toBe('not-run');
+    expect(gateResult([], 0, 3, 4).result).toBe('not-run');
+  });
+
+  it('counts assisted answers as not correct, and a prompt that could not play as one that could still have been right', () => {
+    expect(gateResult([C, C, A, C], 4, 3, 4)).toEqual({ asked: 4, correct: 3, assisted: 1, result: 'pass' });
+    expect(gateResult([C, C, A, W], 4, 3, 4).result).toBe('fail');
+    const N = { ...r('skipped'), noSound: true as const };
+    expect(gateResult([N, C, C, C], 4, 3, 4)).toEqual({ asked: 3, correct: 3, assisted: 0, result: 'pass' });
+    expect(gateResult([N, C, C, W], 4, 3, 4)).toEqual({ asked: 3, correct: 2, assisted: 0, result: 'not-run' });
+    expect(gateResult([N, N, N, N], 4, 3, 4)).toEqual({ asked: 0, correct: 0, assisted: 0, result: 'not-run' });
+  });
+
+  it('a size of three (the default) is the rule of today: two of three', () => {
+    expect(gateResult([C, C, W], 3, 2, 3).result).toBe('pass');
+    expect(gateResult([C, W, W], 3, 2).result).toBe('fail');
+  });
+});
+
 describe('rowsPassed (one row per draw)', () => {
   it('passes when a row passed and none failed; a not-run row never turns a pass into a fail', () => {
     expect(rowsPassed([])).toBe(false);

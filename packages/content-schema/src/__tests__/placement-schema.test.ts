@@ -12,6 +12,7 @@ import {
   PlacementGateSchema,
   PlacementLevelSchema,
   PlacementResultSchema,
+  PlacementRunStateSchema,
   PlacementSourceSchema,
   PlacementStrandSchema,
   PlacementSummarySchema,
@@ -19,7 +20,11 @@ import {
   ProgressSummarySchema,
   StopReasonSchema,
   StrandStatusSchema,
+  startRun,
+  type AssessmentQuestion,
 } from '../index';
+import { makeBank } from './fixtures/placement-bank';
+import { PlacementResultSchemaV1 } from './fixtures/placement-result-schema-v1';
 
 const response = { questionId: 'pitem:recog-g1', outcome: 'correct', chosenOptionId: 'a', assisted: false, ms: 1800 } as const;
 const gate = { gate: 'recog', form: 'decode', asked: 3, correct: 3, assisted: 0, result: 'pass' } as const;
@@ -127,10 +132,13 @@ describe('GateResultSchema', () => {
     expect(GateResultSchema.safeParse({ ...gate, reason: 'stopped' }).success).toBe(true);
   });
 
-  it('bounds the counts to 0..3 and rejects unknown results and reasons', () => {
-    expect(GateResultSchema.safeParse({ ...gate, asked: 4 }).success).toBe(false);
+  it('bounds the counts to 0..4 (a four-question sentence row; PV-1b) and rejects unknown results and reasons', () => {
+    expect(GateResultSchema.safeParse({ ...gate, asked: 4, correct: 3, assisted: 1 }).success).toBe(true);
+    expect(GateResultSchema.safeParse({ ...gate, asked: 4, correct: 4 }).success).toBe(true);
+    expect(GateResultSchema.safeParse({ ...gate, asked: 5 }).success).toBe(false);
+    expect(GateResultSchema.safeParse({ ...gate, correct: 5 }).success).toBe(false);
+    expect(GateResultSchema.safeParse({ ...gate, assisted: 5 }).success).toBe(false);
     expect(GateResultSchema.safeParse({ ...gate, correct: -1 }).success).toBe(false);
-    expect(GateResultSchema.safeParse({ ...gate, assisted: 4 }).success).toBe(false);
     expect(GateResultSchema.safeParse({ ...gate, result: 'wrong' }).success).toBe(false);
     expect(GateResultSchema.safeParse({ ...gate, reason: 'timeout' }).success).toBe(false);
   });
@@ -188,6 +196,65 @@ describe('PlacementResultSchema', () => {
   it('requires all five strands', () => {
     const { vocabulary: _v, ...four } = strands;
     expect(PlacementResultSchema.safeParse({ ...result, strands: four }).success).toBe(false);
+  });
+});
+
+describe('PV-1b bounds: the sentence rung may hold four questions', () => {
+  const sentenceRow = { gate: 'sentence', form: 'read', asked: 4, correct: 3, assisted: 0, result: 'pass' } as const;
+
+  it('a result with a four-question sentence row parses with the live schema and in a snapshot', () => {
+    const four = { ...result, gates: [gate, sentenceRow], mode: 'standard' };
+    expect(PlacementResultSchema.safeParse(four).success).toBe(true);
+    expect(ProgressSnapshotSchema.safeParse({ ...snapshot, placements: [four] }).success).toBe(true);
+  });
+
+  it('a five-question row stays out, in a result and in a snapshot (the Worker answers 422)', () => {
+    const five = { ...result, gates: [{ ...sentenceRow, asked: 5 }] };
+    expect(PlacementResultSchema.safeParse(five).success).toBe(false);
+    expect(ProgressSnapshotSchema.safeParse({ ...snapshot, placements: [five] }).success).toBe(false);
+  });
+
+  it('the frozen pre-change reader rejects a four-question row (recorded: this is why the Worker goes first, section 3.7)', () => {
+    expect(PlacementResultSchemaV1.safeParse({ ...result, gates: [gate] }).success).toBe(true);
+    expect(PlacementResultSchemaV1.safeParse({ ...result, gates: [gate, sentenceRow] }).success).toBe(false);
+  });
+
+  it('every stored result shape written before PV-1b still parses: three-question rows, every mode, an override, a missing mode', () => {
+    const three = { ...gate, gate: 'sentence', form: 'oral', asked: 3, correct: 3 } as const;
+    const shapes = [
+      result,
+      { ...result, mode: 'short', length: 'quick' },
+      { ...result, mode: 'standard', gates: [gate, three] },
+      { ...result, mode: 'deep', gates: Array(14).fill(three), responses: Array(42).fill(response) },
+      { ...result, override: { by: 'parent', at: '2026-10-11T00:00:00.000Z', startQuestId: 'quest:stage1-02' } },
+    ];
+    for (const shape of shapes) {
+      expect(PlacementResultSchema.safeParse(shape).success).toBe(true);
+      expect(PlacementResultSchemaV1.safeParse({ ...shape, responses: shape.responses.slice(0, 24), gates: shape.gates.slice(0, 9) }).success).toBe(true);
+    }
+  });
+});
+
+describe('PlacementRunStateSchema: the saved rung holds three or four questions (PV-1b)', () => {
+  const open = startRun(makeBank(), { mode: 'standard', revealMode: 'tap', audio: true, visual: true, takeMyTime: false, seed: 7, exclude: [], resolvesPicture: () => true }, 1_000);
+  const rung = open.current as NonNullable<typeof open.current>;
+  const withRung = (n: number) => {
+    const questions = Array.from({ length: n }, (_, i) => ({ ...(rung.questions[i % 3] as AssessmentQuestion), id: `pitem:copy-${i}` }));
+    return JSON.parse(JSON.stringify({ ...open, current: { ...rung, questions } }));
+  };
+
+  it('accepts a rung of three (every state saved before PV-1b) and of four, and rejects two and five', () => {
+    expect(PlacementRunStateSchema.safeParse(withRung(3)).success).toBe(true);
+    expect(PlacementRunStateSchema.safeParse(withRung(4)).success).toBe(true);
+    expect(PlacementRunStateSchema.safeParse(withRung(2)).success).toBe(false);
+    expect(PlacementRunStateSchema.safeParse(withRung(5)).success).toBe(false);
+  });
+
+  it('keeps the version at 1: a state saved by the engine before the change parses, version 2 does not', () => {
+    const saved = JSON.parse(JSON.stringify(open));
+    expect(PlacementRunStateSchema.safeParse(saved).success).toBe(true);
+    expect(PlacementRunStateSchema.safeParse({ ...saved, version: 2 }).success).toBe(false);
+    expect(PlacementRunStateSchema.safeParse({ ...saved, current: null, stop: 'complete' }).success).toBe(true);
   });
 });
 

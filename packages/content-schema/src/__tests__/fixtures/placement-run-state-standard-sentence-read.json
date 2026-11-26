@@ -1,0 +1,694 @@
+{
+ "version": 1,
+ "bankVersion": 1,
+ "config": {
+  "mode": "standard",
+  "listenFirst": false,
+  "revealMode": "tap",
+  "audio": true,
+  "visual": true,
+  "takeMyTime": false,
+  "seed": 7,
+  "exclude": []
+ },
+ "startedAtMs": 1000,
+ "deadlineMs": 601000,
+ "lastTouchMs": 67000,
+ "shownAtMs": 67000,
+ "pause": null,
+ "pausedAtMs": null,
+ "timeUp": false,
+ "draws": {
+  "vocab:oral": [
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o4",
+      "pictureRef": "card:vocab-hear-3-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:vocab-hear-3-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:vocab-hear-3-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:vocab-hear-3-1",
+      "en": "picture 1",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "word:w3"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:vocab-hear-3"
+   },
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o4",
+      "pictureRef": "card:vocab-hear-6-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:vocab-hear-6-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:vocab-hear-6-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:vocab-hear-6-1",
+      "en": "picture 1",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "word:w6"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:vocab-hear-6"
+   },
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o1",
+      "pictureRef": "card:vocab-hear-7-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o4",
+      "pictureRef": "card:vocab-hear-7-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:vocab-hear-7-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:vocab-hear-7-1",
+      "en": "picture 1",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "word:w7"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:vocab-hear-7"
+   }
+  ],
+  "sentence:oral": [
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o3",
+      "pictureRef": "card:sent-hear-9-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:sent-hear-9-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:sent-hear-9-1",
+      "en": "picture 1",
+      "isCorrect": false
+     },
+     {
+      "id": "o4",
+      "pictureRef": "card:sent-hear-9-3",
+      "en": "picture 3",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "pattern:n-ieyo",
+     "word:s9"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:sent-hear-9"
+   },
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o4",
+      "pictureRef": "card:sent-hear-1-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:sent-hear-1-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:sent-hear-1-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:sent-hear-1-1",
+      "en": "picture 1",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "pattern:n-ieyo",
+     "word:s1"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:sent-hear-1"
+   },
+   {
+    "format": "hear-pick-picture",
+    "options": [
+     {
+      "id": "o1",
+      "pictureRef": "card:sent-hear-7-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o4",
+      "pictureRef": "card:sent-hear-7-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:sent-hear-7-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:sent-hear-7-1",
+      "en": "picture 1",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "pattern:n-ieyo",
+     "word:s7"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": "card"
+    },
+    "leaks": false,
+    "id": "pitem:sent-hear-7"
+   }
+  ]
+ },
+ "done": [
+  {
+   "gate": "recog",
+   "form": "decode",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "sound-basic",
+   "form": "decode",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "syl-cv",
+   "form": "decode",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "sound-rest",
+   "form": "decode",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "syl-cvc",
+   "form": "decode",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "vocab",
+   "form": "read",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  },
+  {
+   "gate": "vocab",
+   "form": "read",
+   "asked": 3,
+   "correct": 3,
+   "assisted": 0,
+   "result": "pass"
+  }
+ ],
+ "current": {
+  "gate": "sentence",
+  "form": "read",
+  "questions": [
+   {
+    "format": "read-pick-picture",
+    "options": [
+     {
+      "id": "o2",
+      "pictureRef": "card:sent-read-8-1",
+      "en": "picture 1",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:sent-read-8-0",
+      "en": "picture 0",
+      "isCorrect": true
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:sent-read-8-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o4",
+      "pictureRef": "card:sent-read-8-3",
+      "en": "picture 3",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "pattern:n-eul-v",
+     "word:t8"
+    ],
+    "requires": {
+     "audio": false,
+     "picture": "card"
+    },
+    "leaks": true,
+    "id": "pitem:sent-read-8"
+   },
+   {
+    "format": "read-pick-picture",
+    "options": [
+     {
+      "id": "o4",
+      "pictureRef": "card:sent-read-4-3",
+      "en": "picture 3",
+      "isCorrect": false
+     },
+     {
+      "id": "o3",
+      "pictureRef": "card:sent-read-4-2",
+      "en": "picture 2",
+      "isCorrect": false
+     },
+     {
+      "id": "o2",
+      "pictureRef": "card:sent-read-4-1",
+      "en": "picture 1",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "pictureRef": "card:sent-read-4-0",
+      "en": "picture 0",
+      "isCorrect": true
+     }
+    ],
+    "tags": [
+     "pattern:n-eul-v",
+     "word:t4"
+    ],
+    "requires": {
+     "audio": false,
+     "picture": "card"
+    },
+    "leaks": true,
+    "id": "pitem:sent-read-4"
+   },
+   {
+    "format": "reply-pick",
+    "options": [
+     {
+      "id": "o2",
+      "ko": "깟",
+      "romanization": "r607",
+      "en": "gloss sent-reply-3-1",
+      "isCorrect": false
+     },
+     {
+      "id": "o1",
+      "ko": "깞",
+      "romanization": "r606",
+      "en": "gloss sent-reply-3-0",
+      "isCorrect": true
+     },
+     {
+      "id": "o3",
+      "ko": "깠",
+      "romanization": "r608",
+      "en": "gloss sent-reply-3-2",
+      "isCorrect": false
+     }
+    ],
+    "tags": [
+     "pattern:reply"
+    ],
+    "requires": {
+     "audio": true,
+     "picture": null
+    },
+    "leaks": true,
+    "id": "pitem:sent-reply-3"
+   }
+  ],
+  "start": 21
+ },
+ "responses": [
+  {
+   "questionId": "pitem:recog-odd-14",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:recog-odd-11",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:recog-odd-13",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-basic-hear-3",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-basic-see-4",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-basic-see-10",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cv-13",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cv-1",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cv-15",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-rest-hear-5",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-rest-see-2",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sound-rest-hear-4",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cvc-16",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cvc-6",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:syl-cvc-15",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-8",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-4",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-0",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-5",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-2",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:vocab-read-6",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  },
+  {
+   "questionId": "pitem:sent-read-8",
+   "outcome": "correct",
+   "chosenOptionId": "o1",
+   "assisted": false,
+   "ms": 3000
+  }
+ ],
+ "tags": {
+  "pitem:recog-odd-14": [
+   "sym:ㄱ",
+   "sym:ㄴ",
+   "look-alike"
+  ],
+  "pitem:recog-odd-11": [
+   "sym:ㄹ",
+   "sym:ㅏ",
+   "look-alike"
+  ],
+  "pitem:recog-odd-13": [
+   "sym:ㅓ",
+   "sym:ㄱ",
+   "look-alike"
+  ],
+  "pitem:sound-basic-hear-3": [
+   "sym:ㄴ",
+   "group:basic"
+  ],
+  "pitem:sound-basic-see-4": [
+   "sym:ㅗ",
+   "group:basic"
+  ],
+  "pitem:sound-basic-see-10": [
+   "sym:ㄷ",
+   "group:basic"
+  ],
+  "pitem:syl-cv-13": [
+   "sym:ㅓ",
+   "sym:ㅜ",
+   "syl:cv13",
+   "shape:cv"
+  ],
+  "pitem:syl-cv-1": [
+   "sym:ㅓ",
+   "sym:ㅜ",
+   "syl:cv1",
+   "shape:cv"
+  ],
+  "pitem:syl-cv-15": [
+   "sym:ㄴ",
+   "sym:ㅇ",
+   "syl:cv15",
+   "shape:cv"
+  ],
+  "pitem:sound-rest-hear-5": [
+   "sym:ㅌ",
+   "group:rest"
+  ],
+  "pitem:sound-rest-see-2": [
+   "sym:ㅂ",
+   "group:rest"
+  ],
+  "pitem:sound-rest-hear-4": [
+   "sym:ㅋ",
+   "group:rest"
+  ],
+  "pitem:syl-cvc-16": [
+   "sym:ㅗ",
+   "sym:ㅁ/final",
+   "syl:cvc16",
+   "shape:cvc"
+  ],
+  "pitem:syl-cvc-6": [
+   "sym:ㅁ",
+   "sym:ㄴ/final",
+   "syl:cvc6",
+   "shape:cvc"
+  ],
+  "pitem:syl-cvc-15": [
+   "sym:ㄴ",
+   "sym:ㄱ/final",
+   "syl:cvc15",
+   "shape:cvc"
+  ],
+  "pitem:vocab-read-8": [
+   "word:r8"
+  ],
+  "pitem:vocab-read-4": [
+   "word:r4"
+  ],
+  "pitem:vocab-read-0": [
+   "word:r0"
+  ],
+  "pitem:vocab-read-5": [
+   "word:r5"
+  ],
+  "pitem:vocab-read-2": [
+   "word:r2"
+  ],
+  "pitem:vocab-read-6": [
+   "word:r6"
+  ],
+  "pitem:sent-read-8": [
+   "pattern:n-eul-v",
+   "word:t8"
+  ]
+ },
+ "notSureStreak": 0,
+ "rested": false,
+ "stop": null
+}

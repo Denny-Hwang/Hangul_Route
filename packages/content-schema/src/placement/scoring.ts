@@ -18,9 +18,11 @@ import { MAIN_STEPS, QUESTIONS_PER_RUNG, STRAND_GATES } from './rungs';
 export type GateOutcome = Pick<GateResult, 'asked' | 'correct' | 'assisted' | 'result'>;
 
 /**
- * Pass on `passAt` (2, or 3 for Short's `syl-cv`) unassisted correct answers;
- * fail once that can no longer be reached (three asked, or earlier when the
- * rest cannot help); otherwise not-run (undecided). `asked` defaults to the
+ * Pass on `passAt` (2, or 3 for Short's `syl-cv` and a four-question `sentence`
+ * rung) unassisted correct answers; fail once that can no longer be reached
+ * (all `size` asked, or earlier when the rest cannot help); otherwise not-run
+ * (undecided). `size` is the number of questions in the rung (3, or 4 for a
+ * `sentence` rung once PV-1c turns the switch). `asked` defaults to the
  * number of responses. The stored `result` is authoritative: consumers never
  * recompute it from `correct`, because the bar depends on the mode.
  *
@@ -33,12 +35,13 @@ export const gateResult = (
   responses: readonly AssessmentResponse[],
   asked: number = responses.length,
   passAt: 2 | 3 = 2,
+  size: number = QUESTIONS_PER_RUNG,
 ): GateOutcome => {
   const heard = responses.filter((r) => r.noSound !== true);
   const scoredAsked = asked - (responses.length - heard.length);
   const correct = heard.filter((r) => r.outcome === 'correct' && !r.assisted).length;
   const assisted = heard.filter((r) => r.assisted).length;
-  const result = correct >= passAt ? 'pass' : correct + (QUESTIONS_PER_RUNG - scoredAsked) < passAt ? 'fail' : 'not-run';
+  const result = correct >= passAt ? 'pass' : correct + (size - scoredAsked) < passAt ? 'fail' : 'not-run';
   return { asked: scoredAsked, correct, assisted, result };
 };
 

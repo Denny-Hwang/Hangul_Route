@@ -377,6 +377,40 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     expect(got.data.summary.placement).toEqual(placementSummary);
   });
 
+  it('round-trips a Standard result with a four-question sentence row (AMENDMENTS-PLC-VALIDITY PV-1b: the Worker takes the new bounds before any client writes one)', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const row = (gate: string, form: string, asked: number, correct: number) => ({ gate, form, asked, correct, assisted: 0, result: 'pass' });
+    const four = {
+      ...placementResult,
+      id: 'placement:2026-11-26-four',
+      completedAt: '2026-11-26T10:20:00.000Z',
+      mode: 'standard',
+      bankVersion: 2,
+      responses: Array.from({ length: 25 }, (_, i) => ({ ...placementResult.responses[0], questionId: `pitem:std-${i}` })),
+      gates: [row('recog', 'decode', 3, 3), row('sentence', 'read', 4, 3), row('sentence', 'oral', 4, 4)],
+      level: { stage: 'stage3', band: 0 },
+      oralStage: 'stage3',
+    };
+    // a result of today's shape (three-question rows) travels in the same list
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult, four]), summary: { ...summary, placement: placementSummary } });
+    expect(res.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult, four]);
+    expect((got.data.snapshot.placements as Array<{ gates: Array<{ asked: number }> }>)[1]?.gates.map((g) => g.asked)).toEqual([3, 4, 4]);
+  });
+
+  it('a sentence row that counts five is a 422 and stores nothing (the bound is 4, not open)', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const gate = { gate: 'sentence', form: 'read', asked: 4, correct: 3, assisted: 0, result: 'pass' };
+    for (const bad of [{ asked: 5 }, { correct: 5 }, { assisted: 5 }]) {
+      const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, gates: [{ ...gate, ...bad }] }]), summary });
+      expect(res.status, JSON.stringify(bad)).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
   it('an old client (neither field) is accepted exactly as today and reads back with an empty list', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);

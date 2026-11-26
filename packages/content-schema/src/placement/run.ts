@@ -22,13 +22,13 @@ import {
   DEEP_REST_AT,
   IDLE_PAUSE_MS,
   LISTEN_FIRST_FORMATS,
-  QUESTIONS_PER_RUNG,
   RUNG_TABLE,
   backstopMs,
   drawsFor,
   legacyLengthOf,
   passAtFor,
   questionCap,
+  questionsFor,
   type PlacementMode,
 } from './rungs';
 import type { PlacementRunState } from './run-state';
@@ -59,7 +59,7 @@ export interface PlacementBankInput {
 }
 
 export interface PlacementConfig {
-  /** short: 6 to 9 questions, no clock; standard: 9 to 24, 10 minutes; deep: 9 to 42, 20 minutes. */
+  /** short: 6 to 9 questions, no clock; standard: 9 to `questionCap`, 10 minutes; deep: 9 to `questionCap`, 20 minutes (24 and 42 at three sentence questions, 25 and 45 at four). */
   mode: PlacementMode;
   /**
    * A *Pictures first* learner (`levelOrder` 0): decoding items start from sound
@@ -154,12 +154,13 @@ interface FirstDraw {
 }
 
 /**
- * Three questions for a rung, or null when fewer than three are eligible. The
- * rung has its own generator, so a draw does not depend on the path taken. A
- * confirming second draw (`first` given) has its own seed, never repeats a
- * template of the first draw, and prefers symbols, syllables and words the
- * first draw did not touch; a second `syl-*` draw holds one tile item when one
- * is eligible.
+ * Questions for a rung (`questionsFor`: three, or `SENTENCE_QUESTIONS` for `sentence`), or
+ * null when fewer are eligible. The rung has its own generator, so a draw does not depend on
+ * the path taken. A confirming second draw (`first` given) has its own seed, never repeats a
+ * template of the first draw, and prefers symbols, syllables and words the first draw did not
+ * touch; a second `syl-*` draw holds one tile item when one is eligible. A `sentence` read draw
+ * is `size - 1` picture items and one reply. A Deep `sentence` oral draw (`avoid` given: the
+ * keys, noun or family, of the run's read draws) prefers keys those draws did not use.
  */
 const drawRung = (
   bank: PlacementBankInput,
@@ -167,10 +168,12 @@ const drawRung = (
   gate: PlacementGate,
   form: PlacementForm,
   first?: FirstDraw,
+  avoid?: ReadonlySet<string>,
 ): AssessmentQuestion[] | null => {
   if (form === 'oral' && !config.audio) return null;
   if (gate === 'recog' && !config.visual) return null;
   if (config.skipGates?.includes(gate) === true) return null;
+  const size = questionsFor(gate);
   const eligible = bank.templates.filter(
     (t) => t.status === 'ready' && t.gate === gate && t.form === form && usable(t, config),
   );
@@ -180,33 +183,34 @@ const drawRung = (
   const isReply = (t: PlacementTemplateInput): boolean => t.question.format === 'reply-pick';
 
   const isBuild = (t: PlacementTemplateInput): boolean => t.question.format === 'build-syllable';
-  const fresh = (t: PlacementTemplateInput): boolean => first === undefined || !first.keys.has(spreadKey(t));
+  const fresh = (t: PlacementTemplateInput): boolean =>
+    (first === undefined || !first.keys.has(spreadKey(t))) && (avoid === undefined || !avoid.has(spreadKey(t)));
 
   const chooseOnce = (exclude: readonly string[]): PlacementTemplateInput[] => {
     if (first !== undefined && (gate === 'syl-cv' || gate === 'syl-cvc')) {
       const tile = pick(1, exclude, (t) => isBuild(t) && fresh(t));
       const taken = [...exclude, ...tile.map((t) => t.id)];
-      const rest = pick(QUESTIONS_PER_RUNG - tile.length, taken, (t) => !isBuild(t) && fresh(t));
+      const rest = pick(size - tile.length, taken, (t) => !isBuild(t) && fresh(t));
       return [...tile, ...rest];
     }
-    if (gate !== 'sentence' || form !== 'read') return pick(QUESTIONS_PER_RUNG, exclude, fresh);
-    // Two read-pick-picture and one reply-pick; a short side is topped up from what is left.
-    const chosen = [...pick(2, exclude, (t) => !isReply(t) && fresh(t)), ...pick(1, exclude, (t) => isReply(t) && fresh(t))];
+    if (gate !== 'sentence' || form !== 'read') return pick(size, exclude, fresh);
+    // `size - 1` read-pick-picture and one reply-pick; a short side is topped up from what is left.
+    const chosen = [...pick(size - 1, exclude, (t) => !isReply(t) && fresh(t)), ...pick(1, exclude, (t) => isReply(t) && fresh(t))];
     const taken = [...exclude, ...chosen.map((t) => t.id)];
-    return [...chosen, ...pick(QUESTIONS_PER_RUNG - chosen.length, taken, fresh)];
+    return [...chosen, ...pick(size - chosen.length, taken, fresh)];
   };
   // Fresh symbols first; then any template not in the first draw (a soft preference, never a reason to skip).
   const choose = (exclude: readonly string[]): PlacementTemplateInput[] => {
     const own = [...exclude, ...(first?.ids ?? [])];
     const preferred = chooseOnce(own);
-    if (preferred.length >= QUESTIONS_PER_RUNG || first === undefined) return preferred;
+    if (preferred.length >= size || (first === undefined && avoid === undefined)) return preferred;
     const taken = [...own, ...preferred.map((t) => t.id)];
-    return [...preferred, ...pick(QUESTIONS_PER_RUNG - preferred.length, taken)];
+    return [...preferred, ...pick(size - preferred.length, taken)];
   };
   let chosen = choose(config.exclude);
   // The previous result's ids are relaxed when the rung would otherwise be short (a retake may repeat items).
-  if (chosen.length < QUESTIONS_PER_RUNG && config.exclude.length > 0) chosen = choose([]);
-  if (chosen.length < QUESTIONS_PER_RUNG) return null;
+  if (chosen.length < size && config.exclude.length > 0) chosen = choose([]);
+  if (chosen.length < size) return null;
 
   const recent: number[] = [];
   return chosen.map((t) => {
@@ -257,17 +261,24 @@ const advance = (from: PlacementRunState): PlacementRunState => {
 
 export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowMs: number): PlacementRunState => {
   const draws: PlacementRunState['draws'] = {};
+  // The keys (noun or family) the sentence read draws used: Deep asks `sentence` oral right after them.
+  const sentenceReadKeys = new Set<string>();
   for (const spec of RUNG_TABLE) {
     for (const form of spec.forms) {
-      const questions = drawRung(bank, config, spec.gate, form);
+      const preferUnused = config.mode === 'deep' && spec.gate === 'sentence' && form === 'oral';
+      const questions = drawRung(bank, config, spec.gate, form, undefined, preferUnused ? sentenceReadKeys : undefined);
       if (questions === null) continue;
       draws[drawKey(spec.gate, form)] = questions;
+      const keysOf = (drawn: readonly AssessmentQuestion[]): string[] =>
+        drawn.map((q) => spreadKey(bank.templates.find((t) => t.id === q.id) as PlacementTemplateInput));
+      if (spec.gate === 'sentence' && form === 'read') keysOf(questions).forEach((key) => sentenceReadKeys.add(key));
       if (drawsFor(config.mode, spec.gate, form) === 2) {
-        const keys = new Set(
-          questions.map((q) => spreadKey(bank.templates.find((t) => t.id === q.id) as PlacementTemplateInput)),
-        );
+        const keys = new Set(keysOf(questions));
         const second = drawRung(bank, config, spec.gate, form, { ids: questions.map((q) => q.id), keys });
-        if (second !== null) draws[drawKey(spec.gate, form, 2)] = second;
+        if (second !== null) {
+          draws[drawKey(spec.gate, form, 2)] = second;
+          if (spec.gate === 'sentence' && form === 'read') keysOf(second).forEach((key) => sentenceReadKeys.add(key));
+        }
       }
     }
   }
@@ -337,8 +348,10 @@ const record = (
     shownAtMs: nowMs,
   };
   const inRung = next.responses.slice(rung.start);
-  if (inRung.length === QUESTIONS_PER_RUNG) {
-    const scored = gateResult(inRung, inRung.length, passAtFor(state.config.mode, rung.gate));
+  // The rung closes after its own questions: a run saved under another `SENTENCE_QUESTIONS` finishes at the size it was built with.
+  const size = rung.questions.length;
+  if (inRung.length === size) {
+    const scored = gateResult(inRung, inRung.length, passAtFor(state.config.mode, rung.gate, size), size);
     const finished: GateResult = {
       gate: rung.gate,
       form: rung.form,
@@ -438,7 +451,8 @@ export const finishRun = (state: PlacementRunState, ctx: FinishContext): Placeme
   const open = state.current;
   if (open !== null && state.responses.length > open.start) {
     const asked = state.responses.slice(open.start);
-    const partial = gateResult(asked, asked.length, passAtFor(state.config.mode, open.gate));
+    const size = open.questions.length;
+    const partial = gateResult(asked, asked.length, passAtFor(state.config.mode, open.gate, size), size);
     gates.push({
       gate: open.gate,
       form: open.form,

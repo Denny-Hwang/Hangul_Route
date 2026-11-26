@@ -25,7 +25,8 @@ export const PlacementRunConfigSchema = z.object({
 const CurrentRungSchema = z.object({
   gate: PlacementGateSchema,
   form: PlacementFormSchema,
-  questions: z.array(AssessmentQuestionSchema).length(3),
+  /** 3, or 4 for a `sentence` rung once `SENTENCE_QUESTIONS` is 4 (a saved run keeps the size it was built with). */
+  questions: z.array(AssessmentQuestionSchema).min(3).max(4),
   /** Index into `responses` of this rung's first answer. */
   start: z.number().int().nonnegative(),
 });
