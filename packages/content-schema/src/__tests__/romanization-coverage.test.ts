@@ -7,6 +7,7 @@ import {
   REGISTERED_SOURCES,
   REPO_ROOT,
   ROMANIZATION_SCAN_IGNORE,
+  checkedKoreanTokens,
   coverageProblems,
   hangulFiles,
   isClassA,
@@ -127,12 +128,24 @@ describe('romanization exceptions are self-cleaning (R8)', () => {
 
   it('flags an exception that matches no registered source or content file', () => {
     // A word no content holds (꽃잎 now appears in a Food book 2 source quote, row CM-46).
-    const exceptions = [{ ko: '솜이불', allowed: ['somnibul'], reason: 'n-insertion' }];
+    const exceptions = [{ ko: '솜이불', allowed: ['somnibul'], reason: 'n-insertion (표준 발음법 제29항)', gap: 'n-insertion' as const }];
     expect(checkExceptions(exceptions, seenExceptionKo(exceptions))[0]?.rule).toBe('romanization-exception-stale');
   });
 
+  it('a word entry matches a whole token of a checked string, not a longer word or a source quote (§3.5 item 4)', () => {
+    const root = tmpTree({
+      'content/episodes/a.json': JSON.stringify({ cells: [{ ko: '북한산에 가요.', romanization: 'bukhansane gayo' }], quote: { quoteOrLocator: '북한산국립공원', note: '북한산' } }),
+    });
+    const word = { ko: '북한산', allowed: ['bukhansan'], reason: 'a noun (체언)', gap: 'predicate-h' as const };
+    const sentence = { ko: '북한산에 가요.', allowed: ['bukhansane gayo'], reason: 'a noun (체언)', gap: 'predicate-h' as const };
+    const longer = { ko: '북한산에', allowed: ['bukhansane'], reason: 'a noun (체언)', gap: 'predicate-h' as const };
+    expect(checkedKoreanTokens(root)).toEqual(new Set(['북한산에', '가요']));
+    expect(seenExceptionKo([word, sentence, longer], root)).toEqual(['북한산에 가요.', '북한산에']);
+    expect(checkExceptions([word], seenExceptionKo([word], root))[0]?.message).toBe('exception 북한산 matched no source');
+  });
+
   it('accepts an exception whose Korean string is in a registered source', () => {
-    const exceptions = [{ ko: '호랑이', allowed: ['horangi'], reason: 'test' }];
+    const exceptions = [{ ko: '호랑이', allowed: ['horangi'], reason: 'test', gap: 'other' as const }];
     expect(seenExceptionKo(exceptions)).toEqual(['호랑이']);
     expect(checkExceptions(exceptions, seenExceptionKo(exceptions))).toEqual([]);
   });

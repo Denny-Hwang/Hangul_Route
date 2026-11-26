@@ -328,7 +328,15 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 4,553,753 B raw / 1,252,274 B gzip (+4,603 B raw, +1,946 B gzip), 3,553 B over the line. The line is the measurement plus a
   // 4,047 B margin (one measured raise). Moving the phase into a lazy chunk was rejected: the first render would not know it and
   // a profile on As I learn would flicker once RF-2 switches `auto` on.
-  startBundleRaw: 4_557_800,
+  // [RG] AMENDMENTS-ROMANIZER-GAPS RG-2b (the gap detectors `gaps.ts`, R8 and R9 in `compare.ts`, the article-citing `reason` texts and
+  // the five new entries of `exceptions.ts`, `predicateH` in `rr.ts`; the app imports `@hangul-route/content-schema` through the barrel, which
+  // Metro bundles whole, and the stable-id module reaches `gaps.ts` through `hasSoundChange`, so lint-only code rides along): on main 5a03725f8
+  // the release `build:web` (CI=1) measures 4,557,092 B raw with RG-2b (6,892 B over the 4,550,200 B line); on top of RF-1a (#1149, line
+  // 4,557,800 B, 4,553,753 B measured on e8fe35c6c) it measures 4,561,759 B raw / 1,254,614 B gzip, 3,959 B over RF-1a's line. The line is that
+  // measurement plus a 4,041 B margin (one measured raise). Tried: keeping the lint code out of the app graph needs `compare.ts` and
+  // `gaps.ts` off the barrel, which moves the imports of about 30 test files (every consumer of the lint functions is a test or helper), and
+  // `hasSoundChange` would still pull `gaps.ts` in through the stable-id module: not a small change, so the line is raised instead.
+  startBundleRaw: 4_565_800,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

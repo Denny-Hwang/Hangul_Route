@@ -11,7 +11,9 @@ import {
   checkProse,
   checkRomanization,
   normalizeRomanization,
+  romanizeWord,
   type RomanizationException,
+  type RomanizationGap,
 } from '../index';
 
 const rules = (ko: string, given: string, exceptions?: readonly RomanizationException[]): string[] =>
@@ -108,30 +110,136 @@ describe('checkRomanization', () => {
     expect(rules('ㄱ', 'g')).toEqual(['romanization-unchecked']);
   });
 
-  it('known limits are mismatches until an exception allows them', () => {
-    expect(rules('꽃잎', 'kkonnip')).toEqual(['romanization-mismatch']);
-    expect(rules('솔잎', 'sollip')).toEqual(['romanization-mismatch']);
-    expect(rules('밟다', 'bapda')).toEqual([]);
-    const exceptions: RomanizationException[] = [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' }];
+  it('an entry replaces the converter value: the entry value passes, the converter value fails (R1 compares with the reviewed value)', () => {
+    const exceptions: RomanizationException[] = [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion (표준 발음법 제29항)', gap: 'n-insertion' }];
     expect(rules('꽃잎', 'kkonnip', exceptions)).toEqual([]);
     expect(rules('꽃잎', 'KKonnip', exceptions)).toEqual([]);
-    expect(rules('꽃잎', 'kkochip', exceptions)).toEqual([]);
+    expect(rules('꽃잎', 'kkochip', exceptions)).toEqual(['romanization-mismatch']);
     expect(rules('꽃잎', 'kkotnip', exceptions)).toEqual(['romanization-mismatch']);
-    expect(rules('솔잎', 'sollip', exceptions)).toEqual(['romanization-mismatch']);
+    // A word entry applies inside a sentence too.
+    expect(rules('꽃잎 예뻐요', 'kkonnip yeppeoyo', exceptions)).toEqual([]);
+    expect(rules('꽃잎 예뻐요', 'kkochip yeppeoyo', exceptions)).toEqual(['romanization-mismatch']);
   });
 
-  it('every shipped exception names its limit and allows only a romanization the converter does not give', () => {
+  it('a whole-string entry keeps its alternates', () => {
+    const exceptions: RomanizationException[] = [
+      { ko: '꽃잎 한 장', allowed: ['kkonnip han jang', 'kkochip han jang'], reason: '표준 발음법 제29항', gap: 'n-insertion' },
+    ];
+    expect(rules('꽃잎 한 장', 'kkonnip han jang', exceptions)).toEqual([]);
+    expect(rules('꽃잎 한 장', 'kkochip han jang', exceptions)).toEqual([]);
+    expect(rules('꽃잎 한 장', 'kkotnip han jang', exceptions)).toEqual(['romanization-mismatch']);
+  });
+
+  it('with no ctx the shipped list applies; { exceptions: [] } means none', () => {
+    expect(checkRomanization('솔잎', 'sollip')).toEqual([]);
+    expect(checkRomanization('솔잎', 'sorip')[0]?.rule).toBe('romanization-mismatch');
+    expect(checkRomanization('솔잎', 'sollip', {})).toEqual([]);
+    expect(rules('솔잎', 'sollip', [])).toEqual(['romanization-mismatch']);
+    expect(rules('솔잎', 'sorip', [])).toEqual(['romanization-gap']);
+  });
+
+  it('every shipped entry fails without the list (a confirmation only for the detector) and passes with it', () => {
     expect(ROMANIZATION_EXCEPTIONS.length).toBeGreaterThan(0);
     for (const e of ROMANIZATION_EXCEPTIONS) {
       expect(e.reason.trim(), e.ko).not.toBe('');
-      expect(rules(e.ko, e.allowed[0] ?? ''), e.ko).toEqual(['romanization-mismatch']);
+      const without = rules(e.ko, e.allowed[0] ?? '', []);
+      if (e.reason.includes('the entry only confirms')) {
+        // A confirmation (북한산): the converter was right, the entry clears the detector.
+        expect(without, e.ko).toEqual(['romanization-gap']);
+      } else {
+        expect(without, e.ko).toContain('romanization-mismatch');
+      }
       expect(rules(e.ko, e.allowed[0] ?? '', ROMANIZATION_EXCEPTIONS), e.ko).toEqual([]);
     }
   });
 });
 
+describe('R9 romanization-gap (AMENDMENTS-ROMANIZER-GAPS §3.5, §3.8)', () => {
+  const none = { exceptions: [] as RomanizationException[] };
+  /** The nine words of the work order: the converter output as given, with no entry. */
+  const nine: ReadonlyArray<readonly [string, string, string]> = [
+    ['읽고', 'ilgo', ''],
+    ['맑게', 'malge', ''],
+    ['좁히다', 'jopida', ''],
+    ['깻잎', 'kkaesip', 'saisiot'],
+    ['색연필', 'saegyeonpil', 'n-insertion'],
+    ['서울역', 'seouryeok', 'n-insertion'],
+    ['맛없어요', 'maseopseoyo', 'juncture'],
+    ['첫인상', 'cheosinsang', 'juncture'],
+    ['못해요', 'mothaeyo', 'predicate-h'],
+  ];
+
+  it.each(nine)('%s with the converter output %s: the rule fix (RG-1) or the gap (RG-2b)', (ko, converter, gap) => {
+    const found = checkRomanization(ko, converter, none);
+    if (gap === '') {
+      expect(found).toEqual([]);
+    } else {
+      expect(found.some((f) => f.rule === 'romanization-gap' && f.message.includes(`: ${gap} (`))).toBe(true);
+      expect(found.every((f) => f.rule === 'romanization-gap' && f.severity === 'error')).toBe(true);
+    }
+  });
+
+  const reviewed: ReadonlyArray<readonly [string, string, string, string]> = [
+    ['깻잎', 'kkaennip', 'saisiot', '표준 발음법 제30항 3'],
+    ['색연필', 'saengnyeonpil', 'n-insertion', '표준 발음법 제29항'],
+    ['서울역', 'seoullyeok', 'n-insertion', '표준 발음법 제29항 붙임 1'],
+    ['맛없어요', 'madeopseoyo', 'juncture', '표준 발음법 제15항'],
+    ['첫인상', 'cheodinsang', 'juncture', '표준국어대사전 첫인상 [처딘상]'],
+    ['못해요', 'motaeyo', 'predicate-h', '로마자 표기법 제3장 제1항 4, 표준 발음법 제12항 붙임 2'],
+  ];
+
+  it.each(reviewed)('%s: the correct value %s with no entry is a mismatch that carries the gap hint, with no separate R9', (ko, value, gap) => {
+    const found = checkRomanization(ko, value, none);
+    expect(found.map((f) => f.rule)).toEqual(['romanization-mismatch']);
+    expect(found[0]?.message).toContain('converter gap:');
+    expect(found[0]?.message).toContain(gap);
+    expect(found[0]?.message).toContain('AMENDMENTS-ROMANIZER-GAPS');
+  });
+
+  it.each(reviewed)('%s: with its entry %s passes and the converter value fails R1', (ko, value, gap, reason) => {
+    const exceptions: RomanizationException[] = [{ ko, allowed: [value], gap: gap as RomanizationGap, reason }];
+    expect(checkRomanization(ko, value, { exceptions })).toEqual([]);
+    expect(checkRomanization(ko, romanizeWord(ko) as string, { exceptions }).map((f) => f.rule)).toEqual(['romanization-mismatch']);
+  });
+
+  it('the 못해요 entry equals the predicate reading of the converter', () => {
+    expect(romanizeWord('못해요', { predicateH: true })).toBe('motaeyo');
+  });
+
+  it('the message names the token, the rule, and the line to paste', () => {
+    const [found] = checkRomanization('그건 못해요.', 'geugeon mothaeyo', none);
+    expect(found).toMatchObject({ rule: 'romanization-gap', severity: 'error', ko: '그건 못해요.', given: 'geugeon mothaeyo' });
+    expect(found?.message).toBe(
+      "못해요: predicate-h (로마자 표기법 제3장 제1항 4, 표준 발음법 제12항 붙임 2); the converter cannot tell. Check 표준국어대사전 and add { ko: '못해요', allowed: ['…'], gap: 'predicate-h', reason: '…' } to ROMANIZATION_EXCEPTIONS",
+    );
+  });
+
+  it('a covering word entry or whole-string entry clears the detector, and a confirmation passes', () => {
+    const word: RomanizationException = { ko: '북한산', allowed: ['bukhansan'], gap: 'predicate-h', reason: 'a noun (체언), 제3장 제1항 4 다만' };
+    expect(rules('북한산', 'bukhansan', [word])).toEqual([]);
+    expect(rules('북한산에 가요.', 'bukhansane gayo', [word])).toEqual(['romanization-gap']);
+    const whole: RomanizationException = { ko: '북한산에 가요.', allowed: ['bukhansane gayo'], gap: 'predicate-h', reason: 'a noun (체언), 제3장 제1항 4 다만' };
+    expect(rules('북한산에 가요.', 'bukhansane gayo', [whole])).toEqual([]);
+    expect(rules('북한산에 가요', 'bukhansane gayo', [whole])).toEqual([]);
+  });
+
+  it('is not reported for a string the converter cannot read, and gives one finding per gap of a token', () => {
+    expect(rules('K팝 못해요', 'kpap mothaeyo', [])).toEqual(['romanization-unchecked']);
+    expect(rules('첫인상', 'cheosinsang', [])).toEqual(['romanization-gap', 'romanization-gap']);
+  });
+
+  it('runs on each piece of a frame between its slots', () => {
+    expect(checkFrameRomanization('저는 ___을/를 못해요', 'jeoneun ___eul/reul mothaeyo', none).map((f) => f.rule)).toEqual(['romanization-gap']);
+    expect(checkFrameRomanization('저는 ___을/를 못해요', 'jeoneun ___eul/reul motaeyo').map((f) => f.rule)).toEqual(['romanization-mismatch']);
+  });
+
+  it('prose pairs never report it (checkProse keeps R1 and R2)', () => {
+    expect(checkProse('She says mothaeyo (못해요) a lot.', [])).toEqual([]);
+  });
+});
+
 describe('checkExceptions (R8)', () => {
-  const ok: RomanizationException = { ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' };
+  const ok: RomanizationException = { ko: '꽃잎', allowed: ['kkonnip'], reason: '표준 발음법 제29항', gap: 'n-insertion' };
 
   it('passes an exception with a reason that matches a source', () => {
     expect(checkExceptions([ok], ['꽃잎', '밥'])).toEqual([]);
@@ -146,7 +254,54 @@ describe('checkExceptions (R8)', () => {
 
   it('fails an exception with no reason', () => {
     const found = checkExceptions([{ ...ok, reason: '  ' }], ['꽃잎']);
-    expect(found.map((f) => f.message)).toEqual(['exception 꽃잎 has no reason']);
+    expect(found.map((f) => f.message)).toContain('exception 꽃잎 has no reason');
+  });
+
+  it('a detector-gap entry must cite an article or the dictionary; other gaps need not', () => {
+    const found = checkExceptions([{ ...ok, reason: 'n-insertion' }], ['꽃잎']);
+    expect(found.map((f) => f.message)).toEqual([expect.stringContaining('cites no article')]);
+    expect(checkExceptions([{ ...ok, reason: '표준국어대사전 꽃잎 [꼰닙]' }], ['꽃잎'])).toEqual([]);
+    expect(checkExceptions([{ ...ok, reason: '표준 발음법 제 29 항' }], ['꽃잎'])).toEqual([]);
+    expect(checkExceptions([{ ...ok, gap: 'proper-noun', reason: 'a name' }], ['꽃잎'])).toEqual([]);
+    expect(checkExceptions([{ ...ok, gap: 'other', reason: 'a name' }], ['꽃잎'])).toEqual([]);
+  });
+
+  it('a word entry holds exactly one allowed value; a whole-string entry may hold more', () => {
+    expect(checkExceptions([{ ...ok, allowed: ['kkonnip', 'kkochip'] }], ['꽃잎']).map((f) => f.message)).toEqual([
+      'exception 꽃잎 is a word entry and must hold exactly one allowed value, not 2',
+    ]);
+    expect(checkExceptions([{ ...ok, allowed: [] }], ['꽃잎']).map((f) => f.message)).toEqual([
+      'exception 꽃잎 is a word entry and must hold exactly one allowed value, not 0',
+    ]);
+    const sentence: RomanizationException = { ...ok, ko: '꽃잎 한 장', allowed: ['kkonnip han jang', 'kkochip han jang'] };
+    expect(checkExceptions([sentence], ['꽃잎 한 장'])).toEqual([]);
+  });
+
+  describe('a predicate-h entry agrees with the predicate reading, or is a noun that keeps the ㅎ', () => {
+    const predicate: RomanizationException = { ko: '못해요', allowed: ['motaeyo'], gap: 'predicate-h', reason: '로마자 표기법 제3장 제1항 4' };
+    it('passes the predicate reading, in compact form, whole strings included', () => {
+      expect(checkExceptions([predicate], ['못해요'])).toEqual([]);
+      expect(checkExceptions([{ ...predicate, allowed: ['Mo-tae yo'] }], ['못해요'])).toEqual([]);
+      const sentence: RomanizationException = { ...predicate, ko: '저는 못해요.', allowed: ['jeoneun motaeyo.'] };
+      expect(checkExceptions([sentence], ['저는 못해요.'])).toEqual([]);
+    });
+
+    it('fails the converter reading of a predicate, and an empty value', () => {
+      const wrong = checkExceptions([{ ...predicate, allowed: ['mothaeyo'] }], ['못해요']);
+      expect(wrong).toHaveLength(1);
+      expect(wrong[0]?.message).toContain('(predicate-h) holds "mothaeyo", the predicate reading is "motaeyo"');
+      expect(checkExceptions([{ ...predicate, allowed: [] }], ['못해요']).map((f) => f.message)).toEqual([
+        'exception 못해요 is a word entry and must hold exactly one allowed value, not 0',
+        expect.stringContaining('holds ""'),
+      ]);
+    });
+
+    it('passes the converter reading only when the reason says it is a noun (체언)', () => {
+      const noun: RomanizationException = { ko: '북한산', allowed: ['bukhansan'], gap: 'predicate-h', reason: 'a noun (체언): 제3장 제1항 4 다만' };
+      expect(checkExceptions([noun], ['북한산'])).toEqual([]);
+      expect(checkExceptions([{ ...noun, reason: 'a noun: 제3장 제1항 4 다만' }], ['북한산'])).toEqual([]);
+      expect(checkExceptions([{ ...noun, reason: '제3장 제1항 4 다만, keeps the ㅎ' }], ['북한산'])).toHaveLength(1);
+    });
   });
 });
 
