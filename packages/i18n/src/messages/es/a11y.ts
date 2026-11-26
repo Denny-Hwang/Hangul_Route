@@ -53,6 +53,7 @@ export const a11y = {
   leaveQuest: 'Dejar la misión',
   hearItLabel: (label: string) => `Escuchar. ${label}`,
   hearNameLabel: (letter: string) => `Escuchar el nombre. ${letter}`,
+  hearVowelsLabel: (letter: string) => `Escuchar con vocales. ${letter}`,
   hearExample: (spoken: string) => `Escuchar: ${spoken}`,
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Letra coreana ${romanization}` : `Letra coreana ${romanization}. ${soundHint}`,

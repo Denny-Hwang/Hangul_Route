@@ -146,6 +146,8 @@ export async function openQuestOneDiscover(page: Page): Promise<void> {
 /** Discover's two buttons for one letter (`jamo:nieun`): Hear it (its sound), and Hear the name (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1). */
 export const hearIt = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|sound`);
 export const hearName = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|name`);
+/** [SF-3] The initial ㅇ card's second button, Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12). */
+export const hearVowels = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|vowels`);
 
 /** Continue to the next Discover page, the one that shows `jamoId`. */
 export async function discoverPageOf(page: Page, jamoId: string): Promise<void> {
