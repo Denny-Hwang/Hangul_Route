@@ -139,7 +139,7 @@ test.describe('axe smoke on the learner PWA (AMENDMENTS-A11Y-CI AC-1)', () => {
 
     // The Korean word above the Hear button, and the English option that is its answer
     // (`minigame:s1-life-q3-apply`, logic/minigame-config.ts).
-    const english: Record<string, string> = { 토마토: 'Tomato', 코코아: 'Cocoa', 쿠키: 'Cookie', 토스트: 'Toast', 김밥: 'Kimbap' };
+    const english: Record<string, string> = { 토마토: 'Tomato', 고구마: 'Sweet potato', 쿠키: 'Cookie', 도토리: 'Acorn', 김밥: 'Kimbap' };
     const prompt = await page.getByRole('heading').filter({ hasText: new RegExp(`^(${Object.keys(english).join('|')})$`) }).first().innerText();
     const answer = english[prompt.trim()];
     expect(answer, `the quiz word ${prompt} is one of the five`).toBeDefined();

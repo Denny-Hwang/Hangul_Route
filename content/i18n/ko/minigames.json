@@ -24,14 +24,14 @@
     },
     "minigame:s1-life-q3-apply": {
       "cardPairs.tomato.gloss": "빨갛고 동그란 열매 채소",
-      "cardPairs.kokoa.gloss": "초콜릿 맛이 나는 따뜻한 음료",
+      "cardPairs.goguma.gloss": "땅속에서 자라는 달콤한 뿌리채소",
       "cardPairs.kuki.gloss": "작고 바삭한 과자",
-      "cardPairs.toseuteu.gloss": "노릇하게 구운 빵",
+      "cardPairs.dotori.gloss": "참나무에 열리는 작은 열매",
       "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식"
     },
     "minigame:s1-life-q3-check": {
       "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk의 소리",
-      "listenPick.rounds.1.prompt": "빨갛고 동그란 열매 채소"
+      "listenPick.rounds.1.prompt": "참나무에 열리는 작은 열매"
     },
     "minigame:s1-rites-q1-play": {
       "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
@@ -43,7 +43,7 @@
     },
     "minigame:s1-rites-q1-check": {
       "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
-      "listenPick.rounds.1.prompt": "음력 새해 첫날 명절"
+      "listenPick.rounds.1.prompt": "드나들 때 여닫는 것"
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "글자 song",

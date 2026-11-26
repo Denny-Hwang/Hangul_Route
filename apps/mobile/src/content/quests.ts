@@ -220,10 +220,10 @@ export const stage1Quests: Quest[] = [
   {
     id: 'quest:stage1-life-q3',
     titleEn: 'Picnic Snacks',
-    blurbEn: 'Two puff-of-air letters, k and t, and picnic snacks to read.',
+    blurbEn: 'Two puff-of-air letters, k and t, and picnic words to read.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Picnic Time!', hoyaLineEn: 'Picnic time! What snacks did we pack?', durationSeconds: 6 },
+      { id: 's1', kind: 'intro', titleEn: 'Picnic Time!', hoyaLineEn: 'Picnic time! Let\'s read picnic words!', durationSeconds: 6 },
       {
         id: 's2',
         kind: 'discover',
@@ -239,8 +239,8 @@ export const stage1Quests: Quest[] = [
             },
             {
               items: [
-                { type: 'word', word: { ko: '코코아', romanization: 'kokoa', en: 'cocoa', syllables: ['ko', 'ko', 'a'] } },
-                { type: 'word', word: { ko: '토스트', romanization: 'toseuteu', en: 'toast', syllables: ['to', 'seu', 'teu'] } },
+                { type: 'word', word: { ko: '고구마', romanization: 'goguma', en: 'sweet potato', syllables: ['go', 'gu', 'ma'] } },
+                { type: 'word', word: { ko: '도토리', romanization: 'dotori', en: 'acorn', syllables: ['do', 'to', 'ri'] } },
               ],
             },
           ],
@@ -280,7 +280,7 @@ export const stage1Quests: Quest[] = [
               // Theme words are for looking (R3): 떡국 holds letters not taught yet, so not "Words you can read now".
               captionEn: 'Words of Seollal',
               items: [
-                { type: 'word', word: { ko: '설날', romanization: 'seollal', en: 'Lunar New Year', syllables: ['seol', 'lal'] }, picture: 'card:seollal' },
+                { type: 'word', word: { ko: '설날', romanization: 'seollal', en: 'Lunar New Year', syllables: ['seol', 'lal'] }, picture: 'card:seollal', noteEn: 'Here n sounds like l: seol + nal sounds like seollal.' },
                 { type: 'word', word: { ko: '떡국', romanization: 'tteokguk', en: 'rice cake soup', syllables: ['tteok', 'guk'] }, picture: 'card:tteokguk' },
               ],
             },
@@ -455,9 +455,14 @@ export const stage1Quests: Quest[] = [
                 { type: 'word', word: { ko: '하늘', romanization: 'haneul', en: 'sky', syllables: ['ha', 'neul'] } },
               ],
             },
+            {
+              items: [
+                { type: 'word', word: { ko: '얼음', romanization: 'eoreum', en: 'ice', syllables: ['eo', 'reum'] }, noteEn: 'Read it smoothly: eol + eum sounds like eoreum.' },
+              ],
+            },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 60,
       },
       { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q2-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-nature-q2-apply', durationSeconds: 60 },
@@ -592,7 +597,7 @@ export const stage1Quests: Quest[] = [
     blurbEn: 'Put it all together and read Hangul words on your own.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'You Can Read!', hoyaLineEn: 'King Sejong made Hangul so everyone could read. Now you can read it too!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'You Can Read!', hoyaLineEn: 'King Sejong made Hangul so everyone could read. Now you can read Korean words too!', durationSeconds: 8 },
       {
         id: 's2',
         kind: 'discover',
@@ -612,9 +617,14 @@ export const stage1Quests: Quest[] = [
                 { type: 'word', word: { ko: '사랑', romanization: 'sarang', en: 'love', syllables: ['sa', 'rang'] } },
               ],
             },
+            {
+              items: [
+                { type: 'word', word: { ko: '한국어', romanization: 'hangugeo', en: 'the Korean language', syllables: ['han', 'gu', 'geo'] }, noteEn: 'Read it smoothly: hanguk + eo sounds like hangugeo.' },
+              ],
+            },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 60,
       },
       { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q3-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-crafts-q3-apply', durationSeconds: 60 },

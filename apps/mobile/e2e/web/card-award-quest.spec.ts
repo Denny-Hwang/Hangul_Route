@@ -97,7 +97,7 @@ async function playToRewardStep(page: Page, first: boolean, miss: boolean): Prom
   await page.getByRole('button', { name: 'Skip for now' }).click();
   if (miss) await page.getByRole('button', { name: 'Skip for now' }).click();
   else await buildLetterBlocks(page, CLOSED_BLOCKS);
-  await playCheckByIds(page, [miss ? { answer: '달', missWith: '다' } : { answer: '달' }, { answer: '설날' }]);
+  await playCheckByIds(page, [miss ? { answer: '달', missWith: '다' } : { answer: '달' }, { answer: '문' }]);
 }
 
 async function openLibraryCards(page: Page): Promise<void> {
