@@ -12,9 +12,13 @@ import {
   contentOccurrences,
   contrastOccurrencesOf,
   contrastUnitInfo,
+  DECODE_ITEMS_FILE,
+  decodeOccurrencesOf,
   jamoClipVoicesOf,
   packOfContentFile,
+  parseDecodeItems,
   readContrastSets,
+  readDecodeItems,
   reviewOccurrencesOf,
   stage1OccurrencesOf,
 } from '../audio/content-sources.mjs';
@@ -496,6 +500,56 @@ describe('the contrast-set catalogue as a manifest source (AMENDMENTS-MINIMAL-PA
         const row = committed.rows.find((r) => r.ref === m.ref);
         expect(row, `${set.id} ${m.text}`).toBeDefined();
         expect(AUDIO_PACKS.indexOf(row.pack)).toBeLessThanOrEqual(AUDIO_PACKS.indexOf(contrastUnitInfo(set.unit).pack));
+      }
+    }
+  });
+});
+
+describe('the Hangul Check decode pool as a manifest source (AMENDMENTS-STAGE1-DECODING-CHECK section 3.4, row DC-2b)', () => {
+  const committed = JSON.parse(readFileSync(join(APP_ROOT, '..', '..', 'content/audio/tts-manifest.json'), 'utf8'));
+  const option = (ko, romanization) => ({ ko, romanization });
+  const tiny = {
+    schemaVersion: 1,
+    pack: 'review',
+    items: [{ id: 'decode:geu', target: '그', options: [option('그', 'geu'), option('드', 'deu'), option('거', 'geo'), option('더', 'deo')] }],
+    awaitingClips: [{ id: 'decode:nya', target: '냐', options: [option('냐', 'nya'), option('먀', 'mya'), option('느', 'neu'), option('므', 'meu')] }],
+  };
+
+  it("makes every option of both lists an occurrence of the pool's pack, the pool file its source", () => {
+    const occs = decodeOccurrencesOf(tiny);
+    expect(occs.map((o) => o.ko)).toEqual(['그', '드', '거', '더', '냐', '먀', '느', '므']);
+    expect(occs[0]).toEqual({ pack: 'review', source: DECODE_ITEMS_FILE, ko: '그', path: 'items.0.options.0' });
+    expect(occs[7]).toEqual({ pack: 'review', source: DECODE_ITEMS_FILE, ko: '므', path: 'awaitingClips.0.options.3' });
+    // The pool is not a warm unit (DC-2d opens the pack as a scope).
+    expect(clipUnitOfSource(DECODE_ITEMS_FILE, 'review')).toBeNull();
+  });
+
+  it("gives a block no content says a full-stop syllable row in the pool's pack; a block an earlier pack owns stays there", () => {
+    const { rows } = build([occ('그', 'placement'), ...decodeOccurrencesOf(tiny)]);
+    expect(rowOf(rows, '그')).toMatchObject({ pack: 'placement', say: '그.', sources: [DECODE_ITEMS_FILE, 'content/episodes/placement/x.json'] });
+    expect(rowOf(rows, '냐')).toMatchObject({ pack: 'review', kind: 'syllable', say: '냐.', rate: 0.85, ref: sayRef('냐'), sources: [DECODE_ITEMS_FILE] });
+  });
+
+  it('rejects a malformed pool, naming the item', () => {
+    const [item] = tiny.items;
+    expect(() => parseDecodeItems({ ...tiny, schemaVersion: 2 })).toThrow(/schemaVersion/);
+    expect(() => parseDecodeItems({ ...tiny, extra: 1 })).toThrow(/unknown fields extra/);
+    expect(() => parseDecodeItems({ ...tiny, items: [{ ...item, id: 'decode:그' }] })).toThrow(/decode:geu/);
+    expect(() => parseDecodeItems({ ...tiny, awaitingClips: [item] })).toThrow(/decode:geu is listed twice/);
+    expect(() => parseDecodeItems({ ...tiny, items: [{ ...item, options: item.options.slice(1) }] })).toThrow(/four blocks/);
+    expect(() => parseDecodeItems({ ...tiny, items: [{ ...item, target: '고' }] })).toThrow(/exactly one of the options/);
+    expect(() => parseDecodeItems({ ...tiny, items: [{ ...item, options: [option('그다', 'geuda'), ...item.options.slice(1)] }] })).toThrow(/one block/);
+    expect(parseDecodeItems(tiny)).toBe(tiny);
+  });
+
+  it('the committed manifest has a text-keyed row for every option of the committed pool; a block only the pool says is in review', () => {
+    const pool = readDecodeItems();
+    for (const item of [...pool.items, ...pool.awaitingClips]) {
+      for (const o of item.options) {
+        const row = committed.rows.find((r) => r.ref === sayRef(o.ko));
+        expect(row, `${item.id} ${o.ko}`).toBeDefined();
+        expect(row.sources, o.ko).toContain(DECODE_ITEMS_FILE);
+        if (row.sources.length === 1) expect(row.pack, o.ko).toBe('review');
       }
     }
   });

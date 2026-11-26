@@ -42,6 +42,8 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/logic/lecture/content.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'lecture/content' },
   // F-QUEST-002 §3.9: the Hangul Check's five words and its final-syllable distractors.
   { path: 'apps/mobile/src/logic/stage1/hangul-check.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/hangul-check' },
+  // AMENDMENTS-STAGE1-DECODING-CHECK §3.4 (DC-2b): the Hangul Check's decode items, every option with its romanization.
+  { path: 'apps/mobile/src/logic/stage1/decode-items.json', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/decode-items' },
   // AMENDMENTS-MINIMAL-PAIRS §3.4: the contrast sets' members (the module mirrors content/audio/contrast-sets.json, which has no `ko` fields for class A).
   { path: 'apps/mobile/src/content/__generated__/contrast-sets.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '__generated__/contrast-sets' },
   // F-CURR-001 §3.10: the generated lesson modules (built from content/episodes/stage-<n>/*.json, which class A scans).

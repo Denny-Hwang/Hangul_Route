@@ -111,3 +111,32 @@ export function parseContrastSets(json: unknown, file?: string): ContrastCatalog
 export function readContrastSets(root?: string): ContrastCatalogue;
 export function isJamoRef(ref: string): boolean;
 export function contrastOccurrencesOf(catalogue: ContrastCatalogue): SpokenOccurrence[];
+
+// ---- the Hangul Check's decode item pool (AMENDMENTS-STAGE1-DECODING-CHECK section 3.4; row DC-2b) ----
+
+export const DECODE_ITEMS_FILE: string;
+
+export interface DecodeOption {
+  ko: string;
+  romanization: string;
+}
+
+export interface DecodeItem {
+  /** `decode:<the target's romanization>`. */
+  id: string;
+  target: string;
+  options: DecodeOption[];
+}
+
+export interface DecodePool {
+  schemaVersion: 1;
+  pack: string;
+  /** Items whose four clips ship today. */
+  items: DecodeItem[];
+  /** Items that wait for DC-2c's clips. */
+  awaitingClips: DecodeItem[];
+}
+
+export function parseDecodeItems(json: unknown, file?: string): DecodePool;
+export function readDecodeItems(root?: string): DecodePool;
+export function decodeOccurrencesOf(pool: DecodePool, source?: string): SpokenOccurrence[];
