@@ -607,3 +607,241 @@ export function clipVerdict(parts) {
   }
   return { verdict: reasons.length === 0 ? 'pass' : 'fail', reasons };
 }
+
+// --- The contrast-set gate (AMENDMENTS-MINIMAL-PAIRS section 3.2, row MP-1a) -------------------------------------------
+//
+// A contrast set is two or three clips that differ only in the plain, aspirated or tense series of their first consonant.
+// `audio:tts:qa --contrast <set id | all>` checks every set after the per-clip gate (G1), on the processed MP3s:
+//
+//   G1 each member passes the per-clip gate        G2 the series forced choice returns the member's own text
+//   G3 same frame (manifest only, no audio)        G4 no two members are byte-identical
+//   G5 like for like (voiced span, loudness)       G6 every member plays where the quest plays it
+//
+// There is no phonetic measurement here (MP-OD-4): Seoul Korean plain and aspirated stops overlap in VOT, so a number
+// could fail natural clips; the owner's blind listen (listen.mjs --contrast) is the measurement and G2 its machine twin.
+
+/** G5: a member's voiced span against the set's median, and the spread of integrated loudness (LU). */
+export const G5_SPAN_RATIO = Object.freeze({ min: 0.75, max: 1.33 });
+export const G5_LOUDNESS_LU = 1.5;
+/**
+ * G5 is advisory on the first run (section 3.2): an aspirated onset's noise may widen its voiced span. MP-1b reports it on
+ * the shipped Stage 1 pairs and fixes the bound, or keeps it advisory, before it gates.
+ */
+export const G5_GATING = false;
+
+/** The mark a manifest `say` ends with: the frame of a clip ('.', ',', '!', '?', '…') or '' for none. */
+export function frameMarkOf(say) {
+  const m = /[.,!?…]$/u.exec(String(say));
+  return m === null ? '' : m[0];
+}
+
+/**
+ * The whole series at the place and vowel of a text: the first syllable's initial swapped through the plain / aspirated /
+ * tense row it belongs to, the rest of the text kept (가 -> 가 카 까; 달 -> 달 탈 딸; 자다 -> 자다 차다 짜다; 사다 -> 사다 싸다).
+ * A text whose first syllable is in no series: just the text.
+ */
+export function seriesFormsOf(text) {
+  const syl = [...String(text).normalize('NFC').trim()];
+  const first = syl.length === 0 ? null : decomposeSyllable(syl[0]);
+  if (first === null) return [syl.join('')];
+  const series = INITIAL_SERIES.find((s) => s.includes(first.l));
+  if (series === undefined) return [syl.join('')];
+  return series.map((l) => [composeSyllable({ ...first, l }), ...syl.slice(1)].join(''));
+}
+
+/**
+ * A closed set whose forced-choice grammar holds the whole series of the member (G2): the series forms the closed set lacks
+ * join its confusables. `closedSetOf` already holds them for a clip of one or two syllables, so this mostly returns the
+ * same set; a clip with no closed set stays without one (its forced choice cannot run, and G2 reports it).
+ */
+export function withSeriesForms(closedSet, text) {
+  if (closedSet === null) return null;
+  const known = new Set([...closedSet.targets, ...closedSet.confusables]);
+  const lacking = seriesFormsOf(text).map(normalizeTranscript).filter((f) => !known.has(f));
+  return lacking.length === 0 ? closedSet : { targets: closedSet.targets, confusables: [...closedSet.confusables, ...lacking] };
+}
+
+const median = (values) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+const gate = (failures, flags = []) => ({ ok: failures.length === 0, ran: true, failures, flags });
+const notRun = (why) => ({ ok: false, ran: false, failures: [why], flags: [] });
+
+/** G3: every member says the same way, from the manifest alone: one end mark, one IPA choice, one kind, one rate. */
+export function evaluateFrame(rows) {
+  const failures = [];
+  const marks = new Set(rows.map((r) => frameMarkOf(r.say)));
+  if (marks.size > 1) failures.push(`the members end differently (${rows.map((r) => `${r.text} sent as "${r.say}"`).join(', ')}): a set whose clips differ in tune can be told apart by it`);
+  const ipa = rows.filter((r) => r.ipa !== undefined).length;
+  if (ipa !== 0 && ipa !== rows.length) failures.push(`${rows.filter((r) => r.ipa !== undefined).map((r) => r.text).join(', ')} sent through an IPA phoneme, the others as text`);
+  if (new Set(rows.map((r) => r.kind)).size > 1) failures.push(`the members are different clip kinds (${rows.map((r) => `${r.text} ${r.kind}`).join(', ')})`);
+  if (new Set(rows.map((r) => r.rate)).size > 1) failures.push(`the members have different rates (${rows.map((r) => `${r.text} ${r.rate}`).join(', ')})`);
+  return gate(failures);
+}
+
+/** G4: no two members are the same bytes. */
+export function evaluateDistinct(members) {
+  const failures = [];
+  const seen = new Map();
+  for (const m of members) {
+    if (seen.has(m.sha256)) failures.push(`${seen.get(m.sha256)} and ${m.text} are byte-identical`);
+    else seen.set(m.sha256, m.text);
+  }
+  return gate(failures);
+}
+
+/**
+ * G5: each member's voiced span is 0.75-1.33 times the set's median, and the integrated loudness is within 1.5 LU. Advisory
+ * (`gating` false): the findings are flags and the gate passes.
+ *
+ * @param {readonly { text: string, voicedSpanS?: number, lufs?: number }[]} members
+ */
+export function evaluateLikeForLike(members, { gating = G5_GATING } = {}) {
+  const findings = [];
+  const outliers = [];
+  const spans = members.filter((m) => Number.isFinite(m.voicedSpanS));
+  if (spans.length >= 2) {
+    const mid = median(spans.map((m) => m.voicedSpanS));
+    for (const m of spans) {
+      const ratio = m.voicedSpanS / mid;
+      if (ratio < G5_SPAN_RATIO.min || ratio > G5_SPAN_RATIO.max) {
+        outliers.push(m.text);
+        findings.push(`${m.text} voiced ${m.voicedSpanS} s is ${Math.round(ratio * 100) / 100} times the set's median ${Math.round(mid * 1000) / 1000} s (allowed ${G5_SPAN_RATIO.min}-${G5_SPAN_RATIO.max})`);
+      }
+    }
+  }
+  const loud = members.filter((m) => Number.isFinite(m.lufs));
+  if (loud.length >= 2) {
+    const spread = Math.max(...loud.map((m) => m.lufs)) - Math.min(...loud.map((m) => m.lufs));
+    if (spread > G5_LOUDNESS_LU) findings.push(`loudness differs by ${Math.round(spread * 10) / 10} LU (allowed ${G5_LOUDNESS_LU})`);
+  }
+  return gating ? { ...gate(findings), advisory: false, outliers } : { ok: true, ran: true, advisory: true, failures: [], flags: findings, outliers };
+}
+
+/** The packs a unit's quest loads: its stage's pack and every pack before it (`packsUpTo`); jamo-s1 is precached. */
+export function packsLoadedBy(unit, packOrder) {
+  const m = /^minigame:s([1-7])-/.exec(String(unit));
+  if (m === null) return [];
+  const index = packOrder.indexOf(`stage${m[1]}`);
+  return index < 0 ? [] : packOrder.slice(0, index + 1);
+}
+
+/** G6: every member is a manifest row in a pack the quest playing the set loads. */
+export function evaluatePlayable(set, rowByRef, packOrder) {
+  const loaded = packsLoadedBy(set.unit, packOrder);
+  const failures = [];
+  if (loaded.length === 0) failures.push(`unit ${set.unit} names no stage whose packs could be found`);
+  for (const m of set.members) {
+    const row = rowByRef.get(m.ref);
+    if (row === undefined) failures.push(`${m.text} (${m.ref}) is not a manifest row`);
+    else if (loaded.length > 0 && !loaded.includes(row.pack)) failures.push(`${m.text} is in pack ${row.pack}, which ${set.unit} does not load (loads ${loaded.join(', ')})`);
+  }
+  return gate(failures);
+}
+
+/** G2 for one member: its forced choice (the whole series as candidates) is its own text. */
+export function seriesChoiceOf(result, forms) {
+  const forced = result?.pass1?.forced;
+  if (forced === undefined || forced === null) return { ok: false, failure: 'no forced choice over the series (not a closed-set clip, or Pass 1 did not run)' };
+  return isExactMatch(forced, forms) ? { ok: true } : { ok: false, failure: `the series forced choice heard "${forced}"` };
+}
+
+/**
+ * Pass 2's score of a member against the other members (advisory, printed only): the member's own score less the best
+ * score of any other member's text, in nats, read from the clip's ranking.
+ */
+export function pass2MarginAmong(pass2, ownText, otherTexts) {
+  const ranking = pass2?.ranking ?? [];
+  const score = (text) => ranking.find((r) => r.candidate === normalizeTranscript(text));
+  const own = score(ownText);
+  const others = otherTexts.map(score).filter((r) => r !== undefined);
+  if (own === undefined || others.length === 0) return null;
+  const best = others.reduce((a, r) => (r.score > a.score ? r : a));
+  return { margin: round(own.score - best.score), over: best.candidate };
+}
+
+/**
+ * The whole set gate on the QA results of the members. `rowByRef` are the manifest rows, `resultByRef` the per-clip QA
+ * results (each: key, verdict, vetoed, sha256, pass1, pass2, signal). A member with no clip fails G1, and the gates that
+ * need its audio are `ran: false`. Returns the set's gates, whether it passes, the member keys to regenerate and the
+ * Pass 2 margins against the other members (advisory, printed only).
+ *
+ * @param {{ id: string, unit: string, members: readonly { text: string, ref: string }[] }} set
+ * @param {{ rowByRef: Map<string, object>, resultByRef: Map<string, object>, packOrder: readonly string[], g5Gating?: boolean }} ctx
+ */
+export function evaluateContrastSet(set, { rowByRef, resultByRef, packOrder, g5Gating = G5_GATING }) {
+  const members = set.members.map((m) => ({ ...m, row: rowByRef.get(m.ref), result: resultByRef.get(m.ref) }));
+  const complete = members.every((m) => m.result !== undefined);
+  const rows = members.map((m) => m.row).filter((r) => r !== undefined);
+  const regenerate = new Set();
+
+  const g1Failures = [];
+  for (const m of members) {
+    if (m.row === undefined) g1Failures.push(`${m.text}: not a manifest row`);
+    else if (m.result === undefined) g1Failures.push(`${m.text}: no clip`);
+    else if (m.result.verdict !== 'pass' || m.result.vetoed === true) {
+      g1Failures.push(`${m.text}: ${m.result.vetoed === true ? 'vetoed in the owner listen' : `fails the per-clip gate (${(m.result.reasons ?? []).join('; ')})`}`);
+      regenerate.add(m.result.key);
+    }
+  }
+  const G1 = gate(g1Failures);
+
+  let G2;
+  if (!complete) G2 = notRun('a member has no clip');
+  else {
+    const failures = [];
+    for (const m of members) {
+      const choice = seriesChoiceOf(m.result, targetFormsOf(m.row, {}));
+      if (!choice.ok) {
+        failures.push(`${m.text}: ${choice.failure}`);
+        regenerate.add(m.result.key);
+      }
+    }
+    G2 = gate(failures);
+  }
+
+  const G3 = rows.length === members.length ? evaluateFrame(rows) : notRun('a member is not a manifest row');
+
+  let G4;
+  if (!complete) G4 = notRun('a member has no clip');
+  else {
+    G4 = evaluateDistinct(members.map((m) => ({ text: m.text, sha256: m.result.sha256 })));
+    if (!G4.ok) {
+      // The first of each identical group stays; the others are another take.
+      const kept = new Set();
+      for (const m of members) {
+        if (kept.has(m.result.sha256)) regenerate.add(m.result.key);
+        kept.add(m.result.sha256);
+      }
+    }
+  }
+
+  let G5;
+  if (!complete) G5 = notRun('a member has no clip');
+  else {
+    G5 = evaluateLikeForLike(
+      members.map((m) => ({ text: m.text, voicedSpanS: m.result.signal?.summary?.voicedSpanS, lufs: m.result.signal?.loudness?.integratedLufs })),
+      { gating: g5Gating },
+    );
+    if (!G5.ok) for (const m of members) if (G5.outliers.includes(m.text)) regenerate.add(m.result.key);
+  }
+
+  const G6 = evaluatePlayable(set, rowByRef, packOrder);
+
+  const margins = members.map((m) => {
+    const among = pass2MarginAmong(m.result?.pass2, m.text, members.filter((o) => o !== m).map((o) => o.text));
+    return { text: m.text, margin: among === null ? null : among.margin, over: among === null ? null : among.over };
+  });
+  const gates = { G1, G2, G3, G4, G5, G6 };
+  return {
+    id: set.id,
+    unit: set.unit,
+    members: members.map((m) => ({ text: m.text, ref: m.ref, key: m.row?.key ?? null, present: m.result !== undefined })),
+    gates,
+    ok: Object.values(gates).every((g) => g.ok),
+    regenerate: [...regenerate],
+    margins,
+  };
+}

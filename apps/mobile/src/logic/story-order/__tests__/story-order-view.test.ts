@@ -36,6 +36,12 @@ describe('slotFace', () => {
   });
 });
 
+describe('slotFace and the reviewed romanization (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+  it('says a word with an entry as the entry says it', () => {
+    expect(slotFace({ ko: '솔잎 먹어요.', romanization: 'x', en: 'Pine.' })).toEqual({ ko: '솔잎', romanization: 'sollip' });
+  });
+});
+
 describe('storyOrderCardLabel', () => {
   const card = storyOrderCards(morning!)[1]!;
   it('names the line and its romanization; the meaning only once shown; a miss or ring in words, never colour alone', () => {

@@ -51,6 +51,7 @@ import {
   promptView,
   startFlow,
   stepFlow,
+  textPromptView,
   type FlowEffect,
   type FlowEvent,
   type ListenPickFlowState,
@@ -117,8 +118,11 @@ export interface ListenPickTextPrompt {
   heading: string;
   /** Hoya after a miss, in place of "Listen again". */
   missLine: string;
-  /** The prompt as text; it receives focus from round 2 on. */
-  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void) => ReactNode;
+  /**
+   * The prompt as text; it receives focus from round 2 on. `held`: a Check's question is open, so the prompt's romanization
+   * keeps its room and draws nothing until the answer (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1a).
+   */
+  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void, held: boolean) => ReactNode;
 }
 
 /**
@@ -200,17 +204,22 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
       ? {
           heading: copy.cultureQuiz.heading,
           missLine: copy.picWord.missHoya,
-          prompt: (r, focusRef) => (
-            <View ref={focusRef} style={{ alignItems: 'center' }} testID="listen-pick-text-prompt">
-              <KoreanText
-                ko={r.prompt.ko}
-                romanization={r.prompt.romanization}
-                romanizationShown={romanizationShown(romanizationMode, false)}
-                size="md"
-                testID="listen-pick-prompt-text"
-              />
-            </View>
-          ),
+          prompt: (r, focusRef, held) => {
+            // What the learner's mode shows of the prompt; a Check's open question holds it, in the room it will take.
+            const modeShows = romanizationShown(romanizationMode, false);
+            return (
+              <View ref={focusRef} style={{ alignItems: 'center' }} testID="listen-pick-text-prompt">
+                <KoreanText
+                  ko={r.prompt.ko}
+                  romanization={r.prompt.romanization}
+                  romanizationShown={modeShows && !held}
+                  romanizationReserved={modeShows && held}
+                  size="md"
+                  testID="listen-pick-prompt-text"
+                />
+              </View>
+            );
+          },
         }
       : undefined);
   const textMode = textPrompt !== undefined;
@@ -420,15 +429,16 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const spellingKit = spellingNow ? spelling : null;
   // The spelling round's Korean is its answer: a sound that cannot play (no voice, sound off) shows only the status
   // panel, never the prompt text, until the round resolves.
-  // A Check whose options hold or hide their romanization asks for the romanization only (CH-1e, section 3.12): the text
-  // the learner asked for (or the Always switch brought up) is read as a sound, the Hangul is never printed above the options.
-  const askedRomanizationOnly = askedTextIsRomanizationOnly(host.mode, romanizationMode, textMode);
+  // In a Check the text that stands in for the sound (Show the letters, Sound off, no voice, a failed or blocked play) is the
+  // romanization only while the question is open (AMENDMENTS-STAGE1-DECODING-CHECK section 3.2): the sound is read and its
+  // spelling found, the Hangul is never printed above the options.
+  const askedRomanizationOnly = askedTextIsRomanizationOnly(host.mode, textMode);
   const prompt = promptView(
     round,
     spellingKit === null ? state : { ...state, textPrompt: false },
     host.mode,
     spellingKit === null ? slot.view.textShown || textMode : false,
-    askedRomanizationOnly && slot.asked,
+    askedRomanizationOnly,
   );
   const content = prompt.content;
   const resolved = state.status === 'resolved' || state.status === 'done';
@@ -470,11 +480,16 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     rounds.length,
     [headingText, hint, textMode && !spellingNow ? round.prompt.romanization : undefined].filter((part): part is string => part !== undefined && part !== '').join(' '),
   );
+  const holdsOpen = checkHoldsRomanization(host.mode);
   const textContent = textPrompt ? (
     <View style={{ gap: spacing.md }}>
-      {textPrompt.prompt(round, (node) => {
-        speakerRef.current = node as Focusable | null;
-      })}
+      {textPrompt.prompt(
+        round,
+        (node) => {
+          speakerRef.current = node as Focusable | null;
+        },
+        textPromptView(round, state, holdsOpen).held,
+      )}
       {resolved ? (
         <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} onHelp={() => setHelpOpen(true)} testID="listen-pick-prompt" />
       ) : null}
@@ -484,8 +499,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const optionContext = {
     mode: host.mode,
     romanizationMode,
-    // AU-8: a quest Check that plays its prompt shows no romanization on its options until the answer.
-    holdRomanization: checkHoldsRomanization(host.mode, textMode),
+    // AU-8, DC-1a: a Check (the quest Check, the Hangul Check; a text prompt round too) shows no romanization on its options
+    // until the answer, whatever the learner's mode.
+    holdRomanization: holdsOpen,
     ...(spellingKit === null ? {} : { labelOf: (text: { ko: string; romanization: string }) => spellingKit.spellingOptionLabel(text, m.a11y.romanizationOr) }),
   };
 

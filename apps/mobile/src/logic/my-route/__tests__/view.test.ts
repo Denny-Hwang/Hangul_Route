@@ -25,6 +25,7 @@ import {
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 import { seed } from './fixtures/route';
 
+type StageRowOf<M extends MyRouteModel> = M['stages'][number];
 const EN = getMessages('en');
 const THEME_TITLES: Record<ThemeKey, string> = { letters: 'Letters', life: 'Life', rites: 'Rites', nature: 'Nature', crafts: 'Crafts' };
 const APPENDIX_C = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1'];
@@ -334,6 +335,30 @@ describe('the pieces', () => {
     const s3 = m.stages.find((s) => s.stage === 'stage3');
     expect(s3 && stageGroups(s3).map((g) => g.map((p) => p.state))).toEqual([['later', 'later', 'later', 'later', 'later']]);
     expect(s3 && stageFill(s3)).toBeNull();
+  });
+
+  it('stageFill: an unplayed optional quest is left out of the bar, a played one fills it, and the bar never falls below what it was (meters only fill)', () => {
+    const optionalLife: Bundle = {
+      ...BUNDLE_8,
+      episodes: BUNDLE_8.episodes.map((e) => (e.id === 'episode:stage1-life' ? { ...e, optionalQuestIds: ['quest:stage1-life-q2'] } : e)),
+    };
+    const required = STAGE1_8.filter((id) => id !== 'quest:stage1-life-q2');
+    const stage1 = (m: MyRouteModel) => m.stages.find((s) => s.stage === 'stage1') as StageRowOf<MyRouteModel>;
+    expect(stageFill(stage1(model(required, {}, optionalLife, {})))).toEqual({ value: 7, max: 7 });
+    expect(stageFill(stage1(model(STAGE1_8, {}, optionalLife)))).toEqual({ value: 8, max: 8 });
+    expect(stageFill(stage1(model(required.slice(0, 3), {}, optionalLife)))).toEqual({ value: 3, max: 7 });
+    expect(stageFill(stage1(model(required, {}, BUNDLE_8)))).toEqual({ value: 7, max: 8 });
+    // Every state of the optional quest, with a few required quests done: the new bar is never lower than the old one
+    // (every quest counted), as a learner who played it before this shipped sees at deploy.
+    for (const doneRequired of [0, 1, 3, 5, 7]) {
+      for (const playedOptional of [false, true]) {
+        const done = [...required.slice(0, doneRequired), ...(playedOptional ? ['quest:stage1-life-q2'] : [])];
+        const old = stageFill(stage1(model(done, {}, BUNDLE_8))) as { value: number; max: number };
+        const next = stageFill(stage1(model(done, {}, optionalLife))) as { value: number; max: number };
+        expect(next.value, `${doneRequired} ${playedOptional}`).toBeGreaterThanOrEqual(old.value);
+        expect(next.value * old.max, `${doneRequired} ${playedOptional}`).toBeGreaterThanOrEqual(old.value * next.max);
+      }
+    }
   });
 
   it('withConnectors: solid into every row whose first stage is reached', () => {

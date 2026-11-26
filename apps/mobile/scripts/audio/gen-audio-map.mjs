@@ -14,6 +14,10 @@
 //   node scripts/audio/gen-audio-map.mjs --check               exit 1 if the committed map is stale
 //   node scripts/audio/gen-audio-map.mjs --with-e2e-fixtures   also map e2e/fixtures/audio
 //
+// It first writes (or with --check, compares) the contrast-set module (src/content/__generated__/contrast-sets.ts,
+// gen-contrast-sets.mjs, AMENDMENTS-MINIMAL-PAIRS section 3.4), so audio:map, build:web and the fixture build (whose sets
+// are approved by the fixture clips, never the real approvals) all carry a current one.
+//
 // --with-e2e-fixtures is for the e2e-only fixture build (build:web:fixtures,
 // which restores the plain map afterwards); a real recording wins over a
 // fixture for the same ref. The drift test fails if that map is ever committed,
@@ -35,6 +39,7 @@ import {
   mergeAssetMaps,
   renderAudioModules,
 } from './lib.mjs';
+import { runContrastSets } from './gen-contrast-sets.mjs';
 
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -54,6 +59,9 @@ function listFiles(dir) {
 }
 
 const withFixtures = process.argv.includes('--with-e2e-fixtures');
+const checking = process.argv.includes('--check');
+// The contrast sets first: the manifest builder reads the game scopes, which read this module (build order, section 3.4).
+const contrast = runContrastSets({ check: checking, withFixtures });
 // Each clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6): the clip manifest's (content/audio/tts-manifest.json, row AC-2),
 // else the one jamo.ts declares for a jamo clip. A clip in neither (a story or card recording) carries none.
 const manifestPath = join(appRoot, '..', '..', TTS_MANIFEST_FILE);
@@ -77,13 +85,17 @@ const stale = existsSync(chunkDir)
   : [];
 const chunks = Object.keys(modules).length - 1;
 
-if (process.argv.includes('--check')) {
+if (checking) {
   const drifted = Object.entries(modules).filter(([name, source]) => {
     const target = join(outDir, name);
     return (existsSync(target) ? readFileSync(target, 'utf8') : '') !== source;
   });
   if (drifted.length > 0 || stale.length > 0) {
     process.stderr.write(`${ASSET_MAP_FILE} (or a pack chunk) is stale: run pnpm --filter @hangul-route/mobile audio:map\n`);
+    process.exit(1);
+  }
+  if (!contrast.ok) {
+    process.stderr.write(`${contrast.file} is stale: run pnpm --filter @hangul-route/mobile audio:map\n`);
     process.exit(1);
   }
   process.stdout.write(`audio:map up to date (${shipped.length} clips)\n`);

@@ -40,6 +40,46 @@ const ctx = (voice = true, states: EngineContext['states'] = {}): EngineContext 
 const rounds = { gloss: glossFrom(undefined), seed: 's' };
 const answersOf = (n: number, right: number): Map<number, RoundAnswer> => new Map(Array.from({ length: n }, (_, i) => [i, { correct: i < right }]));
 
+describe('an item only an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a, BC-OD-16)', () => {
+  const CELL = 'episode:stage2-letters';
+  const base = INDEX.items.find((i) => i.cells.includes(CELL)) as (typeof INDEX.items)[number];
+  const optionalItem = { ...base, id: 'lex:opt-only', cells: [CELL], asked: [], optionalIn: { [CELL]: ['quest:stage2-letters-q8'] } };
+  const withOptional = { ...INDEX, items: [...INDEX.items, optionalItem], byId: new Map([...INDEX.byId, [optionalItem.id, optionalItem]]) };
+
+  it('is not asked in the cell Check until a quest that teaches it is completed', () => {
+    expect(cellCheckItemIds(withOptional, CELL)).not.toContain('lex:opt-only');
+    expect(cellCheckItemIds(withOptional, CELL, new Set(['quest:stage2-letters-q1']))).not.toContain('lex:opt-only');
+    expect(cellCheckItemIds(withOptional, CELL, new Set(['quest:stage2-letters-q8']))).toContain('lex:opt-only');
+    // The items the cell had before are the same either way.
+    expect(cellCheckItemIds(withOptional, CELL)).toEqual(cellCheckItemIds(INDEX, CELL));
+  });
+
+  it('the plan reads the completed quests of its context', () => {
+    const planIds = (done?: ReadonlySet<string>) =>
+      planCellCheck({ ...ctx(), index: surfaceIndex(withOptional), ...(done === undefined ? {} : { doneQuestIds: done }) }, CELL, 'check', rounds)?.rounds.map((r) => r.question.itemId) ?? [];
+    expect(planIds()).not.toContain('lex:opt-only');
+    expect(planIds(new Set(['quest:stage2-letters-q1']))).not.toContain('lex:opt-only');
+    // Stage Jump and Test out: the same ids, the same share.
+    expect(stageJumpItemIds(withOptional, [CELL])).not.toContain('lex:opt-only');
+    expect(stageJumpItemIds(withOptional, [CELL], new Set(['quest:stage2-letters-q8']))).toContain('lex:opt-only');
+  });
+
+  it('Test out counts the topic words of a played optional quest in the cell, and not those of an unplayed one', () => {
+    const lex = (id: string, extra: object = {}) => ({ ...base, id, cells: [CELL], asked: [], ...extra });
+    const items = [lex('lex:a'), lex('lex:b'), lex('lex:c'), lex('lex:d'), ...['vocab:x1', 'vocab:x2', 'vocab:x3'].map((id) => lex(id, { optionalIn: { [CELL]: ['quest:stage2-letters-q8'] } }))];
+    const index = { items, byId: new Map(items.map((i) => [i.id, i])), retired: new Set<string>() };
+    expect(testOutFits(index, CELL)).toBe(true);
+    expect(testOutFits(index, CELL, new Set(['quest:stage2-letters-q8']))).toBe(false);
+  });
+
+  it('a Stage Jump skips a cell whose only items an unplayed optional quest teaches', () => {
+    const only = { ...base, id: 'lex:opt-only2', cells: ['episode:stage2-crafts'], asked: [], optionalIn: { 'episode:stage2-crafts': ['quest:stage2-crafts-q8'] } };
+    const index = { items: [only], byId: new Map([[only.id, only]]), retired: new Set<string>() };
+    expect(stageJumpItemIds(index, ['episode:stage2-crafts'])).toEqual([]);
+    expect(planStageJump({ ...ctx(), index }, 'stage2', ['episode:stage2-crafts'], rounds)).toBeNull();
+  });
+});
+
 describe('the plan: the cell items, at least 30% at produce, interleaved', () => {
   const lessonCells = CATALOG.cells.filter((c) => /^episode:stage[1-7]-/.test(c.episodeId)).map((c) => c.episodeId);
 

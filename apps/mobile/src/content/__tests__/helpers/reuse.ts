@@ -195,33 +195,87 @@ export function jamoOfSyllable(ch: string): string[] | null {
   return [INITIALS[Math.floor(code / 588)] as string, MEDIALS[Math.floor((code % 588) / 28)] as string, ...(final === '' ? [] : [final])];
 }
 
+/**
+ * Where a final taught in a context only may stand (AMENDMENTS-BATCHIM-COMPLETE section 3.8):
+ * `vowel` - before a vowel (the next block starts with ㅇ), as final ㅎ in 좋아요 [조아요];
+ * `end-or-vowel` - at the end of a word, or before a vowel, as ㄺ ㅄ ㄻ in 닭, 값, 삶, 읽어요, 없어요.
+ * Anywhere else (before a consonant, and for `vowel` also at the end of a word) the final is not taught: 읽고, 값도, 좋고.
+ */
+export type FinalContext = 'vowel' | 'end-or-vowel';
+
 /** The symbols a route has taught: initial consonants, vowels and final letters. */
 export interface TaughtSymbols {
   initials: ReadonlySet<string>;
   vowels: ReadonlySet<string>;
   finals: ReadonlySet<string>;
+  /** Finals taught only in a context (section 3.8): read where `FinalContext` says, and nowhere else. Absent: none. */
+  contextFinals?: ReadonlyMap<string, FinalContext>;
 }
 
 /**
  * Word Builder's symbols (section 3.3): the five tense consonants, the eleven compound vowels and the
- * ten final letters of q5-q6. With Stage 1's 30 they are every modern initial and vowel and every
- * single final letter; double finals (겹받침) stay theme words, never a scored read.
+ * nine final letters of q5-q6 that every route has met. With Stage 1's 30 they are every modern initial and vowel and
+ * every single final letter but ㅎ. Final ㅎ is taught by the optional q9 and only before a vowel (`contextFinals`,
+ * section 3.8), so from Stage 3 on it is read there and nowhere else; the double finals (겹받침) stay theme words,
+ * never a scored read from Stage 3 on (BC-OD-8): q8 and q9 are optional, so passing Word Builder no longer means they
+ * were played.
  */
 export const WORD_BUILDER_SYMBOLS: TaughtSymbols = {
   initials: new Set([...'ㄲㄸㅃㅆㅉ']),
   vowels: new Set([...'ㅐㅔㅒㅖㅘㅝㅟㅢㅚㅙㅞ']),
-  finals: new Set([...'ㄷㅅㅈㅊㅌㅎㅆㅋㄲㅍ']),
+  finals: new Set([...'ㄷㅅㅈㅊㅌㅆㅋㄲㅍ']),
+  contextFinals: new Map<string, FinalContext>([['ㅎ', 'vowel']]),
 };
 
-export const unionSymbols = (a: TaughtSymbols, b: TaughtSymbols): TaughtSymbols => ({
-  initials: new Set([...a.initials, ...b.initials]),
-  vowels: new Set([...a.vowels, ...b.vowels]),
-  finals: new Set([...a.finals, ...b.finals]),
-});
+/**
+ * What Word Builder's optional quests teach inside Word Builder (section 3.8), by quest id: q8 the double finals ㄺ ㅄ ㄻ
+ * (at the end of a word, or before a vowel), q9 a bottom ㅎ and the double finals ㄶ ㅀ (before a vowel). Test data for
+ * the Word Builder loop of U-4: its taught set grows by a quest's row before that quest's scopes are read.
+ */
+export const WORD_BUILDER_FINAL_QUESTS: Readonly<Record<string, ReadonlyMap<string, FinalContext>>> = {
+  'quest:stage2-letters-q8': new Map<string, FinalContext>([['ㄺ', 'end-or-vowel'], ['ㅄ', 'end-or-vowel'], ['ㄻ', 'end-or-vowel']]),
+  'quest:stage2-letters-q9': new Map<string, FinalContext>([['ㅎ', 'vowel'], ['ㄶ', 'vowel'], ['ㅀ', 'vowel']]),
+};
+
+const wider = (a: FinalContext | undefined, b: FinalContext): FinalContext => (a === 'end-or-vowel' || b === 'end-or-vowel' ? 'end-or-vowel' : 'vowel');
+
+export const unionSymbols = (a: TaughtSymbols, b: TaughtSymbols): TaughtSymbols => {
+  const contextFinals = new Map<string, FinalContext>();
+  for (const [final, context] of [...(a.contextFinals ?? []), ...(b.contextFinals ?? [])]) contextFinals.set(final, wider(contextFinals.get(final), context));
+  return {
+    initials: new Set([...a.initials, ...b.initials]),
+    vowels: new Set([...a.vowels, ...b.vowels]),
+    finals: new Set([...a.finals, ...b.finals]),
+    ...(contextFinals.size === 0 ? {} : { contextFinals }),
+  };
+};
+
+/**
+ * The finals of `text` taught in a context (`contextFinals`) that stand where they are not taught, as
+ * `final ㅎ in 좋 (taught only before a vowel)` lines. A final that is not in `contextFinals` is not this function's
+ * business (the flat sets say whether it is taught at all). "Before a vowel" is a next block that starts with ㅇ; "at the
+ * end of a word" is no next block (a space, a mark, or the end of the text).
+ */
+export function finalContextProblems(text: string, contextFinals: ReadonlyMap<string, FinalContext>): string[] {
+  const chars = [...text];
+  const out: string[] = [];
+  chars.forEach((ch, i) => {
+    const final = jamoOfSyllable(ch)?.[2];
+    const context = final === undefined ? undefined : contextFinals.get(final);
+    if (context === undefined) return;
+    const next = chars[i + 1] === undefined ? null : jamoOfSyllable(chars[i + 1] as string);
+    const beforeVowel = next !== null && next[0] === 'ㅇ';
+    const atEnd = next === null;
+    if (beforeVowel || (atEnd && context === 'end-or-vowel')) return;
+    out.push(`final ${final} in ${ch} (taught only ${context === 'vowel' ? 'before a vowel' : 'at the end of a word or before a vowel'})`);
+  });
+  return out;
+}
 
 /** The symbols of `text` that `taught` lacks, as `initial ㄸ in 뜨` lines (empty = decodable). */
 export function untaughtSymbols(text: string, taught: TaughtSymbols): string[] {
   const out: string[] = [];
+  const inContext = taught.contextFinals ?? new Map<string, FinalContext>();
   for (const ch of text) {
     if (!/[가-힣]/.test(ch)) {
       if (/[ㄱ-ㆎ]/.test(ch)) out.push(`loose jamo ${ch}`);
@@ -230,7 +284,8 @@ export function untaughtSymbols(text: string, taught: TaughtSymbols): string[] {
     const [initial, vowel, final] = jamoOfSyllable(ch) as string[];
     if (!taught.initials.has(initial as string)) out.push(`initial ${initial} in ${ch}`);
     if (!taught.vowels.has(vowel as string)) out.push(`vowel ${vowel} in ${ch}`);
-    if (final !== undefined && !taught.finals.has(final)) out.push(`final ${final} in ${ch}`);
+    if (final !== undefined && !taught.finals.has(final) && !inContext.has(final)) out.push(`final ${final} in ${ch}`);
   }
-  return out;
+  // A final taught in a context only is read where it is taught (section 3.8).
+  return [...out, ...finalContextProblems(text, new Map([...inContext].filter(([final]) => !taught.finals.has(final))))];
 }

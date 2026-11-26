@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "sets": [
+    { "id": "ga-ka", "series": "k", "unit": "minigame:s1-life-q3-pairs", "members": [
+      {"text":"가","romanization":"ga","en":"the syllable ga","ref":"audio/vocab/e2e-contrast-ga.mp3","kind":"plain"},
+      {"text":"카","romanization":"ka","en":"the syllable ka","ref":"audio/vocab/e2e-contrast-ka.mp3","kind":"aspirated"}
+    ], "approval": { "date": "2026-11-25", "plays": 6, "correct": 6, "mp3Sha256": {
+      "audio/vocab/e2e-contrast-ga.mp3": "1d2dfc413f6f70ef6a35986c7e2a60fc7daee6cec6c712f0b90db60ee4118af0",
+      "audio/vocab/e2e-contrast-ka.mp3": "1d2dfc413f6f70ef6a35986c7e2a60fc7daee6cec6c712f0b90db60ee4118af0"
+    } } },
+    { "id": "da-ta", "series": "t", "unit": "minigame:s1-life-q3-pairs", "members": [
+      {"text":"다","romanization":"da","en":"the syllable da","ref":"audio/vocab/e2e-contrast-da.mp3","kind":"plain"},
+      {"text":"타","romanization":"ta","en":"the syllable ta","ref":"audio/vocab/e2e-contrast-ta.mp3","kind":"aspirated"}
+    ], "approval": { "date": "2026-11-25", "plays": 6, "correct": 6, "mp3Sha256": {
+      "audio/vocab/e2e-contrast-da.mp3": "1d2dfc413f6f70ef6a35986c7e2a60fc7daee6cec6c712f0b90db60ee4118af0",
+      "audio/vocab/e2e-contrast-ta.mp3": "1d2dfc413f6f70ef6a35986c7e2a60fc7daee6cec6c712f0b90db60ee4118af0"
+    } } }
+  ]
+}

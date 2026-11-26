@@ -117,8 +117,12 @@ describe('logic/audio/lesson-clips', () => {
     const unsigned = new Set(
       storiesAll.filter((s) => s.review.language !== 'native-reviewed' || s.review.culture !== 'culture-reviewed' || s.shelf === undefined).map((s) => s.id),
     );
+    // A contrast set's game scope (`minigame:s1-life-q3-pairs`) is a manifest source from the catalogue (AMENDMENTS-MINIMAL-PAIRS
+    // MP-1a), before MP-2b gives its quest the step that names it; the exemption goes with MP-2b (the quest then reaches it).
+    const catalogue = JSON.parse(readFileSync(join(__dirname, '../../../../../../content/audio/contrast-sets.json'), 'utf8')) as { sets: { unit: string }[] };
+    const contrastUnits = new Set(catalogue.sets.map((s) => s.unit));
     const unreached = [...manifestUnits].filter(
-      (u) => !byLesson.has(u) && u !== 'placement' && !topics.has(u) && !/^card:[a-z0-9-]+$/.test(u) && !unsigned.has(u),
+      (u) => !byLesson.has(u) && u !== 'placement' && !topics.has(u) && !/^card:[a-z0-9-]+$/.test(u) && !unsigned.has(u) && !contrastUnits.has(u),
     );
     expect(unreached).toEqual([]);
     // The Word Builder clips (`jamo-wb`) warm with the Word Builder cell (AC-B6): that cell's lessons reach it.

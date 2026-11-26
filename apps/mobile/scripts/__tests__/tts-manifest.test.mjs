@@ -10,12 +10,15 @@ import { jamoVoice } from '../../src/logic/audio/jamo-voice';
 import {
   cardOccurrencesOf,
   contentOccurrences,
+  contrastOccurrencesOf,
+  contrastUnitInfo,
   jamoClipVoicesOf,
   packOfContentFile,
+  readContrastSets,
   reviewOccurrencesOf,
   stage1OccurrencesOf,
 } from '../audio/content-sources.mjs';
-import { jamoClipRefs } from '../audio/lib.mjs';
+import { clipUnitOfSource, jamoClipRefs } from '../audio/lib.mjs';
 import {
   CLIP_KINDS,
   KIND_RATES,
@@ -400,5 +403,100 @@ describe('content sources (content-sources.mjs)', () => {
   it('reads a heritage card by its Korean name, and a review item with its reply', () => {
     expect(cardOccurrencesOf([{ id: 'card:book', subtitleKo: '책' }, { id: 'card:x' }])).toEqual([{ pack: 'cards', source: 'card:book', ko: '책', path: 'subtitleKo' }]);
     expect(reviewOccurrencesOf([{ id: 'lex:a', ko: '안녕하세요', reply: { ko: '네, 안녕하세요.' } }]).map((o) => o.ko)).toEqual(['안녕하세요', '네, 안녕하세요.']);
+  });
+});
+
+describe('the contrast-set catalogue as a manifest source (AMENDMENTS-MINIMAL-PAIRS section 3.4, row MP-1a)', () => {
+  const catalogue = readContrastSets();
+  const committed = JSON.parse(readFileSync(join(APP_ROOT, '..', '..', 'content/audio/tts-manifest.json'), 'utf8'));
+  const committedRow = (text, ref) => committed.rows.find((r) => r.text === text && (ref === undefined || r.ref === ref));
+  const tiny = {
+    schemaVersion: 1,
+    sets: [
+      { id: 'go-ko', series: 'k', unit: 'minigame:s1-life-q3-pairs', members: [
+        { text: '고', romanization: 'go', en: 'the syllable go', ref: sayRef('고'), kind: 'plain' },
+        { text: '코', romanization: 'ko', en: 'the syllable ko', ref: sayRef('코'), kind: 'aspirated' },
+      ] },
+      { id: 'ga-ka', series: 'k', unit: 'minigame:s1-life-q3-pairs', members: [
+        { text: '가', romanization: 'ga', en: 'the syllable ga', ref: 'audio/jamo/giyeok.mp3', kind: 'plain' },
+        { text: '카', romanization: 'ka', en: 'the syllable ka', ref: 'audio/jamo/kieuk.mp3', kind: 'aspirated' },
+      ] },
+      { id: 'dal-tal-ttal', series: 't', unit: 'minigame:s2-letters-q2-pairs', members: [
+        { text: '달', romanization: 'dal', en: 'moon', ref: sayRef('달'), kind: 'plain' },
+        { text: '딸', romanization: 'ttal', en: 'daughter', ref: sayRef('딸'), kind: 'tense' },
+      ] },
+    ],
+  };
+
+  it('makes a say text an occurrence of the pack of its unit\'s quest, the unit its source, and a jamo clip none', () => {
+    expect(contrastOccurrencesOf(tiny)).toEqual([
+      { pack: 'stage1', source: 'minigame:s1-life-q3-pairs', ko: '고', path: 'sets.go-ko.members.0' },
+      { pack: 'stage1', source: 'minigame:s1-life-q3-pairs', ko: '코', path: 'sets.go-ko.members.1' },
+      { pack: 'stage2', source: 'minigame:s2-letters-q2-pairs', ko: '달', path: 'sets.dal-tal-ttal.members.0' },
+      { pack: 'stage2', source: 'minigame:s2-letters-q2-pairs', ko: '딸', path: 'sets.dal-tal-ttal.members.1' },
+    ]);
+  });
+
+  it('moves a text to the first pack that uses it, gives a new text a row, and a text no round has used yet its full-stop frame', () => {
+    const later = [occ('코', 'stage7'), occ('탈', 'stories'), occ('고', 'placement')];
+    const { rows } = build([...later, ...contrastOccurrencesOf(tiny)]);
+    expect(rowOf(rows, '코')).toMatchObject({ pack: 'stage1', say: '코.' });
+    expect(rowOf(rows, '고')).toMatchObject({ pack: 'stage1' });
+    expect(rowOf(rows, '코').sources).toEqual(['content/episodes/stage7/x.json', 'minigame:s1-life-q3-pairs']);
+    expect(rowOf(rows, '딸')).toMatchObject({ pack: 'stage2', kind: 'syllable', say: '딸.', rate: 0.85, sources: ['minigame:s2-letters-q2-pairs'] });
+    expect(rowOf(rows, '가')).toBeUndefined();
+    // A text an earlier pack already uses stays there.
+    const { rows: earlier } = build([occ('달', 'stage1'), ...contrastOccurrencesOf(tiny)]);
+    expect(rowOf(earlier, '달').pack).toBe('stage1');
+  });
+
+  it('warms a clip with the game scope that plays it', () => {
+    expect(clipUnitOfSource('minigame:s1-life-q3-pairs', 'stage1')).toBe('minigame:s1-life-q3-pairs');
+    expect(clipUnitOfSource('minigame:s2-letters-q2-pairs', 'stage2')).toBe('minigame:s2-letters-q2-pairs');
+  });
+
+  it('the committed manifest has the Stage 1 pairs in stage1 (they move out of placement, stage2 and stage7), none regenerated', () => {
+    for (const text of ['코', '도', '토', '구', '쿠', '두', '투', '디', '티', '조', '초', '주', '추', '기', '키', '지', '치']) {
+      const row = committedRow(text, sayRef(text));
+      expect(row.pack, text).toBe('stage1');
+      expect(row.sources, text).toContain('minigame:s1-life-q3-pairs');
+      expect(row.say).toBe(`${text}.`);
+    }
+    // 고 and 달 were already in stage1; the jamo members are the jamo rows, not say rows of the sets.
+    expect(committedRow('고').pack).toBe('stage1');
+    expect(committedRow('달').pack).toBe('stage1');
+    for (const [text, ref] of [['가', 'audio/jamo/giyeok.mp3'], ['카', 'audio/jamo/kieuk.mp3'], ['다', 'audio/jamo/digeut.mp3'], ['타', 'audio/jamo/tieut.mp3'], ['자', 'audio/jamo/jieut.mp3'], ['차', 'audio/jamo/chieut.mp3']]) {
+      expect(committedRow(text, ref).pack, text).toBe('jamo-s1');
+      expect(committedRow(text, ref).sources, text).not.toContain('minigame:s1-life-q3-pairs');
+    }
+  });
+
+  it('the committed manifest has the Stage 2 sets in stage2 (탈 from stories, 풀 and 짜다 from review); 불 stays in placement, 달 in stage1', () => {
+    for (const text of ['탈', '풀', '짜다', '빵', '개']) expect(committedRow(text).pack, text).toBe('stage2');
+    expect(committedRow('불').pack).toBe('placement');
+    expect(committedRow('달').pack).toBe('stage1');
+    for (const text of ['탈', '풀', '짜다', '불', '달', '빵', '개']) expect(committedRow(text).sources, text).toContain('minigame:s2-letters-q2-pairs');
+  });
+
+  it('the 8 new rows (MP-1b generates them): syllables sent with a full stop, words as they are', () => {
+    const fresh = { 딸: ['syllable', '딸.'], 뿔: ['syllable', '뿔.'], 방: ['syllable', '방.'], 깨: ['syllable', '깨.'], 자다: ['word', '자다'], 차다: ['word', '차다'], 사다: ['word', '사다'], 싸다: ['word', '싸다'] };
+    for (const [text, [kind, say]] of Object.entries(fresh)) {
+      const row = committedRow(text);
+      expect(row, text).toMatchObject({ kind, say, pack: 'stage2', sources: ['minigame:s2-letters-q2-pairs'], rate: kind === 'word' ? 0.9 : 0.85 });
+      expect(row.ref).toBe(sayRef(text));
+    }
+    // 디 and 티 are NOT new: their clips were already shipped (spec section 3.1 said they had none).
+    expect(committedRow('디', sayRef('디'))).toBeDefined();
+    expect(Object.keys(fresh)).toHaveLength(8);
+  });
+
+  it('every member of the committed catalogue is a manifest row whose ref and pack follow the rule', () => {
+    for (const set of catalogue.sets) {
+      for (const m of set.members) {
+        const row = committed.rows.find((r) => r.ref === m.ref);
+        expect(row, `${set.id} ${m.text}`).toBeDefined();
+        expect(AUDIO_PACKS.indexOf(row.pack)).toBeLessThanOrEqual(AUDIO_PACKS.indexOf(contrastUnitInfo(set.unit).pack));
+      }
+    }
   });
 });

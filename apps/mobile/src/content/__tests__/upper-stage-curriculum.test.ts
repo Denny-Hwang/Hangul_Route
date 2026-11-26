@@ -40,8 +40,10 @@ import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './helpers/distractors';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import {
+  WORD_BUILDER_FINAL_QUESTS,
   WORD_BUILDER_SYMBOLS,
   discoverTexts,
+  finalContextProblems,
   reuseProblems,
   scopeTexts,
   stemOf,
@@ -50,6 +52,7 @@ import {
   vocabLevelFor,
   withoutSetPhrases,
   wordsOf,
+  type FinalContext,
   type TaughtSymbols,
 } from './helpers/reuse';
 
@@ -466,12 +469,19 @@ function symbolKeysOf(ko: string): string[] {
   return keys;
 }
 
-/** U-4: the read words of a quest that use a symbol not taught by then, as readable lines. */
-function undecodable(quest: LessonQuest, taught: ReadonlySet<string>): string[] {
+/**
+ * U-4: the read words of a quest that use a symbol not taught by then, as readable lines. `context` holds the finals
+ * taught in a context only (AMENDMENTS-BATCHIM-COMPLETE section 3.8: a double final of q8 at the end of a word or before
+ * a vowel, a bottom ㅎ of q9 before a vowel): such a final is read where it is taught and nowhere else, so its flat
+ * key (`ㅎ/final`) is never a taught symbol by itself.
+ */
+function undecodable(quest: LessonQuest, taught: ReadonlySet<string>, context: ReadonlyMap<string, FinalContext> = new Map()): string[] {
   return quest.scopes.flatMap((scope) =>
     scopeWords(scope).read.flatMap((w) => {
-      const missing = symbolKeysOf(w.ko).filter((k) => !taught.has(k));
-      return missing.length > 0 ? [`U-4 ${quest.id}: ${scope.ref} reads ${w.ko}, which uses ${[...new Set(missing)].join(' ')} not taught yet`] : [];
+      const missing = symbolKeysOf(w.ko).filter((k) => !taught.has(k) && !(k.endsWith('/final') && context.has(k.slice(0, -'/final'.length))));
+      const misplaced = finalContextProblems(w.ko, new Map([...context].filter(([final]) => !taught.has(`${final}/final`))));
+      const lines = [...(missing.length > 0 ? [`${[...new Set(missing)].join(' ')} not taught yet`] : []), ...misplaced];
+      return lines.length > 0 ? [`U-4 ${quest.id}: ${scope.ref} reads ${w.ko}, which uses ${lines.join('; ')}`] : [];
     }),
   );
 }
@@ -550,38 +560,57 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
     }
   });
 
+  /** U-4 of one Stage 2 cell: the scored reads that use a symbol its route has not taught by then, as readable lines. */
+  const stage2DecodeProblems = (cell: LessonCell): string[] => {
+    const taught = new Set(STAGE1_KEYS);
+    // The finals Word Builder's optional q8 and q9 teach, in the contexts they teach them (section 3.8).
+    const context = new Map<string, FinalContext>();
+    const decodes = cell.theme === 'letters' && (cell.volume ?? 1) === 1;
+    return cell.quests.flatMap((quest) => {
+      // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
+      if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
+      if (decodes) for (const [final, where] of WORD_BUILDER_FINAL_QUESTS[quest.id] ?? []) context.set(final, where);
+      // The other Stage 2 cells show a Word Builder word only as exposure (rule 6's theme words): a Pic-Word or
+      // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
+      // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
+      // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
+      const scored = decodes
+        ? quest
+        : cell.theme === 'letters'
+          ? ({ ...quest, scopes: quest.scopes.filter((sc) => sc.kind !== 'pic-word-match' && sc.kind !== 'card-match') } as LessonQuest)
+          : ({
+              ...quest,
+              scopes: quest.scopes.flatMap((sc): LessonScope[] =>
+                sc.kind === 'listen-pick'
+                  ? // A heard prompt is exposure; a Read Pick Meaning prompt (row CM-3A S2) is read.
+                    [{ ...sc, rounds: sc.rounds.map((r) => (r.promptShown === true ? r : { ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
+                  : sc.kind === 'pic-word-match' || sc.kind === 'card-match'
+                    ? []
+                    : [sc],
+              ),
+            } as LessonQuest);
+      return undecodable(scored, taught, context);
+    });
+  };
+
   it('U-4 decodable scored reading in Stage 2: Stage 1 symbols, plus in Word Builder the symbols it taught by then', () => {
     // Letters Volume 2 (row CM-44 S2) assumes nothing from Word Builder: with `volumes` on, its page's Vol 2 tab opens
     // it before Volume 1 is complete (the curriculum stays unlocked). So it reads Stage 1 symbols and the symbols its own
     // Discover shows, and its Pic-Word tiles (which carry their romanization) are exposure, as in every other Stage 2 cell.
-    for (const cell of stage2) {
-      const taught = new Set(STAGE1_KEYS);
-      const decodes = cell.theme === 'letters' && (cell.volume ?? 1) === 1;
-      for (const quest of cell.quests) {
-        // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
-        if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
-        // The other Stage 2 cells show a Word Builder word only as exposure (rule 6's theme words): a Pic-Word or
-        // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
-        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
-        // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
-        const scored = decodes
-          ? quest
-          : cell.theme === 'letters'
-            ? ({ ...quest, scopes: quest.scopes.filter((sc) => sc.kind !== 'pic-word-match' && sc.kind !== 'card-match') } as LessonQuest)
-            : ({
-                ...quest,
-                scopes: quest.scopes.flatMap((sc): LessonScope[] =>
-                  sc.kind === 'listen-pick'
-                    ? // A heard prompt is exposure; a Read Pick Meaning prompt (row CM-3A S2) is read.
-                      [{ ...sc, rounds: sc.rounds.map((r) => (r.promptShown === true ? r : { ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
-                    : sc.kind === 'pic-word-match' || sc.kind === 'card-match'
-                      ? []
-                      : [sc],
-                ),
-              } as LessonQuest);
-        expect(undecodable(scored, taught)).toEqual([]);
-      }
-    }
+    for (const cell of stage2) expect(stage2DecodeProblems(cell), cell.id).toEqual([]);
+  });
+
+  it('U-4 in Word Builder grows by the finals of q8 and q9 once each is reached, in the contexts it teaches them (section 3.8)', () => {
+    // The fixture cell has no Discover, so its words use Stage 1 symbols (ㅙ of 괜 is Word Builder's own, outside this test).
+    const quest = (k: number, read: string[]): LessonQuest =>
+      ({ id: `quest:stage2-letters-q${k}`, steps: [], scopes: [{ ref: `minigame:s2-letters-q${k}-practice`, kind: 'build-letter', words: read.map((ko) => ({ ko, romanization: 'x', en: 'x' })) }] }) as unknown as LessonQuest;
+    const cell = (quests: LessonQuest[]): LessonCell => ({ id: 'episode:stage2-letters', stage: 'stage2', theme: 'letters', quests }) as unknown as LessonCell;
+    // Every quest's own words are read after its own finals are taught; an earlier quest reads none of them.
+    expect(stage2DecodeProblems(cell([quest(6, ['밥']), quest(7, ['곰']), quest(8, ['닭', '값', '삶', '읽어요', '없어요']), quest(9, ['좋아요', '많이', '싫어요'])]))).toEqual([]);
+    expect(stage2DecodeProblems(cell([quest(6, ['닭']), quest(8, ['읽어요'])]))).toEqual([expect.stringContaining('ㄺ/final not taught yet')]);
+    expect(stage2DecodeProblems(cell([quest(8, ['읽는', '값도', '없다']), quest(9, ['좋고', '많다', '좋'])]))).toHaveLength(6);
+    // q9's finals are not taught by q8; q8's finals are still taught in q9.
+    expect(stage2DecodeProblems(cell([quest(8, ['좋아요']), quest(9, ['닭'])]))).toEqual([expect.stringContaining('좋아요')]);
   });
 
   it('U-6 at least half the Korean words outside Discover are reused (Stage 2)', () => {
@@ -806,16 +835,78 @@ describe('U-4 decodable scored reading (F-CURR-001 section 3.1 rule 6)', () => {
     expect(untaughtSymbols('맛있어요', STAGE1_SYMBOLS)).toEqual(['final ㅅ in 맛', 'final ㅆ in 있']);
     const all = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
     expect(untaughtSymbols('뜨거워요 맛있어요', all)).toEqual([]);
-    // Double finals stay theme words (section 3.3 q6), never a scored read.
+    // Double finals stay theme words from Stage 3 on (section 3.8, BC-OD-8), never a scored read.
     expect(untaughtSymbols('닭', all)).toEqual(['final ㄺ in 닭']);
     expect(untaughtSymbols('ㄱ', all)).toEqual(['loose jamo ㄱ']);
   });
 
-  it('with Word Builder the route has taught every modern initial and vowel (section 3.3, U-2)', () => {
+  it('with Word Builder the route has taught every modern initial and vowel (section 3.3, U-2), and every single final but ㅎ', () => {
     const all = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
     expect(all.initials.size).toBe(19);
     expect(all.vowels.size).toBe(21);
-    expect(all.finals.size).toBe(16);
+    // 15: Stage 1's six and Word Builder's nine. Final ㅎ is not one of them: it is taught before a vowel only (section 3.8).
+    expect(all.finals.size).toBe(15);
+    expect(all.finals.has('ㅎ')).toBe(false);
+    expect(WORD_BUILDER_SYMBOLS.finals.has('ㅎ')).toBe(false);
+    expect([...(all.contextFinals ?? [])]).toEqual([['ㅎ', 'vowel']]);
+  });
+
+  describe('final contexts: a final counts as taught only where it is taught (AMENDMENTS-BATCHIM-COMPLETE section 3.8)', () => {
+    const q8 = WORD_BUILDER_FINAL_QUESTS['quest:stage2-letters-q8'] as ReadonlyMap<string, FinalContext>;
+    const q9 = WORD_BUILDER_FINAL_QUESTS['quest:stage2-letters-q9'] as ReadonlyMap<string, FinalContext>;
+    const both = new Map<string, FinalContext>([...q8, ...q9]);
+    // Inside Word Builder after q9: every initial and vowel, the seven representative finals, Word Builder's single finals,
+    // and q8's and q9's finals in their contexts.
+    const keys = new Set([...INITIALS, ...MEDIALS, ...REPRESENTATIVE_FINALS.map((f) => `${f}/final`), ...[...WORD_BUILDER_SYMBOLS.finals].map((f) => `${f}/final`)]);
+    const inWordBuilder: TaughtSymbols = { ...unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS), contextFinals: both };
+    const readOf = (ko: string) => ({ id: 'quest:x', scopes: [{ ref: 'r', kind: 'card-match', pairs: [{ ko, romanization: 'x', en: 'x' }] }], steps: [] }) as unknown as LessonQuest;
+    const PASS = ['닭', '값', '삶', '읽어요', '없어요', '좋아요', '많이', '괜찮아요', '싫어요', '좋아요.', '닭 값'];
+    const FAIL = ['읽고', '읽는', '읽다', '없는', '없다', '값도', '좋고', '많다', '않네', '놓는', '좋'];
+
+    it('the per-quest table: q8 teaches ㄺ ㅄ ㄻ at the end of a word or before a vowel, q9 ㅎ ㄶ ㅀ before a vowel', () => {
+      expect([...q8]).toEqual([['ㄺ', 'end-or-vowel'], ['ㅄ', 'end-or-vowel'], ['ㄻ', 'end-or-vowel']]);
+      expect([...q9]).toEqual([['ㅎ', 'vowel'], ['ㄶ', 'vowel'], ['ㅀ', 'vowel']]);
+      expect(Object.keys(WORD_BUILDER_FINAL_QUESTS)).toEqual(['quest:stage2-letters-q8', 'quest:stage2-letters-q9']);
+    });
+
+    it('untaughtSymbols reads the words of q8 and q9 where they are taught, and nothing else', () => {
+      for (const ko of PASS) expect(untaughtSymbols(ko, inWordBuilder), ko).toEqual([]);
+      for (const ko of FAIL) expect(untaughtSymbols(ko, inWordBuilder), ko).not.toEqual([]);
+      expect(untaughtSymbols('좋고', inWordBuilder)).toEqual(['final ㅎ in 좋 (taught only before a vowel)']);
+      expect(untaughtSymbols('읽고', inWordBuilder)).toEqual(['final ㄺ in 읽 (taught only at the end of a word or before a vowel)']);
+      expect(untaughtSymbols('닭이 없어요', inWordBuilder)).toEqual([]);
+    });
+
+    it('symbolKeysOf and undecodable agree with it', () => {
+      for (const ko of PASS) expect(undecodable(readOf(ko), keys, both), ko).toEqual([]);
+      for (const ko of FAIL) expect(undecodable(readOf(ko), keys, both), ko).toHaveLength(1);
+      expect(undecodable(readOf('읽는'), keys, both)).toEqual([
+        'U-4 quest:x: r reads 읽는, which uses final ㄺ in 읽 (taught only at the end of a word or before a vowel)',
+      ]);
+    });
+
+    it('a final of a quest not played yet is not taught: q8 before q8, q9 before q9, and q8 alone does not teach ㅎ', () => {
+      expect(undecodable(readOf('닭'), keys)).toEqual(['U-4 quest:x: r reads 닭, which uses ㄺ/final not taught yet']);
+      expect(undecodable(readOf('닭'), keys, q9)).toEqual(['U-4 quest:x: r reads 닭, which uses ㄺ/final not taught yet']);
+      expect(undecodable(readOf('닭'), keys, q8)).toEqual([]);
+      expect(undecodable(readOf('좋아요'), keys, q8)).toEqual(['U-4 quest:x: r reads 좋아요, which uses ㅎ/final not taught yet']);
+      expect(undecodable(readOf('좋아요'), keys, q9)).toEqual([]);
+    });
+
+    it('from Stage 3 on: final ㅎ before a vowel only, and every double final stays untaught', () => {
+      const stage3 = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
+      for (const ko of ['좋아요', '좋아해요', '넣어요', '좋아하는 친구']) expect(untaughtSymbols(ko, stage3), ko).toEqual([]);
+      for (const ko of ['좋고', '좋', '좋다', '놓는']) expect(untaughtSymbols(ko, stage3), ko).toEqual([expect.stringMatching(/^final ㅎ in .* \(taught only before a vowel\)$/)]);
+      for (const ko of ['닭', '값', '삶', '읽어요', '없어요', '많이', '괜찮아요', '싫어요']) expect(untaughtSymbols(ko, stage3), ko).toEqual([expect.stringMatching(/^final [ㄺㅄㄻㄶㅀ] in/)]);
+    });
+
+    it('finalContextProblems reads an end-of-word final before a mark or a space, and a lone block', () => {
+      expect(finalContextProblems('닭.', both)).toEqual([]);
+      expect(finalContextProblems('닭? 값!', both)).toEqual([]);
+      expect(finalContextProblems('좋.', both)).toHaveLength(1);
+      expect(finalContextProblems('좋 아요', both)).toHaveLength(1);
+      expect(finalContextProblems('안녕', both)).toEqual([]);
+    });
   });
 
   // From Stage 3 on every route has passed Word Builder (Stage 2), so a scored read may use its symbols;

@@ -77,3 +77,37 @@ export function stage1OccurrencesOf(stage1Quests: readonly unknown[], minigameSc
 export function cardOccurrencesOf(cards: readonly unknown[]): SpokenOccurrence[];
 export function reviewOccurrencesOf(items: readonly unknown[]): SpokenOccurrence[];
 export function readClipSources(root?: string): Promise<{ jamo: JamoClipVoice[]; occurrences: SpokenOccurrence[] }>;
+
+// ---- the contrast-set catalogue (AMENDMENTS-MINIMAL-PAIRS section 3.1, 3.4; row MP-1a) ----
+
+export const CONTRAST_SETS_FILE: string;
+export const CONTRAST_SET_SERIES: readonly ('k' | 't' | 'p' | 'c' | 's')[];
+export const CONTRAST_MEMBER_KINDS: readonly ('plain' | 'aspirated' | 'tense')[];
+
+export interface ContrastMember {
+  text: string;
+  romanization: string;
+  en: string;
+  ref: string;
+  kind: 'plain' | 'aspirated' | 'tense';
+}
+
+export interface ContrastSet {
+  id: string;
+  series: 'k' | 't' | 'p' | 'c' | 's';
+  unit: string;
+  members: ContrastMember[];
+  approval?: { date: string; plays: number; correct: number; mp3Sha256: Record<string, string> };
+  lapsed?: { date: string; reason: string };
+}
+
+export interface ContrastCatalogue {
+  schemaVersion: 1;
+  sets: ContrastSet[];
+}
+
+export function contrastUnitInfo(unit: string): { stage: number; quest: string; pack: string } | null;
+export function parseContrastSets(json: unknown, file?: string): ContrastCatalogue;
+export function readContrastSets(root?: string): ContrastCatalogue;
+export function isJamoRef(ref: string): boolean;
+export function contrastOccurrencesOf(catalogue: ContrastCatalogue): SpokenOccurrence[];

@@ -104,6 +104,7 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
   const start = startMarkerOf(route, order);
   const { next, nextKind } = nextOf(input.routeNext, cursor);
 
+  const optionalQuestIds = new Set(gridEpisodes.flatMap((e) => e.optionalQuestIds ?? []));
   const stages = buildStageRows(input, {
     gridEpisodes,
     pips: {
@@ -115,6 +116,7 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
       // One marker: the pip of the one next (section 4.4); `here` stays the catalogue cursor's stage.
       cursorId: next?.questId ?? null,
       startId: start?.questId ?? null,
+      optionalQuestIds,
       ...(input.isQuestOpen === undefined ? {} : { isQuestOpen: input.isQuestOpen }),
     },
     cursorStage: cursor?.stage ?? null,

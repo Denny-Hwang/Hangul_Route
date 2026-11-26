@@ -16,6 +16,7 @@ import {
   decodeRetiredItem,
   encodeRetiredItem,
   masteryDenominator,
+  cellHoldsItem,
   packGlossKey,
   selectableIds,
   unpackGlossKey,
@@ -144,6 +145,24 @@ describe('the chunk rows', () => {
     expect(rows[1]?.[6]).toBe(4 | (2 << 3) | (1 << 8));
   });
 
+  it('round-trips optionalIn (BC-2a), and an item without it keeps a row of 13 slots', () => {
+    const optionalItem: ReviewItem = { ...word, id: 'lex:dak', cells: ['episode:stage2-letters', 'episode:stage3-life'], asked: [], optionalIn: { 'episode:stage2-letters': ['quest:stage2-letters-q8', 'quest:stage2-letters-q9'] } };
+    const { tables, rows } = encodeReviewItems([word, optionalItem]);
+    expect(rows[0]).toHaveLength(13);
+    expect(rows[1]?.[13]).toEqual([[tables.cells.indexOf('stage2-letters'), 'quest:stage2-letters-q8', 'quest:stage2-letters-q9']]);
+    const back = decodeReviewItems({ REVIEW_ITEM_TABLES: tables, REVIEW_ITEM_ROWS: rows });
+    expect(back).toEqual([word, optionalItem]);
+    expect(back[0]?.optionalIn).toBeUndefined();
+  });
+
+  it('refuses an optionalIn cell the item is not taught in, and an empty quest list', () => {
+    const bad = ReviewItemSchema.safeParse({ ...word, optionalIn: { 'episode:stage9-none': ['quest:x'] } });
+    expect(bad.success).toBe(false);
+    expect(bad.error?.issues.map((i) => i.message)).toEqual(['episode:stage9-none is not one of the item\'s cells']);
+    expect(ReviewItemSchema.safeParse({ ...word, optionalIn: { 'episode:stage2-life': [] } }).success).toBe(false);
+    expect(ReviewItemSchema.safeParse({ ...word, optionalIn: { 'episode:stage2-life': ['quest:stage2-life-q8'] } }).success).toBe(true);
+  });
+
   it('decodes a row without gloss, picture or reply', () => {
     const { tables, rows } = encodeReviewItems([{ ...exchange, en: undefined, glossKey: undefined, reply: { ko: '네.', romanization: 'ne' } }]);
     const item = decodeReviewItem(rows[0] as (typeof rows)[number], tables);
@@ -196,6 +215,36 @@ describe('retired ids (§4.2)', () => {
     expect(row).toEqual(['lex:bae~pear', '배', '']);
     expect(decodeRetiredItem(row)).toEqual({ id: 'lex:bae~pear', kind: 'lex', ko: '배', romanization: 'bae' });
     expect(decodeRetiredItem(encodeRetiredItem({ id: 'sym:bieup', ko: 'ㅂ', romanization: 'b/p' }))).toEqual({ id: 'sym:bieup', kind: 'sym', ko: 'ㅂ', romanization: 'b/p' });
+  });
+});
+
+describe('the mastery denominator: an item an optional quest teaches (BC-2a, BC-OD-16)', () => {
+  const cell = 'episode:stage2-letters';
+  const items = [
+    { id: 'lex:bap', cells: [cell] },
+    { id: 'lex:dak', cells: [cell], optionalIn: { [cell]: ['quest:stage2-letters-q8'] } },
+    // taught elsewhere by a required quest too: its other cell keeps it
+    { id: 'lex:joayo', cells: [cell, 'episode:stage3-life'], optionalIn: { [cell]: ['quest:stage2-letters-q9'] } },
+  ];
+
+  it('joins the cell once a quest that teaches it is completed, never before', () => {
+    expect(masteryDenominator(items, cell, [1], [])).toEqual(['lex:bap']);
+    expect(masteryDenominator(items, cell, [1], [], new Set())).toEqual(['lex:bap']);
+    expect(masteryDenominator(items, cell, [1], [], new Set(['quest:stage2-letters-q1']))).toEqual(['lex:bap']);
+    expect(masteryDenominator(items, cell, [1], [], new Set(['quest:stage2-letters-q8']))).toEqual(['lex:bap', 'lex:dak']);
+    expect(masteryDenominator(items, cell, [1], [], new Set(['quest:stage2-letters-q9']))).toEqual(['lex:bap', 'lex:joayo']);
+    expect(masteryDenominator(items, cell, [1], [], new Set(['quest:stage2-letters-q8', 'quest:stage2-letters-q9']))).toEqual(['lex:bap', 'lex:dak', 'lex:joayo']);
+  });
+
+  it('an item taught elsewhere by a required quest stays in that cell whatever is completed', () => {
+    expect(masteryDenominator(items, 'episode:stage3-life', [1], [])).toEqual(['lex:joayo']);
+  });
+
+  it('cellHoldsItem: the cell teaches it, and an optional-only cell needs one of its quests done', () => {
+    expect(cellHoldsItem(items[0] as (typeof items)[number], cell)).toBe(true);
+    expect(cellHoldsItem(items[1] as (typeof items)[number], cell)).toBe(false);
+    expect(cellHoldsItem(items[1] as (typeof items)[number], cell, new Set(['quest:stage2-letters-q8']))).toBe(true);
+    expect(cellHoldsItem(items[1] as (typeof items)[number], 'episode:stage3-life', new Set(['quest:stage2-letters-q8']))).toBe(false);
   });
 });
 

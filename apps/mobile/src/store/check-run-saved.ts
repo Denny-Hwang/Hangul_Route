@@ -84,9 +84,15 @@ export function clearSavedCheck(profileId: string): Promise<void> {
 /** What a Hangul Check run is stored with besides its answers. */
 export interface ReviewRunSaveContext {
   seed: number;
-  hideRomanization: boolean;
   startedAt: string;
 }
+
+/**
+ * The stored shape still carries `hideRomanization` (`saved-check.ts` requires a boolean, so a run stored before the Check
+ * switch went resumes). Every Check holds its romanization now, so a new run stores the constant `true` and readers ignore
+ * the value (AMENDMENTS-STAGE1-DECODING-CHECK section 3.8, row DC-1a).
+ */
+export const STORED_HIDE_ROMANIZATION = true;
 
 /**
  * Keeps the stored Hangul Check of `profileId` in step with the run in `review-run-store` (OD-LR9 (b), owner decision
@@ -97,7 +103,7 @@ export interface ReviewRunSaveContext {
 export function keepReviewRunSaved(profileId: string, context: ReviewRunSaveContext): () => void {
   return useReviewRunStore.subscribe((run, before) => {
     if (run.answers === before.answers || run.itemIds.length === 0 || Object.keys(run.answers).length === 0) return;
-    void saveCheck(profileId, savedHangulCheck({ ...context, items: run.itemIds, answers: run.answers }));
+    void saveCheck(profileId, savedHangulCheck({ ...context, hideRomanization: STORED_HIDE_ROMANIZATION, items: run.itemIds, answers: run.answers }));
   });
 }
 

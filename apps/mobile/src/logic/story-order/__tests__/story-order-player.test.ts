@@ -1,4 +1,4 @@
-import { StoryOrderRoundSchema, romanize } from '@hangul-route/content-schema';
+import { StoryOrderRoundSchema, romanizeReviewed } from '@hangul-route/content-schema';
 import { storyOrderIssues } from '@hangul-route/content-schema/lint';
 import { describe, expect, it } from 'vitest';
 import { STORY_ORDER_FIXTURES } from '../../../navigation/story-order-e2e-fixture';
@@ -47,7 +47,7 @@ describe('the fixtures', () => {
   it('are romanized as rr.ts romanizes them (no punctuation in the romanization)', () => {
     for (const fixture of Object.values(STORY_ORDER_FIXTURES)) {
       for (const round of fixture.storyOrder?.rounds ?? []) {
-        for (const panel of round.panels) expect(panel.caption.romanization, panel.caption.ko).toBe(romanize(panel.caption.ko).text);
+        for (const panel of round.panels) expect(panel.caption.romanization, panel.caption.ko).toBe(romanizeReviewed(panel.caption.ko).text);
       }
     }
   });

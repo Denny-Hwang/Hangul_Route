@@ -1,4 +1,4 @@
-import { romanizeWord } from '@hangul-route/content-schema';
+import { romanizeReviewed, romanizeWord } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -64,8 +64,8 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
 
   const pair = _scope.cardPairs?.[0];
   const target = pair?.ko ?? '안녕';
-  // F-CNT-002: the pair's own romanization, else the converter's (the default word has none in content).
-  const targetRomanization = pair?.romanization ?? romanizeWord(target) ?? undefined;
+  // F-CNT-002: the pair's own romanization, else the reviewed one (the default word has none in content).
+  const targetRomanization = pair?.romanization ?? (romanizeWord(target) === null ? undefined : romanizeReviewed(target).text);
   // The word is printed under the speaker; the panel only says why it is silent (F-AUDIO-004 A-5b).
   const slot = usePromptSlot({ source: 'voice-echo', textOnScreen: true });
   const [helpOpen, setHelpOpen] = useState(false);

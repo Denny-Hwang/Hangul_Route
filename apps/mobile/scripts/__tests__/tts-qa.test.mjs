@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CTC_MARGIN_NATS,
+  G5_GATING,
   LETTER_NAMES,
   clipVerdict,
   closedSetOf,
@@ -15,12 +16,20 @@ import {
   ctcTokensOf,
   ctcVocabOf,
   ctcViterbiLogLik,
+  evaluateContrastSet,
+  evaluateDistinct,
+  evaluateFrame,
+  evaluateLikeForLike,
   evaluatePass1,
   evaluatePass2,
+  evaluatePlayable,
   isClosedSetRow,
   isExactMatch,
   nativeNumeral,
   normalizeTranscript,
+  packsLoadedBy,
+  pass2MarginAmong,
+  seriesFormsOf,
   sinoNumeral,
   spokenVariantsOf,
   parseWhisperText,
@@ -30,6 +39,7 @@ import {
   syllableConfusables,
   targetFormsOf,
   whisperGrammar,
+  withSeriesForms,
 } from '../audio/tts/qa-lib.mjs';
 
 const row = (kind, text, extra = {}) => ({ ref: `audio/say/${kind}.mp3`, key: `k-${text}`, kind, text, say: text, rate: 0.9, pack: 'stage2', sources: ['x'], ...extra });
@@ -458,5 +468,173 @@ describe('Pass 2 internals: the CTC vocabulary, tokens, greedy decode and Viterb
     expect(out.scores.가).toBeGreaterThan(out.scores.카);
     expect(out.scores.가 - out.scores.카).toBeCloseTo(ln(0.8 / 0.05), 10);
     expect(() => scoreCtcClip({ argmax: [], ids: [15], emissions: [[0]] }, ['가'], jamo)).toThrow(/not requested/);
+  });
+});
+
+describe('the contrast-set gate (AMENDMENTS-MINIMAL-PAIRS section 3.2, G2-G6)', () => {
+  const PACKS = ['jamo-s1', 'jamo-wb', 'stage1', 'placement', 'stage2', 'stage3'];
+  const man = (text, say, extra = {}) => ({ ref: `audio/say/${text}.mp3`, key: `k-${text}`, kind: 'syllable', text, say, rate: 0.85, pack: 'stage1', sources: ['x'], ...extra });
+  const SET = { id: 'ga-ka', unit: 'minigame:s1-life-q3-pairs', members: [{ text: '가', ref: 'audio/say/가.mp3' }, { text: '카', ref: 'audio/say/카.mp3' }] };
+  const rows = [man('가', '가.'), man('카', '카.')];
+  const rowByRef = new Map(rows.map((r) => [r.ref, r]));
+  /** One member's QA result: Pass 1 forced choice, its signal and its bytes. */
+  const result = (text, extra = {}) => ({
+    key: `k-${text}`,
+    ref: `audio/say/${text}.mp3`,
+    verdict: 'pass',
+    reasons: [],
+    sha256: `sha-${text}`,
+    pass1: { forced: text },
+    pass2: { ranking: [{ candidate: text, score: -8 }, { candidate: text === '가' ? '카' : '가', score: -9.5 }, { candidate: '까', score: -12 }] },
+    signal: { summary: { voicedSpanS: 0.5 }, loudness: { integratedLufs: -16 } },
+    ...extra,
+  });
+  const run = (patch = {}, opts = {}) => {
+    const results = new Map([['가', result('가')], ['카', result('카')]].map(([t, r]) => [r.ref, { ...r, ...(patch[t] ?? {}) }]));
+    return evaluateContrastSet(opts.set ?? SET, { rowByRef: opts.rowByRef ?? rowByRef, resultByRef: opts.resultByRef ?? results, packOrder: PACKS, g5Gating: opts.g5Gating });
+  };
+
+  it('seriesFormsOf is the whole series at the member\'s place and vowel, for a syllable and a word', () => {
+    expect(seriesFormsOf('가')).toEqual(['가', '카', '까']);
+    expect(seriesFormsOf('달')).toEqual(['달', '탈', '딸']);
+    expect(seriesFormsOf('자다')).toEqual(['자다', '차다', '짜다']);
+    expect(seriesFormsOf('방')).toEqual(['방', '팡', '빵']);
+    expect(seriesFormsOf('사다')).toEqual(['사다', '싸다']);
+    expect(seriesFormsOf('나')).toEqual(['나']);
+    expect(seriesFormsOf('abc')).toEqual(['abc']);
+  });
+
+  it('withSeriesForms adds the series forms a closed set lacks, and leaves a complete one and a missing one alone', () => {
+    const lacking = { targets: ['가'], confusables: ['카'] };
+    expect(withSeriesForms(lacking, '가')).toEqual({ targets: ['가'], confusables: ['카', '까'] });
+    const closed = closedSetOf(row('syllable', '가'), NO_OVERRIDES);
+    expect(withSeriesForms(closed, '가')).toBe(closed);
+    expect(withSeriesForms(null, '가')).toBeNull();
+    // closedSetOf already holds the series of a one- or two-syllable clip.
+    for (const text of ['가', '달', '자다', '빵', '사다', '개']) {
+      const set = closedSetOf(row('word', text), NO_OVERRIDES);
+      for (const form of seriesFormsOf(text)) expect([...set.targets, ...set.confusables], `${text}: ${form}`).toContain(form);
+    }
+  });
+
+  it('a set whose members agree passes every gate, and prints Pass 2 margins against the other members', () => {
+    const r = run();
+    expect(r.ok).toBe(true);
+    expect(Object.fromEntries(Object.entries(r.gates).map(([k, g]) => [k, g.ok]))).toEqual({ G1: true, G2: true, G3: true, G4: true, G5: true, G6: true });
+    expect(r.regenerate).toEqual([]);
+    expect(r.margins).toEqual([{ text: '가', margin: 1.5, over: '카' }, { text: '카', margin: 1.5, over: '가' }]);
+  });
+
+  it('G1: a member that fails the per-clip gate, is vetoed or has no clip fails the set', () => {
+    const failed = run({ 카: { verdict: 'fail', reasons: ['Pass 1: free transcript "가" is not 카'] } });
+    expect(failed.ok).toBe(false);
+    expect(failed.gates.G1.failures[0]).toMatch(/카: fails the per-clip gate \(Pass 1: free transcript/);
+    expect(failed.regenerate).toEqual(['k-카']);
+    const vetoed = run({ 가: { vetoed: true } });
+    expect(vetoed.gates.G1.failures).toEqual(['가: vetoed in the owner listen']);
+    const noClip = run({}, { resultByRef: new Map([['audio/say/가.mp3', result('가')]]) });
+    expect(noClip.gates.G1.failures).toEqual(['카: no clip']);
+    expect(noClip.gates.G2).toMatchObject({ ok: false, ran: false });
+    expect(noClip.gates.G4.ran).toBe(false);
+    expect(noClip.gates.G5.ran).toBe(false);
+    expect(noClip.members.map((m) => m.present)).toEqual([true, false]);
+  });
+
+  it('G2: a 가 that the forced choice over the whole series hears as 까 fails a 가 / 카 pair, and is regenerated', () => {
+    const r = run({ 가: { pass1: { forced: '까' } } });
+    expect(r.gates.G2.ok).toBe(false);
+    expect(r.gates.G2.failures).toEqual(['가: the series forced choice heard "까"']);
+    expect(r.regenerate).toEqual(['k-가']);
+    expect(run({ 카: { pass1: { forced: null } } }).gates.G2.failures[0]).toMatch(/no forced choice over the series/);
+    expect(run({ 가: { pass1: { forced: '가.' } } }).gates.G2.ok).toBe(true);
+  });
+
+  it('G2 reads an authored accept variant as the member (the exact-match rule of the per-clip gate)', () => {
+    const overrides = { 가: { say: '가.', accept: ['가아'], reason: 'x', engine: 'polly', voice: 'Seoyeon' } };
+    expect(isExactMatch('가아', targetFormsOf(rows[0], overrides))).toBe(true);
+  });
+
+  it('G3: members sent with different end marks, an IPA phoneme on one, other kinds or other rates are not one frame', () => {
+    const frame = (...rs) => evaluateFrame(rs);
+    expect(frame(man('가', '가.'), man('카', '카.')).ok).toBe(true);
+    expect(frame(man('가', '가,'), man('카', '카,')).ok).toBe(true);
+    expect(frame(man('가', '가'), man('카', '카')).ok).toBe(true);
+    const mixed = frame(man('바', '바!'), man('파', '파.'));
+    expect(mixed.ok).toBe(false);
+    expect(mixed.failures[0]).toMatch(/바 sent as "바!", 파 sent as "파\."/);
+    expect(frame(man('까', '까,'), man('카', '카.')).ok).toBe(false);
+    expect(frame(man('가', '가.', { ipa: 'ka' }), man('카', '카.')).failures[0]).toMatch(/IPA phoneme/);
+    expect(frame(man('가', '가.', { ipa: 'ka' }), man('카', '카.', { ipa: 'kha' })).ok).toBe(true);
+    expect(frame(man('가', '가.', { kind: 'jamo-sound' }), man('카', '카.')).failures[0]).toMatch(/different clip kinds/);
+    expect(frame(man('가', '가.', { rate: 0.9 }), man('카', '카.')).failures[0]).toMatch(/different rates/);
+    const gate = run({}, { rowByRef: new Map([...rowByRef, ['audio/say/카.mp3', man('카', '카!')]]) });
+    expect(gate.gates.G3.ok).toBe(false);
+    expect(gate.ok).toBe(false);
+    // A frame problem is a content decision: nothing to regenerate.
+    expect(gate.regenerate).toEqual([]);
+  });
+
+  it('G4: byte-identical members fail, and the second of them is regenerated', () => {
+    const r = run({ 카: { sha256: 'sha-가' } });
+    expect(r.gates.G4.ok).toBe(false);
+    expect(r.gates.G4.failures).toEqual(['가 and 카 are byte-identical']);
+    expect(r.regenerate).toEqual(['k-카']);
+    expect(evaluateDistinct([{ text: 'a', sha256: '1' }, { text: 'b', sha256: '2' }, { text: 'c', sha256: '1' }]).failures).toEqual(['a and c are byte-identical']);
+  });
+
+  it('G5: a member 1.5 times the median voiced span is flagged while advisory, and fails when gating', () => {
+    const wide = { 카: { signal: { summary: { voicedSpanS: 1.0 }, loudness: { integratedLufs: -16 } } } };
+    const advisory = run(wide);
+    expect(advisory.gates.G5).toMatchObject({ ok: true, advisory: true });
+    expect(advisory.gates.G5.flags[0]).toMatch(/가 voiced 0\.5 s is 0\.67 times the set's median 0\.75 s/);
+    expect(advisory.ok).toBe(true);
+    // Two members are always within 1.33 of their own median, so a triple shows the bound.
+    const triple = evaluateLikeForLike([{ text: 'a', voicedSpanS: 0.4 }, { text: 'b', voicedSpanS: 0.4 }, { text: 'c', voicedSpanS: 0.6 }], { gating: true });
+    expect(triple.ok).toBe(false);
+    expect(triple.failures).toEqual(["c voiced 0.6 s is 1.5 times the set's median 0.4 s (allowed 0.75-1.33)"]);
+    expect(triple.outliers).toEqual(['c']);
+    const advisoryTriple = evaluateLikeForLike([{ text: 'a', voicedSpanS: 0.4 }, { text: 'b', voicedSpanS: 0.4 }, { text: 'c', voicedSpanS: 0.6 }]);
+    expect(advisoryTriple).toMatchObject({ ok: true, advisory: true });
+    expect(advisoryTriple.flags).toHaveLength(1);
+    expect(G5_GATING).toBe(false);
+    expect(evaluateLikeForLike([{ text: 'a', voicedSpanS: 0.4, lufs: -16 }, { text: 'b', voicedSpanS: 0.4, lufs: -14 }], { gating: true }).failures).toEqual(['loudness differs by 2 LU (allowed 1.5)']);
+    expect(evaluateLikeForLike([{ text: 'a', voicedSpanS: 0.4, lufs: -16 }, { text: 'b', voicedSpanS: 0.4, lufs: -15 }], { gating: true }).ok).toBe(true);
+  });
+
+  it('G5 gating regenerates the outlier in the set gate', () => {
+    const members = [...SET.members, { text: '까', ref: 'audio/say/까.mp3' }];
+    const set = { ...SET, members };
+    const threeRows = new Map([...rowByRef, ['audio/say/까.mp3', man('까', '까.')]]);
+    const results = new Map([
+      ['audio/say/가.mp3', result('가')],
+      ['audio/say/카.mp3', result('카')],
+      ['audio/say/까.mp3', result('까', { signal: { summary: { voicedSpanS: 0.9 }, loudness: { integratedLufs: -16 } } })],
+    ]);
+    const r = evaluateContrastSet(set, { rowByRef: threeRows, resultByRef: results, packOrder: PACKS, g5Gating: true });
+    expect(r.gates.G5.ok).toBe(false);
+    expect(r.regenerate).toEqual(['k-까']);
+    expect(evaluateContrastSet(set, { rowByRef: threeRows, resultByRef: results, packOrder: PACKS }).ok).toBe(true);
+  });
+
+  it('G6: every member must be in a pack that the quest playing the set loads', () => {
+    expect(packsLoadedBy('minigame:s1-life-q3-pairs', PACKS)).toEqual(['jamo-s1', 'jamo-wb', 'stage1']);
+    expect(packsLoadedBy('minigame:s2-letters-q2-pairs', PACKS)).toEqual(['jamo-s1', 'jamo-wb', 'stage1', 'placement', 'stage2']);
+    expect(packsLoadedBy('quest:stage1-life-q3', PACKS)).toEqual([]);
+    const late = new Map([...rowByRef, ['audio/say/카.mp3', man('카', '카.', { pack: 'stage7' })]]);
+    const r = run({}, { rowByRef: late });
+    expect(r.gates.G6.ok).toBe(false);
+    expect(r.gates.G6.failures[0]).toMatch(/카 is in pack stage7, which minigame:s1-life-q3-pairs does not load \(loads jamo-s1, jamo-wb, stage1\)/);
+    expect(evaluatePlayable({ ...SET, unit: 'minigame:s2-letters-q2-pairs' }, late, PACKS).ok).toBe(false);
+    expect(evaluatePlayable({ ...SET, unit: 'minigame:s2-letters-q2-pairs' }, new Map([...rowByRef, ['audio/say/카.mp3', man('카', '카.', { pack: 'placement' })]]), PACKS).ok).toBe(true);
+    expect(evaluatePlayable(SET, new Map(), PACKS).failures[0]).toMatch(/not a manifest row/);
+    expect(evaluatePlayable({ ...SET, unit: 'x' }, rowByRef, PACKS).failures[0]).toMatch(/names no stage/);
+  });
+
+  it('Pass 2 margins are printed and never fail a set', () => {
+    const narrow = run({ 가: { pass2: { ranking: [{ candidate: '가', score: -10 }, { candidate: '카', score: -9 }] } } });
+    expect(narrow.ok).toBe(true);
+    expect(narrow.margins[0]).toEqual({ text: '가', margin: -1, over: '카' });
+    expect(run({ 가: { pass2: null } }).margins[0]).toEqual({ text: '가', margin: null, over: null });
+    expect(pass2MarginAmong({ ranking: [{ candidate: '가', score: -8 }] }, '가', ['카'])).toBeNull();
   });
 });

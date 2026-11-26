@@ -96,6 +96,41 @@ describe("content errors stop the build", () => {
     assert.match(r.stdout, /items\.ipdong: the romanization of 입동 is ipdong \(F-CNT-002\), not ibdong/);
   });
 
+  // AMENDMENTS-ROMANIZER-GAPS RG-2a: the build asks for the reviewed romanization (the entry of ROMANIZATION_EXCEPTIONS), not the rule converter's.
+  test("an item that holds a reviewed entry word passes with the entry value and fails with the converter's", () => {
+    const reviewed = inputTree();
+    edit(reviewed, "content/weekly/2026-11-02.json", (d) => {
+      d.items[0].ko = "솔잎";
+      d.items[0].romanization = "sollip";
+    });
+    const ok = run(reviewed);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    assert.match(chunkFile(reviewed), /"ko":"솔잎","romanization":"sollip"/);
+    const converter = inputTree();
+    edit(converter, "content/weekly/2026-11-02.json", (d) => {
+      d.items[0].ko = "솔잎";
+      d.items[0].romanization = "sorip";
+    });
+    const r = run(converter);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /items\.ipdong: the romanization of 솔잎 is sollip \(F-CNT-002\), not sorip/);
+  });
+
+  test("a {ko:} token of a note that is an entry word shows the reviewed romanization", () => {
+    const root = inputTree();
+    edit(root, "content/weekly/2026-11-02.json", (d) => {
+      d.noteEn = d.noteEn.replace("{ko:입동}", "{ko:솔잎}");
+    });
+    for (const locale of ["es", "ko"]) {
+      edit(root, `content/i18n/${locale}/weekly-2026-10-26.json`, (o) => {
+        o.entries["week:2026-11-02"].note = o.entries["week:2026-11-02"].note.replace("{ko:입동}", "{ko:솔잎}");
+      });
+    }
+    const ok = run(root);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    assert.match(chunkFile(root), /\{"ko":"솔잎","romanization":"sollip"\},\{"text":" falls on 7 November/);
+  });
+
   test("an overlay note whose {ko:} tokens differ from the English", () => {
     const root = inputTree();
     edit(root, "content/i18n/es/weekly-2026-10-26.json", (o) => {

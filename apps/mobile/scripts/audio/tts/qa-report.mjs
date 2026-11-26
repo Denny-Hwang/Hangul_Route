@@ -29,6 +29,8 @@ export const REPORT_SCHEMA_VERSION = 1;
 export const REPORT_JSON = 'qa-report.json';
 export const REPORT_MD = 'qa-report.md';
 export const OWNER_LISTEN_FILE = 'owner-listen.json';
+/** The owner's blind listen of the contrast sets (AMENDMENTS-MINIMAL-PAIRS section 3.3, listen.mjs --contrast). */
+export const OWNER_CONTRAST_FILE = 'owner-contrast.json';
 
 /** What silence is: the threshold the processing trim uses (-50 dB), over at least 50 ms. */
 export const SILENCEDETECT_FILTER = 'silencedetect=noise=-50dB:d=0.05';
@@ -311,12 +313,15 @@ export function activeVetoes(ownerListen, clips) {
  * the rows to regenerate with their commands (failing, missing, and any the owner vetoed in the optional listen),
  * and that listen. Extra files (no manifest row) fail the run: they are listed to be removed.
  */
-export function buildReport({ meta, clips, missing, extra, notGenerated = [], ownerListen = null, packTotals = [] }) {
+export function buildReport({ meta, clips, missing, extra, notGenerated = [], ownerListen = null, packTotals = [], contrastSets = null, ownerContrast = null }) {
   const vetoed = activeVetoes(ownerListen, clips).map((v) => v.key);
   const vetoedSet = new Set(vetoed);
   const marked = clips.map((c) => ({ ...c, vetoed: vetoedSet.has(c.key) }));
   const failing = marked.filter((c) => c.verdict !== 'pass').map((c) => c.key);
-  const regenerate = [...new Set([...failing, ...missing, ...vetoed])];
+  // The set gate (--contrast): a member another take must replace joins the rows to regenerate; a set that fails with
+  // no member to regenerate (G3, G6) is a content decision and fails the run on its own (reportPasses).
+  const sets = contrastSets === null ? null : contrastSets.map((set) => ({ ...set, owner: ownerContrastOf(set, ownerContrast, clips) }));
+  const regenerate = [...new Set([...failing, ...missing, ...vetoed, ...(sets ?? []).flatMap((set) => set.regenerate)])];
   const passing = marked.filter((c) => c.verdict === 'pass' && !c.vetoed);
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
@@ -332,6 +337,7 @@ export function buildReport({ meta, clips, missing, extra, notGenerated = [], ow
       flagged: passing.filter((c) => c.pass1?.flags.length || c.pass2?.flags.length || c.signal?.flags.length || c.identity?.flags?.length).length,
       pass2Advisory: marked.filter((c) => c.pass2?.advisory === true).length,
       packTotalsOk: packTotals.every((p) => p.ok),
+      ...(sets === null ? {} : { contrastSets: { sets: sets.length, pass: sets.filter((x) => x.ok).length, fail: sets.filter((x) => !x.ok).length } }),
       firstTake: { pass1: firstTake(clips, 'pass1'), pass2: firstTake(clips, 'pass2') },
     },
     clips: marked,
@@ -339,6 +345,7 @@ export function buildReport({ meta, clips, missing, extra, notGenerated = [], ow
     extra,
     notGenerated,
     packTotals,
+    contrastSets: sets,
     regenerate: {
       keys: regenerate,
       commands: regenerationCommands({ engine: meta.engine, voice: meta.voice, keys: regenerate, missing, pilot: meta.selection?.pilot === true, stage: meta.stage, masterDir: meta.masterDir }),
@@ -347,9 +354,36 @@ export function buildReport({ meta, clips, missing, extra, notGenerated = [], ow
   };
 }
 
-/** Whether the run passes: nothing to regenerate, no extra file, and every pack within its set total. */
+/**
+ * Where the owner's blind listen of a set stands (section 3.3), read from owner-contrast.json: per speaker (the
+ * computer, then a phone speaker) pass, fail, or "clip changed" when a member is no longer the MP3 that was heard (the
+ * run's `mp3Sha256`). The listen is the approval, not part of the QA verdict, so it never fails a run.
+ *
+ * @param {{ id: string, members: readonly { ref: string }[] }} set
+ * @param {{ sets?: Record<string, { runs?: Record<string, { date: string, pass: boolean, mp3Sha256: Record<string, string> }> }> } | null} ownerContrast
+ * @param {readonly { ref: string, sha256: string }[]} clips the QA results (their sha256 is the MP3 checked now)
+ */
+export function ownerContrastOf(set, ownerContrast, clips) {
+  const runs = ownerContrast?.sets?.[set.id]?.runs ?? {};
+  const shaByRef = new Map(clips.map((c) => [c.ref, c.sha256]));
+  const status = {};
+  for (const speaker of ['computer', 'phone']) {
+    const run = runs[speaker];
+    if (run === undefined) status[speaker] = 'not done';
+    else if (set.members.some((m) => shaByRef.has(m.ref) && run.mp3Sha256?.[m.ref] !== shaByRef.get(m.ref))) status[speaker] = `clip changed since ${run.date}`;
+    else status[speaker] = `${run.pass ? 'pass' : 'fail'} (${run.date})`;
+  }
+  return status;
+}
+
+/** Whether the run passes: nothing to regenerate, no extra file, every pack within its set total, every contrast set through its gate. */
 export function reportPasses(report) {
-  return report.regenerate.keys.length === 0 && report.extra.length === 0 && (report.packTotals ?? []).every((p) => p.ok);
+  return (
+    report.regenerate.keys.length === 0 &&
+    report.extra.length === 0 &&
+    (report.packTotals ?? []).every((p) => p.ok) &&
+    (report.contrastSets ?? []).every((set) => set.ok)
+  );
 }
 
 const cell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
@@ -369,6 +403,48 @@ function signalCell(s) {
   const parts = [sec(sum.durationS), `onset ${sec(sum.onsetS)}`, `voiced ${sec(sum.voicedSpanS)}`];
   if (s.closure) parts.push(`closure ${sec(s.closure.atS)}`);
   return parts.join(', ');
+}
+
+const gateCell = (g) => {
+  if (!g.ran) return `not run (${g.failures[0]})`;
+  if (!g.ok) return `fail: ${g.failures.join('; ')}`;
+  if (g.flags.length > 0) return `${g.advisory ? 'advisory' : 'pass, flag'}: ${g.flags.join('; ')}`;
+  return 'pass';
+};
+
+const marginsCell = (margins) =>
+  margins.map((m) => `${m.text} ${m.margin === null ? 'n/a' : `${m.margin} over ${m.over}`}`).join(', ');
+
+/** The contrast-set table (AMENDMENTS-MINIMAL-PAIRS section 3.2): one line per set, G1-G6, Pass 2 margins, the owner's listen. */
+export function renderContrastTable(sets) {
+  const out = [
+    '',
+    '## Contrast sets (set gate, AMENDMENTS-MINIMAL-PAIRS section 3.2)',
+    '',
+    'G1 each member passes the per-clip gate; G2 the forced choice over the whole series returns the member; G3 one frame (manifest); G4 no two members byte-identical; G5 like for like (advisory until MP-1b fixes its bound); G6 every member plays where the quest plays it. Pass 2 margins against the other members are advisory. The owner listen (blind, section 3.3) is the approval and is required for a set to be played.',
+    '',
+    tableRow(['Set', 'Members', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Pass 2 margin (nats, advisory)', 'Owner listen', 'Set']),
+    '|---|---|---|---|---|---|---|---|---|---|---|',
+  ];
+  for (const set of sets) {
+    const g = set.gates;
+    out.push(
+      tableRow([
+        set.id,
+        set.members.map((m) => `${m.text}${m.present ? '' : ' (no clip)'}`).join(' '),
+        gateCell(g.G1),
+        gateCell(g.G2),
+        gateCell(g.G3),
+        gateCell(g.G4),
+        gateCell(g.G5),
+        gateCell(g.G6),
+        marginsCell(set.margins),
+        `computer ${set.owner?.computer ?? 'not done'}; phone ${set.owner?.phone ?? 'not done'}`,
+        set.ok ? 'pass' : 'fail',
+      ]),
+    );
+  }
+  return out;
 }
 
 /** The Markdown report: the summary, then the table the content PR body pastes, then the rows to regenerate. */
@@ -415,6 +491,7 @@ export function renderReportMarkdown(report) {
   for (const key of report.missing) out.push(tableRow([key, '', 'no clip', '', '', '', '', 'fail: missing', '', '']));
   if (report.extra.length > 0) out.push('', `Extra files, no manifest row (an identity failure: remove them): ${report.extra.join(', ')}.`);
   if ((report.notGenerated ?? []).length > 0) out.push('', `Not generated (no manifest row; recorded clips, not checked here): ${report.notGenerated.length} files.`);
+  if (report.contrastSets !== null && report.contrastSets !== undefined) out.push(...renderContrastTable(report.contrastSets));
   for (const p of report.packTotals ?? []) {
     out.push('', `Pack ${p.pack} set total (AC-B6): ${p.clips} clips, ${p.bytes} bytes (limit ${p.limit.clips} clips, ${p.limit.maxBytes} bytes): ${p.ok ? 'pass' : `fail: ${p.failures.join('; ')}`}.`);
   }

@@ -52,6 +52,11 @@ describe('the finished sentence', () => {
     expect(fillGloss('I like ___.', [])).toBe('I like ___.');
   });
 
+  it('uses the reviewed romanization where the word has an entry (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+    expect(sentenceRomanization('___ 주세요.', ['솔잎'])).toBe('sollip juseyo');
+    expect(nameGloss('솔잎')).toBe('Sollip');
+  });
+
   it('a name in the gloss is its romanization as a proper noun', () => {
     expect(nameGloss('호야')).toBe('Hoya');
     expect(nameGloss(' 김 호야 ')).toBe('Gim Hoya');

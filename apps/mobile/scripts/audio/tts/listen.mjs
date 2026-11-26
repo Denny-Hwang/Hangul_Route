@@ -10,7 +10,17 @@
 // earlier listens. Interactive in a terminal: Enter keeps a clip, v vetoes it (with an optional reason), r plays it
 // again, q stops. Without a terminal and without --veto nothing is recorded.
 // The rules are in listen-lib.mjs, tested.
+//
+// The blind listen of the contrast sets (AMENDMENTS-MINIMAL-PAIRS section 3.3, row MP-1a) is a mode of this tool:
+//
+//   pnpm audio:tts:listen --contrast all --engine polly --voice Seoyeon                   (computer sound)
+//   pnpm audio:tts:listen --contrast all --engine polly --voice Seoyeon --speaker phone   (once more, a phone-sized speaker)
+//
+// It plays each member of a set three times in a shuffled order and asks which one you heard (nothing is shown until the
+// set ends), then plays the set side by side with two questions, and records the verdict per set in owner-contrast.json
+// next to the QA report. Only a processed MP3 that the clip lock holds is played. It is required for a set to be played.
 import { spawnSync } from 'node:child_process';
+import { randomInt } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -30,6 +40,16 @@ function writeAtomic(path, data) {
 function player() {
   if (spawnSync('afplay', ['-h'], { stdio: 'ignore' }).error === undefined) return (file) => ['afplay', [file]];
   return (file) => ['ffplay', ['-nodisp', '-autoexit', '-loglevel', 'error', file]];
+}
+
+/** A fair shuffle (Fisher-Yates over crypto.randomInt): the order of the plays must not be guessable. */
+function shuffle(list) {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = randomInt(i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 async function main(argv) {
@@ -56,6 +76,7 @@ async function main(argv) {
         if (r.error) throw new Error(`${cmd} is not available: install ffmpeg (brew install ffmpeg) for ffplay`);
       },
       ask: rl === null ? null : (question) => rl.question(question),
+      shuffle,
       now: () => new Date(),
       out: (line) => process.stdout.write(`${line}\n`),
       err: (line) => process.stderr.write(`${line}\n`),

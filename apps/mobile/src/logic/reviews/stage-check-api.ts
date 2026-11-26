@@ -3,7 +3,7 @@ import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MemoryFile } from '../memory/memory-file';
 import { stampOf, type MemoryAnswer } from '../memory/memory-runtime';
 import { localDay, vocabOf } from '../vocab/progress';
-import { checkAnswers } from './cell-check';
+import { checkAnswers, completedQuestIds } from './cell-check';
 import type { RoundAnswer } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
 import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
@@ -162,6 +162,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
         voice: deps.voice(),
         seed: `${profileId}|${today}`,
         visibility: deps.visibility(profileId),
+        doneQuestIds: completedQuestIds(snap),
       };
       return { kind: 'ready', world: { profileId, ctx } };
     } catch {
@@ -222,7 +223,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
         // English. The stage's items' chunks load first and an item none of whose chunks loads (offline, not cached)
         // is left out; then the chunks of the options beside each answer, and the plan is built again.
         const tried = new Map<string, boolean>();
-        const ids = stageCheckItemIds(ctx.index, cells).flat();
+        const ids = stageCheckItemIds(ctx.index, cells, ctx.doneQuestIds).flat();
         await loadCells(ids, ctx, tried);
         const out = new Set(unloadable(ids, ctx, tried));
         const gloss = (): ReturnType<typeof glossFrom> => glossFrom(deps.overlays(locale));

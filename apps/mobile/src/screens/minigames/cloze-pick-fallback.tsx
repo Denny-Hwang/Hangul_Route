@@ -34,7 +34,7 @@ export function ClozePickFallback({ scope, host, onBack }: Omit<ClozePickStepPro
       textPrompt={{
         heading: copy.clozePick.heading,
         missLine: copy.clozePick.miss,
-        prompt: (round, focusRef) => (
+        prompt: (round, focusRef, held) => (
           <>
             {valueIds.has(round.id) && realia ? <ClozeRealia realia={realia} testID="cloze-pick-fallback-realia" /> : null}
             <View
@@ -44,7 +44,16 @@ export function ClozePickFallback({ scope, host, onBack }: Omit<ClozePickStepPro
               style={{ alignItems: 'center' }}
               testID="listen-pick-text-prompt"
             >
-              <KoreanText ko={round.prompt.ko} romanization={round.prompt.romanization} gloss={round.prompt.en} size="md" testID="listen-pick-prompt-text" />
+              {/* The sentence's meaning is the stimulus and stays; its romanization is held while a Check's question is open (DC-1a). */}
+              <KoreanText
+                ko={round.prompt.ko}
+                romanization={round.prompt.romanization}
+                gloss={round.prompt.en}
+                romanizationShown={!held}
+                romanizationReserved={held}
+                size="md"
+                testID="listen-pick-prompt-text"
+              />
             </View>
           </>
         ),

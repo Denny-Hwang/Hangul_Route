@@ -209,6 +209,33 @@ describe('expandCellRows', () => {
   });
 });
 
+describe('expandCellRows: optional quests (AMENDMENTS-BATCHIM-COMPLETE BC-2a)', () => {
+  const five = [['A', 4, []], ['B', 4, []], ['C', 4, []], ['D', 4, []], ['E', 4, []]] as const;
+
+  it('the eighth slot counts the trailing optional quests: CatalogCell.optionalQuestIds is the last ones, in order', () => {
+    const { cells } = expandCellRows([['stage3', 'rites', 'Holiday Words', 'shipped', 9, five, 1, 2]]);
+    expect(cells[0]?.questIds).toHaveLength(5);
+    expect(cells[0]?.optionalQuestIds).toEqual(['quest:stage3-rites-q4', 'quest:stage3-rites-q5']);
+  });
+
+  it('an absent slot, or a count of 0, means none (the field is not written); the volume slot still reads 1 or 2', () => {
+    const rows = expandCellRows([
+      ['stage3', 'rites', 'Holiday Words', 'shipped', 9, five],
+      ['stage3', 'life', 'Home', 'shipped', 9, five, 1],
+      ['stage3', 'nature', 'Plants', 'shipped', 9, five, 1, 0],
+    ]);
+    for (const cell of rows.cells) expect('optionalQuestIds' in cell, cell.episodeId).toBe(false);
+    expect(rows.cells).toHaveLength(3);
+  });
+
+  it('assembleCatalog keeps the list on the cell, and the catalogue still parses', () => {
+    const rows = expandCellRows([['stage2', 'letters', 'Word Builder', 'shipped', 9, five, 1, 2]]);
+    const catalog = assembleCatalog(sources({ cells: rows.cells, lessonQuests: rows.quests }));
+    expect(catalog.cells[0]?.optionalQuestIds).toEqual(['quest:stage2-letters-q4', 'quest:stage2-letters-q5']);
+    expect(catalog.cells[0]?.questIds).toHaveLength(5);
+  });
+});
+
 describe('assembleCatalog', () => {
   it('puts the cells in grid order and each cell\'s quests in cell order, whatever the input order', () => {
     const catalog = assembleCatalog(sources());

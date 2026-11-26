@@ -6,7 +6,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { jamoClipRefs, parseJamoSource } from './lib.mjs';
+import { AUDIO_REF_PATTERN, jamoClipRefs, parseJamoSource } from './lib.mjs';
 
 export const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const repoRoot = join(appRoot, '..', '..');
@@ -263,6 +263,106 @@ export function reviewOccurrencesOf(items) {
   return out;
 }
 
+// ---- the contrast-set catalogue (AMENDMENTS-MINIMAL-PAIRS section 3.1 and 3.4, row MP-1a) --------------------------
+// content/audio/contrast-sets.json lists the sets a Listen & Pick contrast round may play. It is a manifest source:
+// each member whose clip is not a jamo clip is an occurrence of the pack of its unit's quest, so a text no round has
+// used yet still gets a manifest row (and a pack), and a clip warms with the quest that plays it.
+
+export const CONTRAST_SETS_FILE = 'content/audio/contrast-sets.json';
+export const CONTRAST_SET_SERIES = ['k', 't', 'p', 'c', 's'];
+export const CONTRAST_MEMBER_KINDS = ['plain', 'aspirated', 'tense'];
+const SET_ID = /^[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)+$/;
+/** `minigame:s1-life-q3-pairs`: the game scope that plays a set; stage 1, theme life, quest 3 of the cell. */
+const UNIT = /^minigame:s([1-7])-([a-z]+)-(q[0-9]+)-pairs$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * The quest and the clip pack of a set's unit, read from the unit's name (`minigame:s1-life-q3-pairs` ->
+ * `quest:stage1-life-q3`, pack `stage1`), or null for a unit of another shape.
+ */
+export function contrastUnitInfo(unit) {
+  const m = UNIT.exec(String(unit));
+  if (m === null) return null;
+  return { stage: Number(m[1]), quest: `quest:stage${m[1]}-${m[2]}-${m[3]}`, pack: `stage${m[1]}` };
+}
+
+/**
+ * Validates a parsed content/audio/contrast-sets.json and returns it; throws naming the set and the field. The rules
+ * of section 3.1 that need the manifest or the content (decodability, the first consonant, refs that are rows) are
+ * checked by the catalogue's test.
+ */
+export function parseContrastSets(json, file = CONTRAST_SETS_FILE) {
+  const fail = (message) => {
+    throw new Error(`${file}: ${message}`);
+  };
+  if (json === null || typeof json !== 'object' || Array.isArray(json)) fail('not an object');
+  if (json.schemaVersion !== 1) fail('schemaVersion must be 1');
+  if (!Array.isArray(json.sets) || json.sets.length === 0) fail('sets must be a non-empty array');
+  const ids = new Set();
+  for (const set of json.sets) {
+    const id = set?.id;
+    if (typeof id !== 'string' || !SET_ID.test(id)) fail(`set id ${JSON.stringify(id)} must be kebab-case with at least two parts (ga-ka)`);
+    if (ids.has(id)) fail(`set ${id} is listed twice`);
+    ids.add(id);
+    const where = `set ${id}`;
+    const extra = Object.keys(set).filter((k) => !['id', 'series', 'unit', 'members', 'approval', 'lapsed'].includes(k));
+    if (extra.length > 0) fail(`${where} has unknown fields ${extra.join(', ')}`);
+    if (!CONTRAST_SET_SERIES.includes(set.series)) fail(`${where}: series must be one of ${CONTRAST_SET_SERIES.join(', ')}`);
+    if (contrastUnitInfo(set.unit) === null) fail(`${where}: unit "${set.unit}" must look like minigame:s1-life-q3-pairs`);
+    if (!Array.isArray(set.members) || set.members.length < 2 || set.members.length > 3) fail(`${where}: members must be two or three clips`);
+    const texts = new Set();
+    const refs = new Set();
+    for (const m of set.members) {
+      for (const k of ['text', 'romanization', 'en', 'ref', 'kind']) if (typeof m?.[k] !== 'string' || m[k] === '') fail(`${where}: every member needs a non-empty ${k}`);
+      const extraMember = Object.keys(m).filter((k) => !['text', 'romanization', 'en', 'ref', 'kind'].includes(k));
+      if (extraMember.length > 0) fail(`${where}: member ${m.text} has unknown fields ${extraMember.join(', ')}`);
+      if (!CONTRAST_MEMBER_KINDS.includes(m.kind)) fail(`${where}: member ${m.text} kind must be one of ${CONTRAST_MEMBER_KINDS.join(', ')}`);
+      if (!AUDIO_REF_PATTERN.test(m.ref)) fail(`${where}: member ${m.text} ref "${m.ref}" is not a clip ref`);
+      if (texts.has(m.text) || refs.has(m.ref)) fail(`${where}: member ${m.text} repeats a text or a clip`);
+      texts.add(m.text);
+      refs.add(m.ref);
+    }
+    if (set.approval !== undefined) {
+      const a = set.approval;
+      if (typeof a?.date !== 'string' || !DAY.test(a.date)) fail(`${where}: approval.date must be YYYY-MM-DD`);
+      if (!Number.isInteger(a.plays) || !Number.isInteger(a.correct) || a.correct > a.plays) fail(`${where}: approval needs integer plays and correct (correct <= plays)`);
+      const keys = Object.keys(a.mp3Sha256 ?? {}).sort();
+      if (JSON.stringify(keys) !== JSON.stringify([...refs].sort())) fail(`${where}: approval.mp3Sha256 must name exactly the members' refs`);
+      for (const sha of Object.values(a.mp3Sha256)) if (!SHA256.test(String(sha))) fail(`${where}: approval.mp3Sha256 values must be sha256`);
+    }
+    if (set.lapsed !== undefined && (typeof set.lapsed?.date !== 'string' || !DAY.test(set.lapsed.date) || typeof set.lapsed?.reason !== 'string' || set.lapsed.reason === '')) {
+      fail(`${where}: lapsed needs a date (YYYY-MM-DD) and a reason`);
+    }
+  }
+  return json;
+}
+
+/** The committed catalogue, validated. */
+export function readContrastSets(root = repoRoot) {
+  return parseContrastSets(JSON.parse(readFileSync(join(root, CONTRAST_SETS_FILE), 'utf8')));
+}
+
+/** Whether a member's clip is a jamo clip (the sound Discover plays): already a manifest row, never a say occurrence. */
+export const isJamoRef = (ref) => String(ref).startsWith('audio/jamo/');
+
+/**
+ * The catalogue's say texts, one occurrence per member whose clip is not a jamo clip, in the pack of the unit's quest
+ * with the unit as its source (AMENDMENTS-MINIMAL-PAIRS section 3.4). The manifest's rule then gives a text to the
+ * first pack that uses it, so a clip the catalogue names as quest 6's moves to `stage1`.
+ */
+export function contrastOccurrencesOf(catalogue) {
+  const out = [];
+  for (const set of catalogue.sets) {
+    const { pack } = contrastUnitInfo(set.unit);
+    set.members.forEach((member, i) => {
+      if (isJamoRef(member.ref)) return;
+      out.push(occurrenceOf(pack, set.unit, ['sets', set.id, 'members', i], { ko: member.text }));
+    });
+  }
+  return out;
+}
+
 /**
  * Every jamo clip voice and every spoken-text occurrence of the shipped content, in a fixed order: the jamo records
  * and the Stage 1 quests, the heritage cards (TypeScript, through ts-loader), the content JSON, and the review items
@@ -281,6 +381,7 @@ export async function readClipSources(root = repoRoot) {
     occurrences: [
       ...stage1OccurrencesOf(stage1Quests, minigameScopes),
       ...contentOccurrences(readShippedContent(root)),
+      ...contrastOccurrencesOf(readContrastSets(root)),
       ...reviewOccurrencesOf(items),
       ...cardOccurrencesOf(heritageCardsAll),
     ],

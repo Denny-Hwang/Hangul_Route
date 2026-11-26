@@ -9,7 +9,7 @@ import { sayKey, sayRef } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import { answerOf, parseListenArgs, runListen } from '../audio/tts/listen-lib.mjs';
 import { saySha256 } from '../audio/tts/lock-lib.mjs';
-import { clipFilesOf, clipRowMatcher, parseQaArgs, qaRefusalOf, runQa } from '../audio/tts/qa-run.mjs';
+import { clipFilesOf, clipRowMatcher, contrastRows, parseQaArgs, qaRefusalOf, runQa, selectContrastSets } from '../audio/tts/qa-run.mjs';
 
 const APP_ROOT = join(__dirname, '..', '..');
 const REPO = '/repo';
@@ -355,6 +355,338 @@ describe('audio:tts:listen', () => {
     const h = listenHarness();
     expect(await runListen(['--pack', 'jamo-s1', '--engine', 'polly', '--voice', 'Seoyeon', '--veto', 'ae'], {}, h.deps)).toBe(2);
     expect(h.err[0]).toMatch(/--veto: ae not in the selection/);
+  });
+});
+
+// --- The contrast-set gate and the blind listen (AMENDMENTS-MINIMAL-PAIRS sections 3.2 and 3.3; row MP-1a) ---------------
+
+const member = (text, rom, ref, kind) => ({ text, romanization: rom, en: `the syllable ${rom}`, ref, kind });
+const GA_KA = { id: 'ga-ka', series: 'k', unit: 'minigame:s1-life-q3-pairs', members: [member('가', 'ga', 'audio/jamo/giyeok.mp3', 'plain'), member('카', 'ka', 'audio/jamo/kieuk.mp3', 'aspirated')] };
+const SADA = { id: 'sada-ssada', series: 's', unit: 'minigame:s2-letters-q2-pairs', members: [
+  { text: '사다', romanization: 'sada', en: 'to buy', ref: 'audio/say/ee0ee072926e06fc.mp3', kind: 'plain' },
+  { text: '싸다', romanization: 'ssada', en: 'cheap', ref: 'audio/say/b291179e0fe019b6.mp3', kind: 'tense' },
+] };
+const DAL = { id: 'dal-tal-ttal', series: 't', unit: 'minigame:s2-letters-q2-pairs', members: [
+  { text: '달', romanization: 'dal', en: 'moon', ref: 'audio/say/2f941e6eb2150679.mp3', kind: 'plain' },
+  { text: '탈', romanization: 'tal', en: 'mask', ref: 'audio/say/a61623942ca7dcd4.mp3', kind: 'aspirated' },
+  { text: '딸', romanization: 'ttal', en: 'daughter', ref: 'audio/say/11cf51a3ca8b5108.mp3', kind: 'tense' },
+] };
+const CATALOGUE = { schemaVersion: 1, sets: [GA_KA, SADA, DAL] };
+const CATALOGUE_PATH = `${REPO}/content/audio/contrast-sets.json`;
+
+describe('audio:tts:qa --contrast', () => {
+  const CONTRAST_ARGS = ['--engine', 'polly', '--voice', 'Seoyeon', '--contrast', 'ga-ka', '--dir', MASTERS];
+  const contrastHarness = (opts = {}) => harness({ ...opts, extraFs: { [CATALOGUE_PATH]: JSON.stringify(CATALOGUE), ...(opts.extraFs ?? {}) } });
+
+  it('selects its own rows: the members of the named sets, across packs, never combined with another selection', () => {
+    expect(parseQaArgs(['--engine', 'polly', '--voice', 'Seoyeon', '--contrast', 'ga-ka,go-ko'])).toMatchObject({ contrast: ['ga-ka', 'go-ko'] });
+    expect(parseQaArgs(['--engine', 'polly', '--voice', 'Seoyeon', '--contrast', 'all']).contrast).toEqual(['all']);
+    expect(parseQaArgs([...ARGS, '--contrast', 'all']).error).toMatch(/cannot be combined with --pilot, --pack or --only/);
+    expect(parseQaArgs(['--engine', 'polly', '--voice', 'Seoyeon', '--contrast', 'all,ga-ka']).error).toMatch(/all cannot be combined/);
+    expect(parseQaArgs(['--engine', 'polly', '--voice', 'Seoyeon']).error).toMatch(/--pack, --pilot or --only/);
+    const sets = selectContrastSets(CATALOGUE, ['all']);
+    expect(sets).toHaveLength(3);
+    expect(selectContrastSets(CATALOGUE, ['sada-ssada']).map((s) => s.id)).toEqual(['sada-ssada']);
+    expect(() => selectContrastSets(CATALOGUE, ['nope'])).toThrow(/no set nope; sets: ga-ka, sada-ssada, dal-tal-ttal/);
+    const manifestRows = [...MANIFEST.rows, { ...jamo('giyeok', '가'), ref: 'audio/say/64ee5293d31bc58b.mp3', key: '64ee5293d31bc58b', kind: 'syllable', pack: 'stage1' }];
+    expect(contrastRows(manifestRows, [GA_KA]).map((r) => r.key)).toEqual(['giyeok', 'kieuk']);
+  });
+
+  it('passes a set whose members agree, writes the set table into both reports and exits 0', async () => {
+    const h = contrastHarness();
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(0);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.summary).toMatchObject({ rows: 2, clips: 2, pass: 2, fail: 0, contrastSets: { sets: 1, pass: 1, fail: 0 } });
+    expect(report.selection.contrast).toEqual(['ga-ka']);
+    expect(report.selectionLabel).toBe('contrast sets ga-ka');
+    expect(report.contrastSets).toHaveLength(1);
+    expect(report.contrastSets[0]).toMatchObject({ id: 'ga-ka', ok: true, regenerate: [], owner: { computer: 'not done', phone: 'not done' } });
+    expect(Object.values(report.contrastSets[0].gates).every((g) => g.ok)).toBe(true);
+    expect(report.contrastSets[0].margins).toEqual([{ text: '가', margin: 5, over: '카' }, { text: '카', margin: 5, over: '가' }]);
+    const md = h.fs.get(`${MASTERS}/qa-report.md`);
+    expect(md).toMatch(/## Contrast sets \(set gate, AMENDMENTS-MINIMAL-PAIRS section 3\.2\)/);
+    expect(md).toMatch(/\| Set \| Members \| G1 \| G2 \| G3 \| G4 \| G5 \| G6 \| Pass 2 margin \(nats, advisory\) \| Owner listen \| Set \|/);
+    expect(md).toMatch(/\| ga-ka \| 가 카 \| pass \| pass \| pass \| pass \| pass \| pass \| 가 5 over 카, 카 5 over 가 \| computer not done; phone not done \| pass \|/);
+    expect(h.out).toContain('1 of 1 contrast sets pass the set gate (G1-G6).');
+  });
+
+  it('puts the whole series into the forced-choice grammar of a member (G2), a pair included', async () => {
+    const h = contrastHarness();
+    await runQa(CONTRAST_ARGS, {}, h.deps);
+    const calls = h.pass1.forcedChoice.mock.calls.map(([, candidates]) => candidates);
+    expect(calls.length).toBeGreaterThan(0);
+    for (const candidates of calls) for (const form of ['가', '카', '까']) expect(candidates).toContain(form);
+  });
+
+  it('G2: a 가 whose series forced choice returns 까 fails the set, which names the clip to regenerate', async () => {
+    const h = contrastHarness({ heard: { giyeok: { free: '가', forced: '까' } } });
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    const set = report.contrastSets[0];
+    expect(set.ok).toBe(false);
+    expect(set.gates.G2.failures).toEqual(['가: the series forced choice heard "까"']);
+    expect(report.regenerate.keys).toEqual(['giyeok']);
+    expect(report.regenerate.commands.at(-1)).toMatch(/audio:tts:generate --engine polly --voice Seoyeon --only giyeok$/);
+    expect(report.summary.contrastSets).toEqual({ sets: 1, pass: 0, fail: 1 });
+    expect(h.fs.get(`${MASTERS}/qa-report.md`)).toMatch(/\| ga-ka \| 가 카 \| fail: 가: fails the per-clip gate .*\| fail: 가: the series forced choice heard "까" \|/);
+    expect(h.out).toContain('  set ga-ka fails G1, G2');
+  });
+
+  it('G3: a set whose members end differently fails with nothing to regenerate (a content decision) and exits 1', async () => {
+    const rows = MANIFEST.rows.map((r) => (r.key === 'kieuk' ? { ...r, say: '카!' } : r));
+    const h = contrastHarness({ lock: lockOf(rows), extraFs: { [`${REPO}/content/audio/tts-manifest.json`]: JSON.stringify({ schemaVersion: 1, rows }) } });
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.summary).toMatchObject({ pass: 2, fail: 0 });
+    expect(report.contrastSets[0].gates.G3.failures[0]).toMatch(/가 sent as "가\.", 카 sent as "카!"/);
+    expect(report.regenerate.keys).toEqual([]);
+    expect(h.out).toContain('  set ga-ka fails G3 (nothing to regenerate: a content decision, section 3.2 "When a set fails")');
+  });
+
+  it('G4: two members that are the same bytes fail', async () => {
+    const h = contrastHarness();
+    const sha = h.deps.sha256File;
+    h.deps.sha256File = async (p) => (p.endsWith('kieuk.wav') ? sha(`${MASTERS}/giyeok.wav`) : sha(p));
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    const set = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`)).contrastSets[0];
+    expect(set.gates.G4.failures).toEqual(['가 and 카 are byte-identical']);
+    // The per-clip identity check fails both byte-identical letters too; the set names them all.
+    expect(set.regenerate).toContain('kieuk');
+  });
+
+  it('G6: a member in a pack the quest does not load fails the set', async () => {
+    const rows = MANIFEST.rows.map((r) => (r.key === 'kieuk' ? { ...r, pack: 'stage3' } : r));
+    const h = contrastHarness({ extraFs: { [`${REPO}/content/audio/tts-manifest.json`]: JSON.stringify({ schemaVersion: 1, rows }) } });
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    expect(JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`)).contrastSets[0].gates.G6.failures[0]).toMatch(/카 is in pack stage3/);
+  });
+
+  it('a member with no clip fails the set and is listed as missing; the other gates are not run', async () => {
+    const h = contrastHarness({ files: ['giyeok.wav'] });
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.missing).toEqual(['kieuk']);
+    expect(report.contrastSets[0].gates.G1.failures).toEqual(['카: no clip']);
+    expect(report.contrastSets[0].gates.G2.ran).toBe(false);
+    expect(h.fs.get(`${MASTERS}/qa-report.md`)).toMatch(/\| ga-ka \| 가 카 \(no clip\) \| fail: 카: no clip \| not run \(a member has no clip\)/);
+  });
+
+  it('a veto of a member in the owner listen fails G1 of its set', async () => {
+    const h = contrastHarness();
+    h.fs.set(`${MASTERS}/owner-listen.json`, JSON.stringify({ date: '2026-11-01', played: 1, vetoes: [{ key: 'kieuk', text: '카', note: '', sha256s: [] }], sessions: [] }));
+    expect(await runQa(CONTRAST_ARGS, {}, h.deps)).toBe(1);
+    const set = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`)).contrastSets[0];
+    expect(set.gates.G1.failures).toEqual(['카: vetoed in the owner listen']);
+  });
+
+  it('reads the owner\'s blind listen next to the report: pass per speaker, or "clip changed" when the MP3 is not the one heard', async () => {
+    const sha = (key) => saySha256(`${MASTERS}/${key}.wav`);
+    const run = (date, pass, shas) => ({ date, speaker: 'computer', pass, correct: 6, total: 6, mp3Sha256: shas });
+    const listen = (computer, phone) => JSON.stringify({ schemaVersion: 1, sets: { 'ga-ka': { runs: { ...(computer ? { computer } : {}), ...(phone ? { phone } : {}) } } } });
+    const heard = { 'audio/jamo/giyeok.mp3': sha('giyeok'), 'audio/jamo/kieuk.mp3': sha('kieuk') };
+    const h = contrastHarness({ extraFs: { [`${MASTERS}/owner-contrast.json`]: listen(run('2026-11-26', true, heard), run('2026-11-27', false, heard)) } });
+    await runQa(CONTRAST_ARGS, {}, h.deps);
+    expect(JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`)).contrastSets[0].owner).toEqual({ computer: 'pass (2026-11-26)', phone: 'fail (2026-11-27)' });
+    expect(h.fs.get(`${MASTERS}/qa-report.md`)).toMatch(/computer pass \(2026-11-26\); phone fail \(2026-11-27\)/);
+    const changed = contrastHarness({ extraFs: { [`${MASTERS}/owner-contrast.json`]: listen(run('2026-11-26', true, { ...heard, 'audio/jamo/kieuk.mp3': 'f'.repeat(64) })) } });
+    await runQa(CONTRAST_ARGS, {}, changed.deps);
+    expect(JSON.parse(changed.fs.get(`${MASTERS}/qa-report.json`)).contrastSets[0].owner).toEqual({ computer: 'clip changed since 2026-11-26', phone: 'not done' });
+  });
+
+  it('checks the processed MP3s of the jamo and say folders by default, and --contrast-sets reads another catalogue', async () => {
+    const mp3 = (r) => saySha256(`${ASSETS}/${r.ref.slice('audio/'.length)}`);
+    const lock = { schemaVersion: 1, rows: lockOf(MANIFEST.rows).rows.map((l, i) => ({ ...l, mp3Sha256: mp3(MANIFEST.rows[i]) })) };
+    const h = harness({ dirs: { [`${ASSETS}/jamo`]: ['giyeok.mp3', 'kieuk.mp3', 'giyeok-name.mp3'], [`${ASSETS}/say`]: ['other.mp3'] }, lock, extraFs: { [`${REPO}/tmp/sets.json`]: JSON.stringify(CATALOGUE) } });
+    expect(await runQa(['--engine', 'polly', '--voice', 'Seoyeon', '--contrast', 'ga-ka', '--contrast-sets', 'tmp/sets.json'], {}, h.deps)).toBe(0);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.stage).toBe('processed');
+    expect(report.folders).toEqual(['apps/mobile/assets/audio/jamo', 'apps/mobile/assets/audio/say']);
+    expect(report.contrastSets[0].ok).toBe(true);
+    // Only the clips of the set are hashed and checked: the rest of a processed folder is not this run's business.
+    expect(report.extra).toEqual([]);
+    expect(report.clips.map((c) => c.key)).toEqual(['giyeok', 'kieuk']);
+  });
+
+  it('a set id that is not in the catalogue is a usage error', async () => {
+    const h = contrastHarness();
+    expect(await runQa([...CONTRAST_ARGS.slice(0, 4), '--contrast', 'nope', '--dir', MASTERS], {}, h.deps)).toBe(2);
+    expect(h.err[0]).toMatch(/--contrast: no set nope/);
+  });
+
+  it('a later owner listen keeps the set table of the report (the veto adds the member to the rows to regenerate)', async () => {
+    const h = contrastHarness();
+    await runQa(CONTRAST_ARGS, {}, h.deps);
+    const deps = { ...h.deps, romanize: () => '', play: vi.fn(async () => {}), ask: null };
+    expect(await runListen(['--pack', 'jamo-s1', '--engine', 'polly', '--voice', 'Seoyeon', '--veto', 'kieuk'], {}, deps)).toBe(0);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.contrastSets).toHaveLength(1);
+    expect(report.summary.contrastSets).toEqual({ sets: 1, pass: 1, fail: 0 });
+    expect(report.regenerate.keys).toEqual(['kieuk']);
+  });
+});
+
+describe('audio:tts:listen --contrast', () => {
+  const ASSET_FILES = {
+    'audio/jamo/giyeok.mp3': `${ASSETS}/jamo/giyeok.mp3`,
+    'audio/jamo/kieuk.mp3': `${ASSETS}/jamo/kieuk.mp3`,
+    'audio/say/ee0ee072926e06fc.mp3': `${ASSETS}/say/ee0ee072926e06fc.mp3`,
+    'audio/say/b291179e0fe019b6.mp3': `${ASSETS}/say/b291179e0fe019b6.mp3`,
+    'audio/say/2f941e6eb2150679.mp3': `${ASSETS}/say/2f941e6eb2150679.mp3`,
+    'audio/say/a61623942ca7dcd4.mp3': `${ASSETS}/say/a61623942ca7dcd4.mp3`,
+    'audio/say/11cf51a3ca8b5108.mp3': `${ASSETS}/say/11cf51a3ca8b5108.mp3`,
+  };
+  const ROMAN = { 가: 'ga', 카: 'ka', 까: 'kka', 사다: 'sada', 싸다: 'ssada', 달: 'dal', 탈: 'tal', 딸: 'ttal' };
+  const LISTEN_ARGS = ['--contrast', 'ga-ka', '--engine', 'polly', '--voice', 'Seoyeon'];
+
+  /** In-memory effects: the processed MP3s exist and are in the lock, the plays come back in reverse order (deterministic). */
+  function contrastListen({ answers, present = Object.keys(ASSET_FILES), lockShas = {}, previous = null, ignored = true } = {}) {
+    const lock = {
+      schemaVersion: 1,
+      rows: Object.entries(ASSET_FILES).map(([ref, path]) => ({ ref, key: 'k', engine: 'polly', voice: 'Seoyeon', model: 'neural', rate: 0.85, generated: '2026-11-07', saySha256: saySha256('x'), mp3Sha256: lockShas[ref] ?? saySha256(path) })),
+    };
+    const fs = new Map([
+      [CATALOGUE_PATH, JSON.stringify(CATALOGUE)],
+      [`${REPO}/content/audio/tts-lock.json`, JSON.stringify(lock)],
+      ...(previous === null ? [] : [[`${MASTERS}/owner-contrast.json`, JSON.stringify(previous)]]),
+    ]);
+    const present_ = new Set(present.map((ref) => ASSET_FILES[ref]));
+    const queue = answers === null ? null : [...answers];
+    const out = [];
+    const err = [];
+    const played = [];
+    const asked = [];
+    const deps = {
+      repoRoot: REPO,
+      readText: (p) => {
+        if (!fs.has(p)) throw new Error(`ENOENT ${p}`);
+        return fs.get(p);
+      },
+      exists: (p) => fs.has(p) || present_.has(p),
+      writeAtomic: (p, text) => fs.set(p, text),
+      isIgnored: () => ignored,
+      sha256File: async (p) => saySha256(p),
+      romanize: (t) => ROMAN[t] ?? '?',
+      play: vi.fn(async (f) => played.push(f.split('/').pop())),
+      ask: queue === null ? null : vi.fn(async (q) => {
+        asked.push(q);
+        return queue.shift() ?? 'q';
+      }),
+      shuffle: (list) => [...list].reverse(),
+      now: () => new Date('2026-11-26T10:00:00Z'),
+      out: (l) => out.push(l),
+      err: (l) => err.push(l),
+    };
+    return { deps, fs, out, err, played, asked };
+  }
+
+  it('reads its arguments: a mode of its own that records next to the QA report', () => {
+    expect(parseListenArgs(LISTEN_ARGS)).toMatchObject({ contrast: ['ga-ka'], speaker: 'computer', engine: 'polly', voice: 'Seoyeon' });
+    expect(parseListenArgs(['--contrast', 'all', '--engine', 'polly', '--voice', 'Seoyeon', '--speaker', 'phone']).speaker).toBe('phone');
+    expect(parseListenArgs(['--contrast', 'all']).error).toMatch(/--contrast needs --engine and --voice/);
+    expect(parseListenArgs([...LISTEN_ARGS, '--pack', 'jamo-s1']).error).toMatch(/cannot be combined/);
+    expect(parseListenArgs([...LISTEN_ARGS, '--speaker', 'tablet']).error).toMatch(/--speaker must be computer or phone/);
+    expect(parseListenArgs(['--contrast', 'all,ga-ka', '--engine', 'polly', '--voice', 'Seoyeon']).error).toMatch(/all cannot be combined/);
+    expect(parseListenArgs(['--pack', 'jamo-s1', '--engine', 'polly', '--voice', 'Seoyeon', '--speaker', 'phone']).error).toMatch(/belong to --contrast/);
+  });
+
+  it('asks the whole series blind, each member three times in a shuffled order, then plays the set side by side and asks the two questions', async () => {
+    // reverse order of [가 가 가 카 카 카]: 카 카 카 가 가 가; the series is 1 가, 2 카, 3 까.
+    const h = contrastListen({ answers: ['2', '2', '2', '1', '1', '1', 'y', 'y'] });
+    expect(await runListen(LISTEN_ARGS, {}, h.deps)).toBe(0);
+    expect(h.out).toContain('\nset ga-ka (1/1): which one is it?');
+    expect(h.out).toContain('  1  가  [ga]');
+    expect(h.out).toContain('  2  카  [ka]');
+    expect(h.out).toContain('  3  까  [kka]');
+    // Nothing about right or wrong is shown before the set ends.
+    expect(h.out.findIndex((l) => /PASS|FAIL/.test(l))).toBe(h.out.length - 3);
+    expect(h.played).toEqual(['kieuk.mp3', 'kieuk.mp3', 'kieuk.mp3', 'giyeok.mp3', 'giyeok.mp3', 'giyeok.mp3', 'giyeok.mp3', 'kieuk.mp3', 'giyeok.mp3', 'kieuk.mp3']);
+    expect(h.asked.slice(0, 6).every((q) => /^  play \d\/6: 1-3, r replays, q stops: $/.test(q))).toBe(true);
+    expect(h.asked[6]).toBe('  Same calm voice, same speed and tune; only the first sound differs? (y/n, q stops): ');
+    expect(h.asked[7]).toBe('  가 soft and lower at the start; 카 a clear puff and higher? (y/n, q stops): ');
+    expect(h.out).toContain('  ga-ka: PASS (6 of 6 right; sameFrame y, kinds y)');
+    const record = JSON.parse(h.fs.get(`${MASTERS}/owner-contrast.json`));
+    expect(record.schemaVersion).toBe(1);
+    expect(record.sets['ga-ka'].runs.computer).toMatchObject({
+      date: '2026-11-26',
+      speaker: 'computer',
+      pass: true,
+      correct: 6,
+      total: 6,
+      answers: { sameFrame: 'y', kinds: 'y' },
+      note: '',
+      mp3Sha256: { 'audio/jamo/giyeok.mp3': saySha256(`${ASSETS}/jamo/giyeok.mp3`), 'audio/jamo/kieuk.mp3': saySha256(`${ASSETS}/jamo/kieuk.mp3`) },
+    });
+    expect(record.sets['ga-ka'].runs.computer.plays).toHaveLength(6);
+    expect(record.sets['ga-ka'].runs.computer.plays[0]).toEqual({ member: '카', ref: 'audio/jamo/kieuk.mp3', heard: '카', correct: true });
+    expect(h.out.at(-1)).toMatch(/Once more with the sound on a phone-sized speaker: add --speaker phone/);
+  });
+
+  it('fails the set on one wrong play, or on one n, and keeps the note; a bad number or r plays the clip again', async () => {
+    const wrong = contrastListen({ answers: ['9', '2', '2', '2', '1', '3', '1', 'y', 'y', 'the 카 sounded tense'] });
+    expect(await runListen(LISTEN_ARGS, {}, wrong.deps)).toBe(0);
+    const run = JSON.parse(wrong.fs.get(`${MASTERS}/owner-contrast.json`)).sets['ga-ka'].runs.computer;
+    expect(run).toMatchObject({ pass: false, correct: 5, total: 6, note: 'the 카 sounded tense' });
+    expect(run.plays.filter((p) => !p.correct)).toEqual([{ member: '가', ref: 'audio/jamo/giyeok.mp3', heard: '까', correct: false }]);
+    // The bad answer "9" played the first clip again.
+    expect(wrong.played.slice(0, 2)).toEqual(['kieuk.mp3', 'kieuk.mp3']);
+    expect(wrong.out).toContain('  ga-ka: FAIL (5 of 6 right; sameFrame y, kinds y)');
+
+    const no = contrastListen({ answers: ['2', '2', '2', '1', '1', '1', 'y', 'n', ''] });
+    await runListen(LISTEN_ARGS, {}, no.deps);
+    expect(JSON.parse(no.fs.get(`${MASTERS}/owner-contrast.json`)).sets['ga-ka'].runs.computer).toMatchObject({ pass: false, correct: 6, answers: { sameFrame: 'y', kinds: 'n' } });
+  });
+
+  it('asks ㅅ / ㅆ its own question, and a word set whether each one sounds like the word; a triple has nine plays and its whole series', async () => {
+    const sada = contrastListen({ answers: ['2', '2', '2', '1', '1', '1', 'y', 'y', 'y'] });
+    expect(await runListen(['--contrast', 'sada-ssada', '--engine', 'polly', '--voice', 'Seoyeon'], {}, sada.deps)).toBe(0);
+    expect(sada.asked[7]).toBe('  사다 breathy, 싸다 a longer, sharper hiss; both start high? (y/n, q stops): ');
+    expect(sada.asked[8]).toBe('  Each one sounds like the word? (y/n, q stops): ');
+    expect(JSON.parse(sada.fs.get(`${MASTERS}/owner-contrast.json`)).sets['sada-ssada'].runs.computer.answers).toEqual({ sameFrame: 'y', kinds: 'y', wordSounds: 'y' });
+    expect(sada.out).toContain('  2  싸다  [ssada]');
+
+    // 달 탈 딸: the plays are [달 달 달 탈 탈 탈 딸 딸 딸] reversed.
+    const dal = contrastListen({ answers: ['3', '3', '3', '2', '2', '2', '1', '1', '1', 'y', 'y', 'y'] });
+    expect(await runListen(['--contrast', 'dal-tal-ttal', '--engine', 'polly', '--voice', 'Seoyeon'], {}, dal.deps)).toBe(0);
+    expect(dal.asked.filter((q) => /^  play /.test(q))).toHaveLength(9);
+    expect(dal.asked[10]).toBe('  달 soft and lower at the start; 탈 a clear puff and higher; 딸 tight, no puff, higher? (y/n, q stops): ');
+    expect(JSON.parse(dal.fs.get(`${MASTERS}/owner-contrast.json`)).sets['dal-tal-ttal'].runs.computer).toMatchObject({ pass: true, correct: 9, total: 9 });
+  });
+
+  it('q stops: the set in progress is not recorded, earlier sets stay; a phone run is kept beside the computer run', async () => {
+    const prior = { schemaVersion: 1, sets: { 'ga-ka': { runs: { computer: { date: '2026-11-25', speaker: 'computer', pass: true, correct: 6, total: 6, mp3Sha256: {} } } } } };
+    const stopped = contrastListen({ answers: ['2', 'q'], previous: prior });
+    expect(await runListen(['--contrast', 'ga-ka,sada-ssada', '--engine', 'polly', '--voice', 'Seoyeon'], {}, stopped.deps)).toBe(0);
+    expect(JSON.parse(stopped.fs.get(`${MASTERS}/owner-contrast.json`))).toEqual(prior);
+    const phone = contrastListen({ answers: ['2', '2', '2', '1', '1', '1', 'y', 'y'], previous: prior });
+    expect(await runListen([...LISTEN_ARGS, '--speaker', 'phone'], {}, phone.deps)).toBe(0);
+    const runs = JSON.parse(phone.fs.get(`${MASTERS}/owner-contrast.json`)).sets['ga-ka'].runs;
+    expect(Object.keys(runs).sort()).toEqual(['computer', 'phone']);
+    expect(runs.computer.date).toBe('2026-11-25');
+    expect(runs.phone).toMatchObject({ speaker: 'phone', pass: true });
+    expect(phone.out.at(-1)).not.toMatch(/Once more/);
+  });
+
+  it('skips a set whose MP3 is missing or is not the one the lock holds, naming why, and exits 1', async () => {
+    const missing = contrastListen({ answers: [], present: ['audio/jamo/giyeok.mp3'] });
+    expect(await runListen(LISTEN_ARGS, {}, missing.deps)).toBe(1);
+    expect(missing.out.find((l) => /skipped/.test(l))).toMatch(/set ga-ka \(1\/1\): skipped\. 카: no processed MP3 at apps\/mobile\/assets\/audio\/jamo\/kieuk\.mp3/);
+    expect(missing.fs.has(`${MASTERS}/owner-contrast.json`)).toBe(false);
+    const changed = contrastListen({ answers: [], lockShas: { 'audio/jamo/kieuk.mp3': 'e'.repeat(64) } });
+    expect(await runListen(LISTEN_ARGS, {}, changed.deps)).toBe(1);
+    expect(changed.out.find((l) => /skipped/.test(l))).toMatch(/is not the MP3 the lock holds for polly\/Seoyeon \(finish the hand-off first\)/);
+    expect(changed.played).toEqual([]);
+  });
+
+  it('refuses without a terminal, outside a gitignored folder and for an unknown set', async () => {
+    const noTerminal = contrastListen({ answers: null });
+    expect(await runListen(LISTEN_ARGS, {}, noTerminal.deps)).toBe(2);
+    expect(noTerminal.err[0]).toMatch(/needs a terminal/);
+    const open = contrastListen({ answers: [], ignored: false });
+    expect(await runListen(LISTEN_ARGS, {}, open.deps)).toBe(2);
+    expect(open.err[0]).toMatch(/is not gitignored/);
+    const unknown = contrastListen({ answers: [] });
+    expect(await runListen(['--contrast', 'nope', '--engine', 'polly', '--voice', 'Seoyeon'], {}, unknown.deps)).toBe(2);
+    expect(unknown.err[0]).toMatch(/--contrast: no set nope/);
   });
 });
 

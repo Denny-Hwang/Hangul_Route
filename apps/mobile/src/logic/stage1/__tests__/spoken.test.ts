@@ -1,4 +1,4 @@
-import { romanizeWord, type Jamo } from '@hangul-route/content-schema';
+import { romanizeReviewed, type Jamo } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { decompose } from '../hangul';
@@ -45,7 +45,7 @@ describe('spoken forms read from the jamo data (F-QUEST-002 §3.12, F-AUDIO-004 
     for (const j of jamoAll) {
       const f = form(j.id);
       expect(f.romanization, j.id).toMatch(/^[a-z]+$/);
-      expect(f.romanization, j.id).toBe(romanizeWord(f.ko));
+      expect(f.romanization, j.id).toBe(romanizeReviewed(f.ko).text);
     }
   });
 

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { HiddenHeritageRoundSchema, romanizeWord, translatableFields } from '@hangul-route/content-schema';
+import { HiddenHeritageRoundSchema, romanizeReviewed, translatableFields } from '@hangul-route/content-schema';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
@@ -140,7 +140,7 @@ describe('the Letters school room scene (row CM-37 part 1)', () => {
   it('every target is a word pair taught in the Stage 2 Letters cell, every other thing a word taught in Stage 2, with the rr.ts romanization', () => {
     const letters = stage2Taught(['letters']);
     const stage2 = stage2Taught(STAGE2_CELLS);
-    for (const thing of THINGS) expect(thing.word.romanization, thing.id).toBe(romanizeWord(thing.word.ko));
+    for (const thing of THINGS) expect(thing.word.romanization, thing.id).toBe(romanizeReviewed(thing.word.ko).text);
     for (const t of ROUND.targets) expect(letters.some((w) => sameWord(w, t.word)), t.word.ko).toBe(true);
     for (const o of ROUND.others) expect(stage2.some((w) => sameWord(w, o.word)), o.word.ko).toBe(true);
   });

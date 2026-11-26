@@ -66,8 +66,8 @@ async function schemaModules() {
     loaderRegistered = true;
   }
   const at = (rel) => pathToFileURL(join(SCRIPTS, "..", "packages", "content-schema", "src", ...rel.split("/"))).href;
-  const [drop, rr] = await Promise.all([import(at("week-drops/week-drop.ts")), import(at("romanization/rr.ts"))]);
-  return { ...drop, romanize: rr.romanize };
+  const [drop, reviewed] = await Promise.all([import(at("week-drops/week-drop.ts")), import(at("romanization/reviewed.ts"))]);
+  return { ...drop, romanizeReviewed: reviewed.romanizeReviewed };
 }
 
 function readJson(root, rel) {
@@ -104,7 +104,7 @@ export function weekOverlays(root, m) {
   return out;
 }
 
-/** A note split into UI text and taught Korean, each token with its F-CNT-002 romanization. */
+/** A note split into UI text and taught Korean, each token with its reviewed romanization (F-CNT-002). */
 export function noteParts(text, romanize) {
   const parts = [];
   let at = 0;
@@ -121,7 +121,7 @@ const tokensOf = (text) => Array.from(String(text).matchAll(TOKEN), (t) => t[1])
 
 /**
  * Pure: every ready drop of the tree as the chunk holds it, sorted by week. Throws ContentError on a body that is
- * not a drop, two drops of one week, a romanization that is not the converter's, or an overlay note whose tokens
+ * not a drop, two drops of one week, a romanization that is not the reviewed one (F-CNT-002, AMENDMENTS-ROMANIZER-GAPS RG-2a), or an overlay note whose tokens
  * differ from the English.
  */
 export function buildDrops(tree, overlays, m) {
@@ -138,7 +138,7 @@ export function buildDrops(tree, overlays, m) {
     if (drop.weekOf !== file[1]) throw new ContentError(`the file of the week of ${drop.weekOf} is content/weekly/${drop.weekOf}.json`, rel);
     if (drop.status !== "ready") continue;
     for (const item of drop.items) {
-      const want = m.romanize(item.ko).text;
+      const want = m.romanizeReviewed(item.ko).text;
       if (item.romanization !== want) throw new ContentError(`items.${item.id}: the romanization of ${item.ko} is ${want} (F-CNT-002), not ${item.romanization}`, rel);
     }
     const local = (field) => Object.fromEntries(LOCALES.flatMap((l) => (typeof overlays[l][drop.id]?.[field] === "string" ? [[l, overlays[l][drop.id][field]]] : [])));
@@ -156,7 +156,7 @@ export function buildDrops(tree, overlays, m) {
       topic: drop.topic,
       minutes: drop.minutes,
       title: { en: drop.titleEn, ...local("title") },
-      note: { en: noteParts(drop.noteEn, m.romanize), ...Object.fromEntries(Object.entries(notes).map(([l, t]) => [l, noteParts(t, m.romanize)])) },
+      note: { en: noteParts(drop.noteEn, m.romanizeReviewed), ...Object.fromEntries(Object.entries(notes).map(([l, t]) => [l, noteParts(t, m.romanizeReviewed)])) },
       source: { publisher: first.publisher, title: first.title, more: rest.length },
       items: drop.items.map((item) => ({ id: item.id, ko: item.ko, romanization: item.romanization, gloss: { en: item.en, ...local(`items.${item.id}.gloss`) } })),
     });
