@@ -50,6 +50,12 @@ export interface KoreanTextViewInput {
    * assistive tech), so nothing moves when it is shown later (AMENDMENTS-AUDIT-2026-11 AU-8). Default `false`.
    */
   romanizationReserved?: boolean;
+  /**
+   * Keep the gloss line's room but draw it invisible and hidden from assistive tech: the meaning of a Korean option is a
+   * key to its answer while a Check's question is open (AMENDMENTS-STAGE1-DECODING-CHECK section 3.1, row DC-1c). Only for
+   * a non-empty gloss. Default `false`.
+   */
+  glossReserved?: boolean;
   /** `true` when the component has an `onPress`. */
   pressable?: boolean;
   accessibilityLabel?: string;
@@ -62,7 +68,10 @@ export interface KoreanTextView {
   showRomanization: boolean;
   /** The romanization line is hidden but keeps its room (never together with `showRomanization`). */
   reserveRomanization: boolean;
+  /** The gloss line is drawn. */
   showGloss: boolean;
+  /** The gloss line is held: it keeps its room, draws nothing and is off the accessibility tree (never together with `showGloss`). */
+  reserveGloss: boolean;
   pressable: boolean;
   showSpeaker: boolean;
   hangulSize: number;
@@ -94,7 +103,8 @@ export function koreanTextView(input: KoreanTextViewInput): KoreanTextView {
     label: koreanTextLabel(input.ko, input.romanization, input.accessibilityLabel),
     showRomanization,
     reserveRomanization: !showRomanization && input.romanizationReserved === true && present(input.romanization),
-    showGloss: present(input.gloss),
+    showGloss: present(input.gloss) && input.glossReserved !== true,
+    reserveGloss: present(input.gloss) && input.glossReserved === true,
     pressable,
     showSpeaker: pressable,
     hangulSize: tier.hangul,

@@ -31,10 +31,12 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import {
   lineHintName,
   lineSpeech,
+  keyView,
   lineViews,
   playableRealia,
   realiaArrangement,
   realiaHeaderView,
+  realiaHeld,
   realiaKeyLabel,
   realiaOptionColumns,
   realiaOptionItem,
@@ -51,6 +53,7 @@ import {
   type RealiaReadState,
 } from '../../logic/realia-read-flow';
 import { koSpeech } from '../../logic/audio/ko-speech';
+import { holdsRomanization, hostSurface } from '../../logic/locale/check-hold';
 import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { AnswerAnnouncer } from './answer-announcer';
@@ -300,7 +303,10 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
   // The question's header node (§3.4): the question and its key word by romanization, never its Hangul.
   const roundLabel = m.a11y.answer.round(roundIdx + 1, play.rounds.length, [round.questionEn, round.key ? a11yRomanization(round.key.romanization, m.a11y.romanizationOr) : undefined].filter((part): part is string => part !== undefined).join(' '));
 
-  const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr };
+  // A quest Check holds the sheet's, the key word's and the options' romanization while the question is open; a line tap says the
+  // line and shows nothing (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c).
+  const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr, held: realiaHeld(holdsRomanization(hostSurface(host.mode)), state) };
+  const key = round.key ? keyView(round.key, context) : undefined;
   const header = realiaHeaderView(host.mode, state, copy);
   const title = titleView(play.realia, context);
   const lines = lineViews(play.realia, round, state, context, a11y);
@@ -336,7 +342,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
             <RealiaSheetView
               testID="realia-read-sheet"
               kind={sheetKind(play.realia)}
-              title={title ? { ko: title.ko, romanization: title.romanization } : undefined}
+              title={title ? { ko: title.ko, romanization: title.romanization, ...(title.romanizationReserved === true ? { romanizationReserved: true } : {}) } : undefined}
               titleLabel={title?.label}
               lines={lines}
               accessibilityLabel={sheetSummary(play.realia, a11y)}
@@ -360,7 +366,8 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
                   testID="realia-read-key"
                   ko={round.key.ko}
                   romanization={round.key.romanization}
-                  romanizationShown={romanizationMode === 'always'}
+                  romanizationShown={key?.shown ?? false}
+                  romanizationReserved={key?.reserved ?? false}
                   size="sm"
                   accessibilityLabel={realiaKeyLabel(round.key, m.a11y.koreanItem, m.a11y.romanizationOr)}
                 />
@@ -377,7 +384,9 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
                         testID={`realia-read-option-${option.id}`}
                         state={view.cardState}
                         ko={view.ko}
-                        romanization={view.romanization}
+                        // A held line keeps its room, so the options do not move when the answer shows it.
+                        romanization={view.heldRomanization === '' ? view.romanization : view.heldRomanization}
+                        romanizationReserved={view.heldRomanization !== ''}
                         label={view.label}
                         art={view.pictureRef !== undefined ? <PictureArt pictureRef={view.pictureRef} gloss={view.label ?? ''} size={pictureSize} /> : undefined}
                         accessibilityLabel={view.accessibilityLabel}

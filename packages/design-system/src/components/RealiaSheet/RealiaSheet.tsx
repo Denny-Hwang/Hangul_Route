@@ -40,6 +40,9 @@ const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: P
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
+/** A romanization line held while a Check's question is open: the same line, invisible and unannounced, so its room is kept. */
+const HELD_LINE = { 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no', selectable: false } as const;
+
 /** One dressing prop, stretched to its box (`stretch`) or kept at its aspect ratio; `registry`: CM-47's dressings. */
 export function Dressing({ refId, height, stretch, width, centered = false, registry = REALIA_REGISTRY }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean; registry?: typeof REALIA_REGISTRY }): ReactElement | null {
   const drawn = drawProp(refId, registry);
@@ -74,7 +77,13 @@ export function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 
         {part.ko}
       </Text>
       {part.romanization !== '' ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, fontStyle: 'italic', color: colors.text.secondary, textAlign: align }}>{part.romanization}</Text>
+        <Text
+          {...KOREAN_LINE_BREAK}
+          {...(part.romanizationReserved === true ? HELD_LINE : null)}
+          style={{ fontSize: textScale.size.caption, fontStyle: 'italic', color: colors.text.secondary, textAlign: align, ...(part.romanizationReserved === true ? { opacity: 0 } : null) }}
+        >
+          {part.romanization}
+        </Text>
       ) : null}
     </View>
   );
@@ -92,7 +101,13 @@ export function Title({ title, label, centered }: { title: RealiaSheetText; labe
         {title.ko}
       </Text>
       {title.romanization !== '' ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, fontStyle: 'italic', color: colors.text.secondary }}>{title.romanization}</Text>
+        <Text
+          {...KOREAN_LINE_BREAK}
+          {...(title.romanizationReserved === true ? HELD_LINE : null)}
+          style={{ fontSize: textScale.size.caption, fontStyle: 'italic', color: colors.text.secondary, ...(title.romanizationReserved === true ? { opacity: 0 } : null) }}
+        >
+          {title.romanization}
+        </Text>
       ) : null}
     </View>
   );

@@ -56,7 +56,8 @@ B2. A decode item [DC] (12 per check: 6 open syllables, 6 with a final) — mock
 |   [ (speaker) Sound 2 ]  (selected)     |     4 sounds in a balanced set: 그 드 거 더
 |   [ (speaker) Sound 3 ]                 |     (no sound stands out by its pattern)
 |   [ (speaker) Sound 4 ]                 |
-|   [[ THIS ONE ]]                        |  <- shown once a card is selected; the answer
+|   [[ THIS ONE ]]                        |  <- the answer; drawn from the start, off until a
+|                                         |     card is selected (DC-2a)
 |   Can't hear it?                        |  <- Show the letters: the cards show their
 |                                         |     romanization (geu, deu, geo, deo); 그 stays Hangul
 +-----------------------------------------+
@@ -112,7 +113,7 @@ E. Stop the check? (over B or C)
 - A: [DC] no switch (removed, OD-DC1)
 - A: [[ LET'S GO ]] -> B part 1; `review.start { kind: 'stage-certificate', stageKey }` ([DC] no `hideRomanization`)
 - B: option tap -> first answer per item scores (review-run-store); a wrong tap is amber, the item stays open until the right one
-- B2: sound card tap -> plays and selects (never scored); [[ THIS ONE ]] -> the answer (first one scores); a wrong answer is amber, the item stays open; Can't hear it? -> the CH sheet; Show the letters -> the cards show their romanization (the answer counts as usual; the Hangul Check records no hint)
+- B2: sound card tap -> plays and selects (never scored); [[ THIS ONE ]] -> the answer (first one scores); a wrong answer is amber, the item stays open (DC-2a: the selection clears; the wrong card still plays on a tap and cannot be selected); Can't hear it? -> the CH sheet; Show the letters -> the cards show their romanization (the answer counts as usual; the Hangul Check records no hint)
 - B3: picture tap -> as B
 - B: last item of a part -> C (or D after part 5)
 - B/C: [x] -> E; a system back (Android back, iOS swipe-back) during B or C also opens E (`guardsBack`); on A and D it leaves at once
@@ -147,4 +148,4 @@ Exit to: back (intro, stop) · `quest/player` (tip) · `library/card-detail` · 
 ## Open questions
 
 - None for Q-10b. A shareable certificate image is out of scope (F-CARD-003 family).
-- [DC] The decode round's choice interaction (tap plays and selects, THIS ONE commits) is provisional (OD-DC10); the DC-2a mock settles it.
+- [DC] The decode round's choice interaction (tap plays and selects, THIS ONE commits): confirmed by the DC-2a mock (OD-DC10 (a), with the refinements of the spec's §3.5 [DC-2a]); mock and measurements in `design/screens/hangul-check/`.
