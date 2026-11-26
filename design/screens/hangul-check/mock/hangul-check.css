@@ -1,0 +1,277 @@
+/*
+ * DC-2a: static design mock of the Hangul Check's decode round and of a version 2 part (not shipped code).
+ * Spec: docs/specs/AMENDMENTS-STAGE1-DECODING-CHECK.md (sections 3.4, 3.5; OD-DC10, OD-DC11). Wireframe:
+ * design/wireframes/reviews/hangul-check.md (B, B2, B3, C). Note: ../README.md.
+ *
+ * Every value below is a token of packages/design-system/src/tokens.ts, copied once as a custom property named after it
+ * (checked against tokens.ts on this commit): --spacing-xl is spacing.xl, --colors-brand-primary is
+ * colors.brand.primary. The few numbers that are not tokens are in the second block, each with the code constant it
+ * comes from (../README.md, "Constants"). colors.feedback.danger is deliberately not copied: nothing here may draw it.
+ *
+ * Type follows the app's text size engine (packages/design-system/src/text-size.ts): reading sizes (caption .. prompt)
+ * are rem, so they grow with the root (the html class sets f); large type (the Hangul of KoreanText) grows half as much
+ * through --head-ratio. Heights of buttons, cards, discs and gaps are px (dp), so they do not grow with the text, as in
+ * the app. Each device frame is a size container; container queries stand in for the app's onLayout measurements.
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-brand-primaryDark: #8D3A11;
+  --colors-brand-primaryLight: #FAD9C6;
+  --colors-brand-secondary: #2672A6;
+  --colors-brand-secondaryDark: #1D5881;
+  --colors-brand-secondaryLight: #CDE5F4;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-surface-paper: #FFFFFF;
+  --colors-surface-sunken: #F2EBDE;
+  --colors-surface-overlay: rgba(20, 14, 8, 0.40);
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-muted: #6F614D;
+  --colors-text-onPrimary: #FFFFFF;
+  --colors-text-onSecondary: #FFFFFF;
+  --colors-feedback-success: #397952;
+  --colors-feedback-successDark: #2C5E3F;
+  --colors-feedback-successLight: #D6EFDF;
+  --colors-feedback-nudge: #F2B33D;
+  --colors-feedback-nudgeLight: #FCEED1;
+  --colors-border-subtle: #E8DFCD;
+  --colors-border-strong: #C5B8A1;
+  --colors-border-focus: #3A7FB5;
+  --colors-border-shape: #857360;
+  --colors-hoya-fur: #F2B33D;
+  --colors-hoya-furDark: #B5862A;
+  --colors-hoya-stripes: #2A1F14;
+  --colors-hoya-belly: #FCF8F1;
+  --colors-hoya-nose: #2A1F14;
+  --colors-hoya-cheek: #F8B4B4;
+  --spacing-none: 0px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 48px;
+  --radii-sm: 8px;
+  --radii-md: 12px;
+  --radii-lg: 16px;
+  --radii-xl: 24px;
+  --radii-pill: 999px;
+  --radii-circle: 9999px;
+  --size-caption: 0.875rem; /* 14 */
+  --size-bodySm: 1rem; /* 16 */
+  --size-body: 1.125rem; /* 18 */
+  --size-bodyLg: 1.25rem; /* 20 */
+  --size-prompt: 1.375rem; /* 22 */
+  --size-title: 1.75rem; /* 28 */
+  --size-hero: 3rem; /* 48 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.35;
+  --family-mono: Menlo, Courier, monospace;
+  --touch-min: 64px;
+  --touch-child: 80px;
+  --touch-hero: 96px;
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --max-width-reading: 720px;
+  --gutter-compact: 16px;
+  --gutter-regular: 24px;
+  --gutter-wide: 32px;
+}
+:root {
+  /* Constants (../README.md, "Constants") */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') on the web build */
+  --dot: var(--spacing-md);        /* Progress dots: height 12 (Progress.tsx default) */
+  --disabled-opacity: 0.6;         /* Button.tsx: a disabled or soft-disabled button's opacity */
+  --mark-disc-pad: var(--spacing-xxs); /* ChoiceCard tile: the mark on a disc of the state's fill, spacing.xxs padding */
+  --hoya-pause: 120px;             /* the pause's Hoya size (StageReviewScreen.tsx pause phase) */
+  --ring-gap: var(--spacing-xs);   /* the selection ring: spacing.xs outside the card (ChoiceCard's look-here geometry, Pic-Word's ring colour) */
+  --f: 1;
+  --head-ratio: 1;
+}
+html.ts-largest { --f: 1.5; --head-ratio: calc((1 + (1.5 - 1) / 2) / 1.5); font-size: 150%; }
+html.ts-200 { --f: 2; --head-ratio: calc((1 + (2 - 1) / 2) / 2); font-size: 200%; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Base and the design board (annotations are board notes, not UI)                             */
+/* ------------------------------------------------------------------------------------------ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-stack); color: var(--colors-text-primary); background: var(--colors-surface-sunken); line-height: var(--leading-normal); }
+.board { padding: var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-xl); }
+.board-title { font-family: var(--family-mono); font-size: calc(var(--size-bodySm) / var(--f)); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.board-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spacing-xxl); }
+.board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-label, .note { font-family: var(--family-mono); font-size: calc(var(--size-caption) / var(--f)); color: var(--colors-text-secondary); max-width: 360px; line-height: var(--leading-normal); }
+.note { border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-sm); }
+.visually-hidden { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Board annotations: the screen-reader focus order (numbered badges). Not UI. */
+.anno { position: absolute; z-index: 5; min-width: var(--spacing-xl); height: var(--spacing-xl); padding: 0 var(--spacing-xs); border-radius: var(--radii-pill); background: var(--colors-text-primary); color: var(--colors-surface-paper); font-family: var(--family-mono); font-size: calc(var(--size-caption) / var(--f)); font-weight: var(--weight-bold); display: inline-flex; align-items: center; justify-content: center; pointer-events: none; top: calc(-1 * var(--spacing-sm)); left: calc(-1 * var(--spacing-sm)); }
+.hdr-close, .dots, .rhead { position: relative; }
+
+/* A device: the window the app gets. */
+.device { container-type: size; container-name: device; position: relative; overflow: hidden; background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); flex: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Screen (tone canvas): gutter on every side, the reading cap.                                */
+/* ------------------------------------------------------------------------------------------ */
+.scr { height: 100%; display: flex; flex-direction: column; padding: var(--gutter-compact); overflow: hidden; }
+.scr > * { width: 100%; max-width: var(--max-width-reading); margin-left: auto; margin-right: auto; }
+@container device (min-width: 600px) { .scr { padding: var(--gutter-regular); } }
+@container device (min-width: 900px) { .scr { padding: var(--gutter-wide); } }
+.icon { display: block; flex: none; }
+
+/* The header row: Stop the check (an icon button, 64), then the part's dots (fill-only, one set across the part). */
+.hdr { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); flex: none; }
+.hdr-close { flex: none; width: var(--touch-min); height: var(--touch-min); margin-left: calc(-1 * var(--spacing-md)); border-radius: var(--radii-pill); display: inline-flex; align-items: center; justify-content: center; background: transparent; border: var(--border-width-base) solid transparent; color: var(--colors-text-primary); }
+.dots { flex: 1; display: flex; align-items: center; gap: var(--spacing-sm); }
+.dots > i { display: block; width: var(--dot); height: var(--dot); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); flex: none; }
+.dots > i.on { background: var(--colors-brand-primary); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The decode round                                                                             */
+/* ------------------------------------------------------------------------------------------ */
+.round { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-md); padding-top: var(--spacing-sm); }
+.rhead { display: flex; flex-direction: column; gap: var(--spacing-xs); flex: none; }
+.heading { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.hint { font-size: var(--size-body); color: var(--colors-text-secondary); line-height: var(--leading-normal); }
+.hint.status { color: var(--colors-text-secondary); }
+
+/* The syllable panel: KoreanText lg (Hangul hero, bold; the romanization line bodyLg medium, text.secondary), held: the
+   romanization line keeps its room and draws nothing until the right commit. Hoya (decorative) at its start. */
+.panel { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
+.panel .syl { font-size: calc(var(--size-hero) * var(--head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-normal); color: var(--colors-text-primary); }
+.panel .rom { font-size: var(--size-bodyLg); font-weight: var(--weight-medium); line-height: var(--leading-normal); color: var(--colors-text-secondary); }
+.panel .rom.held { visibility: hidden; }
+.panel .hoya { position: absolute; left: var(--spacing-md); top: 50%; transform: translateY(-50%); width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+
+/* The four sound cards: a 2 x 2 grid. Each card is painted with ChoiceCard's state looks (choiceCardStyle), drawn by the
+   decode round itself (as Cloze Pick paints them by hand), because ChoiceCard's art slot is touchTarget.hero tall. */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); flex: none; }
+/* The target: the card, the selection ring and the ring's padding, all one button (Pic-Word Match's targetStyle,
+   AMENDMENTS-TOUCH KT-4b: a touch on the ring is a touch on the card). At rest the ring is drawn in the canvas colour,
+   so the card keeps its size and nothing moves when the selection shows or moves. */
+.target { position: relative; display: block; min-width: 0; width: 100%; padding: var(--ring-gap); border-radius: calc(var(--radii-lg) + var(--ring-gap) + var(--border-width-thick)); border: var(--border-width-thick) solid var(--colors-surface-canvas); background: transparent; font-family: inherit; color: inherit; text-align: center; }
+/* Selected (not yet committed): solid brand.primary, borderWidth.thick (Pic-Word's RING_SELECTED; never the dashed
+   look-here ring, which the review host does not draw). */
+.target.selected { border-color: var(--colors-brand-primary); }
+/* Keyboard / switch focus: border.focus, thick, spacing.xxs outside the target (so outside the selection ring). */
+.target.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.card { position: relative; width: 100%; min-height: var(--touch-hero); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xs); padding: var(--spacing-sm); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); color: var(--colors-text-primary); }
+.card .lbl { font-size: var(--size-body); font-weight: var(--weight-semibold); line-height: var(--leading-normal); }
+/* The speaker disc: Listen & Pick's speaker look in small (secondaryLight fill, secondary border, secondaryDark glyph). */
+.disc { width: var(--spacing-xxxl); height: var(--spacing-xxxl); border-radius: var(--radii-circle); background: var(--colors-brand-secondaryLight); border: var(--border-width-base) solid var(--colors-brand-secondary); color: var(--colors-brand-secondaryDark); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+/* Playing: the disc fills (secondary, white glyph) while its clip plays. A state of the sound, not of the answer. */
+.card.playing .disc { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+/* The Latin sound chip (no sound, or Show the letters): the option's romanization in the disc's place, same height up
+   to Largest text (at 200 % its line is taller than the disc and the card grows once, at the learner's request). */
+.chip { min-height: var(--spacing-xxxl); max-width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-xs); padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); border: var(--border-width-base) solid var(--colors-border-shape); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.card.playing .chip { background: var(--colors-brand-secondary); border-color: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+/* States (choiceCardStyle): correct = successLight / success + check; wrong = nudgeLight / nudge + replay (a wrong card
+   still plays on a tap, so the replay mark means what it shows; it cannot be selected again). */
+.card.correct { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.card.wrong { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
+.card .mark { position: absolute; top: var(--spacing-xs); right: var(--spacing-xs); padding: var(--mark-disc-pad); border-radius: var(--radii-pill); display: flex; }
+.card.correct .mark { background: var(--colors-feedback-successLight); color: var(--colors-feedback-success); }
+.card.wrong .mark { background: var(--colors-feedback-nudgeLight); color: var(--colors-text-primary); }
+/* The press look (press-look.ts): a thick border.shape outline that grows inward and a slight shrink. */
+.card.pressed { border-width: var(--border-width-thick); padding: calc(var(--spacing-sm) - (var(--border-width-thick) - var(--border-width-base))); transform: scale(0.97); }
+
+/* This one and the help slot. The slot keeps its room when it is empty or changes (Can't hear it? / Turn sound on /
+   Try again / nothing), and in a shared row both take one equal share, so This one never changes size. */
+.acts { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); flex: none; }
+.acts .pick { align-self: stretch; }
+.help-slot { min-height: var(--touch-min); display: flex; align-items: center; justify-content: center; }
+.a-compact .acts, .a-tight .acts, .a-tight-row .acts, .a-side .acts, .a-side-tight .acts { flex-direction: row; align-items: center; }
+.a-compact .acts > *, .a-tight .acts > *, .a-tight-row .acts > *, .a-side .acts > *, .a-side-tight .acts > * { flex: 1 1 0; min-width: 0; align-self: auto; }
+.acts .help-slot .btn { width: 100%; }
+.a-full .acts .help-slot .btn { width: auto; }
+/* Pack loading (N6): the board holds the cards (they take no tap, no look change), Can't hear it? is drawn inactive. */
+.grid.held { pointer-events: none; }
+
+
+/* Buttons as the design-system Button draws them: heights are touch targets (px), labels follow the text size. */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-base) solid transparent; font-size: var(--size-body); font-weight: var(--weight-semibold); line-height: var(--leading-normal); text-align: center; background: transparent; color: var(--colors-text-primary); font-family: inherit; }
+.btn-sm { font-size: var(--size-bodySm); padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.btn-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.btn-hero { min-height: var(--touch-hero); font-size: var(--size-prompt); padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); }
+.btn-primary { background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
+.btn-secondary { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.btn-ghost { border-color: var(--colors-brand-primary); color: var(--colors-brand-primary); background: transparent; }
+/* Button's disabled look (Button.tsx): sunken fill, muted label, opacity 0.6; soft-disabled stays focusable (aria-disabled). */
+.btn[aria-disabled="true"] { opacity: var(--disabled-opacity); background: var(--colors-surface-sunken); color: var(--colors-text-muted); }
+.btn.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Arrangements (../README.md, "Arrangements"): the first that holds every state on screen.    */
+/* ------------------------------------------------------------------------------------------ */
+/* tight-row: tight, and the heading and the syllable share a row (the panel at the end, as wide as its syllable);
+   Hoya moves to the header's end. For large text on small phones. */
+.a-tight-row .round { gap: var(--spacing-sm); padding-top: var(--spacing-xs); }
+
+.a-tight-row .hint:not(.status) { display: none; }
+.a-tight-row .acts .pick.btn-lg { min-height: var(--touch-min); font-size: var(--size-body); }
+.toprow { display: flex; align-items: center; gap: var(--spacing-md); flex: none; }
+.toprow .rhead { flex: 1 1 auto; min-width: 0; }
+.toprow .panel { flex: none; padding: var(--spacing-xs) var(--spacing-lg); }
+.hdr-hoya { flex: none; width: var(--spacing-xxxl); height: var(--spacing-xxxl); margin-left: auto; }
+/* tight: no hint line drawn (it stays in the round's spoken heading), gaps step down to spacing.sm, This one md. */
+.a-tight .round { gap: var(--spacing-sm); padding-top: var(--spacing-xs); }
+
+.a-tight .hint:not(.status) { display: none; }
+.a-tight .acts .pick.btn-lg { min-height: var(--touch-min); font-size: var(--size-body); }
+
+/* side (landscape: the GameColumns side arrangement): the prompt column (the header, the heading, the syllable) and
+   the answers column (the cards, This one and the help slot), half the reading column each, both top-aligned. The header
+   rides in the prompt column, so the answers get the window height. The order is the portrait one. */
+.cols { flex: 1 1 auto; min-height: 0; display: flex; gap: var(--spacing-xl); }
+.pcol, .acol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-md); }
+.a-side-tight .cols { gap: var(--spacing-lg); }
+.a-side-tight .pcol, .a-side-tight .acol { gap: var(--spacing-sm); }
+.a-side-tight .hint:not(.status) { display: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The Can't hear it? sheet (SheetFrame: scrim, bottom sheet, capped at the reading width from regular) */
+/* ------------------------------------------------------------------------------------------ */
+.scrim { position: absolute; inset: 0; background: var(--colors-surface-overlay); z-index: 3; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; margin: 0 auto; max-width: 100%; background: var(--colors-surface-paper); border-radius: var(--radii-xl) var(--radii-xl) 0 0; padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-md); }
+@container device (min-width: 600px) { .sheet { max-width: var(--max-width-reading); } }
+.sheet-hd { display: flex; align-items: center; gap: var(--spacing-sm); }
+.sheet-hd h2 { flex: 1; font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.sheet-line { font-size: var(--size-body); line-height: var(--leading-normal); }
+.sheet .btn { align-self: stretch; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Listen & Pick in the review host (names, finals, the word): drawn for the part's dots only.  */
+/* ------------------------------------------------------------------------------------------ */
+.lp { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-md); padding-top: var(--spacing-sm); }
+.lp-prompt { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); }
+.speaker { width: var(--touch-hero); height: var(--touch-hero); border-radius: var(--radii-pill); background: var(--colors-brand-secondaryLight); border: var(--border-width-base) solid var(--colors-brand-secondary); color: var(--colors-brand-secondaryDark); display: inline-flex; align-items: center; justify-content: center; }
+.speaker.playing { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.lp-opts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
+.opt { position: relative; min-height: var(--touch-child); display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); }
+.opt .ko { display: flex; flex-direction: column; }
+.opt .ko b { font-size: calc(var(--size-title) * var(--head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
+.opt .ko i { font-style: normal; font-size: var(--size-bodySm); font-weight: var(--weight-medium); color: var(--colors-text-secondary); line-height: var(--leading-normal); visibility: hidden; }
+.opt .ko i.shown { visibility: visible; }
+.opt .end { width: var(--spacing-xl); flex: none; margin-left: auto; display: flex; }
+.opt.correct { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); color: var(--colors-feedback-success); }
+.opt.correct .ko { color: var(--colors-text-primary); }
+.opt.pic { flex-direction: column; justify-content: center; padding: var(--spacing-sm); }
+.pic-art { width: var(--touch-hero); height: calc(var(--touch-hero) - var(--spacing-lg)); }
+
+/* The pause between parts (C). */
+.pause { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-lg); text-align: center; }
+.pause .hoya-lg { width: var(--hoya-pause); height: var(--hoya-pause); }
+.pause p { font-size: calc(var(--size-title) * var(--head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.pause .btn { align-self: stretch; }
+
+/* Reduced motion: nothing moves (no press shrink, no fade of the romanization line). */
+@media (prefers-reduced-motion: reduce) { .card.pressed { transform: none; } }
+.a-side-tight .acts .pick.btn-lg { min-height: var(--touch-min); font-size: var(--size-body); }
+.card .mark-slot { display: contents; }
