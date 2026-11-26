@@ -4,11 +4,11 @@
  * sentence items. A key is `act-<predicate>-<noun>`; the three pictures of a
  * noun are its family, and only the action tells them apart:
  *
- * - run (뛰어요): side view in mid-stride, legs stretched out, motion lines behind, a ground shadow;
- * - swim (헤엄쳐요): the head and back above the water, one limb reaching forward in a stroke, splashes;
- * - sleep (자요): lying down, eyes closed (still smiling), a crescent moon;
- * - eat (먹어요): sitting, food held at the mouth with a bite taken (a person: a bowl and a spoon);
- * - fly (날아요): in the air, wings up, a cloud below.
+ * - run (ttwieoyo): side view in mid-stride, legs stretched out, motion lines behind, a ground shadow;
+ * - swim (heeomchyeoyo): the head and back above the water, one limb reaching forward in a stroke, splashes;
+ * - sleep (jayo): lying down, eyes closed (still smiling), a crescent moon;
+ * - eat (meogeoyo): sitting, food held at the mouth with a bite taken (a person: a bowl and a spoon);
+ * - fly (narayo): in the air, wings up, a cloud below.
  *
  * The animals keep the faces of their word pictures (`animal.ts`, placed
  * smaller), so `act-run-bear` is the bear of `animal-bear`. Every key is
