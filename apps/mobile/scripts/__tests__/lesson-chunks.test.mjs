@@ -759,7 +759,9 @@ describe('precacheReport and its budget lines', () => {
     // [SF] AMENDMENTS-DISCOVER-SOUND-FIRST SF-1 (Hear the name, the carrier line and the startsWith Check round, in the
     // start bundle) on top of RG-1 (4,544,073 B) measures 4,546,233 B (release build, CI=1): 4,550,200 B.
     // [RG] AMENDMENTS-ROMANIZER-GAPS RG-2a (the reviewed romanization, +1,348 B on RG-1 alone) on top of SF-1 measures 4,547,724 B (release build, CI=1): the line stays 4,550,200 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_550_200);
+    // [RF] AMENDMENTS-ROMANIZATION-FADE RF-1a (the resolver, the fade phase and its course reads, the Check scope, in the start
+    // bundle) on top of main e8fe35c6c (4,549,150 B) measures 4,553,753 B (release build, CI=1): 4,557,800 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_557_800);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown
     // about 30 KB since FN-7 (4,574,000 to 4,604,100 B), so it now stays at least 140 KB (was 150 KB) under each of them.
@@ -772,17 +774,19 @@ describe('precacheReport and its budget lines', () => {
     // [SB] Row SB-3: 4,538,000 B, so the gap is back to FN-7's 150 KB: the closest old size, 4,751,444 B, is 213,444 B above it.
     // [LR] Row LR-3a: 4,544,600 B; the closest old size, 4,751,444 B, is 206,844 B above it (the gap holds).
     // [SF] Row SF-1: 4,550,200 B; the closest old size, 4,751,444 B, is 201,244 B above it (the gap holds).
+    // [RF] Row RF-1a: 4,557,800 B; the closest old size, 4,751,444 B, is 193,644 B above it (the gap holds).
     for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(150_000);
     // SB took about 100 KB out: the line is under every measurement from FN-7 to SB, the closest (FN-7's own, 4,570,041 B)
     // 32,041 B above it. [LR] Row LR-3a: 4,544,600 B, so the closest is 25,441 B above it and the gap is 25 KB (was 30 KB). [SF] Row SF-1:
-    // 4,550,200 B, so the closest is 19,841 B above it and the gap is 15 KB (was 25 KB).
+    // 4,550,200 B, so the closest is 19,841 B above it and the gap is 15 KB (was 25 KB). [RF] Row RF-1a: 4,557,800 B, so the closest
+    // is 12,241 B above it and the gap is 10 KB (was 15 KB): the start bundle has grown back about 12 KB since SB-3 took 100 KB out.
     const fn7ToSb = [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387, 4_617_949, 4_625_094, 4_629_855, 4_630_569, 4_633_012, 4_634_508, 4_636_329];
-    for (const measured of fn7ToSb) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(15_000);
-    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724]) {
+    for (const measured of fn7ToSb) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(10_000);
+    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_547_724).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_553_753).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

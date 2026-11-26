@@ -321,7 +321,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // main with RG-1 (4,544,073 B raw / 1,248,797 B gzip) alone it measures 4,545,421 B raw / 1,249,206 B gzip (+1,348 B raw);
   // on top of SF-1 the release `build:web` (CI=1) measures 4,547,724 B raw / 1,249,854 B gzip, 2,476 B under the line. The line is
   // unchanged. Splitting the `reason` texts out of `exceptions.ts` was tried and added bytes (Metro does not tree-shake): not kept.
-  startBundleRaw: 4_550_200,
+  // [RF] AMENDMENTS-ROMANIZATION-FADE RF-1a (the romanization resolver and its three modes, the fade phase with its reads of the
+  // course (the Stage 1 quest list, the episodes, the level check's placed-out set), decodable-text rule, the Check scope that
+  // `MinigameScreen` sets, and the shared screen-reader holder; the hook every learner screen calls is in the start bundle, so
+  // they come with it): on main e8fe35c6c (4,549,150 B raw / 1,250,328 B gzip) the release `build:web` (CI=1) measures
+  // 4,553,753 B raw / 1,252,274 B gzip (+4,603 B raw, +1,946 B gzip), 3,553 B over the line. The line is the measurement plus a
+  // 4,047 B margin (one measured raise). Moving the phase into a lazy chunk was rejected: the first render would not know it and
+  // a profile on As I learn would flicker once RF-2 switches `auto` on.
+  startBundleRaw: 4_557_800,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
