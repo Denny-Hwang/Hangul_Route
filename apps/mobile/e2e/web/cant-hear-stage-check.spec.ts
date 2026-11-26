@@ -195,11 +195,18 @@ test('the Stage Check holds the options of a heard pick round until one is answe
   await expect(options.locator('[data-testid="korean-text-romanization-reserved"]')).toHaveCount(await options.count());
   // A miss does not end the hold; the right answer does. Try the options in turn until the held lines come.
   const n = await options.count();
-  for (let i = 0; i < n; i += 1) {
+  let revealed = false;
+  for (let i = 0; i < n && !revealed; i += 1) {
     await pastTapLock(page);
     await options.nth(i).click();
-    if ((await page.locator('[data-testid="korean-text-romanization-reserved"]').count()) === 0) break;
+    // Answered right: the held lines are gone and the options show their romanization (read before the round moves on).
+    if ((await page.locator('[data-testid="korean-text-romanization-reserved"]').count()) === 0) {
+      revealed = true;
+      const shown = await options.evaluateAll((els) => els.map((e) => (e as HTMLElement).innerText));
+      for (const text of shown) expect(text.replace(/\s+/g, ' ')).toMatch(/[A-Za-z]/);
+    }
   }
+  expect(revealed).toBe(true);
 });
 
 // CH-1g (owner decision 2026-11-25): a Check's Dictation hear round has the link, but its sheet is guidance only, since

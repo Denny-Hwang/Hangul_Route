@@ -406,7 +406,7 @@ function TypeRoundBody({
             // The word is drawn only after the answer, with its romanization and meaning.
             <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" testID="daily-review-type-target" />
           ) : (
-            <kit.HearPrompt hear={heard} round={{ target: { ko: round.target, romanization: round.answer.ko.romanization, en: round.answer.gloss ?? '' } }} compact={false} first={false} testID="daily-review-dictation" />
+            <kit.HearPrompt hear={heard} round={{ target: { ko: round.target, romanization: round.answer.ko.romanization, en: round.answer.gloss ?? '' } }} compact={false} first={false} holdRomanization={look.held} testID="daily-review-dictation" />
           )
         ) : round.mode === 'picture' && round.picture ? (
           <PictureArt pictureRef={round.picture} gloss={round.answer.gloss ?? ''} size={pictureSize} />
