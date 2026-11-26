@@ -1,5 +1,6 @@
-import { CURR_TELEMETRY_PAYLOADS, type ReviewEntry } from '@hangul-route/content-schema';
+import { CURR_TELEMETRY_PAYLOADS, type ProgressSnapshot, type ReviewEntry } from '@hangul-route/content-schema';
 import { cellHoldsItem } from '@hangul-route/content-schema/review-items';
+import { latchQuests } from '../quest-progress';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { memoryAnswerOf, sessionResult, type RoundAnswer } from './daily-review';
 import { buildCheck, type EngineContext } from './engine';
@@ -53,6 +54,14 @@ export interface PlannedCheck {
   soundNotice: boolean;
   /** A Stage Jump's cells (the stage's grid cells), each latched `testedOut` on a pass; absent on a cell's own Check. */
   cells?: readonly string[];
+}
+
+/**
+ * The quests the learner has completed, from the same source mastery reads (`latchQuests`, `questDoneAt`): what
+ * `cellHoldsItem` needs to tell whether an item an optional quest alone teaches was offered as played.
+ */
+export function completedQuestIds(snapshot: ProgressSnapshot | undefined): ReadonlySet<string> {
+  return new Set(snapshot === undefined ? [] : Object.keys(latchQuests(snapshot).questDoneAt ?? {}));
 }
 
 /**

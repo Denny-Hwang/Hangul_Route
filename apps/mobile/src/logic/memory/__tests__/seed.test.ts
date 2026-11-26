@@ -30,6 +30,25 @@ const perDay = (states: Iterable<{ state: { d: string | null } }>): Map<string, 
   return out;
 };
 
+describe('an item only an optional quest teaches (AMENDMENTS-BATCHIM-COMPLETE BC-2a, BC-OD-16)', () => {
+  const first = LESSON_QUESTS[0] as (typeof LESSON_QUESTS)[number];
+  const cell = cellOfEpisode(first.episodeId);
+  const plain = { ...(ITEMS.find((i) => !i.id.startsWith('vocab:')) as (typeof ITEMS)[number]), id: 'lex:plain-x', cells: [cell], asked: [] };
+  const unplayed = { ...plain, id: 'lex:opt-unplayed', optionalIn: { [cell]: ['quest:never-played'] } };
+  const played = { ...plain, id: 'lex:opt-played', optionalIn: { [cell]: [first.id] } };
+  const recycled = { ...plain, id: 'lex:opt-asked', cells: ['episode:stage9-none'], asked: [cell] };
+  const seeded = (items: SeedInput['items']) => deriveSeed({ ...input(finished(1)), items, retired: new Set(), seededAt: '2027-01-01T00:00:00.000Z' });
+
+  it('is seeded once a quest that teaches it is done, and not while only the cell\'s other quests are', () => {
+    const states = seeded([plain, unplayed, played]).states;
+    expect([...states.keys()].sort()).toEqual(['lex:opt-played', 'lex:plain-x']);
+  });
+
+  it('an item a cell only asks again (a recycle) is seeded by any quest done in that cell', () => {
+    expect([...seeded([recycled]).states.keys()]).toEqual(['lex:opt-asked']);
+  });
+});
+
 describe('seeding at the five historical snapshot points', () => {
   const points = historicalPoints(20);
   const seeds = Object.fromEntries(Object.entries(points).map(([name, snap]) => [name, deriveSeed(input(snap))])) as Record<keyof typeof points, ReturnType<typeof deriveSeed>>;

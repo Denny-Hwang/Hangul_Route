@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { masteryDenominator } from '../review-items/review-item';
 import { reviewItemsOf, serializeSnapshot, serializeStage1Table, stage1Table } from '../review-items/build';
 import type { ItemOccurrence } from '../review-items/extract';
 import {
@@ -167,6 +168,29 @@ describe('buildReviewItems: items an optional quest teaches (AMENDMENTS-BATCHIM-
     ]);
     expect(items[0]?.cells).toEqual(['episode:stage2-life', 'episode:stage3-life']);
     expect(items[0]?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q9'] });
+  });
+
+  it('an optional quest that becomes the first teacher leaves the later cell that asks it a cell of the item (its first required cell)', () => {
+    const items = build([
+      optional({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', source: 'discover' }, 'quest:stage2-life-q9'),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage3-life', stage: 3 }),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage4-life', stage: 4 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage2-life', 'episode:stage3-life']);
+    expect(items[0]?.asked).toEqual(['episode:stage4-life']);
+    expect(items[0]?.optionalIn).toEqual({ 'episode:stage2-life': ['quest:stage2-life-q9'] });
+    // The later cell's mastery still holds it, whatever the learner played in Word Builder.
+    expect(masteryDenominator(items, 'episode:stage3-life', [1], [])).toEqual([items[0]?.id]);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1], [])).toEqual([]);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1], [], new Set(['quest:stage2-life-q9']))).toEqual([items[0]?.id]);
+  });
+
+  it('without an optional quest the first cell and the first grid cell are what they were', () => {
+    const items = build([
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage3-life', stage: 3 }),
+      occ({ kind: 'lex', ko: '많이', romanization: 'mani', en: 'a lot', loose: true, cell: 'episode:stage4-life', stage: 4 }),
+    ]);
+    expect(items[0]?.cells).toEqual(['episode:stage3-life']);
   });
 });
 

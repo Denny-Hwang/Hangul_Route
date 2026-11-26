@@ -2,13 +2,13 @@ import type { ProgressSnapshot, ReviewEntry, UiLocale } from '@hangul-route/cont
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MemoryFile } from '../memory/memory-file';
 import { stampOf, type MemoryAnswer } from '../memory/memory-runtime';
-import { latchQuests } from '../quest-progress';
 import { localDay, vocabOf } from '../vocab/progress';
 import {
   cellCheckCompleteEvent,
   cellCheckEntry,
   cellCheckItemIds,
   cellCheckStartEvent,
+  completedQuestIds,
   checkAnswers,
   checkLatch,
   checkResult,
@@ -137,7 +137,7 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       const snap = deps.snapshot(profileId);
       const states = engineStates(file.rows, snap ? vocabOf(snap) : undefined);
       // The completed quests: an item only an optional quest teaches is asked once the learner played one of them.
-      const doneQuestIds = new Set(snap === undefined ? [] : Object.keys(latchQuests(snap).questDoneAt ?? {}));
+      const doneQuestIds = completedQuestIds(snap);
       const ctx: EngineContext = {
         // Row CM-33: a pair round only when this learner met the letter's look-alike too.
         index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }, states),
