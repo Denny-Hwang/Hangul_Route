@@ -20,6 +20,14 @@ describe('koTokenParts (F-CURR-001 §3.4)', () => {
     expect(koTokenParts('')).toEqual([]);
   });
 
+  it('reads a token with its reviewed romanization where it has an entry (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
+    expect(koTokenParts('{ko:솔잎}')).toEqual([{ ko: '솔잎', romanization: 'sollip' }]);
+    expect(koTokenParts('{ko:솔잎 먹어요}')).toEqual([{ ko: '솔잎 먹어요', romanization: 'sollip meogeoyo' }]);
+    expect(koTokenParts('{ko:송편은 솔잎을 깔고 쪄요.}')).toEqual([{ ko: '송편은 솔잎을 깔고 쪄요.', romanization: 'songpyeoneun sollipeul kkalgo jjyeoyo' }]);
+    // A word that cannot be read still leaves the whole token without a romanization.
+    expect(koTokenParts('{ko:솔잎 A1}')).toEqual([{ ko: '솔잎 A1', romanization: '' }]);
+  });
+
   it('romanizes a token of several words word by word (a pattern note such as {ko:접고 잘라요})', () => {
     expect(koTokenParts('Add {ko:고}: {ko:접고 잘라요}.')).toEqual([
       { text: 'Add ' },

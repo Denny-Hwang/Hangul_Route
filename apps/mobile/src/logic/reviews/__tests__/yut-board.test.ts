@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { romanizeWord } from '@hangul-route/content-schema';
+import { romanizeReviewed } from '@hangul-route/content-schema';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
@@ -46,7 +46,7 @@ describe('the five throws (sourced: Encyclopedia of Korean Culture E0042794, Kor
   });
 
   it('each name is romanized by the F-CNT-002 converter (rr.ts)', () => {
-    for (const name of THROW_NAMES) expect(YUT_THROWS[name].romanization).toBe(romanizeWord(YUT_THROWS[name].ko));
+    for (const name of THROW_NAMES) expect(YUT_THROWS[name].romanization).toBe(romanizeReviewed(YUT_THROWS[name].ko).text);
     expect(THROW_NAMES.map((n) => YUT_THROWS[n].romanization)).toEqual(['do', 'gae', 'geol', 'yut', 'mo']);
   });
 

@@ -1,5 +1,5 @@
 import { cellIsReady, laterVolumeStoryIds, storyIsReady, type Catalog } from '../catalog/schema';
-import { romanize } from '../romanization/rr';
+import { romanizeReviewed } from '../romanization/reviewed';
 import { StageKeySchema, ThemeKeySchema, type StageKey } from './heritage-card';
 import { LECTURE_MAX_BLOCKS, type LectureBlock } from './lecture';
 import { presetMinutesOf } from './lecture-presets';
@@ -133,7 +133,7 @@ function searchText(parts: readonly (string | null | undefined)[]): string {
 /** The search parts of a content id: its UI title, its Korean title and that title's romanization. */
 function termsOf(id: string, title: string, options: ChooserOptions, extra: readonly string[] = []): string {
   const ko = options.koTitle?.(id) ?? null;
-  const roman = ko === null ? null : romanize(ko).text;
+  const roman = ko === null ? null : romanizeReviewed(ko).text;
   return searchText([title, ko, roman, ...extra]);
 }
 
