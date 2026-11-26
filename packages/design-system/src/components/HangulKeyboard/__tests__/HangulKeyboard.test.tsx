@@ -172,6 +172,50 @@ describe('HangulKeyboard: one TapBoard, each finger on its own (AMENDMENTS-TOUCH
   });
 });
 
+describe('HangulKeyboard: the held sound line (AMENDMENTS-STAGE1-DECODING-CHECK, row DC-1b)', () => {
+  /** The face of a key (its glyph Text and its sound-value Text), as the key draws it at rest. */
+  const faceOf = (key: El): El[] => {
+    const box = (key.props.children as (l: { pressed: boolean }) => El)({ pressed: false });
+    const fragment = box.props.children as El;
+    return fragment.props.children as El[];
+  };
+  const letter = (props: Partial<HangulKeyboardProps>): El => render({ soundOf: (jamo) => `sound-${jamo}`, ...props }).keys.find((k) => idOf(k) === 'ㄱ')!;
+
+  it('by default the sound line is drawn under the glyph', () => {
+    const [glyph, sound] = faceOf(letter({}));
+    expect(glyph!.props.children).toBe('ㄱ');
+    expect(sound!.props.children).toBe('sound-ㄱ');
+    expect(sound!.props['aria-hidden']).toBeUndefined();
+    expect((sound!.props.style as Props).opacity).toBeUndefined();
+  });
+
+  it('soundHeld keeps the line\'s room and draws nothing: same Text, invisible and off the accessibility tree', () => {
+    const [, sound] = faceOf(letter({ soundHeld: true }));
+    expect(sound!.type).toBe('Text');
+    expect((sound!.props.style as Props).opacity).toBe(0);
+    expect(sound!.props['aria-hidden']).toBe(true);
+    expect(sound!.props.accessibilityElementsHidden).toBe(true);
+    expect(sound!.props.importantForAccessibility).toBe('no');
+    // The room is kept: the held line has the size and the line count of the drawn one.
+    const [, shown] = faceOf(letter({}));
+    expect((sound!.props.style as Props).fontSize).toBe((shown!.props.style as Props).fontSize);
+    expect(sound!.props.numberOfLines).toBe(1);
+  });
+
+  it('soundHeld keeps every key\'s accessible name (the sound value read as words)', () => {
+    const open = render({ soundOf: (jamo) => `sound-${jamo}`, soundHeld: true }).keys;
+    const shown = render({ soundOf: (jamo) => `sound-${jamo}` }).keys;
+    expect(open.map((k) => k.props.accessibilityLabel)).toEqual(shown.map((k) => k.props.accessibilityLabel));
+    expect(open.find((k) => idOf(k) === 'ㄱ')!.props.accessibilityLabel).toBe('ㄱ, sound-ㄱ');
+  });
+
+  it('soundHeld does not change what a key types', () => {
+    const k = keyboard({ soundHeld: true });
+    k.tap('ㅁ');
+    expect(k.typed).toEqual(['ㅁ']);
+  });
+});
+
 describe('HangulKeyboard under touch (F7)', () => {
   it('a rollover types both letters, in the order the fingers lift', () => {
     const k = keyboard();

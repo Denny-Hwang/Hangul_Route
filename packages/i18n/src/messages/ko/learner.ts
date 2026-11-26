@@ -1524,7 +1524,6 @@ export const learner = {
     notReady: '한글 확인은 아직 열리지 않았어요. 퀘스트를 계속해 봐요.',
     intro: {
       body: '4분쯤 걸려요. 그림과 소리로 해요. 시간 제한은 없어요.',
-      hideRomanization: '읽기 연습: 누를 때까지 로마자 표기 숨기기',
       start: { cta: '시작해요' },
       later: { cta: '나중에 할게요' },
     },

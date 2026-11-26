@@ -9,6 +9,14 @@ import { keyboardLayout, keyFace, keyLockMs, keyStep, type KeyboardKey } from '.
 import type { HangulKeyboardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
+/** A held sound line (a Check): the same line, invisible and unannounced, so its room is kept (as KoreanText's reserved line). */
+const HELD_LINE = {
+  'aria-hidden': true,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no',
+  selectable: false,
+} as const;
+
 /**
  * HangulKeyboard: the in-app two-set (dubeolsik, KS X 5002) Korean keyboard
  * (F-CURR-001 §3.7, OD-10; design/screens/minigame-writing/keyboard.md). It draws
@@ -35,6 +43,7 @@ export function HangulKeyboard({
   soundOf,
   speakSound = (sound) => sound,
   labels,
+  soundHeld = false,
   disabled = false,
   testID,
 }: HangulKeyboardProps): ReactElement {
@@ -86,8 +95,9 @@ export function HangulKeyboard({
           {face}
         </Text>
         <Text {...KOREAN_LINE_BREAK}
+          {...(soundHeld ? HELD_LINE : null)}
           numberOfLines={1}
-          style={{ fontSize: soundSize, color: colors.text.secondary, letterSpacing: typography.tracking.tight }}
+          style={{ fontSize: soundSize, color: colors.text.secondary, letterSpacing: typography.tracking.tight, ...(soundHeld ? { opacity: 0 } : null) }}
         >
           {soundOf(face)}
         </Text>

@@ -2177,7 +2177,6 @@ export const learner = {
     notReady: 'The Hangul Check is not open yet. Keep playing your quests.',
     intro: {
       body: 'About four minutes. Pictures and sounds. No timer.',
-      hideRomanization: 'Reading practice: hide the romanization until I tap',
       start: { cta: "Let's go" },
       later: { cta: 'Maybe later' },
     },

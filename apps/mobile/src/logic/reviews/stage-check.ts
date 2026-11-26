@@ -144,9 +144,9 @@ export function stageCheckEntry(input: { stage: StageKey; result: CheckResult; a
 
 // ---- telemetry (section 11.3) ----------------------------------------------------------------------------
 
-/** `review.start { kind: 'stage-certificate', stageKey, hideRomanization }`. No item, no text. */
-export function stageCheckStartEvent(profileId: string, stage: StageKey, hideRomanization: boolean): TelemetryEvent {
-  return { name: 'review.start', profileId, payload: { kind: 'stage-certificate', stageKey: stage, hideRomanization } };
+/** `review.start { kind: 'stage-certificate', stageKey }` (the `hideRomanization` flag went with the switch, DC-1b). No item, no text. */
+export function stageCheckStartEvent(profileId: string, stage: StageKey): TelemetryEvent {
+  return { name: 'review.start', profileId, payload: { kind: 'stage-certificate', stageKey: stage } };
 }
 
 /** `review.complete { kind: 'stage-certificate', stageKey, stars }`: stars only, never a count or a score. */

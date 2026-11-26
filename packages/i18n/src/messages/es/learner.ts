@@ -1563,7 +1563,6 @@ export const learner = {
     notReady: 'El repaso de hangul aún no está abierto. Sigue jugando tus misiones.',
     intro: {
       body: 'Unos cuatro minutos. Imágenes y sonidos. Sin reloj.',
-      hideRomanization: 'Práctica de lectura: ocultar la romanización hasta que toque',
       start: { cta: '¡Vamos!' },
       later: { cta: 'Quizá después' },
     },

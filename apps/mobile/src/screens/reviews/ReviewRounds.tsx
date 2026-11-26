@@ -29,9 +29,11 @@ import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
+import type { HoldSurface } from '../../logic/locale/check-hold';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
 import type { BuildRound, ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, ShapeRound, TypeRound } from '../../logic/reviews/review-rounds';
+import { keyboardSoundHeld, roundLook } from '../../logic/reviews/round-look';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
@@ -73,11 +75,13 @@ export interface RoundProps<R extends ReviewRound> {
    */
   cantHear?: boolean;
   /**
-   * The options hide their romanization (the Stage Check with its "hide the romanization" switch on): the text the learner
-   * asks for is the prompt's romanization only, no Hangul, so the round stays a decoding item (section 3.12, OD-CH6 (c)).
-   * Absent: the surface's own text, as with Sound off. Only the Stage Check passes it.
+   * What this surface holds back until the question is answered (AMENDMENTS-STAGE1-DECODING-CHECK section 3.1, row DC-1b):
+   * the Stage Check and the Cell Check hold every round, the Daily Review (and Keep going) the read and produce rungs
+   * (`holdsRomanization(surface, round.question.rung)`). A held line keeps its room, draws nothing and is off the
+   * accessibility tree, and the text that stands in for a sound (Show the letters, Sound off) is the prompt's
+   * romanization only, never the Hangul, so the round stays a reading item (section 3.2). Default `practice`: nothing is held.
    */
-  hidesRomanization?: boolean;
+  holdSurface?: HoldSurface;
   /**
    * The Stage Check (`stage-check`) or the Cell Check (`cell-check`): a Check stays sound-first, so "Always show the
    * letters" does not reach its rounds (owner decision 2026-11-25), and the learner's ask is counted under this id.
@@ -137,7 +141,7 @@ function optionLabel(o: PickOption, showRomanization: boolean): string {
   return o.label ?? '';
 }
 
-export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false, hidesRomanization = false, check }: RoundProps<PickRound>): ReactElement {
+export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHear = false, holdSurface = 'practice', check }: RoundProps<PickRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const [wrong, setWrong] = useState<readonly string[]>([]);
@@ -149,13 +153,14 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
   const { slot, hear } = useRoundSound(round.heard ? round.prompt.ko : null, round.heard, cantHear, round.cue !== undefined, check);
   const hearAgainRef = useRef<View | null>(null);
   const showOptionRomanization = round.ask !== 'sound';
-  // The Stage Check with its hide switch on holds a heard round's options' romanization until the round is answered
-  // (the AU-8 pattern: the line keeps its room, draws nothing, and the accessible name keeps it), so the switch does what
-  // it says and the asked text cannot be matched to an option by its Latin letters.
-  const heldRomanization = hidesRomanization && round.heard && !solved;
-  // CH-1e: where the options hide their romanization, the asked text (Show the letters) is the romanization only, while
-  // the question is open. A cue round is guidance only, so it never prints its prompt.
-  const romanizationOnly = hidesRomanization && round.cue === undefined && slot.asked && !solved;
+  // The hold (section 3.1): the romanization of the prompt and of every option waits for the answer (the AU-8 pattern: the
+  // line keeps its room, draws nothing, and the accessible name keeps it), so the asked text cannot be matched to an
+  // option by its Latin letters. A Sound round's romanization is its stimulus and is never held.
+  const look = roundLook(round, { surface: holdSurface, solved });
+  // CH-1e and section 3.2: where the question is held, the text that stands in for the sound (Show the letters, Sound
+  // off, no voice, a failed or blocked play) is the romanization only, while the question is open. A cue round's ask is
+  // guidance only, so it never prints its prompt.
+  const romanizationOnly = look.askedRomanizationOnly;
   const tiles = round.options.every((o) => o.picture !== undefined);
 
   const heading =
@@ -212,7 +217,7 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
                 onShowLetters={slot.showLetters}
                 focusAfter={hearAgainRef}
                 lettersText={
-                  hidesRomanization
+                  look.askedRomanizationOnly
                     ? a11yRomanization(round.prompt.romanization, m.a11y.romanizationOr)
                     : m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })
                 }
@@ -238,7 +243,14 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
         </View>
       ) : (
         <View style={{ alignItems: 'center' }}>
-          <KoreanText ko={round.prompt.ko} romanization={round.prompt.romanization} size="lg" testID="daily-review-prompt" />
+          <KoreanText
+            ko={round.prompt.ko}
+            romanization={round.prompt.romanization}
+            romanizationShown={look.promptRomanization}
+            romanizationReserved={look.held}
+            size="lg"
+            testID="daily-review-prompt"
+          />
         </View>
       )}
       {round.question.voiceFallback ? <PromptPanel view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
@@ -251,7 +263,7 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion, cantHea
                 layout={tiles ? 'tile' : 'row'}
                 state={stateOf(option)}
                 {...(option.ko
-                  ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '', romanizationReserved: heldRomanization && showOptionRomanization }
+                  ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '', romanizationReserved: look.held && showOptionRomanization }
                   : { label: option.label })}
                 art={option.picture ? <PictureArt pictureRef={option.picture} gloss={option.label ?? ''} size={pictureSize} decorative /> : null}
                 onPress={() => tap(option)}
@@ -334,6 +346,7 @@ function TypeRoundBody({
   grade: gradeOf,
   kit,
   heard,
+  holdSurface = 'practice',
 }: RoundProps<TypeRound> & { kit: DictationKit | null; heard: HearRound | null }): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -348,6 +361,11 @@ function TypeRoundBody({
   const answered = useRef(false);
   const advance = useAdvance(onSolved, reducedMotion);
   const typed = useMemo(() => composeTyped(keys), [keys]);
+  // The hold (section 3.3): the shown word's romanization waits for the answer (a right answer, or a one-letter slip that
+  // shows the right form), and in a Check the keyboard's Latin sound line waits too (the Daily Review keeps it, OD-DC12).
+  const look = roundLook(round, { surface: holdSurface, solved: verdict === 'right' || verdict === 'near' });
+  const soundHeld = keyboardSoundHeld(holdSurface, round);
+  const romanization = { romanizationShown: look.promptRomanization, romanizationReserved: look.held };
 
   // Dictation: heard while the chunk says so (holding, then hear); a `see` round of the word once it is not.
   const hearing = kit !== null && heard !== null && heard.mode !== 'see';
@@ -395,10 +413,10 @@ function TypeRoundBody({
         ) : kit !== null && heard !== null ? (
           // A hear round that is now the see round (Show the letters, CH-1c): the word is one item focus can land on.
           <kit.AskedWord hear={heard} target={{ ko: round.target, romanization: round.answer.ko.romanization, ...(round.answer.gloss === undefined ? {} : { en: round.answer.gloss }) }}>
-            <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" testID="daily-review-type-target" />
+            <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" {...romanization} testID="daily-review-type-target" />
           </kit.AskedWord>
         ) : (
-          <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" testID="daily-review-type-target" />
+          <KoreanText ko={round.target} romanization={round.answer.ko.romanization} gloss={round.answer.gloss} size="lg" {...romanization} testID="daily-review-type-target" />
         )}
         {kit !== null && heard !== null && heard.mode === 'see' ? <kit.SeeNotice hear={heard} testID="daily-review-dictation-notice" /> : null}
       </View>
@@ -436,6 +454,7 @@ function TypeRoundBody({
           width={kbWidth}
           layoutClass={lc}
           soundOf={keySound}
+          soundHeld={soundHeld}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
           // After a far miss the field starts empty (`done` clears it) and every key builds on the ones before, as in
           // a first try: the round stays open until the right answer, with Hoya's bubble keeping it in view.
@@ -451,7 +470,7 @@ function TypeRoundBody({
 
 // ---- order -----------------------------------------------------------------------------------------------
 
-export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<OrderRound>): ReactElement {
+export function OrderRoundView({ round, onFirst, onSolved, reducedMotion, holdSurface = 'practice' }: RoundProps<OrderRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.sentenceBuilder;
   const [placed, setPlaced] = useState<readonly string[]>([]);
@@ -459,6 +478,8 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   const missed = useRef(false);
   const advance = useAdvance(onSolved, reducedMotion);
   const done = placed.length === round.words.length;
+  // The exchange's line holds its romanization until the sentence is built; the tiles draw Hangul only (section 3.3).
+  const look = roundLook(round, { surface: holdSurface, solved: done });
 
   const tap = (key: string, ko: string): void => {
     if (done || placed.includes(key)) return;
@@ -486,7 +507,9 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
     <View testID="daily-review-round" style={{ gap: spacing.md }}>
       <Heading level="prompt">{copy.heading}</Heading>
       <Body tone="secondary">{copy.instruction}</Body>
-      {round.line ? <KoreanText ko={round.line.ko} romanization={round.line.romanization} size="md" testID="daily-review-line" /> : null}
+      {round.line ? (
+        <KoreanText ko={round.line.ko} romanization={round.line.romanization} romanizationShown={look.promptRomanization} romanizationReserved={look.held} size="md" testID="daily-review-line" />
+      ) : null}
       {round.meaning ? (
         <View>
           <Caption tone="muted">{copy.meaning}</Caption>
@@ -551,7 +574,7 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
 /** The sentence in the card's label: its gap read as a word, no closing mark (the label adds its own). */
 const clozeLabel = (text: string, blank: string): string => text.split('___').join(blank).replace(/[.?!]+$/, '');
 
-export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<ClozeRound>): ReactElement {
+export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion, holdSurface = 'practice' }: RoundProps<ClozeRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const a11y = m.a11y.minigame.clozePick;
@@ -561,6 +584,8 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   const advance = useAdvance(onSolved, reducedMotion);
   const lc = useLayoutClass();
   const { slot, hear } = useRoundSound(solved ? round.answer.ko.ko : null, solved);
+  // The gapped sentence's romanization and every tile's wait for the answer; the sentence's meaning is the stimulus and stays.
+  const look = roundLook(round, { surface: holdSurface, solved });
 
   const tap = (option: PickOption): void => {
     if (solved) return;
@@ -590,7 +615,15 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
     <View testID="daily-review-round" style={{ gap: spacing.md }}>
       <Heading level="prompt">{copy.clozePick.heading}</Heading>
       <View accessible accessibilityLabel={label} style={{ alignItems: 'center' }} testID="daily-review-cloze-sentence">
-        <KoreanText ko={shown.ko} romanization={shown.romanization} gloss={round.meaning} size="lg" testID="daily-review-prompt" />
+        <KoreanText
+          ko={shown.ko}
+          romanization={shown.romanization}
+          romanizationShown={look.promptRomanization}
+          romanizationReserved={look.held}
+          gloss={round.meaning}
+          size="lg"
+          testID="daily-review-prompt"
+        />
       </View>
       {solved ? <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
       <Body tone="secondary">{copy.clozePick.instruction.word}</Body>
@@ -604,6 +637,7 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
                 state={stateOf(option)}
                 ko={option.ko?.ko ?? ''}
                 romanization={option.ko?.romanization ?? ''}
+                romanizationReserved={look.held}
                 onPress={() => tap(option)}
                 accessibilityLabel={optionLabel(option, true)}
                 testID={`daily-review-option-${option.id}`}

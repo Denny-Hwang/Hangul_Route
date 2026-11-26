@@ -7,6 +7,12 @@ import { checkHoldsRomanization, optionView, promptView, startFlow, textPromptVi
 import { scopeFor } from '../minigame-config';
 import { seededRandom, shuffleOptions, validRounds } from '../listen-pick';
 import type { HostMode } from '../../screens/minigames/host';
+import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
+import { holdsRomanization, type HoldSurface } from '../locale/check-hold';
+import type { Rung } from '../memory/spacing';
+import type { EngineContext, ReviewQuestion } from '../reviews/engine';
+import { roundFor, surfaceIndex, type PickRound, type ReviewRound, type RoundInput } from '../reviews/review-rounds';
+import { keyboardSoundHeld, roundLook } from '../reviews/round-look';
 
 /**
  * The romanization-only bot (AMENDMENTS-STAGE1-DECODING-CHECK section 3.9, row DC-1a): a responder that understands
@@ -266,5 +272,193 @@ describe('control: the same bot with the hold off', () => {
     const tally = playHangulChecks(false, 20, NO_LENGTH, shared);
     expect(tally.reading.trials).toBeGreaterThan(100);
     expect(accuracy(tally.reading)).toBeGreaterThanOrEqual(0.9);
+  });
+});
+
+// ---- the review rounds (row DC-1b): the Stage Check, the Cell Check and the Daily Review ------------------------------
+
+/**
+ * The same bot on the rounds of `ReviewRounds`, through the pure `roundLook` the screen draws from. The Stage Check and the
+ * Cell Check hold every rung; the Daily Review's read and produce rungs hold, its recognize rung is practice and is reported,
+ * not held to chance. Pick rounds are scored by the bot; type, cloze and order rounds are production: the exact check is
+ * that no romanization line of the question is drawn before the answer and that the keyboard's Latin line is held in a
+ * Check (the Daily Review keeps it, OD-DC12).
+ */
+
+const FORMATS: Readonly<Record<ReviewItemKind, readonly ReviewFormat[]>> = {
+  sym: ['hear-pick', 'read-pick'],
+  syl: ['hear-pick', 'read-pick'],
+  lex: ['hear-pick', 'read-pick', 'type-see'],
+  pat: ['hear-pick', 'read-pick', 'sentence-builder', 'cloze-pick'],
+  exc: ['hear-pick', 'read-pick', 'sentence-builder'],
+  rea: ['read-pick'],
+};
+const item = (id: string, over: Partial<ReviewItem> = {}): ReviewItem => {
+  const kind = id.slice(0, 3) as ReviewItemKind;
+  return { id, kind, ko: '가', romanization: 'ga', home: 'life', stage: 2, volume: 1, cells: ['episode:stage2-life'], asked: [], formats: [...FORMATS[kind]], soundChange: false, homophoneOf: [], ...over };
+};
+const REVIEW_ITEMS: ReviewItem[] = [
+  item('lex:sagwa', { ko: '사과', romanization: 'sagwa', en: 'apple' }),
+  item('lex:namu', { ko: '나무', romanization: 'namu', en: 'tree' }),
+  item('lex:bap', { ko: '밥', romanization: 'bap', en: 'cooked rice' }),
+  item('lex:tteok', { ko: '떡', romanization: 'tteok', en: 'rice cake' }),
+  item('lex:gae', { ko: '개', romanization: 'gae', en: 'dog' }),
+  item('lex:mul', { ko: '물', romanization: 'mul', en: 'water' }),
+  item('sym:giyeok', { ko: 'ㄱ', romanization: 'g/k' }),
+  item('sym:nieun', { ko: 'ㄴ', romanization: 'n' }),
+  item('sym:mieum', { ko: 'ㅁ', romanization: 'm' }),
+  item('sym:siot', { ko: 'ㅅ', romanization: 's' }),
+  item('pat:chaegi-isseoyo', { ko: '책이 있어요.', romanization: 'chaegi isseoyo', en: 'There is a book.' }),
+  item('pat:yeonpiri-eopseoyo', { ko: '연필이 없어요.', romanization: 'yeonpiri eopseoyo', en: 'There is no pencil.' }),
+  item('pat:chinguga-isseoyo', { ko: '친구가 있어요.', romanization: 'chinguga isseoyo', en: 'I have a friend.' }),
+  item('pat:gabangi-isseoyo', { ko: '가방이 있어요.', romanization: 'gabangi isseoyo', en: 'There is a bag.' }),
+  item('exc:ige-mwoyeyo', { ko: '이게 뭐예요?', romanization: 'ige mwoyeyo?', en: 'What is this?', reply: { ko: '지우개예요.', romanization: 'jiugaeyeyo.', en: 'It is an eraser.' } }),
+  item('exc:nuguyeyo', { ko: '누구예요?', romanization: 'nuguyeyo?', en: 'Who is it?', reply: { ko: '할머니예요.', romanization: 'halmeoniyeyo.', en: 'It is Grandma.' } }),
+  item('exc:annyeong', { ko: '안녕하세요!', romanization: 'annyeonghaseyo!', en: 'Hello!', reply: { ko: '네, 안녕하세요.', romanization: 'ne, annyeonghaseyo.', en: 'Yes, hello.' } }),
+  item('exc:gamsa', { ko: '고마워요.', romanization: 'gomawoyo.', en: 'Thank you.', reply: { ko: '천만에요.', romanization: 'cheonmaneyo.', en: "You're welcome." } }),
+];
+const REVIEW_INDEX: EngineContext['index'] = { items: REVIEW_ITEMS, byId: new Map(REVIEW_ITEMS.map((i) => [i.id, i])), retired: new Set() };
+const SURFACE = surfaceIndex(REVIEW_INDEX, { clozePick: true });
+
+/** What the bot knows of the content: the lexicon oracle (a romanization to its meaning, an exchange's line to its reply). */
+const MEANING = new Map(REVIEW_ITEMS.filter((i) => i.en !== undefined).map((i) => [norm(i.romanization), norm(i.en ?? '')]));
+const REPLY = new Map(REVIEW_ITEMS.filter((i) => i.reply !== undefined).map((i) => [norm(i.romanization), norm(i.reply?.romanization ?? '')]));
+
+const question = (id: string, format: ReviewFormat, rung: Rung): ReviewQuestion => ({ itemId: id, kind: id.slice(0, 3) as ReviewItemKind, rung, format, theme: 'life', stretch: false, voiceFallback: false });
+const RUNG_OF: Partial<Record<ReviewFormat, Rung>> = { 'hear-pick': 'recognize', 'read-pick': 'read' };
+
+/** The rounds of one seed: every item asked every way it has, at the rung of its format. */
+function reviewRounds(seed: number): ReviewRound[] {
+  const input: RoundInput = { index: SURFACE, gloss: (_k, en) => en, seed: `s${seed}` };
+  const out: ReviewRound[] = [];
+  for (const i of REVIEW_ITEMS) {
+    for (const format of FORMATS[i.kind]) {
+      if (format === 'hear-pick' && i.kind === 'sym') continue;
+      const round = roundFor(question(i.id, format, RUNG_OF[format] ?? 'produce'), input);
+      if (round !== null) out.push(round);
+    }
+  }
+  return out;
+}
+
+interface ReviewSeen {
+  /** The Latin text drawn for the stimulus: the heard sound's romanization, or the shown prompt's romanization when it is drawn. */
+  stimulus: string | undefined;
+  options: Array<{ id: string; romanization: string; label: string | undefined }>;
+}
+
+/** What the bot sees of a pick round: only what the look draws (a held line is invisible), and the sound it hears. */
+function seeReview(round: PickRound, surface: HoldSurface): ReviewSeen {
+  const look = roundLook(round, { surface, solved: false });
+  const stimulus = round.heard || look.promptRomanization ? round.prompt.romanization : undefined;
+  return {
+    stimulus,
+    options: round.options.map((o) => ({ id: o.id, romanization: look.optionRomanization ? (o.ko?.romanization ?? '') : '', label: o.label })),
+  };
+}
+
+function reviewMatches(round: PickRound, seen: ReviewSeen): string[] {
+  if (seen.stimulus === undefined || round.ask === 'sound') return [];
+  const s = norm(seen.stimulus);
+  if (round.ask === 'spelling') return seen.options.filter((o) => o.romanization !== '' && norm(o.romanization) === s).map((o) => o.id);
+  if (round.ask === 'reply') return seen.options.filter((o) => o.romanization !== '' && norm(o.romanization) === REPLY.get(s)).map((o) => o.id);
+  const meaning = MEANING.get(s);
+  return seen.options.filter((o) => meaning !== undefined && o.label !== undefined && norm(o.label) === meaning).map((o) => o.id);
+}
+
+function reviewMiddle(seen: ReviewSeen): string | undefined {
+  const drawn = seen.options.filter((o) => o.romanization !== '');
+  if (drawn.length < 3) return undefined;
+  const sums = drawn.map((o) => ({ id: o.id, sum: drawn.reduce((t, other) => t + distance(norm(o.romanization), norm(other.romanization)), 0) }));
+  const best = Math.min(...sums.map((x) => x.sum));
+  const winners = sums.filter((x) => x.sum === best);
+  return winners.length === 1 ? winners[0]!.id : undefined;
+}
+
+interface ReviewTally {
+  trials: number;
+  right: number;
+  chance: number;
+  leaks: string[];
+}
+
+function playReviewPicks(surface: HoldSurface, seeds: number, only: (round: PickRound) => boolean): ReviewTally {
+  const tally: ReviewTally = { trials: 0, right: 0, chance: 0, leaks: [] };
+  for (let seed = 1; seed <= seeds; seed += 1) {
+    const rnd = seededRandom(seed * 15485863);
+    reviewRounds(seed).forEach((round, i) => {
+      if (round.type !== 'pick' || !only(round)) return;
+      const seen = seeReview(round, surface);
+      const matched = reviewMatches(round, seen);
+      const centre = reviewMiddle(seen);
+      if (matched.length > 0 || centre !== undefined) tally.leaks.push(`${surface}@${seed}#${i} ${round.question.itemId} ${round.ask}`);
+      const answered = matched.length === 1 ? matched[0]! : (centre ?? seen.options[Math.floor(rnd() * seen.options.length)]!.id);
+      tally.trials += 1;
+      tally.chance += 1 / round.options.length;
+      if (answered === round.answerId) tally.right += 1;
+    });
+  }
+  return tally;
+}
+
+const anyPick = (): boolean => true;
+
+describe('review rounds: the Stage Check and the Cell Check hold every rung', () => {
+  it.each(['stage-check', 'cell-check'] as const)('%s: the fixtures draw heard spelling, meaning, reply and sound rounds', (surface) => {
+    const asks = new Set(reviewRounds(1).filter((r): r is PickRound => r.type === 'pick').map((r) => r.ask));
+    expect([...asks].sort()).toEqual(['meaning', 'reply', 'sound', 'spelling']);
+    expect(holdsRomanization(surface, 'recognize')).toBe(true);
+  });
+
+  it.each(['stage-check', 'cell-check'] as const)('%s exact check: before the answer no pick round gives the bot a match or a middle option, in any of 200 seeds', (surface) => {
+    const tally = playReviewPicks(surface, SEEDS, anyPick);
+    expect(tally.leaks).toEqual([]);
+    expect(tally.trials).toBeGreaterThan(2000);
+  });
+
+  it.each(['stage-check', 'cell-check'] as const)('%s pooled: the bot is no better than chance + 0.03 on the pick rounds', (surface) => {
+    const tally = playReviewPicks(surface, SEEDS, anyPick);
+    expect(tally.right / tally.trials).toBeLessThanOrEqual(tally.chance / tally.trials + 0.03);
+  });
+
+  it.each(['stage-check', 'cell-check'] as const)("%s production rounds (type, cloze, order): no romanization line is drawn before the answer and the keyboard's Latin line is held", (surface) => {
+    const rounds = reviewRounds(1).filter((r) => r.type === 'type' || r.type === 'cloze' || r.type === 'order');
+    expect(new Set(rounds.map((r) => r.type))).toEqual(new Set(['type', 'cloze', 'order']));
+    for (const round of rounds) {
+      const look = roundLook(round, { surface, solved: false });
+      expect(look.promptRomanization, round.question.itemId).toBe(false);
+      expect(look.optionRomanization, round.question.itemId).toBe(false);
+      if (round.type === 'type') expect(keyboardSoundHeld(surface, round)).toBe(true);
+    }
+  });
+});
+
+describe('review rounds: the Daily Review holds the read and produce rungs, not the recognize rung', () => {
+  it('exact check and pooled limit on the read-rung pick rounds (meaning, reply and sound)', () => {
+    const tally = playReviewPicks('daily-review', SEEDS, (round) => round.question.rung === 'read');
+    expect(tally.leaks).toEqual([]);
+    expect(tally.trials).toBeGreaterThan(1000);
+    expect(tally.right / tally.trials).toBeLessThanOrEqual(tally.chance / tally.trials + 0.03);
+  });
+
+  it('the recognize rung (hear it, pick it) is practice: its options show their romanization and the bot matches them (reported, not held)', () => {
+    const tally = playReviewPicks('daily-review', 20, (round) => round.question.rung === 'recognize');
+    expect(tally.trials).toBeGreaterThan(100);
+    expect(tally.right / tally.trials).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it("production rounds hold their question, and the produce rung keeps the keyboard's Latin line (OD-DC12)", () => {
+    const type = reviewRounds(1).find((r) => r.type === 'type')!;
+    expect(roundLook(type, { surface: 'daily-review', solved: false }).held).toBe(true);
+    expect(keyboardSoundHeld('daily-review', type)).toBe(false);
+    expect(keyboardSoundHeld('stage-check', type)).toBe(true);
+  });
+});
+
+describe('review rounds, control: the same bot with the hold off', () => {
+  it('answers at least 0.9 of the pick rounds whose stimulus names the answer when nothing is held (practice)', () => {
+    const tally = playReviewPicks('practice', 20, (round) => round.ask !== 'sound');
+    expect(tally.trials).toBeGreaterThan(300);
+    expect(tally.right / tally.trials).toBeGreaterThanOrEqual(0.9);
   });
 });
