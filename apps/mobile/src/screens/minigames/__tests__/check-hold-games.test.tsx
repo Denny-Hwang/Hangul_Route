@@ -84,6 +84,20 @@ const heldLines = (node: ReactTestInstance): ReactTestInstance[] =>
   hostNodes(node, (n) => off(n) && n.children.some((c) => typeof c === 'string' && c.trim() !== ''));
 const names = (node: ReactTestInstance): string => hostNodes(node, (n) => typeof n.props['aria-label'] === 'string').map((n) => String(n.props['aria-label'])).join(' | ');
 
+/** The text metrics (`fontSize`, `lineHeight`, `fontStyle`, `fontWeight`) of the host node whose only child is `text`: held (off) or drawn. */
+function metricsOf(root: ReactTestInstance, text: string, held: boolean): Record<string, unknown> {
+  const node = hostNodes(root, (n) => n.children.length === 1 && n.children[0] === text && off(n) === held)[0];
+  if (!node) throw new Error(`no ${held ? 'held' : 'drawn'} line "${text}"`);
+  const flat: Record<string, unknown> = {};
+  const merge = (style: unknown): void => {
+    if (Array.isArray(style)) style.forEach(merge);
+    else if (typeof style === 'object' && style !== null) Object.assign(flat, style);
+  };
+  merge(node.props.style);
+  const { fontSize, lineHeight, fontStyle, fontWeight } = flat;
+  return { fontSize, lineHeight, fontStyle, fontWeight };
+}
+
 const pressable = (root: ReactTestInstance, id: string): ReactTestInstance => {
   const node = byTestId(root, id).find((n) => typeof n.props.onClick === 'function');
   if (!node) throw new Error(`no pressable ${id}`);
@@ -449,5 +463,90 @@ describe('Tap Respond (a `hold` boolean, no host)', () => {
       expect(reads(card, o.en)).toBe(true);
     }
     expect(heldLines(root)).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+describe('a held line takes exactly the room of the line it replaces (same size, leading, style and weight)', () => {
+  const cloze = async (mode: HostMode): Promise<ReactTestInstance> => {
+    const r = await render(
+      <RomanizationModeOverride mode="always">
+        <ClozePickGame scope={clozeFixtureScope(['word'])} host={host(mode)} />
+      </RomanizationModeOverride>,
+    );
+    mounted.push(r);
+    return r.root;
+  };
+  const type = async (round: keyof typeof FIXTURE_ROUNDS, mode: HostMode, size = { width: 375, height: 667 }): Promise<ReactTestInstance> => {
+    const scope = { kind: 'type-hangul' as const, rounds: 1, typeHangul: { rounds: [FIXTURE_ROUNDS[round] as TypeHangulRound] } };
+    const r = await render(
+      <LayoutProvider value={layoutClassFor(size)}>
+        <RomanizationModeOverride mode="always">
+          <TypeHangulGame scope={scope} host={host(mode)} />
+        </RomanizationModeOverride>
+      </LayoutProvider>,
+      { createNodeMock: () => ({ focus: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined, nodeType: 1, getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }) }) },
+    );
+    mounted.push(r);
+    return r.root;
+  };
+  const builder = async (mode: HostMode): Promise<ReactTestInstance> => {
+    const r = await render(
+      <LayoutProvider value={layoutClassFor({ width: 375, height: 667 })}>
+        <RomanizationModeOverride mode="always">
+          <SentenceBuilderGame scope={{ kind: 'order-it', rounds: 1, orderIt: { rounds: [EAT_RICE] } }} host={host(mode)} />
+        </RomanizationModeOverride>
+      </LayoutProvider>,
+    );
+    mounted.push(r);
+    return r.root;
+  };
+  const tapRespond = async (hold: boolean): Promise<ReactTestInstance> => {
+    const scope = {
+      kind: 'tap-respond' as const,
+      dialogue: [
+        {
+          npcKo: '이름이 뭐예요?',
+          npcRomanization: 'ireumi mwoyeyo?',
+          npcEn: 'What is your name?',
+          options: [{ ko: '저는 다미예요.', romanization: 'jeoneun damiyeyo.', en: 'I am Dami.', isCorrect: true }],
+        },
+      ],
+    };
+    const r = await render(<TapRespondGame scope={scope} onFinish={() => undefined} hold={hold} />);
+    mounted.push(r);
+    return r.root;
+  };
+
+  it('Cloze Pick: the sentence line and a tile line', async () => {
+    const held = await cloze('check');
+    const drawn = await cloze('quest');
+    for (const line of ['chaegeul ___.', 'ilgeoyo']) expect(metricsOf(held, line, true), line).toEqual(metricsOf(drawn, line, false));
+  });
+
+  it('Type Hangul: the word line (see; in a compact-height window it is a plain line) and the picture cue', async () => {
+    const small = { width: 320, height: 568 };
+    expect(metricsOf(await type('hoya', 'check', small), 'hoya', true)).toEqual(metricsOf(await type('hoya', 'quest', small), 'hoya', false));
+    expect(metricsOf(await type('hoya', 'check'), 'hoya', true)).toEqual(metricsOf(await type('hoya', 'quest'), 'hoya', false));
+    const held = await type('bibimbap', 'check');
+    const drawn = await type('bibimbap', 'quest');
+    expect(hostNodes(held, (n) => off(n) && n.children[0] === 'bibimbap')).toHaveLength(1);
+    const heldCue = hostNodes(held, (n) => off(n) && n.children[0] === 'bibimbap')[0]!;
+    const drawnCue = hostNodes(drawn, (n) => !off(n) && n.children[0] === 'bibimbap')[0]!;
+    const style = (n: ReactTestInstance): string => JSON.stringify(n.props.style).replace(/"opacity":0,?/, '');
+    expect(style(heldCue).includes('lineHeight')).toBe(style(drawnCue).includes('lineHeight'));
+  });
+
+  it('Sentence Builder: a tray tile line', async () => {
+    const held = await builder('check');
+    const drawn = await builder('quest');
+    expect(metricsOf(held, 'babeul', true)).toEqual(metricsOf(drawn, 'babeul', false));
+  });
+
+  it('Tap Respond: the NPC line', async () => {
+    const held = await tapRespond(true);
+    const drawn = await tapRespond(false);
+    expect(metricsOf(held, 'ireumi mwoyeyo?', true)).toEqual(metricsOf(drawn, 'ireumi mwoyeyo?', false));
   });
 });

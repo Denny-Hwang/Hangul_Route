@@ -404,7 +404,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                   {view.romanization}
                 </Body>
               ) : view.heldRomanization !== '' ? (
-                <HeldText size="bodySm" tone="secondary">{view.heldRomanization}</HeldText>
+                <HeldText size="bodySm" tone="secondary" leading="body">{view.heldRomanization}</HeldText>
               ) : null}
               <Body size="sm" tone="secondary" testID="cloze-pick-meaning">
                 {view.meaning}
@@ -490,7 +490,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                                     {card.romanization}
                                   </Body>
                                 ) : card.heldRomanization !== '' ? (
-                                  <HeldText size="bodySm" tone="secondary">{card.heldRomanization}</HeldText>
+                                  <HeldText size="bodySm" tone="secondary" leading="body">{card.heldRomanization}</HeldText>
                                 ) : null}
                               </View>
                               {look.mark ? (

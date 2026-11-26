@@ -475,7 +475,7 @@ function TileFace({ ko, romanization, held = '' }: { ko: string; romanization: s
       {romanization !== '' ? (
         <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
       ) : held !== '' ? (
-        <HeldText size="caption" tone="muted" weight="medium">{held}</HeldText>
+        <HeldText size="caption" tone="muted" weight="medium" leading="none">{held}</HeldText>
       ) : null}
     </>
   );

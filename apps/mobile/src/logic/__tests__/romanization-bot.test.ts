@@ -712,23 +712,37 @@ describe.each(GAMES)('quest Checks on other games: %s', (_name, make, checks) =>
 
 describe('quest Checks on other games: Type Hangul (production)', () => {
   const rounds = checkScopes('type-hangul').flatMap(({ quest, scope }) => (scope.typeHangul?.rounds ?? []).map((round) => ({ quest, round })));
-  /** The modes a round can be drawn in: a Dictation round is heard, or the `see` round of its word (no voice, Sound off, Show the letters). */
-  const modesOf = (round: TypeHangulRound): Array<'hear' | 'see' | 'picture'> =>
-    round.mode === 'hear' ? ['hear', 'see'] : round.pictureRef !== undefined ? ['picture'] : ['see'];
-  const lookOf = (mode: 'hear' | 'see' | 'picture', hold: boolean) => typeHangulLook({ mode, hold, solved: false, romanizationMode: 'always', revealed: false });
+  /**
+   * The ways a round can be drawn: a Dictation round is heard, or the stand-in `see` round of its word (sound off, no voice, two
+   * failed plays: section 3.2); any other round is the `see` round of its word, or a picture round.
+   */
+  const modesOf = (round: TypeHangulRound): Array<'hear' | 'stand-in' | 'see' | 'picture'> =>
+    round.mode === 'hear' ? ['hear', 'stand-in'] : round.pictureRef !== undefined ? ['picture'] : ['see'];
+  const lookOf = (mode: 'hear' | 'stand-in' | 'see' | 'picture', hold: boolean) =>
+    typeHangulLook({ mode: mode === 'stand-in' ? 'see' : mode, standIn: mode === 'stand-in', hold, solved: false, romanizationMode: 'always', revealed: false });
 
-  it('has Type Hangul Check rounds (the content of the 30 Checks)', () => {
+  it('has Type Hangul Check rounds (the content of the 30 Checks), mostly Dictation', () => {
     expect(rounds.length).toBeGreaterThanOrEqual(30);
+    expect(rounds.filter(({ round }) => round.mode === 'hear').length).toBeGreaterThan(rounds.length / 2);
   });
 
-  it("exact check: in a Check no romanization of the word is drawn before the answer, whichever way the round is drawn, and the keyboard's Latin line is held", () => {
+  it("exact check: in a Check the word's romanization is not drawn before the answer (the keyboard's Latin line and a Dictation hint are held), whichever way the round is drawn", () => {
     const hold = holdsRomanization('quest-check');
     for (const { quest, round } of rounds) {
       for (const mode of modesOf(round)) {
         const look = lookOf(mode, hold);
-        expect(look.romanizationVisible, `${quest} ${round.id} ${mode}`).toBe(false);
-        expect(look.canReveal, `${quest} ${round.id} ${mode}`).toBe(false);
-        expect(look.keyboardSoundHeld, `${quest} ${round.id} ${mode}`).toBe(true);
+        const where = `${quest} ${round.id} ${mode}`;
+        expect(look.keyboardSoundHeld, where).toBe(true);
+        expect(look.canReveal, where).toBe(false);
+        if (mode === 'stand-in') {
+          // The romanization is the sound to find (never the Hangul, the answer): a reading round, section 3.2.
+          expect(look.hangulHidden, where).toBe(true);
+          expect(look.romanizationVisible, where).toBe(true);
+        } else {
+          expect(look.hangulHidden, where).toBe(false);
+          expect(look.romanizationVisible, where).toBe(false);
+        }
+        if (mode === 'hear') expect(look.hearHintHeld, where).toBe(true);
       }
     }
   });
@@ -738,12 +752,13 @@ describe('quest Checks on other games: Type Hangul (production)', () => {
     expect(lookOf('picture', false)).toMatchObject({ romanizationVisible: true, keyboardSoundHeld: false });
   });
 
-  it('control: with the hold off, a Latin-only typist can spell the word shown from its drawn romanization and the keyboard line', () => {
-    const shown = rounds.filter(({ round }) => modesOf(round).includes('see'));
+  it('control: with the hold off, a Latin-only typist can spell the word shown from its drawn romanization and the keyboard line, and a Dictation round can be hinted', () => {
+    const shown = rounds.filter(({ round }) => modesOf(round).includes('stand-in'));
     expect(shown.length).toBeGreaterThan(10);
     for (const { quest, round } of shown) {
-      const look = lookOf('see', false);
-      expect(look.romanizationVisible && !look.keyboardSoundHeld, `${quest} ${round.id}`).toBe(true);
+      const look = lookOf('stand-in', false);
+      expect(look.romanizationVisible && !look.keyboardSoundHeld && !look.hangulHidden, `${quest} ${round.id}`).toBe(true);
+      expect(lookOf('hear', false).hearHintHeld, `${quest} ${round.id}`).toBe(false);
     }
   });
 });

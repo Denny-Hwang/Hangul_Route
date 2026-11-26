@@ -9,7 +9,7 @@ const input = (over: Partial<TypeHangulLookInput> = {}): TypeHangulLookInput => 
 
 describe('practice (no hold): what the mode shows, as before', () => {
   it('see, always: the line and the keyboard line show; nothing to reveal', () => {
-    expect(typeHangulLook(input())).toEqual({ romanizationVisible: true, romanizationReserved: false, canReveal: false, keyboardSoundHeld: false });
+    expect(typeHangulLook(input())).toEqual({ romanizationVisible: true, romanizationReserved: false, canReveal: false, keyboardSoundHeld: false, hangulHidden: false, hearHintHeld: false });
   });
 
   it('see, tap: the line waits for a tap, offered until it is revealed', () => {
@@ -24,7 +24,7 @@ describe('practice (no hold): what the mode shows, as before', () => {
 
 describe('a Check holds until the round is passed', () => {
   it('see, always: the line is reserved, not drawn; the keyboard line is held', () => {
-    expect(typeHangulLook(input({ hold: true }))).toEqual({ romanizationVisible: false, romanizationReserved: true, canReveal: false, keyboardSoundHeld: true });
+    expect(typeHangulLook(input({ hold: true }))).toEqual({ romanizationVisible: false, romanizationReserved: true, canReveal: false, keyboardSoundHeld: true, hangulHidden: false, hearHintHeld: false });
   });
 
   it('a held line cannot be revealed by a tap, in any mode, even after a tap', () => {
@@ -48,8 +48,39 @@ describe('a Check holds until the round is passed', () => {
     expect(typeHangulLook(input({ hold: true, solved: true, romanizationMode: 'tap' }))).toMatchObject({ romanizationVisible: false, canReveal: true });
   });
 
-  it('a hear (Dictation) round draws no word before its answer: only the keyboard line is held', () => {
-    expect(typeHangulLook(input({ mode: 'hear', hold: true }))).toEqual({ romanizationVisible: false, romanizationReserved: false, canReveal: false, keyboardSoundHeld: true });
-    expect(typeHangulLook(input({ mode: 'hear' }))).toMatchObject({ romanizationVisible: false, keyboardSoundHeld: false });
+  it("a hear (Dictation) round draws no word before its answer: the keyboard line and its own hint are held (a held line cannot be revealed)", () => {
+    expect(typeHangulLook(input({ mode: 'hear', hold: true }))).toEqual({
+      romanizationVisible: false,
+      romanizationReserved: false,
+      canReveal: false,
+      keyboardSoundHeld: true,
+      hangulHidden: false,
+      hearHintHeld: true,
+    });
+    // Practice keeps the hint.
+    expect(typeHangulLook(input({ mode: 'hear' }))).toMatchObject({ romanizationVisible: false, keyboardSoundHeld: false, hearHintHeld: false });
+  });
+});
+
+describe('a heard word that cannot be heard (sound off, no voice, failed plays): the stand-in for the sound (section 3.2)', () => {
+  it('in a Check the romanization is the sound and the Hangul is not drawn, whatever the mode; the keyboard line is held', () => {
+    for (const romanizationMode of ['always', 'tap'] as const) {
+      expect(typeHangulLook(input({ hold: true, standIn: true, romanizationMode }))).toEqual({
+        romanizationVisible: true,
+        romanizationReserved: false,
+        canReveal: false,
+        keyboardSoundHeld: true,
+        hangulHidden: true,
+        hearHintHeld: false,
+      });
+    }
+  });
+
+  it('passed: the Korean shows as the answer', () => {
+    expect(typeHangulLook(input({ hold: true, standIn: true, solved: true }))).toMatchObject({ hangulHidden: false, romanizationVisible: true });
+  });
+
+  it('practice (no hold) is the see round of the word, unchanged', () => {
+    expect(typeHangulLook(input({ standIn: true }))).toEqual(typeHangulLook(input()));
   });
 });

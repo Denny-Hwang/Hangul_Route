@@ -202,7 +202,7 @@ export function TapRespondGame({ scope, onFinish, hold = false }: Props): ReactE
           {view.npc.romanization !== '' ? (
             <Body tone="muted">{view.npc.romanization}</Body>
           ) : view.npc.romanizationHeld !== '' ? (
-            <HeldText size="body" tone="muted">{view.npc.romanizationHeld}</HeldText>
+            <HeldText size="body" tone="muted" leading="body">{view.npc.romanizationHeld}</HeldText>
           ) : null}
           <Spacer size="xxs" />
           <Body tone="secondary">{turn.npcEn}</Body>

@@ -222,7 +222,11 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   // shows it, because with the Korean hidden the romanization and gloss are the cue. A quest Check holds the word's
   // romanization, the picture round's cue and the keyboard's Latin line until the round is passed (AMENDMENTS-STAGE1-DECODING-CHECK
   // DC-1c): the picture and its meaning stay, so a picture round becomes spelling from meaning.
-  const look = typeHangulLook({ mode, hold: holdsRomanization(hostSurface(host.mode)), solved: state.phase === 'pass', romanizationMode, revealed });
+  // A heard word that cannot be heard (sound off, no Korean voice, two failed plays) is the `see` round of the word; in a Check the
+  // romanization stands in for the sound and the Hangul, the answer to type, is not drawn (section 3.2).
+  const hold = holdsRomanization(hostSurface(host.mode));
+  const standIn = hold && hearRound && hear !== null && heard !== null && heard.mode === 'see';
+  const look = typeHangulLook({ mode, hold, solved: state.phase === 'pass', romanizationMode, revealed, standIn });
   const romanizationVisible = look.romanizationVisible;
   const reveal = (): void => setRevealed(true);
   const kit = hearing ? hear : null;
@@ -240,7 +244,13 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   // The word to type, with its romanization and gloss (taught Korean always carries both). A compact
   // window (under 640 tall) draws it inline in the top row, as the mock does; a picture round hides the Korean.
   const prompt = kit !== null && heard !== null ? (
-    <kit.HearPrompt hear={heard} round={round} compact={compactRow} first={state.roundIdx === 0} />
+    // A Check does not offer "Show how it sounds": it would reveal the romanization, and a held line cannot be revealed by a tap.
+    <kit.HearPrompt hear={heard} round={round} compact={compactRow} first={state.roundIdx === 0} holdRomanization={look.hearHintHeld} />
+  ) : look.hangulHidden ? (
+    <View style={{ alignItems: 'center', gap: spacing.xs }} testID="type-hangul-prompt">
+      <Body weight="bold">{round.target.romanization}</Body>
+      <Caption tone="secondary">{round.target.en}</Caption>
+    </View>
   ) : compactRow ? (
     <View style={{ flexShrink: 1, gap: spacing.xxs }}>
       <Caption tone="secondary">{promptLine}</Caption>
@@ -622,7 +632,7 @@ function WordLine({ round, romanizationVisible, romanizationReserved = false, on
           {ko}
         </Text>
         {hidden ? (
-          romanizationReserved ? <HeldText size="bodySm" tone="secondary" italic>{romanization}</HeldText> : null
+          romanizationReserved ? <HeldText size="bodySm" tone="secondary" leading="none" italic>{romanization}</HeldText> : null
         ) : (
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>
         )}
@@ -638,5 +648,5 @@ function WordLine({ round, romanizationVisible, romanizationReserved = false, on
 /** The picture round's cue: the target's romanization, drawn; held in a quest Check until the round is passed (the picture and its meaning stay). */
 function PictureCue({ look, romanization }: { look: TypeHangulLook; romanization: string }): ReactElement | null {
   if (look.romanizationVisible) return <Body weight="bold">{romanization}</Body>;
-  return look.romanizationReserved ? <HeldText size="body" tone="secondary" weight="bold">{romanization}</HeldText> : null;
+  return look.romanizationReserved ? <HeldText size="body" tone="secondary" weight="bold" leading="body">{romanization}</HeldText> : null;
 }
