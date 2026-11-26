@@ -4,15 +4,18 @@ Status: ready (multi-agent review 2026-11-25, §11; open decisions SF-OD-1 to SF
 
 **Owner decision 2026-11-25**: the open decisions SF-OD-1 to SF-OD-5 are approved as recommended ("권고대로 진행해줘"); they are no longer provisional.
 
+**Row SF-3 added 2026-11-26** (§12): the "아 · 오 · 우" button on the initial ㅇ card, WO-12 item 13 (`AMENDMENTS-STAGE1-CONTENT-FIXES.md` §1.1 #13, OD-CF5), which CF moved to WO-13 and SF-0 had left out of scope. **Owner decision 2026-11-26**: the owner assigned it to this amendment and approved its open decisions SF-OD-6 to SF-OD-8 as recommended.
+
 > **Amended 2026-11-25 by `AMENDMENTS-MINIMAL-PAIRS.md` [MP]** (work order WO-16 of the 2026-11 review: hear plain, aspirated and tense consonants apart, on approved clips only) (SF-OD-5, SF-OD-4): SF-OD-5 is answered there (§3.11, MP-OD-5): Match Sound keeps the name; quest 6's new contrast step is the sound practice of 가 / 카 and the other plain / aspirated pairs, on approved clips. SF-OD-4 (a): the four Check rounds keep the series rule; practice now includes the contrast, in contrast rounds only.
 
 **Amends** (each gets an "Amended 2026-11-25 by AMENDMENTS-DISCOVER-SOUND-FIRST [SF]" line in this PR):
 - `AMENDMENTS-AUDIO-CLIPS.md`: JV-A5 (Discover's button order and the line under each button), the "Discover" and "Listen & Pick letter rounds" rows of §6.1, the `startsWith` row of JV-A4 (one more user), and AU-OD-2 in §12 (reversed). JV-A1's rule for letter questions is **not** changed.
 - `F-QUEST-002-discover-check-stage1-complete.md`: §3.2 item 1 (Discover goes back to its own 2026-10-12 text: **Hear it** plays the sound, the name is the second button), §3.3 Round 1 (a consonant round is "hear a sound, pick the written symbol" again), §3.6 (the Check options of quests 4 and 6) and §3.10 (Listen & Pick's heading on such a round).
 - `AMENDMENTS-AUDIT-2026-11.md`: AU-10 (the sound that plays by itself when a Look and learn page opens is now the letter's sound, 가, not its name).
-- `design/wireframes/quest/discover.md` (section "[SF] Sound first").
+- `design/wireframes/quest/discover.md` (section "[SF] Sound first"; from row SF-3, also "[SF-3] The ㅇ card").
+- From row SF-3 (2026-11-26): `AMENDMENTS-STAGE1-CONTENT-FIXES.md` OD-CF5, §4 and §8 (item 13 now points at §12 here).
 
-**Not amended**: AU-OD-1 and JV-A1's letter-question rule. Match Sound, Listen & Pick letter rounds outside the four quest Check rounds of §3.7, the Hangul Check, Trace Stroke, the lecture letter slide and its sound quiz, the presenter sound check and Match Shape's pair board still say a letter by its name (the lecture's copy of those four Check rounds follows them, §3.7) (OD-R2: "keep the decision itself"). The Hangul Check belongs to WO-10 (`AMENDMENTS-STAGE1-DECODING-CHECK.md`). Content fixes, including a "아 · 오 · 우" button on the ㅇ page, belong to WO-12 (`AMENDMENTS-STAGE1-CONTENT-FIXES.md`, item 13). QS-3 and AU-10's conditions (sound on, no screen reader, something can play) do not change.
+**Not amended**: AU-OD-1 and JV-A1's letter-question rule. Match Sound, Listen & Pick letter rounds outside the four quest Check rounds of §3.7, the Hangul Check, Trace Stroke, the lecture letter slide and its sound quiz, the presenter sound check and Match Shape's pair board still say a letter by its name (the lecture's copy of those four Check rounds follows them, §3.7) (OD-R2: "keep the decision itself"). The Hangul Check belongs to WO-10 (`AMENDMENTS-STAGE1-DECODING-CHECK.md`). Content fixes belong to WO-12 (`AMENDMENTS-STAGE1-CONTENT-FIXES.md`); its item 13, a "아 · 오 · 우" button on the ㅇ page, is row SF-3 of this amendment (§12, added 2026-11-26). QS-3 and AU-10's conditions (sound on, no screen reader, something can play) do not change.
 
 **Why a new file, not a section of `AMENDMENTS-AUDIO-CLIPS.md`** (the WO suggests a section there; the decision was left to this row):
 1. The repo amends an amendment with a new file and a tagged pointer in the old one: `AMENDMENTS-QUEST-SOUND-BACK.md` put a `[QS]` note into AUDIO-CLIPS G7 (`:60`), and `AMENDMENTS-AUDIO-CANT-HEAR.md` chose a separate file for the same reasons (its "Not amended" line).
@@ -100,7 +103,7 @@ So no new clip is needed. §3.5 says what happens when a clip does not play.
 
 - The order on a consonant card is: glyph and romanization, sound hint, **Hear it**, its line, **Hear the name**, its line, the **Can't hear it?** link (first card only, CH-1d), the block (finals only), the example word, the "Say it out loud" lines, the status panel. Reading order for a screen reader is the same.
 - The second button and its line appear exactly where the old **Hear it with a vowel** did: only for a consonant whose sound and name differ (`jamo.kind === 'consonant' && jamoVoice(j, 'sound').text !== jamoVoice(j, 'letter').text`, guarded as `discover-flow.ts:219-220` is today: the kind first, because `jamoVoice(final, 'letter')` throws). ㅇ, vowels and finals have one button.
-- Sizes and tones do not change: **Hear it** is `size="lg"`, `tone="secondary"`, pulses once (static under reduced motion); **Hear the name** is `size="md"`, `tone="ghost"` (`DiscoverStep.tsx:525-533`, `:549-556`). Both stay at least `touchTarget.child`.
+- Sizes and tones do not change: **Hear it** is `size="lg"`, `tone="secondary"`, pulses once (static under reduced motion); **Hear the name** is `size="md"`, `tone="ghost"` (`DiscoverStep.tsx:525-533`, `:549-556`). **Hear it** is at least `touchTarget.child` (80), **Hear the name** `touchTarget.min` (64; `Button` `md`). [SF-3] corrected 2026-11-26: this line said both were `touchTarget.child`.
 - The heard mark, Continue, Previous, Read along, `romanizationMode` and `quest.discover_completed { questId, pages, heard }` behave as today. `heard` counts distinct buttons tapped; the second button's id changes (below), its count does not.
 
 ### 3.2 View model (`logic/stage1/discover-flow.ts`)
@@ -189,7 +192,7 @@ Left as letter rounds, unchanged (open decision SF-OD-3): the vowel rounds `s1-l
 - AU-OD-1 itself, and every letter question outside the four Check rounds of §3.7 (Match Sound, Listen & Pick letter rounds in Play steps, the Hangul Check, Trace Stroke, the lecture letter slide and quiz, the presenter sound check, Match Shape's pair board). Under OD-R2 they keep the name. Match Sound in quest 1 still says 기역; Discover now teaches 가 first and 기역 only on its optional second button, so a learner may hear the name for the first time in Match Sound (§1.3, SF-OD-5).
 - The presenter's letter slide (`LetterSlide.tsx`): it keeps name first and **Hear it with a vowel** (open decision SF-OD-2). Only the lecture's copy of the four Check rounds changes (§3.7).
 - The Hangul Check (WO-10) and its name and decoding sections.
-- The ㅇ page's "아 · 오 · 우" button (WO-12 item 13) and every other content fix (WO-12). For WO-12: quest 1's ㄱ example word is 가 glossed "the sound ga" (`content/quests.ts:43`), so page 2 now gives 가 three times (autoplay, the line, the example), and "the sound ga" is not a meaning.
+- Every content fix of WO-12. (The ㅇ page's "아 · 오 · 우" button, WO-12 item 13, was out of scope here until 2026-11-26; it is now row SF-3, §12.) For WO-12: quest 1's ㄱ example word is 가 glossed "the sound ga" (`content/quests.ts:43`), so page 2 now gives 가 three times (autoplay, the line, the example), and "the sound ga" is not a meaning.
 - A minimal-pair round of plain, aspirated and tense consonants (WO-16).
 - Any new clip, any change to the clip pipeline, QS-3's timing or AU-10's conditions.
 - Renaming the big button (SF-OD-1).
@@ -239,6 +242,8 @@ Next release, no flag: the change is an order and two labels on a teaching page,
 | **SF-0** | Opus 5.5 | this spec; `design/wireframes/quest/discover.md`; the "Amended" lines and `[SF]` notes in AUDIO-CLIPS, F-QUEST-002 (§3.2, §3.3, §3.6, §3.10) and AMENDMENTS-AUDIT-2026-11; the index line in `docs/specs/README.md` | docs only | — | multi-agent review done (§11); status `ready` |
 | **SF-1** | Sonnet 5.5 | **built 2026-11-25 on `feat/discover-sound-first`** (two commits: Discover sound first with `nameButton`, `hearName.cta` / `hearNameLabel` en, es, ko and the ledger re-signed for `learner` and `a11y`; then `lp.symSound`, `sameSeries`, `frame: 'startsWith'`, the four Check rounds, the Listen & Pick heading, the lecture's copy and the four rounds' es / ko prompt gloss; the Korean button reads "글자 이름 들어 보기" after the review; the §3.8 device checks are open) `fix(mobile,i18n)`: Discover plays the sound first (§3.1-§3.6) and the quest Check's consonant round asks by sound (§3.7). Two commits, one per change, each with its tests | the files of "Scope" above | §6, all rows; `pnpm --filter @hangul-route/mobile test`, `pnpm --filter @hangul-route/i18n test`, `pnpm --filter @hangul-route/content-schema test`, `node scripts/check-i18n.mjs`, the `jamo-voice` e2e | a quest 1 learner hears 가 on page 2 before any tap and on Hear it; Hear the name says 기역; autoplay = `item.hear` is pinned; quest 4's round 1 says 차 under "Which letter starts this sound?"; es and ko reviewed, ledger re-signed; §3.8 handed to the owner |
 | **SF-2** | Sonnet 5.5 | `docs(specs)`: close: this status → `shipped` after §3.8 (or "built, on-device checks open"), row PR numbers here and in the index line, the `[SF]` notes' "as built" details if SF-1 departed from §3; this spec's AUDIO-CLIPS line numbers refreshed (`:80`, `:509` on `8676b5de5` move with the notes this PR adds); a `[SF]` pointer in `AMENDMENTS-AUDIO-CANT-HEAR.md`'s CH-1d row (`:308`, "after Letter name") | this file, `docs/specs/README.md`, AUDIO-CLIPS §14 (one review-log line), CANT-HEAR | — | the docs say what main does |
+| **SF-3a** | Opus 5.5 | `docs(specs)`: §12 (the ㅇ card's **Hear it with vowels**), SF-OD-6 to SF-OD-8, the [SF-3] section of `design/wireframes/quest/discover.md`, the pointer in `AMENDMENTS-STAGE1-CONTENT-FIXES.md` OD-CF5, §4 and §8, the index line | this file, the wireframe, CF, `docs/specs/README.md` | — | multi-agent review (§11, 2026-11-26: phonics and pedagogy; accessibility and design) done; open decisions approved by the owner 2026-11-26 |
+| **SF-3b** | Opus 5.5 | `feat(mobile,i18n)`: the button (§12.2-§12.7), stacked on SF-3a | `apps/mobile/src/logic/stage1/discover-flow.ts`, `apps/mobile/src/screens/quest/DiscoverStep.tsx`, `packages/i18n/src/messages/{en,es,ko}/learner.ts` and `a11y.ts` (two keys), `packages/i18n/src/messages/review-ledger.json`, the tests of §12.8 | §12.8; `TZ=UTC pnpm --filter @hangul-route/mobile test`, `pnpm --filter @hangul-route/i18n test`, `node scripts/check-i18n.mjs`, `pnpm generate --check`, `pnpm --filter @hangul-route/mobile audio:check`, lint, typecheck, `CI=1 pnpm --filter @hangul-route/mobile build:web` (start bundle against `PRECACHE_BUDGET.startBundleRaw`) | §12.9; es and ko drafted and reviewed in the PR (two reviewers), the ledger re-signed for `learner` and `a11y`; §12.9's device checks handed to the owner |
 
 ## 10. Open decisions (each adopted provisionally, as recommended)
 
@@ -247,6 +252,10 @@ Next release, no flag: the change is an order and two labels on a teaching page,
 - **SF-OD-3 — vowel rounds in the quest Check.** Quests 1-3 and 9 ask a vowel in round 1. (a) Leave them (their voice is already the sound; quest 1's options are its four new symbols, two of each kind, so a consonant sound round there would have two options). (b) Retarget them to a consonant. **Recommendation: (a)**. Adopted provisionally.
 - **SF-OD-5 — Match Sound after a sound-first Discover** (§1.3). (a) Keep AU-OD-1 as OD-R2 decided: Match Sound says the name; every basic consonant's name starts with its own sound, and the name is on Discover's second button. (b) Make Stage 1 Match Sound a sound question (the "one table change" again, with JV-A3 rule 2 pools), so "Match the Sound" plays the sound Discover taught. **Recommendation: (a) for SF-1**, because OD-R2 kept AU-OD-1 explicitly; the owner should look at (b) together with WO-16, which reworks listening practice anyway. Adopted provisionally; flagged. **[MP] 2026-11-25:** looked at with WO-16 (`AMENDMENTS-MINIMAL-PAIRS.md` §3.11, MP-OD-5): (a) stays; quest 6's contrast step plays the sounds Discover taught, on approved clips.
 - **SF-OD-4 — the series rule.** (a) Only the four Check rounds of §3.7 exclude the target's series. (b) Every sound question excludes it. **Recommendation: (a)**: practice rounds may include the contrast once WO-16 has clip-only minimal pairs; a Check should not. Adopted provisionally.
+
+- **SF-OD-6 — the label of the ㅇ card's second button** (§12.4). (a) **Hear it with vowels**. (b) "Hear a, o, u": romanization inside a UI string, which then has to be kept in step with the content by hand in three locales, and it names the sounds without saying they are ㅇ with vowels. (c) Reuse `soundWith.cta` "Hear it with a vowel": no new string, but it is singular while three vowels play, and the presenter's letter slide uses it for a different thing. **Recommendation: (a)**: it follows the shipped "Hear it with a vowel" (the presenter's letter slide, `LetterSlide.tsx:117`), which also means "this letter on a vowel" (ㄴ → 나); here it is ㅇ on three vowels. **Owner decision 2026-11-26: approved as recommended.**
+- **SF-OD-7 — which clips** (§12.2). (a) The three shipped vowel clips 아 / 오 / 우 (`audio/jamo/a.mp3`, `o.mp3`, `u.mp3`, pack `jamo-s1`, precached), played one after the other. (b) One new clip "아, 오, 우" through the F-AUDIO-004 pipeline (voice lock, TTS, QA, the owner's listen). **Recommendation: (a)**: they are the very clips the ㅏ, ㅗ and ㅜ cards play, so the learner hears that ㅇ adds nothing to them, which is the point; no new clip, no manifest or pack change, no owner listen, and it works offline. **Owner decision 2026-11-26: approved as recommended.**
+- **SF-OD-8 — which syllables** (§12.2). (a) 아 · 오 · 우, as WO-12 item 13 asks. (b) Add 어 or 이. (c) Words (아이, 오이, 우유): ㅣ comes in quest 3 and ㅠ later, so they are not readable on quest 2's page. **Recommendation: (a)**: all three vowels are taught before the ㅇ card (ㅏ in quest 1, ㅗ and ㅜ on quest 2's page 1), they are the three mouth shapes most unlike each other, and three short sounds keep the button at about 3.5 s. **Owner decision 2026-11-26: approved as recommended.**
 
 ## 11. Review log
 
@@ -260,3 +269,92 @@ Next release, no flag: the change is an order and two labels on a teaching page,
   - F-QUEST-002 §3.6 added to the amended sections; the tests that would fail listed in §6 (`stage1-curriculum.test.ts`, the `lp:sym` loops of `scope-builders.test.ts` and `voice-pools.test.ts`, `audio.spec.ts`, `jamo-voice-audio.spec.ts`, quest 2 in `jamo-voice.spec.ts`, `review-ledger-current.test.ts`) and a direct assertion on quest 1's page 2;
   - the lecture's copy of the four Check rounds gets the `startsWith` frame (§3.7), and its files join the scope;
   - quest 6's contrast left to WO-16 stated; quest 1's example 가 "the sound ga" passed to WO-12; the wireframe's large-text note; small slips (nine targets, the silent ㅇ in 기역, the memory rung in §7) and line numbers.
+- 2026-11-26, SF-3a: §12 written on `fb4ff3b3c`; open decisions SF-OD-6 to SF-OD-8 approved by the owner as recommended.
+- 2026-11-26, multi-agent review of SF-3a (two independent reviewers: phonics and pedagogy; accessibility and design, against the code). No blocker. Confirmed: initial ㅇ is silent, so 아 / 오 / 우 are right; ㅏ ㅗ ㅜ are taught before the ㅇ card; the three clips are shipped, precached and the vowel cards' own; the final ㅇ is rightly left out; the label fits the budget and puts the visible label first in the accessible name; no "Say it out loud" line is right; the replay from 아; autoplay unaffected; anti-shame holds; no mock is needed (the ㅇ card never has Hear the name, so the button fills that exact slot). Applied:
+  - the line under the button is three carrier lines, 아 = ㅇ + ㅏ · a and its sisters, not "아 · 오 · 우": the same clips as the vowel cards alone would read as a replay; the composition beside "마 = ㅁ + ㅏ" on the ㅁ card is the lesson (§12.1, §12.4);
+  - the gap is 150 ms, not 500 ms: each clip carries about 0.35 s of silence at each end (measured), so 500 ms gave about 1.2 s between 0.3 s syllables; timings corrected (§12.3, SF-OD-8);
+  - how it stops is written down: `playPrompt` resolves a cut-off prompt as `played`, so `playInOrder` checks a run counter after every play and wait and a superseded run reports nothing; a page change and leaving stop it (§12.3), with render tests for Previous, Continue and leaving during a wait (§12.8);
+  - all three clips are warmed, counted by the card slot and played (§12.6 item 4);
+  - "no playing state" decided and explained, so the Read along Stop pattern is not copied (§12.3);
+  - the silent-switch device check corrected (no panel: the switch cannot be detected), and Can't hear it? sits under the ㅁ card on quest 2 (§12.9); the iOS device-voice and VoiceOver notes added;
+  - the card order: Say it out loud lines and the status panel come before the example (§12.5, wireframe); the heard pill drawn;
+  - `touchTarget.min` (64) for an `md` button, here and in §3.1;
+  - when `heard` counts the button; exact-name matching in tests; SF-OD-6 (b)'s reasoning; the CF row's line citation refreshed.
+
+## 12. Row SF-3 — the ㅇ card's "아 · 오 · 우" button (added 2026-11-26)
+
+Written on main `fb4ff3b3c`, after SF-1 (#1136). Source: WO-12 item 13 of `docs/roadmap/review-2026-11/phase-2-hangul.md` ("초성 ㅇ 을 '이응'으로만 들려줘 묵음을 귀로 확인할 수 없음 → Discover 의 ㅇ 페이지에 '아 · 오 · 우' 연속 재생 버튼"), moved to WO-13 by `AMENDMENTS-STAGE1-CONTENT-FIXES.md` OD-CF5 and assigned to this amendment by the owner on 2026-11-26.
+
+### 12.1 Why
+
+The ㅇ card says ㅇ by its name, 이응: initial ㅇ has no sound of its own (F-AUDIO-004 W5, W6; §3.1). Its hint says "silent at the start of a block" (`content/jamo.ts:34`), but nothing on the card lets the learner **hear** that silence. The example word 오 (`content/quests.ts:82`) helps once; one syllable does not show a rule. Three blocks that start with ㅇ and sound just like the vowel alone, played one after the other and written as ㅇ + vowel, do: ㅇ + ㅏ is 아, while the ㅁ card above it on the same page shows ㅁ + ㅏ is 마.
+
+### 12.2 What the button plays
+
+| | |
+|---|---|
+| Where | The **initial ㅇ** card (`jamo:ieung`, kind `consonant`) on any Discover page. Shipped today: quest 2, page 2, second item, after ㅁ (`content/quests.ts:82`). Not the final ㅇ card (`jamo:ieung-batchim`, "ng", `quests.ts:322`), not a vowel or another consonant |
+| Plays | **아, 오, 우**, in that order: `jamoVoice(ㅏ, 'sound')`, `jamoVoice(ㅗ, 'sound')`, `jamoVoice(ㅜ, 'sound')` (SF-OD-8) |
+| Clips | `audio/jamo/a.mp3`, `o.mp3`, `u.mp3` (`content/audio/tts-manifest.json:33, 37, 39`, sources `jamo:a#sound`, `jamo:o#sound`, `jamo:u#sound`, said "아." at rate 0.85; pack `jamo-s1`, precached; in `apps/mobile/src/content/__generated__/audio-assets.ts`). The same clips the ㅏ, ㅗ and ㅜ cards' **Hear it** play. **No new clip**, no manifest, pack or lock change, no owner listen (SF-OD-7) |
+| Taught before | ㅏ in quest 1 (`quests.ts:37`); ㅗ and ㅜ on quest 2's page 1 (`:76-77`). A content test keeps it so (§12.8) |
+| Speech rate | `sound`, as every Discover letter button |
+
+### 12.3 Order, gaps and stopping
+
+- One tap plays the three sounds one after the other. Each starts when the one before has **finished**, after a **150 ms** wait (`SERIES_GAP_MS` in `discover-flow.ts`). Each clip is about 1.05 s and already holds about 0.35 s of silence before and after its 0.3 s of voice (measured in the SF-3a review), so the voices are about 0.85 s apart: three separate syllables, not one long vowel. The whole is about 3.5 s. The wait is not Read along's `motion.duration.slow` (320 ms): that pause follows a sentence with no silence of its own; this one follows a clip that has it, and the 150 ms keeps the device voice (no built-in silence) from running the three together.
+- **What stops it.** Another sound on the page (Hear it, Hear the name, an example word, a line, Read along), **Continue**, **Previous** or leaving the step: the sound that is playing stops and nothing of the rest is played (no 오 over 이응, no 우 on the next page). Show how to say it, Can't hear it? and the help sheet play nothing and do not stop it. A second tap on the button itself starts it again from 아.
+- **How (the rule the build follows).** `playPrompt` resolves a prompt that a newer one cut off as `played` (F-AUDIO-004; the same reason `logic/story/audio-runner.ts` keeps a generation counter), so a plain loop would go on. The run is `playInOrder(steps, { play, wait, live })` in `discover-flow.ts`: it waits after each play and before each next one, and checks `live()` after every play and every wait; a run that is no longer live returns `superseded` and the screen sends **no** `audio` event for it. The screen keeps one run counter: every `play` effect and every `stopAudio` effect ends the run in progress, and so do a page change and leaving the step, which also stop the voice when a run is playing (today `next` does not stop a single clip; a 3.5 s run must not outlive its page). The wait's timer is cleared with the run.
+- **No playing state.** Unlike Read along (whose button becomes **Stop**, `DiscoverStep.tsx:735`), the button keeps its label while it plays and there is no live announcement or per-syllable highlight. Reason: it is short (about 3.5 s), it starts only on the learner's tap, any other sound or Continue stops it (so WCAG 1.4.2 does not apply), and the three syllables are printed under it. Do not copy the Read along pattern here.
+- It never plays by itself: AU-10's autoplay plays the page's first item's `hear` (§3.3), and on the ㅇ card that is still 이응. On quest 2's page 2 the first item is ㅁ anyway.
+- **Heard.** The button is one button: it enters `tapped` on the tap, so `quest.discover_completed.heard` counts it once, as every button (a tap counts whatever played, §3.1). The card's heard mark appears only when all three played (the run reports `played`).
+
+### 12.4 Label, accessible name and the lines under it
+
+| Key | English (Pre-A1) | Where |
+|---|---|---|
+| new `learner.quest.discover.hearVowels.cta` | **"Hear it with vowels"** (SF-OD-6) | the button on the ㅇ card; 19 characters, inside the `cta` budget (28) |
+| new `a11y.hearVowelsLabel(letter: string)` | **"Hear it with vowels. {letter}"**, `letter` = `a11y.discoverLetter(romanization)` without the hint ("Korean letter silent/ng") | the button's accessible name; it starts with the visible label in every locale (WCAG 2.5.3), as `hearNameLabel` does |
+
+- Under the button, three **carrier lines**, content (`KoreanText`, `size="sm"`), stacked: **아 = ㅇ + ㅏ** · a, **오 = ㅇ + ㅗ** · o, **우 = ㅇ + ㅜ** · u. They are the consonant card's carrier line ("마 = ㅁ + ㅏ · ma" on the ㅁ card above) for ㅇ, so the page shows the contrast: ㅁ + ㅏ says ma, ㅇ + ㅏ says only a. No gloss, as the carrier and name lines (they are sounds here). Each line's accessible label is its syllable and romanization only ("아, a"), as the carrier line's (§3.1), so a Korean screen-reader voice does not read the lone ㅇ as 이응 three times.
+- **es and ko** are shipped locales: SF-3b drafts the two keys' es and ko values, has them reviewed under F-I18N-001 §3.10 by two reviewers in the PR and re-signs the ledger for `learner` and `a11y`, as SF-1 did (§3.6). This section writes English only. No string holds Hangul or an age word.
+- Discover tests match button names exactly, not by prefix: "Hear it" is the start of "Hear it with vowels" (Voice Control users say "Show numbers" to pick one; nothing else is needed).
+
+### 12.5 Where it sits
+
+The ㅇ card never has **Hear the name** (its name is what Hear it says, §3.1), so the new button takes that button's place and pattern exactly. The card, top to bottom (`DiscoverStep.tsx:502-648`): heard pill (once heard), glyph and romanization, sound hint, **Hear it** (이응; big; it pulses only when it is the page's first card), its line "이응 · ieung", **Hear it with vowels** (`size="md"`, `tone="ghost"`: `touchTarget.min`, 64), its three carrier lines, the **Can't hear it?** link (only on the page's first card; on quest 2 it sits under the ㅁ card), the "Say it out loud" lines, the status panel, then the divider and the example word. Screen-reader order is the same. No card has three letter buttons. Largest text and 320 wide: as the consonant card (the two buttons stack, each centred at its own width, its lines under it); the card scrolls and Continue stays reachable.
+
+No visual mock: the button is the existing second-button pattern (Hear the name, §3.1: `HearButton` md ghost and `KoreanText` sm lines in a centred column), with a new label and three lines in place of one; no new component, size, colour, token or arrangement. The one thing the pattern does not show, a button that plays for a few seconds, is settled in words (§12.3, "No playing state"). The wireframe gets the ㅇ card (`design/wireframes/quest/discover.md`, "[SF-3] The ㅇ card").
+
+### 12.6 When a sound does not play (`AMENDMENTS-AUDIO-CANT-HEAR.md` §3.1: Discover is guidance only, its Korean is printed)
+
+1. Each of the three plays by the usual order: the clip, else the ranked Korean device voice (AC-B7, AC-B12), as every Discover button (§3.5).
+2. If one of them does not play (sound off, no clip and no Korean voice, a blocked or failed play), the run **stops there**: nothing after it is tried. The card's status panel says why with its one action (Turn sound on, Tap to hear, Try again), and that action plays the whole button again from 아 (the panel replays the button played last, `DiscoverStep.tsx:288-290`).
+3. The three carrier lines are already printed and are the button's text fallback, as the name line is for Hear the name (§3.5 item 4; `sayLines` covers only `hear` and the example, `discover-flow.ts:620-624`). No "Say it out loud" line is added; nothing else changes; Continue is never held.
+4. The build reads **all three** clips wherever it reads a button's clip: the warm-up (`warmClips`, `DiscoverStep.tsx:142`), the card slot's "has a clip" (`useCardSlot`, `:408-418`: true only when every button's every clip is there) and the play effect (`:195`). The page's **Can't hear it?** link is unchanged: its **Hear it** plays the first card's main Hear it.
+
+### 12.7 Anti-shame
+
+Optional and unscored: nothing is asked, nothing can be missed, no timer, no mark but the heard pill (which only fills). Continue is enabled at once and never waits for it.
+
+### 12.8 Tests (SF-3b; each failing first)
+
+| File | Level | What it pins |
+|---|---|---|
+| `apps/mobile/src/logic/stage1/__tests__/discover-flow.test.ts` | unit | the ㅇ card has `vowelsButton`: id `jamo:ieung\|vowels`, its action's `series` = `[{ 아, audio/jamo/a.mp3 }, { 오, audio/jamo/o.mp3 }, { 우, audio/jamo/u.mp3 }]`, `spec` = the first, kind `sound`; its `lines` = 아 = ㅇ + ㅏ / a, 오 = ㅇ + ㅗ / o, 우 = ㅇ + ㅜ / u, each labelled "아, a" and so on; no `nameButton`; ㄱ, a vowel, the final ㅇ and a tense consonant have no `vowelsButton`; `pageRender`'s heard mark counts it; `actionSpecs` gives all three. `playInOrder`: plays in order with a `SERIES_GAP_MS` wait between (none before the first, none after the last), returns `played` when all played, stops at and returns the first other result, returns `superseded` (and plays nothing more) when no longer live after a play or after a wait. Quest 2's own page 2 has the button, and ㅏ ㅗ ㅜ are taught on an earlier page; each of the three clips is in `AUDIO_ASSETS` |
+| `apps/mobile/src/screens/quest/__tests__/discover-vowels.test.tsx` (new) | render | the ㅇ card shows **Hear it with vowels** with the three lines under it and the accessible name "Hear it with vowels. Korean letter silent/ng" (exact match); a tap plays 아, 오, 우 in order and the heard mark shows; a tap on Hear it, Continue, or Previous during a wait stops it and nothing more of it plays; leaving the step during a wait plays nothing more; a muted first play stops it at 아 and the card's status panel shows; all three clips are warmed |
+| `apps/mobile/src/logic/__tests__/voice-surfaces.test.ts` | unit | a new row "Discover, the initial ㅇ card: Hear it with vowels", type `sound`, targets ㅏ ㅗ ㅜ |
+| `packages/i18n/src/__tests__/jamo-voice-messages.test.ts`, `length-budget.test.ts`, `review-ledger-current.test.ts` | unit | `hearVowels.cta` and `hearVowelsLabel` in en / es / ko, no Hangul in en or es; `hearVowelsLabel(x)` starts with `hearVowels.cta` in every locale; the key is in the button budget list; the ledger is current |
+| `apps/mobile/e2e/web/jamo-voice.spec.ts` (quest 2, `:102-123`) | e2e (Playwright, web) | on the ㅇ card, **Hear it with vowels** says 아, 오, 우 in that order |
+
+Coverage: `discover-flow.ts` is business logic (90 % target).
+
+### 12.9 Acceptance
+
+- A quest 2 learner on page 2 taps **Hear it with vowels** on the ㅇ card and hears 아, 오, 우, each a separate syllable, from the shipped vowel clips, with "아 = ㅇ + ㅏ · a" and its two sister lines under the button; Hear it still says 이응.
+- No other card has the button; nothing plays by itself; Continue is never held; another sound, Continue or Previous stops it.
+- es and ko reviewed in the PR, ledger re-signed; every check of row SF-3b green; the start bundle is reported against `PRECACHE_BUDGET.startBundleRaw` (Discover is in the start bundle).
+- **[On device, owner]** iPhone (PWA) and an Android phone, quest 2 page 2: the three sounds play with clear gaps, 오 and 우 too (they start from a timer after the tap; the clips go through the already unlocked Web Audio, but the iOS device-voice fallback could be refused there, which would put the status panel up mid-run). With the silent switch on, nothing is heard and no panel shows (the switch cannot be detected, CANT-HEAR §1); the lines are printed; Can't hear it? sits under the ㅁ card. VoiceOver / TalkBack read "Hear it with vowels. Korean letter silent/ng" and then "아, a", "오, o", "우, u" (VoiceOver may speak over 아, as over every Hear it). At Largest text the two buttons and the lines fit and Continue stays reachable.
+
+### 12.10 Out of scope
+
+The presenter's letter slide (SF-OD-2's reasoning: a grown-up leads it), the final ㅇ card, the lecture's letter slide, the Hangul Check (WO-10) and any new clip.
