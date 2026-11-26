@@ -9,6 +9,8 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { extractKoreanPairs } from '../../romanization/extract';
+import { koTokens } from '../../romanization/rr';
 
 export type SourceClass = 'A' | 'B1' | 'B2' | 'B3' | 'C';
 
@@ -305,10 +307,45 @@ export function coverageProblems(root: string = REPO_ROOT): string[] {
   return problems;
 }
 
-/** The Korean strings of `exceptions` that appear in a registered source or in the content JSON (R8 input). */
+/** Collects every `ko` string of a parsed JSON value: the Korean the class A scan pairs with a romanization. */
+function collectKo(value: unknown, out: string[]): void {
+  if (Array.isArray(value)) {
+    for (const v of value) collectKo(v, out);
+  } else if (typeof value === 'object' && value !== null) {
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'ko' && typeof child === 'string' && HANGUL_SYLLABLE.test(child)) out.push(child);
+      else collectKo(child, out);
+    }
+  }
+}
+
+/**
+ * The tokens of the Korean strings a data suite actually checks: the `ko` fields of `content/**\/*.json`
+ * (class A) and the pairs extracted from the registered TS sources, split and stripped as the converter
+ * reads them. A source quote or a note in the content (`북한산국립공원` in a `quoteOrLocator`) is not here.
+ */
+export function checkedKoreanTokens(root: string = REPO_ROOT): Set<string> {
+  const strings: string[] = [];
+  for (const file of contentJsonFiles(root)) collectKo(JSON.parse(readFileSync(join(root, file), 'utf8')), strings);
+  for (const file of registeredFiles(root)) {
+    if (existsSync(join(root, file)) && /\.tsx?$/.test(file)) {
+      for (const pair of extractKoreanPairs(readFileSync(join(root, file), 'utf8'), file)) strings.push(pair.ko);
+    }
+  }
+  return new Set(strings.flatMap((ko) => koTokens(ko)));
+}
+
+/**
+ * The Korean strings of `exceptions` that R8 may keep: a whole-string entry (its `ko` has a space) that
+ * appears in a registered source or in the content JSON as text, and a word entry that is a whole token
+ * of a checked string (so a source quote cannot keep it alive).
+ */
 export function seenExceptionKo(exceptions: ReadonlyArray<{ ko: string }>, root: string = REPO_ROOT): string[] {
   const texts = [...registeredFiles(root), ...contentJsonFiles(root)]
     .filter((p) => existsSync(join(root, p)))
     .map((p) => readFileSync(join(root, p), 'utf8'));
-  return exceptions.map((e) => e.ko).filter((ko) => texts.some((t) => t.includes(ko)));
+  const tokens = checkedKoreanTokens(root);
+  return exceptions
+    .map((e) => e.ko)
+    .filter((ko) => (/\s/.test(ko.trim()) ? texts.some((t) => t.includes(ko)) : tokens.has(ko)));
 }

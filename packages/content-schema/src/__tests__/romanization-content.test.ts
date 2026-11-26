@@ -146,7 +146,7 @@ describe('romanization content scanner (a bad file would fail)', () => {
   it('R1 exception: an explicit entry with a reason allows a documented converter limit', () => {
     const files = { 'content/a.json': [{ ko: '꽃잎', romanization: 'kkonnip', en: 'petal' }] };
     expect(scanFixture(files).errors).toHaveLength(1);
-    expect(scanFixture(files, [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' }]).errors).toEqual([]);
+    expect(scanFixture(files, [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion', gap: 'n-insertion' }]).errors).toEqual([]);
   });
 
   it('warns, never fails, when the converter cannot read the Korean', () => {
