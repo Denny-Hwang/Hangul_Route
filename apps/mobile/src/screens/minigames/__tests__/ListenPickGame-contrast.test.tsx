@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clipRefsFor, type PlaySpec } from '../../../logic/audio/controller';
 import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import { useAudioStore } from '../../../store/audio-store';
+import { useLocaleStore } from '../../../store/locale-store';
 import { clearReaderLog, focusNodes, hasId, pressableById } from '../../../test-support/cant-hear-rig';
 import { byTestId, press, render, screenTexts, textOf, unmount } from '../../../test-support/render';
 import type { AnswerMeta, HostMode, MinigameHost } from '../host';
@@ -114,6 +115,7 @@ beforeEach(() => {
   audio.script = [];
   audio.delayMs = 0;
   useAudioStore.setState({ muted: false, showLetters: false, voiceCheckPending: false, clips: true });
+  useLocaleStore.setState({ device: null });
   clearReaderLog(reader);
   events.length = 0;
   answers.length = 0;
@@ -136,6 +138,11 @@ const tick = async (ms: number): Promise<void> => {
 const PAIRS = ['ga-ka', 'da-ta', 'ja-cha'];
 
 async function game(mode: HostMode = 'quest', setIds: readonly string[] = PAIRS): Promise<ReactTestRenderer> {
+  return gameOf(setIds.map((id) => lp.pair(id)), mode);
+}
+
+/** The game over these scope rounds (stubs, full contrast rounds or plain ones), as the lesson player hands them. */
+async function gameOf(rounds: ListenPickRound[], mode: HostMode = 'quest'): Promise<ReactTestRenderer> {
   const host: MinigameHost = {
     mode,
     answer: (round, correct, meta) => void (answers.push([round, correct]), metas.push(meta)),
@@ -143,7 +150,6 @@ async function game(mode: HostMode = 'quest', setIds: readonly string[] = PAIRS)
   };
   // The contrast chunk is a dynamic import (a real file read, which fake timers do not move): have it in, as the precache has.
   await loadContrastKit();
-  const rounds: ListenPickRound[] = setIds.map((id) => lp.pair(id));
   const r = await render(<ListenPickGame scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />, {
     createNodeMock: focusNodes(['listen-pick-speaker']) as never,
   });
@@ -424,7 +430,10 @@ describe('a triple stays open after a miss (section 3.7)', () => {
     expect(completed).toBe(0);
     // The right option can still be tapped: the round resolves, and all three members show their kind lines.
     await tick(500);
+    expect(textsOf(r)).toContain(C.missHoya);
     await tapOption(r, right);
+    // The right answer is not "Listen to both.": Hoya's miss line leaves with the round's open state.
+    expect(textsOf(r)).not.toContain(C.missHoya);
     const lines = [right, ...wrongs].map((id) => textOf(byTestId(r.root, `contrast-kind-${id}`)[0]!));
     expect(new Set(lines)).toEqual(new Set([C.kind.plain, C.kind.aspirated, C.kind.tense]));
     expect(answers).toEqual([]);
@@ -457,6 +466,49 @@ describe('a right answer (section 3.7)', () => {
   });
 });
 
+describe('the gloss after the answer follows the UI language (section 3.7, CLAUDE.md languages)', () => {
+  const glossOf = (r: ReactTestRenderer, id: string): string => textOf(byTestId(r.root, `listen-pick-option-${id}`)[0]!);
+
+  it.each([
+    ['es', 'la sílaba'],
+    ['ko', '음절'],
+  ] as const)('a Stage 1 syllable option shows the %s gloss, not the English "the syllable"', async (locale, word) => {
+    useLocaleStore.setState({ device: locale });
+    const r = await game();
+    const spec = await hear(r);
+    const right = KO_OF[spec.text]!;
+    await tapOption(r, right);
+    for (const id of [right, ...otherOptions(r, spec.text)]) {
+      const text = glossOf(r, id);
+      expect(text).toContain(word);
+      expect(text).toContain(id);
+      expect(text).not.toContain('the syllable');
+    }
+  });
+
+  it('keeps the gloss the scope itself holds for an option (a localized round written out in full), not the catalogue English', async () => {
+    useLocaleStore.setState({ device: 'es' });
+    const full = (setId: string): ListenPickRound => {
+      const members = fixture.sets.find((s) => s.id === setId)!.members;
+      return {
+        id: `lp:pair:${setId}`,
+        contrastSet: setId,
+        prompt: { ko: members[0]!.text, romanization: members[0]!.romanization, en: `ES ${members[0]!.romanization}` },
+        options: members.map((m) => ({ id: m.romanization, text: { ko: m.text, romanization: m.romanization, en: `ES ${m.romanization}` } })),
+        answerId: members[0]!.romanization,
+      };
+    };
+    const r = await gameOf(['ga-ka', 'da-ta', 'ja-cha'].map(full));
+    const spec = await hear(r);
+    const right = KO_OF[spec.text]!;
+    await tapOption(r, right);
+    for (const id of [right, ...otherOptions(r, spec.text)]) {
+      expect(glossOf(r, id)).toContain(`ES ${id}`);
+      expect(glossOf(r, id)).not.toContain('the syllable');
+    }
+  });
+});
+
 describe("Can't hear it? on a contrast round (section 3.9)", () => {
   it('is guidance only: the line and Hear it, no Show the letters, and the prompt\'s Korean is never printed', async () => {
     const r = await game();
@@ -478,6 +530,43 @@ describe("Can't hear it? on a contrast round (section 3.9)", () => {
     await tick(6000);
     expect(completed).toBe(1);
     expect(answers).toEqual([]);
+  });
+});
+
+describe('a scope that holds contrast and plain rounds together', () => {
+  const plainRound = (n: number): ListenPickRound => ({
+    id: `lp:syl:plain${n}`,
+    prompt: { ko: '나', romanization: 'na', en: 'the syllable na' },
+    options: [
+      { id: 'a', text: { ko: '나', romanization: 'na', en: 'the syllable na' } },
+      { id: 'b', text: { ko: '마', romanization: 'ma', en: 'the syllable ma' } },
+    ],
+    answerId: 'a',
+  });
+
+  it('expands a contrast stub into its set (the members as options, a target from the set): no blank option cards', async () => {
+    const r = await gameOf([lp.pair('ga-ka'), plainRound(1)]);
+    expect(progress(r)).toBe('1 / 2');
+    expect(byTestId(r.root, 'listen-pick-option-ga').length).toBeGreaterThan(0);
+    expect(byTestId(r.root, 'listen-pick-option-ka').length).toBeGreaterThan(0);
+    expect(byTestId(r.root, 'listen-pick-option-a')).toHaveLength(0);
+    const spec = await hear(r);
+    expect(['ga', 'ka']).toContain(KO_OF[spec.text]);
+    expect(spec).toMatchObject({ clipOnly: true });
+  });
+
+  it("Can't hear it? on the contrast round drops only the later contrast rounds: the plain rounds stay", async () => {
+    const r = await gameOf([lp.pair('ga-ka'), plainRound(1), plainRound(2)]);
+    expect(progress(r)).toBe('1 / 3');
+    await press(pressableById(r.root, 'cant-hear'));
+    expect(progress(r)).toBe('1 / 3');
+  });
+
+  it("Can't hear it? drops a later contrast round and keeps the plain one between", async () => {
+    const r = await gameOf([lp.pair('ga-ka'), plainRound(1), lp.pair('da-ta')]);
+    expect(progress(r)).toBe('1 / 3');
+    await press(pressableById(r.root, 'cant-hear'));
+    expect(progress(r)).toBe('1 / 2');
   });
 });
 

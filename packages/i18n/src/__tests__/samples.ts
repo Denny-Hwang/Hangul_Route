@@ -10,6 +10,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
   // AMENDMENTS-MINIMAL-PAIRS section 3.7: a contrast member's name, by its romanization and its kind line.
   'a11y.contrastItem': [['ga', 'Soft, starts lower.']],
+  // AMENDMENTS-MINIMAL-PAIRS section 3.7: the meaning under a syllable member.
+  'learner.minigame.contrast.syllable': [['ga']],
   // F-A11Y-001 §3.7: a game's result, said once.
   'a11y.answer.item': [['sagwa', 'apple'], ['sagwa'], ['sagwa', '']],
   'a11y.answer.right': [['sagwa, apple']],

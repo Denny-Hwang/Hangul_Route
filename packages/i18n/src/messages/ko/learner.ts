@@ -624,6 +624,7 @@ export const learner = {
     },
     contrast: {
       missHoya: '둘 다 들어 봐요.',
+      syllable: (sound: string) => `${sound} 음절`,
       kind: {
         plain: '부드럽고, 소리가 낮게 시작해요.',
         aspirated: '숨이 세게 나오고, 소리가 높게 시작해요.',

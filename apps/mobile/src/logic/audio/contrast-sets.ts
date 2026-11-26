@@ -153,20 +153,38 @@ export function drawContrastRounds(
   }
   // Targets: the member whose kind has come up least so far, ties by the seeded draw.
   const seen = new Map<ContrastKind, number>();
-  return chosen.map((stub) => {
-    // A scope's round may be the start bundle's stub (`lp.pair`): the set's own round has the options.
-    const round = pairRound(stub.contrastSet!, env.sets);
-    const set = contrastSetById(round.contrastSet!, env.sets)!;
-    const least = Math.min(...set.members.map((m) => seen.get(m.kind) ?? 0));
-    const candidates = set.members.filter((m) => (seen.get(m.kind) ?? 0) === least);
-    const target = candidates[Math.floor(random() * candidates.length)]!;
-    seen.set(target.kind, (seen.get(target.kind) ?? 0) + 1);
-    return {
-      ...round,
-      prompt: { ko: target.text, romanization: target.romanization, en: target.en, audioRef: target.ref },
-      answerId: target.romanization,
-    };
-  });
+  return chosen.map((stub) => withTarget(stub, env.sets, random, seen));
+}
+
+/**
+ * A contrast round with its set's own options and a drawn target (sections 3.5, 3.7). A scope's round may be the start
+ * bundle's stub (`lp.pair`), whose options are placeholders: the set's round supplies the members, and each member keeps
+ * the meaning the scope holds for it when the scope names it (a round written out in full and localized: the option with
+ * the same Korean text, its `en` non empty), else the catalogue's. The target is the member whose kind `seen` counts
+ * least (ties by `random`); `seen` is updated, so a run of rounds balances its kinds.
+ */
+export function withTarget(
+  scopeRound: ListenPickRound,
+  sets: readonly ContrastSetEntry[] | undefined,
+  random: () => number,
+  seen: Map<ContrastKind, number> = new Map(),
+): ListenPickRound {
+  const round = pairRound(scopeRound.contrastSet!, sets);
+  const set = contrastSetById(round.contrastSet!, sets)!;
+  const least = Math.min(...set.members.map((m) => seen.get(m.kind) ?? 0));
+  const candidates = set.members.filter((m) => (seen.get(m.kind) ?? 0) === least);
+  const target = candidates[Math.floor(random() * candidates.length)]!;
+  seen.set(target.kind, (seen.get(target.kind) ?? 0) + 1);
+  const held = (ko: string): string | undefined => {
+    const en = scopeRound.options.find((o) => o.text?.ko === ko)?.text?.en;
+    return en === undefined || en === '' ? undefined : en;
+  };
+  return {
+    ...round,
+    options: round.options.map((o) => (o.text === undefined ? o : { ...o, text: { ...o.text, en: held(o.text.ko) ?? o.text.en } })),
+    prompt: { ko: target.text, romanization: target.romanization, en: held(target.text) ?? target.en, audioRef: target.ref },
+    answerId: target.romanization,
+  };
 }
 
 /**

@@ -60,7 +60,7 @@ import {
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
-import { isContrastRound, isContrastScope, roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
+import { isContrastRound, isContrastScope, roundItemId, seededRandom, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
@@ -152,6 +152,19 @@ const CHECK_ASK_SOURCE: Partial<Record<HostMode, string>> = { check: 'quest-chec
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
 /**
+ * A scope that holds contrast rounds among others (not a contrast step: a content test keeps the two kinds apart, so this is
+ * defence): each contrast round that plays now is expanded into its set's own round with a drawn target, so a stub never
+ * shows its placeholder options; the rest stay. A contrast round that cannot play is left out (section 3.6).
+ */
+function mixedRounds(contrast: ContrastKit, rounds: readonly ListenPickRound[], env: ContrastEnv, seed: number): ListenPickRound[] {
+  const random = seededRandom(seed);
+  return rounds.flatMap((r) => {
+    if (!isContrastRound(r)) return [r];
+    return contrast.contrastRoundPlayable(r, env) ? [contrast.withTarget(r, undefined, random)] : [];
+  });
+}
+
+/**
  * Listen & Pick. A scope that holds a contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a) loads the contrast
  * chunk first (`contrast-entry.ts`: the catalogue, the draw, the compare row), so the start bundle carries none of it; any
  * other scope plays at once and never imports it. While the chunk loads the step shows the lesson's waiting state; a chunk
@@ -204,7 +217,7 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
         ? valid
         : isContrastScope(valid)
           ? contrast.drawContrastRounds(valid, contrastEnv(), seed)
-          : valid.filter((r) => contrast.contrastRoundPlayable(r, contrastEnv()));
+          : mixedRounds(contrast, valid, contrastEnv(), seed);
     return playing.map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i));
   }, [scope, seed, spelling, contrastEnv, contrast]);
   // The contrast rounds dropped since the step opened (a clip that did not play, a pack switched off, Can't hear it?): the
@@ -622,7 +635,9 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
   const hearAgainShown = spellingKit === null || !(layoutClass.windowHeight > 0 && layoutClass.windowHeight < layout.compactHeight);
   // A contrast round keeps its Hoya line over the compare row when the round ends on a pair's miss too (it resolves then).
   const contrastRound = isContrastRound(round);
-  const showMissHoya = host.mode !== 'review' && (state.status === 'asking' || (contrastRound && state.status === 'resolved')) && state.wrongIds.length > 0;
+  // A pair ends on its miss, so Hoya stays over the compare row; a triple that resolves resolved on the right answer, which is not "Listen to both."
+  const missEndedRound = contrastRound && state.status === 'resolved' && round.options.length <= 2;
+  const showMissHoya = host.mode !== 'review' && (state.status === 'asking' || missEndedRound) && state.wrongIds.length > 0;
   const compare = contrastRound && contrast !== null ? contrast.compareItems(round, state, copy.contrast, m.a11y, (o) => noteOf(round, o)) : [];
   /** Plays one member of the round's set from its own clip (a compare item, an answered option), outlined while it sounds. */
   const playMember = (id: string): void => {
@@ -638,7 +653,7 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
   /** Can't hear it? opened: the step's later contrast rounds are dropped after this one (section 3.9). */
   const trimLater = (): void => {
     if (!contrastRound) return;
-    const later = roundsRef.current.slice(roundIdx + 1).map((r) => r.id);
+    const later = roundsRef.current.slice(roundIdx + 1).filter(isContrastRound).map((r) => r.id);
     if (later.length > 0) dispatch({ type: 'total', total: dropRounds(later) });
   };
   // The round's header node (§3.4): the heading, the scaffold line and, in the text prompt mode, the Korean it shows by
@@ -829,7 +844,7 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
                       // A held line (AU-8) keeps its room, so the cards do not move when the answer shows it.
                       romanization={view.heldRomanization === '' ? view.romanization : view.heldRomanization}
                       romanizationReserved={view.heldRomanization !== ''}
-                      {...(note === undefined || option.text === undefined ? {} : { gloss: option.text.en })}
+                      {...(note === undefined || option.text === undefined || contrast === null ? {} : { gloss: contrast.memberGloss(copy.contrast, option.text) })}
                       label={view.label}
                       art={
                         view.pictureRef !== undefined ? (

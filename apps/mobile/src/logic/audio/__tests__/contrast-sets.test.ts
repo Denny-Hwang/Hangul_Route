@@ -13,8 +13,11 @@ import {
   pairRound,
   optionMember,
   playableContrastRounds,
+  withTarget,
   type ContrastEnv,
 } from '../contrast-sets';
+import { memberGloss } from '../../listen-pick-contrast';
+import { getMessages } from '@hangul-route/i18n';
 import { isContrastRound, isContrastScope } from '../../listen-pick';
 import { listenPickSpeech } from '../listen-pick-speech';
 
@@ -309,5 +312,52 @@ describe('drawContrastRounds: six of the playable sets, targets balanced, seeded
       expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2);
       expect(counts.every((n) => n >= 1)).toBe(true);
     }
+  });
+});
+
+describe('withTarget: the scope keeps the meanings it holds (AMENDMENTS-MINIMAL-PAIRS section 3.7)', () => {
+  const set = PAIRS[0]!;
+  const full = (en: (i: number) => string): ListenPickRound => ({
+    id: `lp:pair:${set.id}`,
+    contrastSet: set.id,
+    prompt: { ko: set.members[0]!.text, romanization: set.members[0]!.romanization, en: en(0) },
+    options: set.members.map((m, i) => ({ id: m.romanization, text: { ko: m.text, romanization: m.romanization, en: en(i) } })),
+    answerId: set.members[0]!.romanization,
+  });
+
+  it('keeps a localized option meaning (and the prompt\'s) from a round written out in full', () => {
+    const round = withTarget(full((i) => `es ${i}`), PAIRS, () => 0);
+    expect(round.options.map((o) => o.text?.en)).toEqual(['es 0', 'es 1']);
+    expect(round.prompt.en).toBe(round.options.find((o) => o.text?.ko === round.prompt.ko)!.text!.en);
+    expect(round.prompt.audioRef).toBe(set.members.find((m) => m.text === round.prompt.ko)!.ref);
+  });
+
+  it('takes the catalogue meaning for a stub (placeholder options) and for an empty meaning', () => {
+    const stub: ListenPickRound = { ...roundOf(set), options: [{ id: 'a', text: { ko: '', romanization: 'a', en: '' } }, { id: 'b', text: { ko: '', romanization: 'b', en: '' } }] };
+    expect(withTarget(stub, PAIRS, () => 0).options.map((o) => o.text?.en)).toEqual(set.members.map((m) => m.en));
+    expect(withTarget(full(() => ''), PAIRS, () => 0).options.map((o) => o.text?.en)).toEqual(set.members.map((m) => m.en));
+  });
+
+  it('draws balanced targets over a run through `seen`', () => {
+    const seen = new Map<'plain' | 'aspirated' | 'tense', number>();
+    const kinds = [0, 1].map(() => withTarget(roundOf(set), PAIRS, () => 0, seen).answerId);
+    expect(new Set(kinds).size).toBe(2);
+  });
+});
+
+describe('memberGloss: the catalogue syllable meaning follows the UI language', () => {
+  const text = { romanization: 'ga', en: 'the syllable ga' };
+  it.each([
+    ['en', 'the syllable ga'],
+    ['es', 'la sílaba ga'],
+    ['ko', 'ga 음절'],
+  ] as const)('%s', (locale, expected) => {
+    expect(memberGloss(getMessages(locale).learner.minigame.contrast, text)).toBe(expected);
+  });
+
+  it('leaves a meaning the scope localized, and a word, as held', () => {
+    const copy = getMessages('es').learner.minigame.contrast;
+    expect(memberGloss(copy, { romanization: 'ga', en: 'la sílaba ga (scope)' })).toBe('la sílaba ga (scope)');
+    expect(memberGloss(copy, { romanization: 'gae', en: 'dog' })).toBe('dog');
   });
 });

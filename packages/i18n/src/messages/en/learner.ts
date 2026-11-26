@@ -934,6 +934,8 @@ export const learner = {
      */
     contrast: {
       missHoya: 'Listen to both.',
+      /** The meaning shown under a syllable once the round is answered ("the syllable ga"); a word keeps its own meaning. */
+      syllable: (sound: string) => `the syllable ${sound}`,
       kind: {
         plain: 'Soft, starts lower.',
         aspirated: 'Big puff, starts higher.',

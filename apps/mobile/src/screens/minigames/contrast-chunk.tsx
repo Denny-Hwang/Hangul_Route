@@ -10,7 +10,7 @@
 export const CONTRAST_CHUNK = 'screen-chunk:contrast';
 
 export { ContrastCompare } from './ContrastCompare';
-export { compareItems, contrastKindLine } from '../../logic/listen-pick-contrast';
+export { compareItems, contrastKindLine, memberGloss } from '../../logic/listen-pick-contrast';
 export {
   contrastApproved,
   contrastClipRef,
@@ -21,4 +21,5 @@ export {
   drawContrastRounds,
   pairRound,
   playableContrastRounds,
+  withTarget,
 } from '../../logic/audio/contrast-sets';

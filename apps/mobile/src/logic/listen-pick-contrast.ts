@@ -12,6 +12,16 @@ type ListenPickOption = ListenPickRound['options'][number];
 
 export type ContrastCopy = MinigameCopy['contrast'];
 
+/**
+ * The meaning shown under a member once the round is answered, in the UI language. A scope that writes the round out in
+ * full holds its own (localized) meaning for each option, and it is kept. The catalogue's meaning of a syllable is the
+ * English "the syllable ga" (the Stage 1 sets are built from `lp.pair`, with no JSON to overlay), so a meaning that is
+ * still exactly that is drawn from the dictionary (`syllable`); a word's meaning not localized by its scope stays as held.
+ */
+export function memberGloss(copy: ContrastCopy, text: { romanization: string; en: string }): string {
+  return text.en === `the syllable ${text.romanization}` ? copy.syllable(text.romanization) : text.en;
+}
+
 /** What a contrast member is, for the line under it: its series (plain, aspirated, tense) and its consonant series (`s` is the hiss). */
 export interface ContrastMemberKind {
   kind: 'plain' | 'aspirated' | 'tense';

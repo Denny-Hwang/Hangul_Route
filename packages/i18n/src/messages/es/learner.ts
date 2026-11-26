@@ -649,6 +649,7 @@ export const learner = {
     },
     contrast: {
       missHoya: 'Escucha los dos.',
+      syllable: (sound: string) => `la sílaba ${sound}`,
       kind: {
         plain: 'Suave, empieza más bajo.',
         aspirated: 'Soplo fuerte, empieza más alto.',
