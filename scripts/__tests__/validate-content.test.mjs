@@ -2,7 +2,7 @@
 
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, test } from "node:test";
@@ -1004,40 +1004,76 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     }
   });
 
-  test("freq-coverage refuses a grade-A list inside the repo (its licence is not checked)", () => {
+  const NIKL_LIST = "scripts/nikl-vocab-2003.json";
+  const writeNikl = (root, entries) => {
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    writeFileSync(join(root, NIKL_LIST), JSON.stringify({ source: {}, columns: [], entries }));
+  };
+
+  test("freq-coverage reads the committed grade-A words of scripts/nikl-vocab-2003.json, with --reports details", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      writeNikl(root, [[1, "떡국", "", "명", "", "A"]]);
+      const r = runWith(root, {}, ["--reports"]);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, /freq-coverage \(report only\): 1 of 1 taught words are on the grade-A list/);
+      assert.match(r.stdout, /  stage 2: 1 of 1/);
+      writeNikl(root, [[1, "떡국", "", "명", "", "B"]]);
+      assert.match(runWith(root).stdout, /freq-coverage \(report only\): 0 of 1 taught words are on the grade-A list/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("freq-coverage is skipped, not failed, in a root without the list, and a list that is not JSON fails the run", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const missing = runWith(root);
+      assert.equal(missing.status, 0, missing.stdout + missing.stderr);
+      assert.match(missing.stdout, /freq-coverage \(report only\): skipped; scripts\/nikl-vocab-2003\.json is missing/);
+      mkdirSync(join(root, "scripts"), { recursive: true });
+      writeFileSync(join(root, NIKL_LIST), "{ nope");
+      const bad = runWith(root);
+      assert.equal(bad.status, 1);
+      assert.match(bad.stdout, /::error file=scripts\/nikl-vocab-2003\.json::invalid-json/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the guard that kept the grade-A list out of the repo is gone: HANGUL_ROUTE_NIKL_GRADE_A is no longer read", () => {
     const root = makeRoot();
     try {
       writeContent(root, "episodes/stage-2/rites.json", lessonCell());
       const list = join(root, "content", "nikl-grade-a.txt");
       writeFileSync(list, "1\t떡국\t명사\n");
       const r = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: list });
-      assert.equal(r.status, 1, r.stdout + r.stderr);
-      assert.match(r.stdout, /::error file=content\/nikl-grade-a\.txt::freq-coverage: the NIKL grade-A list stays outside the repo/);
-      assert.match(r.stdout, /freq-coverage \(report only\): skipped; HANGUL_ROUTE_NIKL_GRADE_A points inside the repo/);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.doesNotMatch(r.stdout, /stays outside the repo/);
+      assert.match(r.stdout, /freq-coverage \(report only\): skipped; scripts\/nikl-vocab-2003\.json is missing/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("freq-coverage reads a local grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, with --reports details", () => {
-    const root = makeRoot();
-    const outside = makeRoot();
-    try {
-      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
-      const list = join(outside, "grade-a.txt");
-      writeFileSync(list, "1\t떡국\t명사\n");
-      const r = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: list }, ["--reports"]);
-      assert.equal(r.status, 0, r.stdout + r.stderr);
-      assert.match(r.stdout, /freq-coverage \(report only\): 1 of 1 taught words are on the grade-A list/);
-      assert.match(r.stdout, /  stage 2: 1 of 1/);
-      const missing = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: join(outside, "nope.txt") });
-      assert.match(missing.stdout, /freq-coverage \(report only\): skipped; .*nope\.txt does not exist/);
-      const unset = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: "" });
-      assert.match(unset.stdout, /freq-coverage \(report only\): skipped; set HANGUL_ROUTE_NIKL_GRADE_A/);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-      rmSync(outside, { recursive: true, force: true });
-    }
+  test("the committed list is the source's: 5,965 words in three grades, with its attribution and a notice", () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const list = JSON.parse(readFileSync(join(here, "..", "nikl-vocab-2003.json"), "utf8"));
+    assert.equal(list.entries.length, 5965);
+    assert.deepEqual(list.grades, { A: 982, B: 2111, C: 2872 });
+    for (const grade of ["A", "B", "C"]) assert.equal(list.entries.filter((e) => e[5] === grade).length, list.grades[grade]);
+    assert.match(list.source.page, /^https:\/\/www\.korean\.go\.kr\/front_eng\/down\/down_02V\.do\?etc_seq=70$/);
+    assert.match(list.source.license, /KOGL.*Type 1/);
+    assert.match(list.source.attribution, /국립국어원/);
+    const at = (rank) => list.entries.find((e) => e[0] === rank);
+    assert.deepEqual(at(353), [353, "밥", "01", "명", "~을 먹다", "A"]);
+    assert.deepEqual(at(3237).slice(1, 3).concat(at(3237)[5]), ["사과", "05", "A"]);
+    assert.deepEqual(at(4064).slice(1, 3).concat(at(4064)[5]), ["사과", "08", "C"]);
+    const notice = readFileSync(join(here, "..", "third-party-notices", "licenses", "NIKL-KOGL-Type1.txt"), "utf8");
+    assert.match(notice, /KOGL/);
+    assert.match(notice, /down_02V\.do\?etc_seq=70/);
   });
 
   test("story-coverage lists each story tier with --reports", () => {
