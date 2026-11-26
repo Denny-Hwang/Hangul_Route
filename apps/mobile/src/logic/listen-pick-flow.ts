@@ -20,6 +20,12 @@ import { holdsRomanization, hostSurface } from './locale/check-hold';
  * the scored one (the run store keeps later ones as retries, `first-try.ts`);
  * a touch inside `touchWindowMs` (350 ms, under the board's 400 ms lock) after an accepted one is a bounce and is dropped (AMENDMENTS-TOUCH KT-D5;
  * the 50 ms window of F-001 §3.4 became this lock).
+ *
+ * A contrast round (`contrast` on the tap, AMENDMENTS-MINIMAL-PAIRS sections 3.6 to 3.8, row MP-2a) differs in four ways: its
+ * `answer` effect is tagged `scored: false` (the game then reports it to no host), a miss plays no replay of the prompt but
+ * shows the two sounds side by side (`compare`: the right one, then the one tapped), a pair round ends after its miss
+ * (a second tap would only be the other one) while a triple stays open, and a round whose clip did not play is dropped
+ * (`drop`), the count shrinking with it.
  */
 
 // The round's speech and its audio surface id live in a pure module (the lecture deck builder uses them too).
@@ -36,6 +42,15 @@ export const LISTEN_PICK_TIMING = {
   // lock is the gate at `TAP_LOCK_MS` on the touch events' own times; this window is the backstop on `Date.now()` at
   // dispatch, so a first tap whose handler ran a few ms late must not make it drop a tap the board accepted.
   touchWindowMs: 350,
+  /**
+   * A contrast round (row MP-2a): the least wait after a right answer, which leaves time to tap the other members
+   * (each option plays its clip once the round is answered), and after a miss, which leaves the compare row's two clips
+   * and its two lines their time. Both still wait for the sound that is playing (QS-4).
+   */
+  contrastAdvanceMs: 1800,
+  contrastMissAdvanceMs: 2800,
+  /** The compare row plays the right clip, then this long after it ends, the clip that was tapped. */
+  compareGapMs: 400,
 } as const;
 
 export type MinigameCopy = Messages['learner']['minigame'];
@@ -54,18 +69,36 @@ export interface ListenPickFlowState {
   textPrompt: boolean;
   /** When the last accepted tap arrived, for the bounce window (`touchWindowMs`). */
   lastTapAt: number | null;
+  /**
+   * A contrast round's miss: the right option and the one tapped, shown side by side with their clips (section 3.7). Absent
+   * on every other round, and again on the next.
+   */
+  compare?: { rightId: string; tappedId: string };
+}
+
+/** What the flow needs to know of a contrast round's tap: how many options it has (two is a pair). */
+export interface ContrastTap {
+  optionCount: number;
 }
 
 export type FlowEvent =
   | { type: 'hear' }
   | { type: 'audio'; round: number; result: PlayResult }
-  | { type: 'tap'; optionId: string; answerId: string; at: number }
+  | { type: 'tap'; optionId: string; answerId: string; at: number; contrast?: ContrastTap }
   | { type: 'replay-due' }
-  | { type: 'advance' };
+  /** `total`: the rounds the game still holds (a contrast step drops the ones whose clips cannot play), else unchanged. */
+  | { type: 'advance'; total?: number }
+  /** Contrast: the open round's clip did not play. The game removed it; `total` is what it holds now. Nothing is scored. */
+  | { type: 'drop'; total: number }
+  /** Contrast: the later rounds were dropped (Can't hear it?, section 3.9). The count is what the game holds now. */
+  | { type: 'total'; total: number };
 
 export type FlowEffect =
   | { type: 'play'; why: 'autoplay' | 'manual' | 'replay' | 'confirm' }
-  | { type: 'answer'; roundKey: number; correct: boolean }
+  /** `scored: false`: a contrast round's own result, drawn and announced, reported to no host (section 3.8). */
+  | { type: 'answer'; roundKey: number; correct: boolean; scored?: false }
+  /** Contrast: play the right member's clip, then the tapped one's (section 3.7). */
+  | { type: 'compare'; rightId: string; tappedId: string }
   | { type: 'haptic'; kind: 'success' | 'nudge' }
   | { type: 'schedule-replay'; ms: number }
   | { type: 'cancel-replay' }
@@ -92,26 +125,57 @@ export function startFlow(total: number): ListenPickFlowState {
 
 const unchanged = (state: ListenPickFlowState): FlowStep => ({ state, effects: [] });
 
+/** A round opened fresh: nothing locked, no ring, no text, no compare row. */
+function openRound(state: ListenPickFlowState, roundIdx: number, total: number): ListenPickFlowState {
+  const { compare: _compare, ...rest } = state;
+  return { ...rest, status: 'asking', roundIdx, total, wrongIds: [], hint: false, textPrompt: false, lastTapAt: null };
+}
+
 function tapStep(state: ListenPickFlowState, event: Extract<FlowEvent, { type: 'tap' }>): FlowStep {
   if (state.status !== 'asking' || state.wrongIds.includes(event.optionId)) return unchanged(state);
   if (state.lastTapAt !== null && event.at - state.lastTapAt < LISTEN_PICK_TIMING.touchWindowMs) {
     return unchanged(state);
   }
+  const { contrast } = event;
+  const unscored = contrast === undefined ? {} : ({ scored: false } as const);
 
   if (event.optionId === event.answerId) {
     return {
       state: { ...state, status: 'resolved', lastTapAt: event.at },
       effects: [
-        { type: 'answer', roundKey: state.roundIdx, correct: true },
+        { type: 'answer', roundKey: state.roundIdx, correct: true, ...unscored },
         { type: 'haptic', kind: 'success' },
         { type: 'cancel-replay' },
         { type: 'play', why: 'confirm' },
-        { type: 'schedule-advance', ms: LISTEN_PICK_TIMING.advanceDelayMs },
+        { type: 'schedule-advance', ms: contrast === undefined ? LISTEN_PICK_TIMING.advanceDelayMs : LISTEN_PICK_TIMING.contrastAdvanceMs },
       ],
     };
   }
 
   const wrongIds = [...state.wrongIds, event.optionId];
+  if (contrast !== undefined) {
+    // Listen to both (section 3.7): no replay of the prompt; the right sound, then the one tapped. A pair is over after
+    // its miss (a second tap would only be the other one); a triple stays open, and its second miss rings the right option.
+    const compare = { rightId: event.answerId, tappedId: event.optionId };
+    const pairOver = contrast.optionCount <= 2;
+    return {
+      state: {
+        ...state,
+        status: pairOver ? 'resolved' : 'asking',
+        wrongIds,
+        hint: state.hint || wrongIds.length >= 2,
+        lastTapAt: event.at,
+        compare,
+      },
+      effects: [
+        { type: 'answer', roundKey: state.roundIdx, correct: false, scored: false },
+        { type: 'haptic', kind: 'nudge' },
+        { type: 'cancel-replay' },
+        { type: 'compare', ...compare },
+        ...(pairOver ? [{ type: 'schedule-advance', ms: LISTEN_PICK_TIMING.contrastMissAdvanceMs } as const] : []),
+      ],
+    };
+  }
   return {
     // Once on, the ring stays for the round (the scaffold round starts with it on, F-CURR-002 section 4.6).
     state: { ...state, wrongIds, hint: state.hint || wrongIds.length >= 2, lastTapAt: event.at },
@@ -124,23 +188,23 @@ function tapStep(state: ListenPickFlowState, event: Extract<FlowEvent, { type: '
   };
 }
 
-function advanceStep(state: ListenPickFlowState): FlowStep {
+function advanceStep(state: ListenPickFlowState, total: number = state.total): FlowStep {
   if (state.status !== 'resolved') return unchanged(state);
-  if (state.roundIdx >= state.total - 1) {
-    return { state: { ...state, status: 'done' }, effects: [{ type: 'complete' }] };
+  if (state.roundIdx >= total - 1) {
+    return { state: { ...state, total, status: 'done' }, effects: [{ type: 'complete' }] };
   }
-  return {
-    state: {
-      ...state,
-      status: 'asking',
-      roundIdx: state.roundIdx + 1,
-      wrongIds: [],
-      hint: false,
-      textPrompt: false,
-      lastTapAt: null,
-    },
-    effects: [{ type: 'play', why: 'autoplay' }],
-  };
+  return { state: openRound(state, state.roundIdx + 1, total), effects: [{ type: 'play', why: 'autoplay' }] };
+}
+
+/**
+ * A contrast round whose clip did not play (section 3.6): it ends with nothing scored and the next one takes its place
+ * (or the step completes). Only an open, untouched round drops; one the learner has answered stays as it is.
+ */
+function dropStep(state: ListenPickFlowState, total: number): FlowStep {
+  if (state.status !== 'asking' || state.wrongIds.length > 0) return unchanged(state);
+  // The index stays on a round that exists, as after any last answer, so the screen has one to draw until the step closes.
+  if (state.roundIdx >= total) return { state: { ...state, total, roundIdx: Math.max(0, total - 1), status: 'done' }, effects: [{ type: 'cancel-replay' }, { type: 'complete' }] };
+  return { state: openRound(state, state.roundIdx, total), effects: [{ type: 'cancel-replay' }, { type: 'play', why: 'autoplay' }] };
 }
 
 /** One event in, the next state and the effects the screen must run out. */
@@ -159,7 +223,11 @@ export function stepFlow(state: ListenPickFlowState, event: FlowEvent): FlowStep
     case 'replay-due':
       return state.status === 'asking' ? { state, effects: [{ type: 'play', why: 'replay' }] } : unchanged(state);
     case 'advance':
-      return advanceStep(state);
+      return advanceStep(state, event.total);
+    case 'drop':
+      return dropStep(state, event.total);
+    case 'total':
+      return { state: { ...state, total: Math.max(state.roundIdx + 1, event.total) }, effects: [] };
   }
 }
 
@@ -388,6 +456,65 @@ export function optionItem(option: ListenPickOption, a11y: Messages['a11y'], con
   const text = option.text!;
   if (context.labelOf) return context.labelOf(text);
   return answerItem(a11y, a11yRomanization(text.romanization, a11y.romanizationOr), context.gloss ? text.en : undefined);
+}
+
+// ---------------------------------------------------------------------------
+// A contrast round's lines (AMENDMENTS-MINIMAL-PAIRS section 3.7, row MP-2a)
+
+export type ContrastCopy = MinigameCopy['contrast'];
+
+/** What a contrast member is, for the line under it: its series (plain, aspirated, tense) and its consonant series (`s` is the hiss). */
+export interface ContrastMemberKind {
+  kind: 'plain' | 'aspirated' | 'tense';
+  /** The set's consonant series (`k t p c s`): the hiss pair has lines of its own. */
+  series: string;
+}
+
+/**
+ * The line under a member once the round is answered, and in its compare row. Both cues are named (the air and where the
+ * voice starts); the hiss pair (s, ss) has its own two lines, since s starts high and so is no "starts lower" sound.
+ */
+export function contrastKindLine(copy: ContrastCopy, member: ContrastMemberKind): string {
+  if (member.series === 's') {
+    if (member.kind === 'tense') return copy.kind.tenseS;
+    if (member.kind === 'plain') return copy.kind.plainS;
+  }
+  return copy.kind[member.kind];
+}
+
+/** One item of the compare row: the Hangul and its romanization, its kind line, and its accessible name. */
+export interface CompareItem {
+  id: string;
+  ko: string;
+  romanization: string;
+  kindLine: string;
+  /** `a11y.contrastItem`: the member by its romanization and its kind line, never its Hangul (F-A11Y-001 AF-4b). */
+  label: string;
+}
+
+/**
+ * What a contrast round's miss shows (section 3.7): the right member first, then the one the learner tapped, each with its
+ * kind line. `note` says what an option is (its kind and series); an option it cannot place is left out. `[]` when the
+ * round has no miss to show.
+ */
+export function compareItems(
+  round: ListenPickRound,
+  state: ListenPickFlowState,
+  copy: ContrastCopy,
+  a11y: Messages['a11y'],
+  note: (option: ListenPickOption) => ContrastMemberKind | undefined,
+): CompareItem[] {
+  if (state.compare === undefined) return [];
+  const items: CompareItem[] = [];
+  for (const id of [state.compare.rightId, state.compare.tappedId]) {
+    const option = round.options.find((o) => o.id === id);
+    const member = option === undefined ? undefined : note(option);
+    if (option?.text === undefined || member === undefined) continue;
+    const kindLine = contrastKindLine(copy, member);
+    const sound = a11yRomanization(option.text.romanization, a11y.romanizationOr);
+    items.push({ id, ko: option.text.ko, romanization: option.text.romanization, kindLine, label: a11y.contrastItem(sound, kindLine) });
+  }
+  return items;
 }
 
 /** Narrow phones (below this width, dp) get one column. */

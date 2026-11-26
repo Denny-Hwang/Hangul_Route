@@ -426,3 +426,64 @@ describe('the sources of a content tree (shared by the generator and the lint)',
     expect(vocabOfTree(new Map()).senseGroups).toEqual([]);
   });
 });
+
+describe('a contrast step and a contrast round make no review item (AMENDMENTS-MINIMAL-PAIRS section 3.8, row MP-2a)', () => {
+  const pair = (setId: string, a: [string, string], b: [string, string]) => ({
+    id: `lp:pair:${setId}`,
+    contrastSet: setId,
+    prompt: kt(a[0], a[1], `the syllable ${a[1]}`),
+    options: [
+      { id: a[1], text: kt(a[0], a[1], `the syllable ${a[1]}`) },
+      { id: b[1], text: kt(b[0], b[1], `the syllable ${b[1]}`) },
+    ],
+    answerId: a[1],
+  });
+  const plain = { id: 'lp:syl:가', prompt: kt('가', 'ga', 'the syllable ga'), options: [{ id: '가', text: kt('가', 'ga', 'the syllable ga') }], answerId: '가' };
+
+  it('Stage 1: a step with contrast: true is skipped whole, and a round with contrastSet is skipped inside a scored step', () => {
+    const quests = [
+      {
+        id: 'quest:stage1-life-q3',
+        steps: [
+          { id: 's3', kind: 'practice', minigameRef: 'minigame:s1-life-q3-play' },
+          { id: 's3p', kind: 'practice', contrast: true, minigameRef: 'minigame:s1-life-q3-pairs' },
+          { id: 's4', kind: 'apply', minigameRef: 'minigame:s1-life-q3-apply' },
+        ],
+      },
+    ];
+    const scopes = {
+      'minigame:s1-life-q3-play': { kind: 'listen-pick', listenPick: { rounds: [plain] } },
+      'minigame:s1-life-q3-pairs': { kind: 'listen-pick', listenPick: { rounds: [pair('ga-ka', ['가', 'ga'], ['카', 'ka'])] } },
+      // A contrast round that sits in a step with no `contrast` flag is still no item.
+      'minigame:s1-life-q3-apply': { kind: 'listen-pick', listenPick: { rounds: [pair('da-ta', ['다', 'da'], ['타', 'ta']), plain] } },
+    };
+    const got = stage1Occurrences({ symbols: SYMBOLS, quests, scopes }).map((o) => [o.kind, o.ko]);
+    expect(got).toEqual([
+      ['syl', '가'],
+      ['syl', '가'],
+    ]);
+  });
+
+  it('a lesson cell: the same two rules, and a plain round beside them still counts', () => {
+    const body = {
+      id: 'episode:stage2-letters',
+      quests: [
+        {
+          id: 'quest:stage2-letters-q2',
+          steps: [
+            { id: 's3', kind: 'practice', minigameRef: 'minigame:s2-letters-q2-play' },
+            { id: 's3p', kind: 'practice', contrast: true, minigameRef: 'minigame:s2-letters-q2-pairs' },
+            { id: 's4', kind: 'apply', minigameRef: 'minigame:s2-letters-q2-apply' },
+          ],
+          scopes: [
+            { ref: 'minigame:s2-letters-q2-play', kind: 'listen-pick', rounds: [{ ...plain, id: 'r1', prompt: kt('달', 'dal', 'moon'), options: [{ id: 'a', text: kt('달', 'dal', 'moon') }], answerId: 'a' }] },
+            { ref: 'minigame:s2-letters-q2-pairs', kind: 'listen-pick', rounds: [pair('dal-tal-ttal', ['달', 'dal'], ['탈', 'tal'])] },
+            { ref: 'minigame:s2-letters-q2-apply', kind: 'listen-pick', rounds: [pair('bul-pul-ppul', ['불', 'bul'], ['풀', 'pul'])] },
+          ],
+        },
+      ],
+    };
+    const got = lessonOccurrences({ file: 'letters.json', body, cellId: 'episode:stage2-letters', stage: 2, home: 'letters', volume: 1 }, []).map((o) => [o.kind, o.ko]);
+    expect(got).toEqual([['lex', '달']]);
+  });
+});

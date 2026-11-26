@@ -122,6 +122,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'a11y.homeworkRow',
   'a11y.access.row', // title, lines and tags joined by ". " (MAR re-review 2026-10-13)
   'a11y.answer.item', // "{romanization}, {gloss}" (F-A11Y-001 §3.7)
+  'a11y.contrastItem', // "{romanization}, {kind line}" (AMENDMENTS-MINIMAL-PAIRS §3.7)
   'a11y.planStatus',
   'a11y.myRoute.later',
   'a11y.myRoute.cell',

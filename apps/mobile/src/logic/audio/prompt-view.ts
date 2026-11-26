@@ -57,10 +57,12 @@ export function promptPanelView(
   hasClip: boolean,
   copy: AudioCopy,
   alwaysShowLetters = false,
+  noText = false,
 ): PromptPanelView {
   // "Always show the letters" (AMENDMENTS-AUDIO-CANT-HEAR CH-2) brings the text up with no reason: nothing failed, and
   // nothing is asked, so a later reducer rule and the hinted mark of CH-1f can tell it from the learner's own ask.
-  const textShown = showText(s, cap, muted, hasClip) || alwaysShowLetters;
+  // `noText` (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6): the text would print the answer, so none ever shows.
+  const textShown = !noText && (showText(s, cap, muted, hasClip) || alwaysShowLetters);
   const reason = textShown ? reasonOf(s, cap, muted, hasClip) : null;
   const action = fallbackAction(reason);
   const detail = panelDetail(reason, copy);

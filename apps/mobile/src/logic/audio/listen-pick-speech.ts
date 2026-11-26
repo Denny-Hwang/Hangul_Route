@@ -16,6 +16,13 @@ export const LISTEN_PICK_AUDIO_SOURCE = 'listen-pick';
  * logic (F-BROWSE-001 section 4.10, `browse-isolation.test.ts`). `listen-pick-flow.ts` re-exports it.
  */
 export function listenPickSpeech(round: ListenPickRound): PlaySpec {
+  // A contrast round plays its member's approved clip or nothing (AMENDMENTS-MINIMAL-PAIRS section 3.6, row MP-2a): never the
+  // say clip of its text, never the device voice.
+  if (round.contrastSet !== undefined) {
+    const spec: PlaySpec = { text: round.prompt.ko, kind: 'sound', source: LISTEN_PICK_AUDIO_SOURCE, clipOnly: true };
+    if (round.prompt.audioRef !== undefined) spec.audioRef = round.prompt.audioRef;
+    return spec;
+  }
   const sound = round.id.startsWith('lp:sym:') || round.id.startsWith('lp:syl:');
   const kind = sound ? 'sound' : promptKindOf(round.prompt.spokenKo ?? round.prompt.ko);
   return koSpeech(round.prompt, kind, LISTEN_PICK_AUDIO_SOURCE);

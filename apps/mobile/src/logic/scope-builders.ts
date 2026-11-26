@@ -9,6 +9,7 @@ import {
   type PicWordRound,
   type PictureRef,
 } from '@hangul-route/content-schema';
+import { CONTRAST_SETS } from '../content/__generated__/contrast-sets';
 import { cardById } from '../content/heritage-cards';
 import { findJamo } from '../content/jamo';
 import { jamoVoice } from './audio/jamo-voice';
@@ -147,6 +148,25 @@ export const lp = {
         ...distractors.map((d) => ({ id: d, text: syllableText(d) })),
       ],
       answerId: syllable,
+    });
+  },
+
+  /**
+   * A contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a): hear one member of a contrast set, pick which. The
+   * options are exactly the set's members (ids are their romanizations, ASCII), and the round names the set. `prompt` and
+   * `answerId` hold the set's first member, with its own clip, until the step draws the round's target when it starts
+   * (`drawContrastRounds`). Throws on an unknown set, which the content test turns into a failing test.
+   */
+  pair(setId: string): ListenPickRound {
+    const set = CONTRAST_SETS.find((s) => s.id === setId);
+    if (!set) throw new Error(`Unknown contrast set ${setId}`);
+    const [first] = set.members;
+    return parseRound({
+      id: `lp:pair:${set.id}`,
+      contrastSet: set.id,
+      prompt: { ko: first!.text, romanization: first!.romanization, en: first!.en, audioRef: first!.ref },
+      options: set.members.map((m) => ({ id: m.romanization, text: { ko: m.text, romanization: m.romanization, en: m.en } })),
+      answerId: first!.romanization,
     });
   },
 
