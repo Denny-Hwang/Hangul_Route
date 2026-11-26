@@ -648,6 +648,17 @@ export const learner = {
       missHoya: 'Escucha otra vez',
       empty: 'Aquí no hay nada para jugar',
     },
+    contrast: {
+      missHoya: 'Escucha los dos.',
+      syllable: (sound: string) => `la sílaba ${sound}`,
+      kind: {
+        plain: 'Suave, empieza más bajo.',
+        aspirated: 'Soplo fuerte, empieza más alto.',
+        tense: 'Tenso, sin soplo.',
+        plainS: 'Suave, con un poco de aire.',
+        tenseS: 'Un siseo largo y agudo.',
+      },
+    },
     realia: {
       lineHint: 'Toca una línea para escucharla.',
       missHoya: 'Mira otra vez',

@@ -1,4 +1,5 @@
 import {
+  ACT_KEYS,
   Body,
   HeritageCardArt,
   WORD_ART_KEYS,
@@ -50,11 +51,15 @@ import {
  * design/components/WordArt/spec.md (the caller's tile), design/screens/presenter/slide-sentence.md.
  */
 
-/** What the art can draw: shared by every screen that asks whether a ref has a picture. */
+/**
+ * What the art can draw: shared by every screen that asks whether a ref has a picture. The level check's action
+ * pictures (`ACT_KEYS`, AMENDMENTS-PLC-VALIDITY PV-1a) are named here, and their glyphs arrive with the level check's
+ * chunk (`screens/placement/placement-chunk.tsx`), the only screens that show them.
+ */
 export const PICTURE_CONTEXT: PictureContext = {
   supportedCardIds,
   swatches: swatchColors(colors),
-  wordArtKeys: WORD_ART_KEYS,
+  wordArtKeys: [...WORD_ART_KEYS, ...ACT_KEYS],
 };
 
 /** The neutral tile's padding, border and corner radius, each in the caller's scale. */

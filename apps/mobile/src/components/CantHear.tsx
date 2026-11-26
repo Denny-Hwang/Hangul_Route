@@ -26,6 +26,11 @@ interface CommonProps {
   active: boolean;
   /** Plays the prompt once through the surface's own hear function (the speaker's). */
   onHear: () => void;
+  /**
+   * The learner opened the sheet (a tap on the link that took it). A contrast round drops the step's later rounds on it
+   * (AMENDMENTS-MINIMAL-PAIRS section 3.9). Optional; nothing else changes.
+   */
+  onOpen?: () => void;
   testID?: string;
 }
 
@@ -145,6 +150,7 @@ export function CantHear(props: CantHearProps): ReactElement {
   const openSheet = (): void => {
     setFamily(currentDeviceFamily());
     setOpen(true);
+    props.onOpen?.();
   };
 
   const guidance = props.guidanceOnly === true;

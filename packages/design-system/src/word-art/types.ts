@@ -43,7 +43,9 @@ export type WordArtFamily =
   | 'color'
   | 'count'
   | 'body'
-  | 'prop';
+  | 'prop'
+  /** [PV] The level check's action pictures (AMENDMENTS-PLC-VALIDITY PV-1a): every key `reserved`, loaded with the level check's chunk. */
+  | 'act';
 
 /** Review state shown on the contact sheet (§3.10): the owner marks `approved`. */
 export type WordArtStatus = 'draft' | 'review' | 'approved';

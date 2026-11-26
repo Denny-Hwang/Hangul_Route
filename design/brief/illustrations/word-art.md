@@ -144,6 +144,7 @@ Helper pictures drawn only so a colour swatch has an object. They are not vocabu
 | culture (12) | `culture-hangul`: abstract blocks of a circle, a square and a bar (alluding to jamo shapes, **no letters**) · `culture-hanok`: tiled curved roof, wooden pillars, door · `culture-bibimbap`: stone bowl, colourful toppings, egg · `culture-tteokbokki`: bowl, red-orange sauce, white rice-cake pieces · `culture-song`: two music notes and sound arcs · `culture-dance`: figure with raised arms and a fan or ribbon · `culture-drama`: TV screen with a play triangle · **[PX]** `culture-hanbok`: a hanbok laid flat, yellow jeogori with a white collar and the long goreum tie, a full red skirt · **[PX]** `culture-seollal`: a child in hanbok in the deep New Year bow, head lowered onto the hands on the floor; **[FU]** the body folded over the knees and drawn larger, the floating lucky pouch left out, so it reads at 48 px · **[PX]** `culture-chuseok`: a plate of songpyeon (half-moon rice cakes) under the big full moon · **[PX]** `culture-yutnori`: the round yut board with its 29 stations (ring and cross) and the four half-round sticks, three flat faces up · **[PX]** `culture-gayageum`: the long zither at an angle, bold strings each over its own bridge (anjok) in a slanting row, the tail cords; **[FU]** three strings 8 units apart and bigger bridges (four merged at 54 px) |
 | science (12) | `science-fire`: flame in three colours · `science-ice`: light-blue ice cube, shine · `science-stone`: gray rounded stone · `science-magnet`: horseshoe, red and blue ends · `science-earth`: blue globe, green continents · `science-space`: dark sky, stars, ringed planet · `science-robot`: boxy robot, antenna, a smiling screen face · `science-seed`: **[PX]** seeds are the subject; **[FU]** four pointed teardrop seeds in golden tan (never round and brown: that read as a chestnut), the big one split at its tip where a stem rises with two leaves · `science-rainbow`: six arcs (allowance of 6 colours), two clouds · `science-shadow`: **[PX]** a person standing in the sun and the long gray shadow they cast · `science-wind`: three swirls and a leaf · `science-light`: bulb, glow, rays |
 | prop (4) | `prop-tangerine` · `prop-leaf` · `prop-grapes` · `prop-crow` (§4) |
+| **[PV]** act (30, reserved) | the level check's action pictures: one animal or one person doing one thing (§10) |
 
 ## 8. Heritage card art reused for no word [PX]
 
@@ -183,3 +184,87 @@ Run `corepack pnpm --filter @hangul-route/design-system test`, then render the g
 96, 64, 48 and 32 px and in silhouette (glyphToSvgString with mono: 'border.strong') and
 check by eye that it reads at 48 px and in silhouette before opening the PR.
 ```
+
+## 10. [PV] Action pictures (`act`, the level check's sentence items)
+
+Spec: `docs/specs/AMENDMENTS-PLC-VALIDITY.md` §3.1 (S1-S5), row PV-1a; F-VOC-002 §3.9 as amended. Code: `packages/design-system/src/word-art/glyphs/act.ts`, the family table `ACT_FAMILIES` in `registry.ts`. Review sheets: `design/components/WordArt/pv1a-review.png` (110 px, 48 px, silhouette, labelled) and `pv1a-blind.png` (the last blind-naming sheet, numbered, no labels).
+
+A sentence item shows four pictures: the right one, two of the **same noun doing the other two actions of its family**, and one of another noun doing an action none of the three has (S1). So each picture has to show **one action a person can name without the sentence**, and the three pictures of a noun must be the same animal or person.
+
+**Keys.** `act-<predicate>-<noun>`, three hyphen-free parts (`act-swim-bear`). Every key is `reserved` (no vocabulary topic uses it) and the family plan is 0.
+
+| Noun | Predicates | Noun | Predicates |
+|---|---|---|---|
+| bear 곰 | run · swim · sleep | monkey 원숭이 | run · eat · sleep |
+| tiger 호랑이 | run · swim · sleep | bird 새 | fly · eat · sleep |
+| puppy 강아지 | run · swim · sleep | duck 오리 | swim · fly · sleep |
+| rabbit 토끼 | run · eat · sleep | sibling 동생 | run · swim · eat |
+| cat 고양이 | run · eat · sleep | friend 친구 | run · swim · eat |
+
+Ten families, 30 pictures, five predicates (run 8, sleep 8, swim 6, eat 6, fly 2 of 30; none above 40 %). Each sentence is true of something a learner could see: no "토끼가 날아요".
+
+**How each action is shown (S3).** No text, numbers, arrows or emoji; the action is in the pose and one setting cue.
+
+| Action | Cue |
+|---|---|
+| run (뛰어요) | side view in mid-stride, legs stretched out, motion lines behind, a ground shadow |
+| swim (헤엄쳐요) | the body level in **open water** (only the wave crest is outlined, so the band is no tub), one leg or arm reaching ahead at the surface with spray, motion lines above the water behind; people wear goggles, like `sport-swimming` |
+| sleep (자요) | lying down, the head on the front paws, eyes closed (the smile stays), a broad crescent moon and a small star |
+| eat (먹어요) | sitting, the food at the mouth: a carrot (rabbit), a fish (cat), a half-peeled banana beside the face (monkey), seeds under the beak (bird), a bowl of rice and a spoon (people) |
+| fly (날아요) | in the air, the near wing raised, two small clouds well below, motion lines behind, no ground shadow |
+
+S3's line says "eating from a bowl"; the animals hold their food at the mouth instead, which the blind review read more surely than an animal at a bowl. Only the people eat from a bowl.
+
+**The same noun, the same look.** The animals keep the face of their word picture (`animal-bear` and the rest, placed smaller), on a body in the same fur tone. The bird and the duck are the side views of `animal-bird` and `animal-duck`. The two people are neutral figures from `pose.ts` (C12): the younger sibling is a child with short black hair, a green top and blue shoes; the friend has a brown ponytail, a blue top and red shoes. Paper faces and hands, no skin tone, one person per picture, no gender-coded colours.
+
+**Where they load.** The glyphs are not in the start registry (`HAND`): the start bundle carries only their names (`ACT_KEYS`), and the level check's chunk hands the glyphs to the registry (`loadActWordArt()`, `addWordArt`) when it loads. The `/design-preview/word-art` page lists the start registry, so the review surface of this family is the two sheets above.
+
+### Review record (PV-1a, 2026-11-26)
+
+Three reviewers, as the row asks: a blind "name the action" test, a visual-consistency review against the existing families, and an engineering review.
+
+**Blind naming.** A fresh reviewer saw only a sheet of the 30 pictures, numbered in a shuffled order, each at 130 px and 48 px, with no labels and no sentence, and named who and what for each. Any picture whose action was misnamed was redrawn and the whole sheet went to a new reviewer.
+
+- Round 1: the animals in water read as "in the bath" (tiger, puppy, bear) and the two swimmers as possibly waving for help; the moon was a thin "C"; the cat's fish, the monkey's banana and the bird's seeds were unclear. Redrawn: the moon broadened (plus a star), the water opened out, the swimmers level with a forward stroke, the food moved to the mouth, the bird's beak brought to the seeds, the flyers' clouds made bumpy and set apart.
+- Round 2: "bear: taking a bath" (the tub reading again). Redrawn: motion lines over the water, spray ahead in place of drops beside the face (drops by a face read as sweat), goggles on the people.
+- Round 3: "monkey: holding a banana", "cat: holding a fish", and the water still read as a tub. Redrawn: the water band lost its outline below the crest; the banana's bitten top and the fish's head moved to the mouth.
+- Round 4 (`pv1a-blind.png`): **every picture named with its action**.
+
+| # | Key | Named (round 4) | Confidence |
+|---|---|---|---|
+| 1 | `act-swim-bear` | bear swimming | medium (or floating / in a bath) |
+| 2 | `act-sleep-monkey` | monkey sleeping | high |
+| 3 | `act-sleep-duck` | duck sleeping | high |
+| 4 | `act-eat-monkey` | monkey eating a banana | high |
+| 5 | `act-swim-duck` | duck swimming | high |
+| 6 | `act-run-puppy` | dog running | high |
+| 7 | `act-run-sibling` | child running | high |
+| 8 | `act-eat-sibling` | child eating rice from a bowl | medium-high |
+| 9 | `act-swim-sibling` | child swimming | high |
+| 10 | `act-sleep-rabbit` | rabbit sleeping | high |
+| 11 | `act-fly-duck` | duck flying | medium-high |
+| 12 | `act-sleep-cat` | cat sleeping | high |
+| 13 | `act-run-rabbit` | rabbit running / hopping | high |
+| 14 | `act-run-monkey` | monkey running | high |
+| 15 | `act-sleep-puppy` | dog sleeping | high |
+| 16 | `act-swim-tiger` | tiger swimming | medium (or floating) |
+| 17 | `act-run-cat` | cat running | high |
+| 18 | `act-swim-puppy` | dog swimming | medium (or floating) |
+| 19 | `act-sleep-bear` | bear sleeping | high |
+| 20 | `act-run-friend` | child running | high |
+| 21 | `act-sleep-bird` | bird sleeping on a branch | high |
+| 22 | `act-eat-bird` | bird eating seeds / pecking | medium |
+| 23 | `act-eat-friend` | child eating from a bowl | medium-high |
+| 24 | `act-swim-friend` | child swimming | high |
+| 25 | `act-run-bear` | bear running | high |
+| 26 | `act-run-tiger` | tiger running | high |
+| 27 | `act-eat-rabbit` | rabbit eating a carrot | high |
+| 28 | `act-sleep-tiger` | tiger sleeping | high |
+| 29 | `act-fly-bird` | bird flying | high |
+| 30 | `act-eat-cat` | cat eating a fish | medium (or holding it) |
+
+Notes the item author (PV-1c) keeps: the animal swims are the softest cue at 48 px ("swimming, or floating"); a swim item's other two pictures of the noun are the run and the sleep, so the choice is still clear. Cat and tiger look alike at 48 px when running or sleeping, and so do bear, monkey and puppy lying down; S1 never puts two such pictures in one item with the same action (the fourth picture's action is none of the noun's three). The reviewers noted the food pairings (a cat and a fish, a monkey and a banana) as common, harmless images.
+
+**Visual consistency** (approved with fixes, all made): the same 3 / 2 ink outlines, rounded builder shapes, token tones (at most 4 fill tones), 60-70 % subjects, ground shadows on what stands, smiling faces; each animal reads as its word picture at 48 px; the people pass C12. Fixed from its list: the swim pose (the distress reading), the moon's thickness, the banana over the face, the cloud shape and gap, the bird's beak and seeds, the spoon at the corner of the smile, knees in place of the black slab, the eating animals' tails curled on the ground and their faces brought nearer the size of the other two pictures.
+
+**Engineering** (approved with fixes): tokens only, builders only, 100 % lines of `act.ts` and the registry covered, the late hand-over correct (the chunk imports the same registry module by file path; nothing in the package barrel imports `act.ts`; a second load changes nothing). Its follow-ups are in the PR.

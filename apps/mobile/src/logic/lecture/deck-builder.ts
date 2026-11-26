@@ -653,9 +653,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       }
       // The question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): one slide per round of the content.
-      case 'listen-pick':
-        listenStep(path, ref, validRounds(scope), stepKind === 'check');
+      case 'listen-pick': {
+        // A contrast round is a clip-only, unscored practice round (AMENDMENTS-MINIMAL-PAIRS section 4, row MP-2a): a classroom
+        // speaker and a teacher's voice are another setting, so it makes no slide, and a step of nothing else is no slide and
+        // no counted skip either (it was never a question to ask the room).
+        const all = validRounds(scope);
+        const heard = all.filter((r) => r.contrastSet === undefined);
+        if (all.length > 0 && heard.length === 0) return;
+        listenStep(path, ref, heard, stepKind === 'check');
         return;
+      }
       case 'tap-respond':
         replyStep(path, ref, listOf(scope.dialogue));
         return;

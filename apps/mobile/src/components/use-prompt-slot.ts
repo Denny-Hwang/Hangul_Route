@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalSt
 import type { ClipLookup } from '../logic/audio/controller';
 import {
   INITIAL_PROMPT_STATE,
+  noTextReducer,
   promptReducer,
   type FallbackAction,
   type PlayResult,
@@ -95,6 +96,12 @@ export interface PromptSlotOptions {
    * Check reports its own (`quest-check`, `hangul-check`, `stage-check`, `cell-check`). Default `source`.
    */
   askSource?: string;
+  /**
+   * The slot never shows the text, whatever happens to the sound (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6):
+   * its Korean is the answer. A play that did not sound, sound off or no voice leave the panel as it was, no fallback is
+   * counted, and the voice check never holds the answers. Default `false`.
+   */
+  noText?: boolean;
 }
 
 export function usePromptSlot({
@@ -106,8 +113,9 @@ export function usePromptSlot({
   guidanceOnly = false,
   soundFirst = false,
   askSource,
+  noText = false,
 }: PromptSlotOptions): PromptSlot {
-  const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
+  const [state, dispatch] = useReducer(noText ? noTextReducer : promptReducer, INITIAL_PROMPT_STATE);
   // A pack chunk's clips arrive after the first render (AMENDMENTS-AUDIO-CLIPS AC-B6): the caller re-renders then, so
   // the `hasClip` it computes (`hasClipFor`) is never left saying "no clip" while the say clip will play.
   useSyncExternalStore(clipRegistry.subscribe, clipRegistry.version, clipRegistry.version);
@@ -127,10 +135,10 @@ export function usePromptSlot({
 
   const capability = { tts, clips, unlocked };
   const clip = (said !== null ? recorded(said) : hasClip) && clips;
-  const view = promptPanelView(state, capability, muted, clip, copy, alwaysShow);
+  const view = promptPanelView(state, capability, muted, clip, copy, alwaysShow, noText);
   // A text the learner asked for, or the switch's, is already up, so nothing can come in above the answers: they are not
   // held for the voice check.
-  const settled = revealed.current || muted || clip || !voiceCheckPending || state.asked === true || alwaysShow;
+  const settled = noText || revealed.current || muted || clip || !voiceCheckPending || state.asked === true || alwaysShow;
   revealed.current = settled;
 
   // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker). An item whose

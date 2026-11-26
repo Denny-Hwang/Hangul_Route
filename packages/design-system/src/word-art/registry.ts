@@ -38,6 +38,7 @@ export const WORD_ART_FAMILIES: readonly WordArtFamily[] = Object.freeze([
   'count',
   'body',
   'prop',
+  'act',
 ] as const);
 
 export const WORD_ART_KEY_RE = new RegExp(`^(${WORD_ART_FAMILIES.join('|')})-[a-z0-9-]+$`);
@@ -62,6 +63,8 @@ export const WORD_ART_PLAN: Readonly<Record<WordArtFamily, number>> = Object.fre
   count: 12,
   body: 12,
   prop: 4,
+  // [PV] AMENDMENTS-PLC-VALIDITY PV-1a: every action picture is `reserved` (no vocabulary topic uses it), so none is planned
+  act: 0,
 });
 
 export interface WordArtEntry {
@@ -140,7 +143,7 @@ export function buildRegistry(sources: readonly WordArtSource[], meta: WordArtMe
   return Object.freeze(out);
 }
 
-/** The hand-drawn sources, one per family file. */
+/** The hand-drawn sources loaded with the start bundle, one per family file. The `act` glyphs load later (`ACT_FAMILIES`). */
 const HAND: readonly WordArtSource[] = [
   ['food', FOOD_GLYPHS],
   ['animal', ANIMAL_GLYPHS],
@@ -154,6 +157,32 @@ const HAND: readonly WordArtSource[] = [
   ['prop', PROP_GLYPHS],
 ];
 
+/**
+ * [PV] The level check's action pictures (AMENDMENTS-PLC-VALIDITY S3, S5, row PV-1a): each noun's family of three
+ * predicates, as hyphen-free slugs. A key is `act-<predicate>-<noun>` (`act-swim-bear`); the glyphs are
+ * `glyphs/act.ts`. They are not in `HAND`: the start bundle carries only these names, and the glyphs load with the
+ * level check's chunk (F-VOC-002 §3.8's split), which hands them to `addWordArt`.
+ */
+export const ACT_FAMILIES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  bear: Object.freeze(['run', 'swim', 'sleep']),
+  tiger: Object.freeze(['run', 'swim', 'sleep']),
+  puppy: Object.freeze(['run', 'swim', 'sleep']),
+  rabbit: Object.freeze(['run', 'eat', 'sleep']),
+  cat: Object.freeze(['run', 'eat', 'sleep']),
+  monkey: Object.freeze(['run', 'eat', 'sleep']),
+  bird: Object.freeze(['fly', 'eat', 'sleep']),
+  duck: Object.freeze(['swim', 'fly', 'sleep']),
+  sibling: Object.freeze(['run', 'swim', 'eat']),
+  friend: Object.freeze(['run', 'swim', 'eat']),
+});
+
+/** Every action picture's key, family by family. */
+export const ACT_KEYS: readonly string[] = Object.freeze(Object.entries(ACT_FAMILIES).flatMap(([noun, predicates]) => predicates.map((p) => `act-${p}-${noun}`)));
+
+/** The keys of each family that loads later, with its chunk, and their meta: every action picture is reserved and waits for review. */
+const LATE_KEYS: Readonly<Partial<Record<WordArtFamily, readonly string[]>>> = { act: ACT_KEYS };
+const LATE_META: WordArtMetaOverrides = Object.fromEntries(ACT_KEYS.map((k) => [k, { status: 'review', reserved: true }]));
+
 /** A hand glyph by key, before the registry exists: the colour swatches draw their objects from it. */
 const handGlyph = (key: string): WordArtGlyph | undefined => HAND.find(([, glyphs]) => Object.prototype.hasOwnProperty.call(glyphs, key))?.[1][key];
 
@@ -164,9 +193,28 @@ export const WORD_ART: Readonly<Record<string, WordArtEntry>> = buildRegistry(
 
 export const WORD_ART_KEYS: readonly string[] = Object.freeze(Object.keys(WORD_ART));
 
-/** The glyph for a key (without `word:`), or undefined: the caller falls back to the text tile (§3.7). */
+/** The late families' glyphs, once their chunk has handed them over (`addWordArt`). */
+const LATE: Record<string, WordArtEntry> = {};
+
+/**
+ * Hand over the glyphs of a family that loads with a chunk (§3.8's split; today `act`, with the level check). The
+ * keys must be exactly the family's declared keys (`ACT_KEYS`), so the names the start bundle knows and the glyphs
+ * cannot drift; a second call (the chunk evaluated again) changes nothing. Returns the family's entries.
+ */
+export function addWordArt(source: WordArtSource): Readonly<Record<string, WordArtEntry>> {
+  const [family, glyphs] = source;
+  const declared = LATE_KEYS[family];
+  if (declared === undefined) throw new Error(`WordArt family ${family} does not load late`);
+  const keys = Object.keys(glyphs);
+  if (keys.length !== declared.length || !declared.every((k) => keys.includes(k))) throw new Error(`WordArt ${family} glyphs do not match its declared keys`);
+  if (!keys.every((k) => Object.prototype.hasOwnProperty.call(LATE, k))) Object.assign(LATE, buildRegistry([source], LATE_META));
+  return Object.freeze(Object.fromEntries(declared.map((k) => [k, LATE[k]!])));
+}
+
+/** The glyph for a key (without `word:`), or undefined: the caller falls back to the text tile (§3.7). A late family's key has its glyph once its chunk has loaded. */
 export function getWordArt(key: string): WordArtGlyph | undefined {
-  return Object.prototype.hasOwnProperty.call(WORD_ART, key) ? WORD_ART[key]!.glyph : undefined;
+  if (Object.prototype.hasOwnProperty.call(WORD_ART, key)) return WORD_ART[key]!.glyph;
+  return Object.prototype.hasOwnProperty.call(LATE, key) ? LATE[key]!.glyph : undefined;
 }
 
 /** `'word:food-apple'` -> `'food-apple'`; null for `card:*`, `swatch:*` or a malformed key. */

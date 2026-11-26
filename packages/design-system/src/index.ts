@@ -36,7 +36,8 @@ export * from './components/ConfirmSheet';
 // (apps/mobile metro-subpaths.test.ts). PictureArt (F-VOC-002 W-7) is the app's one caller; the web contact
 // sheet and node tests keep using the pure './word-art' subpath.
 export * from './components/WordArt';
-export { WORD_ART_KEYS } from './word-art/registry';
+// [PV] ACT_KEYS: the level check's action pictures, whose glyphs load with its chunk (AMENDMENTS-PLC-VALIDITY PV-1a).
+export { ACT_KEYS, WORD_ART_KEYS } from './word-art/registry';
 export * from './components/PipRow';
 export * from './components/RouteMarkers';
 // Pure scene-art API (no React): the path Metro can resolve; the web app uses the ./scene-art subpaths.

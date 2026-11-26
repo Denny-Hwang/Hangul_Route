@@ -2070,6 +2070,33 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
     expect(second!.prompt).not.toHaveProperty('frame');
   });
 
+  it('a contrast round (AMENDMENTS-MINIMAL-PAIRS section 4, row MP-2a) gives no slide: a contrast-only step is no slide and no counted skip, and a round beside it still is one', () => {
+    const contrast = (setId: string, a: [string, string], b2: [string, string]) => ({
+      id: `lp:pair:${setId}`,
+      contrastSet: setId,
+      prompt: { ...kt(a[0], a[1], `the syllable ${a[1]}`), audioRef: `audio/fixture/${a[1]}.mp3` },
+      options: [
+        { id: a[1], text: kt(a[0], a[1], `the syllable ${a[1]}`) },
+        { id: b2[1], text: kt(b2[0], b2[1], `the syllable ${b2[1]}`) },
+      ],
+      answerId: a[1],
+    });
+    const hearPuff = quest('hear-the-puff', [['practice', 'mg:pairs'], ['apply', 'mg:pairs-and-one']], { rewardCardId: undefined });
+    const pairs = [contrast('ga-ka', ['가', 'ga'], ['카', 'ka']), contrast('da-ta', ['다', 'da'], ['타', 'ta'])];
+    const scopeOf = (ref: string): MinigameScope | undefined =>
+      ref === 'mg:pairs'
+        ? { kind: 'listen-pick', listenPick: { rounds: pairs } }
+        : ref === 'mg:pairs-and-one'
+          ? { kind: 'listen-pick', listenPick: { rounds: [...pairs, questionScopes['mg:lp-sym']!.listenPick!.rounds[0]!] } }
+          : undefined;
+    const bun = b({ scopeFor: scopeOf, questById: (id) => (id === hearPuff.id ? hearPuff : undefined) });
+    const { slides, skipped } = run(hearPuff.id, {}, VOICE, bun);
+    // Only the plain symbol round of the second step is a slide; the contrast-only step has none, and none is "skipped".
+    expect(quizzes(slides, 'listen')).toHaveLength(1);
+    expect(slides.some((s) => s.key.includes('lp:pair') || JSON.stringify(s).includes('lp:pair'))).toBe(false);
+    expect(skipped).toEqual([]);
+  });
+
   it('Read Pick Meaning (row CM-3A S2): a meaning question on the shown Korean, nothing said before the answer, the pictures as options', () => {
     const read = quest('read-pick', [['check', 'mg:read-pick']], { rewardCardId: undefined });
     const scope: MinigameScope = {

@@ -203,6 +203,14 @@ export interface LessonSource {
 /** The game steps whose rounds are scored (F-QUEST-002 §3.1): their scopes' answers are taught items. */
 const SCORED_STEPS = new Set(['practice', 'apply', 'check']);
 
+/**
+ * A contrast step (`contrast: true`, AMENDMENTS-MINIMAL-PAIRS section 3.8, row MP-2a) is never scored, so it is no source of
+ * items, and neither is a contrast round (`contrastSet`) wherever it sits: a contrast member would be asked in the Daily
+ * Review by the device voice, which the contrast must never be.
+ */
+const isContrastStep = (step: Rec): boolean => step.contrast === true;
+const isContrastRound = (round: Rec): boolean => typeof round.contrastSet === 'string';
+
 /** The glosses of the Discover items, at their F-I18N-001 overlay fields of the quest entity. */
 function discoverItem(c: Collector, item: Rec, questId: string, path: string, at: string): void {
   const k = (field: string): string => `${questId}#${path}.${field}`;
@@ -248,6 +256,7 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
   switch (scope.kind) {
     case 'listen-pick':
       rounds.forEach((round, ri) => {
+        if (isContrastRound(round)) return;
         const rid = key(round, ri);
         const answer = arr(round.options).filter(isRec).find((o) => o.id === round.answerId);
         const picture = pictureOf(round) ?? pictureOf(answer);
@@ -463,7 +472,7 @@ export function lessonOccurrences(source: LessonSource, symbols: readonly Review
           discoverItem(c, item, questId, path, `${source.file} quests[${qi}].steps[${si}].discover.pages[${pi}].items[${ii}]`);
         });
       });
-      if (!SCORED_STEPS.has(String(step.kind)) || typeof step.minigameRef !== 'string') return;
+      if (!SCORED_STEPS.has(String(step.kind)) || typeof step.minigameRef !== 'string' || isContrastStep(step)) return;
       const at = scopes.findIndex((s) => s.ref === step.minigameRef);
       if (at >= 0) scopeAnswers(c, scopes[at] as Rec, `${source.file} quests[${qi}].scopes[${at}]`);
     });
@@ -505,6 +514,7 @@ function stage1Scope(c: Collector, ref: string, scope: Rec, at: string): void {
     });
   });
   arr(isRec(scope.listenPick) ? scope.listenPick.rounds : []).filter(isRec).forEach((round, ri) => {
+    if (isContrastRound(round)) return;
     const id = String(round.id ?? '');
     const where = `${at}.listenPick.rounds[${ri}]`;
     const glossKey = k(`listenPick.rounds.${key(round, ri)}.prompt`);
@@ -546,7 +556,7 @@ export function stage1Occurrences(data: Stage1Data): ItemOccurrence[] {
           discoverItem(c, item, quest.id, `steps.${key(step, si)}.discover.pages.${pi}.items.${ii}`, `${at}.discover.pages[${pi}].items[${ii}]`);
         });
       });
-      if (!SCORED_STEPS.has(String(step.kind)) || typeof step.minigameRef !== 'string') return;
+      if (!SCORED_STEPS.has(String(step.kind)) || typeof step.minigameRef !== 'string' || isContrastStep(step)) return;
       const scope = data.scopes[step.minigameRef];
       if (isRec(scope)) stage1Scope(c, step.minigameRef, scope, `${at} ${step.minigameRef}`);
     });

@@ -204,6 +204,7 @@ export const a11y = {
     round: (n: number, total: number, prompt: string) => `Pregunta ${n} de ${total}. ${prompt}`,
   },
   romanizationOr: 'o',
+  contrastItem: (item: string, kind: string) => `${item}, ${kind}`,
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `Dígito ${digit}`,
