@@ -343,7 +343,15 @@ export const PRECACHE_BUDGET = Object.freeze({
   // realia `romanizationReserved` props): on main b8496d52a with RG-2b (line 4,565,800 B) the release `build:web` (CI=1) measures
   // 4,565,884 B raw / 1,255,976 B gzip, 84 B over the line (4,557,414 B on the DC-1c base before RG-2b). The line is the measurement plus
   // a 4,016 B margin (one measured raise). A start bundle shrink row (SB-4) is planned after phase 2.
-  startBundleRaw: 4_569_900,
+  // [MP] AMENDMENTS-MINIMAL-PAIRS MP-2a (the contrast round: the flow's contrast branches, `ListenPickGame`'s wrapper and its contrast
+  // branches, `clipOnly` in the controller and `noText` in the prompt slot, the en strings, `contrastSet` in the schema and the review-item
+  // extract stay in the start bundle; the catalogue (the generated `contrast-sets.ts`), its playable rules and draw, the kind lines
+  // and the compare row are `contrast-chunk`, a screen chunk of about 12 KB raw, loaded only by a Listen & Pick scope that holds a
+  // contrast round): on top of main (line 4,569,900 B after DC-1c; 4,562,459 B measured on 46f721b2e before it) the release `build:web`
+  // (CI=1) measures 4,573,615 B raw / 1,258,181 B gzip, 3,715 B over main's line (about 7.7 KB over main's own size; the whole
+  // feature in the start bundle was about 13 KB). The line is that measurement plus a 3,985 B margin (one measured raise). Moving the
+  // game's inline contrast branches into the chunk too is the work of the start bundle shrink row (SB-4), planned after phase 2.
+  startBundleRaw: 4_577_600,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
