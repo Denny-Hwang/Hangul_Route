@@ -9,6 +9,7 @@ import { useAudioStore } from '../../../store/audio-store';
 import { clearReaderLog, focusNodes, hasId, pressableById } from '../../../test-support/cant-hear-rig';
 import { byTestId, press, render, screenTexts, textOf, unmount } from '../../../test-support/render';
 import type { AnswerMeta, HostMode, MinigameHost } from '../host';
+import { loadContrastKit } from '../contrast-entry';
 import { ListenPickGame } from '../ListenPickGame';
 
 /**
@@ -140,6 +141,8 @@ async function game(mode: HostMode = 'quest', setIds: readonly string[] = PAIRS)
     answer: (round, correct, meta) => void (answers.push([round, correct]), metas.push(meta)),
     complete: () => void (completed += 1),
   };
+  // The contrast chunk is a dynamic import (a real file read, which fake timers do not move): have it in, as the precache has.
+  await loadContrastKit();
   const rounds: ListenPickRound[] = setIds.map((id) => lp.pair(id));
   const r = await render(<ListenPickGame scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />, {
     createNodeMock: focusNodes(['listen-pick-speaker']) as never,

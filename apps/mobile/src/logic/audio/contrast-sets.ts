@@ -1,7 +1,7 @@
-import type { ListenPickRound } from '@hangul-route/content-schema';
+import { ListenPickRoundSchema, type ListenPickRound } from '@hangul-route/content-schema';
 import { CONTRAST_SETS, type ContrastKind, type ContrastMemberEntry, type ContrastSetEntry } from '../../content/__generated__/contrast-sets';
 import type { HostMode } from '../../screens/minigames/host';
-import { seededRandom } from '../listen-pick';
+import { isContrastRound, seededRandom } from '../listen-pick';
 import type { PlaySpec } from './controller';
 import { LISTEN_PICK_AUDIO_SOURCE } from './listen-pick-speech';
 
@@ -38,16 +38,6 @@ export const CONTRAST_STEP_ROUNDS = 6;
 /** A contrast step needs at least this many playable sets (section 3.5). */
 export const CONTRAST_MIN_SETS = 2;
 
-/** A listen-pick round that is a contrast round. */
-export function isContrastRound(round: Pick<ListenPickRound, 'contrastSet'>): boolean {
-  return round.contrastSet !== undefined;
-}
-
-/** Every round of a scope is a contrast round (a contrast step's scope; a content test keeps the two kinds apart). */
-export function isContrastScope(rounds: readonly Pick<ListenPickRound, 'contrastSet'>[]): boolean {
-  return rounds.length > 0 && rounds.every(isContrastRound);
-}
-
 /** A set by id, or `undefined`. */
 export function contrastSetById(id: string, sets: readonly ContrastSetEntry[] = CONTRAST_SETS): ContrastSetEntry | undefined {
   return sets.find((s) => s.id === id);
@@ -64,6 +54,25 @@ function memberOf(set: ContrastSetEntry, text: string): ContrastMemberEntry | un
 export function contrastClipRef(setId: string, text: string, sets: readonly ContrastSetEntry[] = CONTRAST_SETS): string | undefined {
   const set = contrastSetById(setId, sets);
   return set === undefined ? undefined : memberOf(set, text)?.ref;
+}
+
+/**
+ * The real round of a set (AMENDMENTS-MINIMAL-PAIRS section 3.5): its options are exactly the set's members (ids are their
+ * romanizations, ASCII) and `prompt` / `answerId` hold the set's first member, with its own clip, until the step draws the
+ * round's target. `lp.pair` in the start bundle is only a stub that names the set (the catalogue is this chunk's); the draw
+ * expands it here. Throws on an unknown set.
+ */
+export function pairRound(setId: string, sets: readonly ContrastSetEntry[] = CONTRAST_SETS): ListenPickRound {
+  const set = contrastSetById(setId, sets);
+  if (set === undefined) throw new Error(`Unknown contrast set ${setId}`);
+  const [first] = set.members;
+  return ListenPickRoundSchema.parse({
+    id: `lp:pair:${set.id}`,
+    contrastSet: set.id,
+    prompt: { ko: first!.text, romanization: first!.romanization, en: first!.en, audioRef: first!.ref },
+    options: set.members.map((m) => ({ id: m.romanization, text: { ko: m.text, romanization: m.romanization, en: m.en } })),
+    answerId: first!.romanization,
+  });
 }
 
 /**
@@ -144,7 +153,9 @@ export function drawContrastRounds(
   }
   // Targets: the member whose kind has come up least so far, ties by the seeded draw.
   const seen = new Map<ContrastKind, number>();
-  return chosen.map((round) => {
+  return chosen.map((stub) => {
+    // A scope's round may be the start bundle's stub (`lp.pair`): the set's own round has the options.
+    const round = pairRound(stub.contrastSet!, env.sets);
     const set = contrastSetById(round.contrastSet!, env.sets)!;
     const least = Math.min(...set.members.map((m) => seen.get(m.kind) ?? 0));
     const candidates = set.members.filter((m) => (seen.get(m.kind) ?? 0) === least);

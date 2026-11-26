@@ -1,7 +1,7 @@
 import { Body, GuardedPressable, Icon, KoreanText, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import type { CompareItem } from '../../logic/listen-pick-flow';
+import type { CompareItem } from '../../logic/listen-pick-contrast';
 
 /**
  * The compare row of a contrast round's miss (AMENDMENTS-MINIMAL-PAIRS section 3.7, design/wireframes/minigame/listen-pick.md

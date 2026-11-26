@@ -1,10 +1,10 @@
 import { ListenPickRoundSchema, PicWordRoundSchema } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import { AUDIO_ASSETS } from '../../content/__generated__/audio-assets';
-import { CONTRAST_SETS } from '../../content/__generated__/contrast-sets';
 import { findJamo, jamoAll } from '../../content/jamo';
 import { jamoVoice } from '../audio/jamo-voice';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
+import { validRounds } from '../listen-pick';
 import { lp, pw } from '../scope-builders';
 import * as config from '../minigame-config';
 
@@ -334,37 +334,16 @@ describe('pw (one Pic-Word Match board)', () => {
 });
 
 describe('lp.pair (a contrast round; AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a)', () => {
-  it('is a valid round named by its set, with the set\'s members as ASCII options and the first member as the placeholder target', () => {
+  it('is a stub that names its set and keeps the catalogue out of the start bundle: two placeholder options, no Hangul', () => {
     const r = lp.pair('ga-ka');
-    expect(ListenPickRoundSchema.safeParse(r).success).toBe(true);
-    expect(r.id).toBe('lp:pair:ga-ka');
-    expect(r.contrastSet).toBe('ga-ka');
-    expect(r.options).toEqual([
-      { id: 'ga', text: { ko: '가', romanization: 'ga', en: 'the syllable ga' } },
-      { id: 'ka', text: { ko: '카', romanization: 'ka', en: 'the syllable ka' } },
-    ]);
-    expect(r.answerId).toBe('ga');
-    expect(r.prompt).toEqual({ ko: '가', romanization: 'ga', en: 'the syllable ga', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r).toMatchObject({ id: 'lp:pair:ga-ka', contrastSet: 'ga-ka', answerId: 'a' });
+    expect(r.options.map((o) => o.id)).toEqual(['a', 'b']);
+    expect(JSON.stringify(r)).not.toMatch(/[가-힣]/);
   });
 
-  it('plays its first member by the catalogue clip and nothing else', () => {
-    expect(listenPickSpeech(lp.pair('go-ko'))).toMatchObject({ text: '고', kind: 'sound', clipOnly: true });
-  });
-
-  it('a three-way set has three options', () => {
-    expect(lp.pair('dal-tal-ttal').options.map((o) => o.id)).toEqual(['dal', 'tal', 'ttal']);
-  });
-
-  it('every shipped set builds, with ASCII option ids', () => {
-    for (const set of CONTRAST_SETS) {
-      const r = lp.pair(set.id);
-      expect(r.options).toHaveLength(set.members.length);
-      expect(r.options.every((o) => /^[a-z]+$/.test(o.id))).toBe(true);
-    }
-  });
-
-  it('throws on an unknown set', () => {
-    expect(() => lp.pair('nope')).toThrow(/Unknown contrast set nope/);
+  it('is a round `validRounds` keeps, and plays clip only', () => {
+    expect(validRounds({ listenPick: { rounds: [lp.pair('ga-ka')] } })).toHaveLength(1);
+    expect(listenPickSpeech(lp.pair('go-ko'))).toMatchObject({ clipOnly: true });
   });
 });
 

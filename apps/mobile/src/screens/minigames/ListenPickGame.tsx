@@ -38,23 +38,14 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '../../logic/answer-feedback';
-import {
-  contrastMemberSpec,
-  contrastRoundPlayable,
-  drawContrastRounds,
-  isContrastRound,
-  isContrastScope,
-  contrastNote,
-  type ContrastEnv,
-} from '../../logic/audio/contrast-sets';
+import type { ContrastEnv } from '../../logic/audio/contrast-sets';
+import type { ContrastMemberKind } from '../../logic/listen-pick-contrast';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
   LISTEN_PICK_TIMING,
   askedTextIsRomanizationOnly,
   checkHoldsRomanization,
-  compareItems,
-  contrastKindLine,
   headerView,
   listenPickSpeech,
   optionColumns,
@@ -64,13 +55,12 @@ import {
   startFlow,
   stepFlow,
   textPromptView,
-  type ContrastMemberKind,
   type FlowEffect,
   type FlowEvent,
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
-import { roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
+import { isContrastRound, isContrastScope, roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClipFor, playPrompt, stop } from '../../platform/audio';
@@ -78,7 +68,8 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { useAudioStore } from '../../store/audio-store';
 import { AnswerAnnouncer } from './answer-announcer';
-import { ContrastCompare } from './ContrastCompare';
+import { useContrastKit, type ContrastKit } from './contrast-entry';
+import { LessonWaiting } from '../lesson-content';
 import { GameColumns } from './GameColumns';
 import type { DictationKit } from './dictation-entry';
 import type { HostMode, MinigameHost } from './host';
@@ -160,12 +151,35 @@ const CHECK_ASK_SOURCE: Partial<Record<HostMode, string>> = { check: 'quest-chec
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
-/** What a contrast round's option is in its set (its kind and the set's consonant series), for the line under it. */
-function noteOf(round: ListenPickRound, option: ListenPickRound['options'][number]): ContrastMemberKind | undefined {
-  return option.text === undefined ? undefined : contrastNote(round, option.text.ko);
+/**
+ * Listen & Pick. A scope that holds a contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a) loads the contrast
+ * chunk first (`contrast-entry.ts`: the catalogue, the draw, the compare row), so the start bundle carries none of it; any
+ * other scope plays at once and never imports it. While the chunk loads the step shows the lesson's waiting state; a chunk
+ * that cannot load drops the contrast rounds silently, as any round whose clip cannot play is dropped (section 3.6), and a
+ * step with none left completes having scored nothing.
+ */
+export function ListenPickGame(props: Props): ReactElement {
+  const { scope, host } = props;
+  const needed = (scope.listenPick?.rounds ?? []).some(isContrastRound);
+  const kit = useContrastKit(needed);
+  const stripped = useMemo(
+    () => (needed && kit === 'failed' ? { ...scope, listenPick: { ...scope.listenPick, rounds: (scope.listenPick?.rounds ?? []).filter((r) => !isContrastRound(r)) } } : scope),
+    [needed, kit, scope],
+  );
+  const nothingLeft = needed && kit === 'failed' && (stripped.listenPick?.rounds.length ?? 0) === 0;
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  useEffect(() => {
+    if (nothingLeft) hostRef.current.complete();
+  }, [nothingLeft]);
+  if (needed && (kit === null || nothingLeft)) return <LessonWaiting />;
+  return <ListenPickBoard {...props} scope={stripped} contrast={kit === 'failed' ? null : kit} />;
 }
 
-export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null }: Props): ReactElement {
+function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null, contrast }: Props & { contrast: ContrastKit | null }): ReactElement {
+  /** What a contrast round's option is in its set (its kind and the set's consonant series), for the line under it. */
+  const noteOf = (round: ListenPickRound, option: ListenPickRound['options'][number]): ContrastMemberKind | undefined =>
+    option.text === undefined || contrast === null ? undefined : contrast.contrastNote(round, option.text.ko);
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const hostForContrast = useRef(host);
   hostForContrast.current = host;
@@ -185,13 +199,14 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   // of the playable sets, targets balanced, seeded); a round that cannot be played is not drawn, so it is never shown.
   const initialRounds = useMemo(() => {
     const valid = validRounds(scope);
-    const playing = valid.some(isContrastRound)
-      ? isContrastScope(valid)
-        ? drawContrastRounds(valid, contrastEnv(), seed)
-        : valid.filter((r) => contrastRoundPlayable(r, contrastEnv()))
-      : valid;
+    const playing =
+      contrast === null || !valid.some(isContrastRound)
+        ? valid
+        : isContrastScope(valid)
+          ? contrast.drawContrastRounds(valid, contrastEnv(), seed)
+          : valid.filter((r) => contrast.contrastRoundPlayable(r, contrastEnv()));
     return playing.map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i));
-  }, [scope, seed, spelling, contrastEnv]);
+  }, [scope, seed, spelling, contrastEnv, contrast]);
   // The contrast rounds dropped since the step opened (a clip that did not play, a pack switched off, Can't hear it?): the
   // count shrinks with them (section 3.6, 3.9). Never a round the learner has answered.
   const [dropped, setDropped] = useState<readonly string[]>([]);
@@ -350,7 +365,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         if (round?.contrastSet === undefined) return;
         const specs = [effect.rightId, effect.tappedId].flatMap((id) => {
           const text = round.options.find((o) => o.id === id)?.text;
-          const spec = text === undefined ? undefined : contrastMemberSpec(round.contrastSet!, text.ko);
+          const spec = text === undefined ? undefined : contrast?.contrastMemberSpec(round.contrastSet!, text.ko);
           return spec === undefined ? [] : [{ id, spec }];
         });
         const mine = (compareRun.current += 1);
@@ -455,7 +470,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
       if (isContrastRound(round)) {
         // Listen to both (section 3.7): the result is Hoya's line and the compare row's items, said once, in order, by their
         // romanization. A pair ends after its miss with Next as for a right answer; a triple stays open.
-        const lines = compareItems(round, after, latest.current.contrast, a11y, (o) => noteOf(round, o));
+        const lines = contrast?.compareItems(round, after, latest.current.contrast, a11y, (o) => noteOf(round, o)) ?? [];
         const result: AnswerResult = { kind: 'line', text: [latest.current.contrast.missHoya, ...lines.map((l) => l.label)].join(' ') };
         if (advanceNow?.type === 'schedule-advance') {
           if (say.readerOn) {
@@ -491,7 +506,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         // Just before the next round opens, look again: a clip that can no longer play (a pack switched off, sound turned
         // off) drops the contrast rounds after this one, so the count and the step follow what can be heard now.
         const env = contrastEnv();
-        const later = roundsRef.current.slice(before.roundIdx + 1).filter((r) => !contrastRoundPlayable(r, env)).map((r) => r.id);
+        const later = roundsRef.current.slice(before.roundIdx + 1).filter((r) => !(contrast?.contrastRoundPlayable(r, env) ?? false)).map((r) => r.id);
         event = { type: 'advance', total: later.length === 0 ? roundsRef.current.length : dropRounds(later) };
       }
       const out = stepFlow(before, event);
@@ -608,11 +623,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   // A contrast round keeps its Hoya line over the compare row when the round ends on a pair's miss too (it resolves then).
   const contrastRound = isContrastRound(round);
   const showMissHoya = host.mode !== 'review' && (state.status === 'asking' || (contrastRound && state.status === 'resolved')) && state.wrongIds.length > 0;
-  const compare = contrastRound ? compareItems(round, state, copy.contrast, m.a11y, (o) => noteOf(round, o)) : [];
+  const compare = contrastRound && contrast !== null ? contrast.compareItems(round, state, copy.contrast, m.a11y, (o) => noteOf(round, o)) : [];
   /** Plays one member of the round's set from its own clip (a compare item, an answered option), outlined while it sounds. */
   const playMember = (id: string): void => {
     const text = round.options.find((o) => o.id === id)?.text;
-    const spec = text === undefined || round.contrastSet === undefined ? undefined : contrastMemberSpec(round.contrastSet, text.ko);
+    const spec = text === undefined || round.contrastSet === undefined ? undefined : contrast?.contrastMemberSpec(round.contrastSet, text.ko);
     if (spec === undefined) return;
     compareRun.current += 1;
     setSounding(id);
@@ -799,7 +814,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                 // Once a contrast round is answered every member shows its meaning and its kind line, is named by both
                 // (`contrastItem`) and has a button that plays its own clip (section 3.7).
                 const note = contrastRound && resolved ? noteOf(round, option) : undefined;
-                const kindLine = note === undefined ? undefined : contrastKindLine(copy.contrast, note);
+                const kindLine = note === undefined || contrast === null ? undefined : contrast.contrastKindLine(copy.contrast, note);
                 const sound = note === undefined || option.text === undefined ? undefined : a11yRomanization(option.text.romanization, m.a11y.romanizationOr);
                 const named = kindLine === undefined || sound === undefined ? undefined : m.a11y.contrastItem(sound, kindLine);
                 return (
@@ -891,7 +906,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
             {compare.length === 0 ? null : (
               <>
                 <Spacer size="md" />
-                <ContrastCompare items={compare} soundingId={sounding} onPlay={playMember} />
+                {contrast === null ? null : <contrast.ContrastCompare items={compare} soundingId={sounding} onPlay={playMember} />}
               </>
             )}
           </View>

@@ -630,6 +630,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // `import()` of `src/screens/minigames/realia-read-entry.tsx`): the answer feedback of the choice games took the start
   // bundle over its line, and this game is only played from Stage 4 on.
   Object.freeze({ name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' }),
+  // [MP] AMENDMENTS-MINIMAL-PAIRS row MP-2a: the contrast round's catalogue (the generated `contrast-sets.ts`), its playable rules
+  // and draw, the lines of a miss and the compare row (`src/screens/minigames/contrast-chunk.tsx`, reached only through the
+  // literal `import()` of `src/screens/minigames/contrast-entry.ts` when a Listen & Pick scope holds a round with `contrastSet`):
+  // two optional steps play it, so the start bundle carries none of it; a chunk that cannot load drops the contrast rounds.
+  Object.freeze({ name: 'contrast-chunk', marker: 'screen-chunk:contrast' }),
 ]);
 
 /**

@@ -10,12 +10,12 @@ import {
   contrastSetById,
   contrastStepPlayable,
   drawContrastRounds,
-  isContrastRound,
-  isContrastScope,
+  pairRound,
   optionMember,
   playableContrastRounds,
   type ContrastEnv,
 } from '../contrast-sets';
+import { isContrastRound, isContrastScope } from '../../listen-pick';
 import { listenPickSpeech } from '../listen-pick-speech';
 
 /**
@@ -69,6 +69,45 @@ const envOf = (sets: readonly ContrastSetEntry[], over: Partial<ContrastEnv> = {
   const clips = allClips(sets);
   return { hasClip: (ref) => clips.has(ref), soundOn: true, alwaysShowLetters: false, host: 'quest', sets, ...over };
 };
+
+describe('pairRound (the real round of a set; AMENDMENTS-MINIMAL-PAIRS section 3.5)', () => {
+  it('is a valid round named by its set, with the set\'s members as ASCII options and the first member as the placeholder target', () => {
+    const r = pairRound('ga-ka', CONTRAST_SETS);
+    expect(r.id).toBe('lp:pair:ga-ka');
+    expect(r.contrastSet).toBe('ga-ka');
+    expect(r.options).toEqual([
+      { id: 'ga', text: { ko: '가', romanization: 'ga', en: 'the syllable ga' } },
+      { id: 'ka', text: { ko: '카', romanization: 'ka', en: 'the syllable ka' } },
+    ]);
+    expect(r.answerId).toBe('ga');
+    expect(r.prompt).toEqual({ ko: '가', romanization: 'ga', en: 'the syllable ga', audioRef: 'audio/jamo/giyeok.mp3' });
+  });
+
+  it('a three-way set has three options; every shipped set builds with ASCII option ids', () => {
+    expect(pairRound('dal-tal-ttal').options.map((o) => o.id)).toEqual(['dal', 'tal', 'ttal']);
+    for (const set of CONTRAST_SETS) {
+      const r = pairRound(set.id);
+      expect(r.options).toHaveLength(set.members.length);
+      expect(r.options.every((o) => /^[a-z]+$/.test(o.id))).toBe(true);
+    }
+  });
+
+  it('throws on an unknown set', () => {
+    expect(() => pairRound('nope')).toThrow(/Unknown contrast set nope/);
+  });
+
+  it('the draw swaps the start bundle\'s stub round (lp.pair) for the set\'s own round', () => {
+    const sets = [fixtureSet('s-ga', 'k', ['plain', 'aspirated']), fixtureSet('s-da', 't', ['plain', 'aspirated'])];
+    const stubs = sets.map((s) => ({ id: `lp:pair:${s.id}`, contrastSet: s.id, prompt: { ko: '', romanization: s.id, en: '' }, options: [], answerId: 'a' }) as ListenPickRound);
+    const drawn = drawContrastRounds(stubs, envOf(sets), 3);
+    expect(drawn).toHaveLength(2);
+    for (const r of drawn) {
+      const set = sets.find((s) => s.id === r.contrastSet)!;
+      expect(r.options.map((o) => o.text?.ko)).toEqual(set.members.map((m) => m.text));
+      expect(set.members.some((m) => m.text === r.prompt.ko && m.romanization === r.answerId)).toBe(true);
+    }
+  });
+});
 
 describe('the catalogue helpers', () => {
   it('a round is a contrast round by its set; a scope is one when every round is', () => {

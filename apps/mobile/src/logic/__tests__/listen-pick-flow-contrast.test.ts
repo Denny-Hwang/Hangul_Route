@@ -2,7 +2,8 @@ import type { ListenPickRound } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { describe, expect, it } from 'vitest';
-import { LISTEN_PICK_TIMING, compareItems, contrastKindLine, startFlow, stepFlow, type FlowEvent } from '../listen-pick-flow';
+import { compareItems, contrastKindLine } from '../listen-pick-contrast';
+import { LISTEN_PICK_TIMING, startFlow, stepFlow, type FlowEvent } from '../listen-pick-flow';
 
 /**
  * A contrast round in the Listen & Pick flow (AMENDMENTS-MINIMAL-PAIRS sections 3.6 to 3.8, row MP-2a): unscored, no
