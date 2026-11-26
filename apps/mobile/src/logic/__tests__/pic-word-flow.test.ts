@@ -394,6 +394,34 @@ describe('tile views', () => {
     expect(after.accessibilityLabel).toBe('Matched, number 1: 밥, bap, rice');
   });
 
+  describe('a Check holds each word\'s romanization until its pair is matched right (DC-1c)', () => {
+    const hold = { romanizationMode: 'always' as const, hold: true };
+
+    it('an open pair draws no line and keeps its room; the name keeps the romanization, the meaning waits as before', () => {
+      const tile = wordTileView(bap, fresh(), hold);
+      expect(tile).toMatchObject({ ko: '밥', romanization: '', heldRomanization: 'bap', accessibilityLabel: '밥, bap' });
+      expect(tile.gloss).toBeUndefined();
+    });
+
+    it('a selected word and a missed word are held too; only a right match shows the line', () => {
+      const selected = run(fresh(), [word('bap')]).state;
+      expect(wordTileView(bap, selected, hold)).toMatchObject({ selected: true, romanization: '', heldRomanization: 'bap' });
+      const missed = run(fresh(), [pic('bap'), word('san')]).state;
+      expect(wordTileView(san, missed, hold)).toMatchObject({ cardState: 'wrong', romanization: '', heldRomanization: 'san' });
+      const matched = run(fresh(), [pic('bap'), word('bap')]).state;
+      expect(wordTileView(bap, matched, hold)).toMatchObject({ cardState: 'correct', romanization: 'bap', heldRomanization: '', gloss: 'rice' });
+      // Each pair on its own: the other words are still held.
+      expect(wordTileView(hanbok, matched, hold)).toMatchObject({ romanization: '', heldRomanization: 'hanbok' });
+    });
+
+    it('tap mode: a touched word has a line to wait for, an untouched one has none; practice never holds', () => {
+      const tapHold = { romanizationMode: 'tap' as const, hold: true };
+      expect(wordTileView(bap, fresh(), tapHold)).toMatchObject({ romanization: '', heldRomanization: '' });
+      expect(wordTileView(bap, run(fresh(), [word('bap')]).state, tapHold)).toMatchObject({ romanization: '', heldRomanization: 'bap' });
+      expect(wordTileView(bap, fresh(), { romanizationMode: 'always', hold: false })).toMatchObject({ romanization: 'bap', heldRomanization: '' });
+    });
+  });
+
   it('gives both tiles of a pair the same badge', () => {
     const state = run(fresh(), matchAll(['san', 'bap'])).state;
     expect(pictureTileView(bap, state).badge).toBe(2);

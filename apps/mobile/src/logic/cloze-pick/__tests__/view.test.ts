@@ -18,6 +18,7 @@ describe('the Cloze Pick prompt card', () => {
       gapText: null,
       found: false,
       romanization: 'chaegeul ___.',
+      heldRomanization: '',
       meaning: 'I read a book.',
       label: 'Sentence: chaegeul blank. I read a book.',
       instruction: 'word',
@@ -32,6 +33,25 @@ describe('the Cloze Pick prompt card', () => {
     expect(clozeView(particle, found, ctx)).toMatchObject({ before: '물', after: ' 마셔요.', gapText: '을', romanization: 'mureul masyeoyo.' });
     expect(clozeView(value, startCloze(1), ctx)).toMatchObject({ meaning: 'It is ___ won.', label: 'Sentence: blank wonieyo. It is blank won.', instruction: 'value' });
     expect(clozeView(value, found, ctx)).toMatchObject({ meaning: 'It is three thousand won.', gapText: '삼천' });
+  });
+
+  it('a Check holds the sentence romanization while the question is open, a miss included, and shows it once found (DC-1c)', () => {
+    const held = { ...ctx, hold: true };
+    const open = clozeView(word, startCloze(1), held);
+    expect(open.romanization).toBe('');
+    expect(open.heldRomanization).toBe('chaegeul ___.');
+    // The meaning is the stimulus and stays; the screen-reader name keeps the romanization.
+    expect(open.meaning).toBe('I read a book.');
+    expect(open.label).toBe('Sentence: chaegeul blank. I read a book.');
+    const missed = stepCloze(startCloze(1), tap('wrong-id', 1)).state;
+    expect(clozeView(word, missed, held)).toMatchObject({ romanization: '', heldRomanization: 'chaegeul ___.' });
+    const found = stepCloze(startCloze(1), tap('right', 1)).state;
+    expect(clozeView(word, found, held)).toMatchObject({ romanization: 'chaegeul ilgeoyo.', heldRomanization: '' });
+  });
+
+  it('the hold wins over a mode that shows, and reserves nothing in a mode that never shows it (tap)', () => {
+    expect(clozeView(word, startCloze(1), { ...ctx, hold: true, romanizationMode: 'tap' }).heldRomanization).toBe('');
+    expect(clozeView(word, startCloze(1), { ...ctx, hold: false })).toMatchObject({ romanization: 'chaegeul ___.', heldRomanization: '' });
   });
 
   it('romanization in tap mode waits for the answer', () => {

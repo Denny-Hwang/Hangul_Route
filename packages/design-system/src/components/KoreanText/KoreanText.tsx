@@ -22,6 +22,15 @@ const RESERVED = {
   testID: 'korean-text-romanization-reserved',
 } as const;
 
+/** The gloss line held while a Check's question is open (DC-1c): the same line, invisible and unannounced. */
+const RESERVED_GLOSS = {
+  'aria-hidden': true,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no',
+  selectable: false,
+  testID: 'korean-text-gloss-reserved',
+} as const;
+
 /**
  * KoreanText — the one renderer for taught Korean (F-I18N-001 §3.5).
  * A target chip (Hangul on a sky-blue tint with a border), the romanization
@@ -37,6 +46,7 @@ export function KoreanText({
   size = 'md',
   romanizationShown = true,
   romanizationReserved = false,
+  glossReserved = false,
   onPress,
   accessibilityLabel,
   testID,
@@ -50,6 +60,7 @@ export function KoreanText({
     size,
     romanizationShown,
     romanizationReserved,
+    glossReserved,
     pressable: onPress !== undefined,
     accessibilityLabel,
   });
@@ -112,13 +123,15 @@ export function KoreanText({
           {speaker}
         </View>
       ) : null}
-      {view.showGloss ? (
+      {view.showGloss || view.reserveGloss ? (
         <Text {...KOREAN_LINE_BREAK}
+          {...(view.reserveGloss ? RESERVED_GLOSS : null)}
           style={{
             marginTop: spacing.xxs,
             fontSize: view.glossSize,
             color: colors.text.secondary,
             textAlign: 'center',
+            opacity: view.reserveGloss ? 0 : 1,
           }}
         >
           {gloss}

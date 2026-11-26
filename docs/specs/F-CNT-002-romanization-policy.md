@@ -10,7 +10,7 @@ Status: ready
 
 Parent / siblings: F-CNT-001 (language policy validator; its §4 lists "romanization spelling accuracy" as this spec) · F-I18N-001 (locale overlays: romanization stays one RR string for every UI locale) · F-AUDIO-004 (what the voice says must match what the screen shows) · F-STORY-003 (adds `storySteps[].romanization`; this spec supplies the values and the rule) · F-LEARN-001 §3.6/L12 (avatar name `례이`) · D4 (JSON-first content, validator scans what ships) · D13 (this policy)
 
-> **Amended 2026-11-25 by `AMENDMENTS-ROMANIZER-GAPS.md` [RG]** (work order WO-17 of the 2026-11 review: the romanization lint stops freezing the converter's wrong answers): §3.2's converter learns three rule-determined patterns (ㄺ before ㄱ in a verb or adjective stem, `읽고 ilgo`; `밟-` and `넓죽-`/`넓둥-`, `밟다 bapda`; a stop before the suffix 히/혀, `좁히다 jopida`, `잡혀 japyeo`). The patterns that need a morpheme boundary or the part of speech (ㄴ-insertion, 사이시옷 before 이, the juncture before a content morpheme, a stop before a 하다 form) are detected by a new rule R9 `romanization-gap`, which fails until an entry in `ROMANIZATION_EXCEPTIONS` (now also per word, with a required `gap` and an article-citing `reason`) covers the word, even when the stored value equals the converter's. §3.3's R1 compares with one reviewed romanization (`romanizeReviewed`: the converter plus the reviewed entries, which now also exclude the converter's value), which the app's composed lines and the week-drop build use too, and R8 checks the new fields. Until row RG-3 rewrites §3.2 and §3.3, the amendment is authoritative where they differ.
+> **Amended 2026-11-25 by `AMENDMENTS-ROMANIZER-GAPS.md` [RG]** (work order WO-17 of the 2026-11 review: the romanization lint stops freezing the converter's wrong answers): §3.2's converter learns three rule-determined patterns (ㄺ before ㄱ in a verb or adjective stem, `읽고 ilgo`; `밟-` and `넓죽-`/`넓둥-`, `밟다 bapda`; a stop before the suffix 히/혀, `좁히다 jopida`, `잡혀 japyeo`). The patterns that need a morpheme boundary or the part of speech (ㄴ-insertion, 사이시옷 before 이, the juncture before a content morpheme, a stop before a 하다 form) are detected by a new rule R9 `romanization-gap`, which fails until an entry in `ROMANIZATION_EXCEPTIONS` (now also per word, with a required `gap` and an article-citing `reason`) covers the word, even when the stored value equals the converter's. §3.3's R1 compares with one reviewed romanization (`romanizeReviewed`: the converter plus the reviewed entries, which now also exclude the converter's value), which the app's composed lines and the week-drop build use too, and R8 checks the new fields. Row RG-3 (2026-11-26) rewrote §3.2, §3.3 and §5 to read as built (the amendment's §3 keeps the reasoning, the vectors and the rule texts); the amendment is authoritative if they ever differ.
 
 ---
 
@@ -43,7 +43,7 @@ Made in this spec:
 | C4 | A romanization has the same number of space-separated words as the Korean (`손 씻기` → `son ssitgi`). Compound spacing follows standard Korean spacing: `가족 식탁` (two words), not `가족식탁`. | Lets the checker compare word by word; matches the dictionary (audit F13). |
 | C5 | Titles and English glosses keep the established English name (`Yut Game`, `K-pop`, `Hangul Day`). Only the `romanization` field, and bare romanized Korean words inside English prose, follow RR. A card may say once, in prose, "also written yutnori". | `K-pop` is an English word; the card exists to show how the Korean is *said* (`keipap`). |
 | C6 | Isolated jamo are not romanized as words. Their `romanization` is a **sound value** from a fixed table (§3.5), checked by lookup, not by the converter. | `g/k`, `d/t` are teaching notation, not RR words. |
-| C7 | Words the rule-based converter cannot know (see §3.2 "Known limits") go in an explicit **exceptions** list where every entry carries a reason; an exception with no reason or no matching occurrence fails the build. | Keeps the list short, reviewed and self-cleaning. |
+| C7 | Words the rule-based converter cannot know (see §3.2 "Known limits") go in an explicit **exceptions** list, `ROMANIZATION_EXCEPTIONS`, where every entry carries a `gap`, a reason that cites its article or its 표준국어대사전 entry, and (for one word) exactly one reviewed value. The four limits that depend on a morpheme boundary or the part of speech are **detected** (R9), and the build fails until an entry covers the word, **even when the stored value equals the converter's**; an entry excludes the converter's value unless it lists it, so an author cannot copy the converter for a reviewed word. An entry with no reason, no article (for a detector gap) or no matching occurrence fails the build (R8). [RG] | Keeps the list short, reviewed and self-cleaning, and stops the lint from freezing the converter's wrong answers. |
 | C8 | Capitalisation is free (`Seoul`, `seoul`); apostrophes are not used. Comparison ignores case. | RR does not mandate case; proper-noun capitals are a style choice. |
 | C9 | The avatar name `례이` is respelled `예리` in the catalogue and romanized `Yeri` (**owner confirmed 2026-10-10**). Fallback: keep `례이` and romanize `Ryei`. | The owner's own romanization was `Yeri`; no Hangul spelling of `례이` reads `Yeri` (audit F11). The name is not shown in the UI today (`avatar-catalog.ts:7-8`). |
 
@@ -64,7 +64,7 @@ Update `.claude/skills/content-skill/SKILL.md` §3.3 (it says "Revised Romanizat
 
 ### 3.2 The converter — TypeScript port of the audit's `rr.py`
 
-Files, all new, exported from `packages/content-schema/src/index.ts`:
+Files, all new (`gaps.ts` and `reviewed.ts` by AMENDMENTS-ROMANIZER-GAPS), exported from `packages/content-schema/src/index.ts`:
 
 ```
 packages/content-schema/src/romanization/
@@ -73,20 +73,30 @@ packages/content-schema/src/romanization/
   compare.ts     // normalizeRomanization, checkRomanization, RomanizationIssue
   extract.ts     // extractKoreanPairs(source, file): inline-literal scanner (§3.4 source class C)
   exceptions.ts  // ROMANIZATION_EXCEPTIONS, JAMO_SOUND_VALUES, JAMO_NAME_VALUES
+  gaps.ts        // detectGaps(token): the four undecidable patterns and their lists (RG-2b)
+  reviewed.ts    // romanizeReviewed(text): the converter plus the reviewed entries (RG-2a)
   a11y.ts        // a11yRomanization('silent/ng') -> 'silent or ng' for screen-reader labels
 ```
 
 Public API:
 
 ```ts
+/** `predicateH` reads a word with a 하다 form as a predicate: every simple stop before ㅎ aspirates (못해요 motaeyo). Default: off. */
+export interface RomanizeOptions { predicateH?: boolean }
 /** One romanized piece per syllable block, pronunciation-based. null if the word has any non-syllable character. */
-export function romanizeSyllables(word: string): string[] | null;
+export function romanizeSyllables(word: string, options?: RomanizeOptions): string[] | null;
 /** romanizeSyllables(word)?.join(''), or null. */
-export function romanizeWord(word: string): string | null;
+export function romanizeWord(word: string, options?: RomanizeOptions): string | null;
 /** Words split on whitespace; ASCII hyphens, . , ! ? ~ · … " ' stripped; unknown tokens returned as-is in `unknown`. */
-export function romanize(text: string): { text: string; unknown: string[] };
+export function romanize(text: string, options?: RomanizeOptions): { text: string; unknown: string[] };
+/** The tokens `romanize` reads (same split and stripping, empty ones dropped). */
+export function koTokens(text: string): string[];
 /** 'han-geul-lal' for teaching UI; null when not all syllable blocks. */
 export function syllableSplit(word: string): string | null;
+/** `romanize` with the reviewed entries applied (whole-string and word entries); `ROMANIZATION_EXCEPTIONS` by default. Same shape as `romanize`. */
+export function romanizeReviewed(text: string, exceptions?: readonly RomanizationException[]): { text: string; unknown: string[] };
+/** Which converter gaps (§3.2 "Known limits") a one-word token falls into; empty for none. */
+export function detectGaps(token: string): RomanizationGap[];
 ```
 
 Algorithm (a faithful port of `scratchpad/rr/rr.py`, reviewed rule by rule):
@@ -96,15 +106,27 @@ Algorithm (a faithful port of `scratchpad/rr/rr.py`, reviewed rule by rule):
    a. `ㅎ` finals (ㅎ, ㄶ, ㅀ): before ㄱ ㄷ ㅈ ㅂ the next initial is aspirated (ㅋ ㅌ ㅊ ㅍ) and the ㅎ drops; before ㅇ the ㅎ drops and liaison of any remaining final applies; before ㄴ a bare ㅎ final is pronounced ㄴ (`넣는` `neonneun`).
    b. A final followed by initial ㅎ aspirates (ㄱ→ㅋ, ㄷ/ㅅ/ㅆ/ㅈ/ㅊ/ㅌ→ㅌ, ㅂ→ㅍ; ㅈ+ㅎ→ㅊ).
    c. **Liaison**: a final before initial ㅇ moves onto the next syllable (compound finals move only their second part); ㄷ/ㅌ + `이` palatalise to ㅈ/ㅊ.
-3. **Neutralise** remaining finals to `k t p l m n ng`.
+   d. **F3, a simple stop before the suffix 히 / 혀 / 혔 / 힌 / 힐** (`SUFFIX_HI`; checked before the noun convention below): the ㅎ merges with the stop and the final drops: ㄱ ㄲ ㅋ → ㅋ, ㅂ ㅍ → ㅍ, ㄷ → ㅊ (SP 제17항 붙임), ㅅ ㅆ ㅌ → ㅌ, ㅈ ㅊ → ㅊ (좁히다 `jopida`, 잡혀 `japyeo`, 굳히다 `guchida`, 맞히다 `machida`, 특히 `teuki`). The vowel is written as spelled (묻혀 `muchyeo`, like 가져 `gajyeo`): a house convention, not the pronunciation (SP 제5항 다만 1 says [무처]). Every other ㅎ block after a simple stop keeps its `h` (the noun convention: 집현전 `jiphyeonjeon`, 입학 `iphak`, 북한산 `bukhansan`).
+3. **Neutralise** remaining finals to `k t p l m n ng`, with two exceptions that are decided by the letters (AMENDMENTS-ROMANIZER-GAPS):
+   - **F1, ㄺ before ㄱ**: a block with final ㄺ before a block with initial ㄱ is heard [ㄹ] (coda `l`, the next initial stays `g`): 읽고 `ilgo`, 맑게 `malge`, 밝고 `balgo`, 읽기 `ilgi`. The ㄺ noun syllables `닭 탉 흙 칡 삵 슭` (`RIEUL_GIYEOK_NOUNS`) keep [ㄱ]: 닭고기 `dakgogi`, 흙과 `heukgwa`. Before any other consonant ㄺ stays `k` (읽다 `ikda`), before ㅇ liaison applies (읽어요 `ilgeoyo`).
+   - **F2, 밟- and 넓죽- / 넓둥- / 넓적-**: the block 밟 before a consonant other than ㅎ, and the block 넓 directly before 죽, 둥 or 적, are heard [ㅂ] (coda `p`, then the usual nasalisation): 밟다 `bapda`, 밟는 `bamneun`, 넓적다리 `neopjeokdari`. Unchanged: 밟아 `balba`, 넓다 `neolda`, 여덟 `yeodeol`.
 4. **Assimilate** across the boundary: ㄹ after ㅁ/ㅇ/ㄱ/ㅂ/ㄷ-group becomes ㄴ; ㄱ/ㄷ/ㅂ-group before ㄴ/ㅁ become `ng`/`n`/`m`; ㄴ before ㄹ and ㄹ before ㄴ both become `ll`.
 5. **Emit** `initial + medial + final` per block; an initial ㄹ is `l` when the previous final is `l`, else `r`; an initial ㅇ is empty.
 
 The port must **not** add tensification, ㄴ-insertion or any dictionary logic.
 
-**Known limits** (documented, and covered by exception entries when content hits them): ㄴ-insertion in compounds (`꽃잎` RR `kkonnip`, converter `kkochip`; `한여름` RR `hannyeoreum`, converter `hanyeoreum`; `색연필`, `담요`), the special final of `밟-` (`밟다` [밥따] `bapda`, converter `balda`), word-internal compound boundaries, Sino-Korean exceptions, `의` as a particle (RR still writes `ui`; fine). Cross-word sandhi is deliberately not applied (RR does not mark it). The converter is a **review aid with an escape hatch**, not an oracle.
+**Known limits.** Four patterns depend on a morpheme boundary or on the part of speech, which a string of syllable blocks does not show, so the converter does not decide them. Each is **detected** by `detectGaps(token)` (`gaps.ts`; head, word, prefix and tail lists, each citing its article), and rule R9 (§3.3) fails until a `ROMANIZATION_EXCEPTIONS` entry covers the word, even when the stored value equals the converter's:
 
-**Golden vectors** (converter output from the audit's `rr.py`, re-run on 2026-10-10; every one is also correct RR by hand except the two marked *limit*). The TS port must reproduce each exactly:
+| `gap` | Pattern | Example (RR, converter) |
+|---|---|---|
+| `n-insertion` | ㄴ / ㄹ is added in a compound before 이 야 여 요 유 (SP 제29항) | `꽃잎` `kkonnip`, `kkochip`; `한여름` `hannyeoreum`, `hanyeoreum`; `색연필` `saengnyeonpil`, `saegyeonpil`; `서울역` `seoullyeok`, `seouryeok`; `담요` |
+| `saisiot` | 사이시옷 before 이 is heard [ㄴㄴ] (SP 제30항 3) | `깻잎` `kkaennip`, `kkaesip` |
+| `juncture` | a final is carried whole into the next content morpheme (SP 제15항) | `맛없어요` `madeopseoyo`, `maseopseoyo`; `첫인상` |
+| `predicate-h` | a stop before a 하다 form: a predicate aspirates (RR 제3장 제1항 4), a noun keeps its ㅎ (다만) | `못해요` `motaeyo`, `mothaeyo`; but the noun `북한산` `bukhansan` is right as converted |
+
+A detector hit on a word the converter already gets right (북한산, a Sino-Korean 번역) is cleared by an entry that **confirms** the converter's value. `romanize(text, { predicateH: true })` reads a word with a 하다 form as a predicate, which is how R8 checks a `predicate-h` entry (§3.3). Not detected, and not decided by the converter: the `다만` reduplications (이죽이죽), a compound whose second part is on no list (a content PR that adds such a word adds it to `gaps.ts` in the same PR), word-internal compound boundaries in general, `의` as a particle (RR still writes `ui`; fine). One ㄺ case is outside the fixes: a noun that keeps its ㅎ after ㄺ (닭한마리 gives `dalkan`, should be `dakhan`) ships nowhere and is an open follow-up. Cross-word sandhi is deliberately not applied (RR does not mark it). The converter is a **review aid with an escape hatch**, not an oracle.
+
+**Golden vectors** (converter output from the audit's `rr.py`, re-run on 2026-10-10; every one is also correct RR by hand except the one marked *limit*; 밟다 `bapda` was a second limit until AMENDMENTS-ROMANIZER-GAPS RG-1, F2). The TS port must reproduce each exactly:
 
 | Korean | RR | Korean | RR |
 |---|---|---|---|
@@ -132,28 +154,32 @@ The port must **not** add tensification, ㄴ-insertion or any dictionary logic.
 | 거의 다 했어 | geoui da haesseo | 아깝다 | akkapda |
 | 례이 | ryei | 예리 | yeri |
 | 기역 … 히읗 | giyeok … hieut (all 14, §3.1 item 7) | 꽃잎 | kkochip (*limit*; RR `kkonnip`) |
-| 밟다 | balda (*limit*; RR `bapda`) | | |
+| 밟다 | bapda (RG-1 F2) | 읽고 | ilgo (RG-1 F1) |
+| 좁히다 | jopida (RG-1 F3) | 잡혀 | japyeo (RG-1 F3) |
 
 `romanizeSyllables('윷놀이')` is `['yun','no','ri']`, `syllableSplit('한글날')` is `'han-geul-lal'`, `syllableSplit('음악')` is `'eu-mak'`.
 
 ### 3.3 The checker and its rules
 
-`checkRomanization(ko: string, given: string, ctx?: { exceptions?: readonly RomanizationException[] }): RomanizationIssue[]`. Normalisation `normalizeRomanization(s)`: NFC, lower case, remove `'` and `’`, strip `. , ! ? ~ · …` and quotes, collapse whitespace, trim. Hyphens are kept until R2 has looked at them, then removed for the comparison, so `gang-a-ji` gives exactly one finding (R2), not two.
+`checkRomanization(ko: string, given: string, ctx?: { exceptions?: readonly RomanizationException[] }): RomanizationIssue[]`. With no `ctx` the list is `ROMANIZATION_EXCEPTIONS`; `{ exceptions: [] }` means none. Normalisation `normalizeRomanization(s)`: NFC, lower case, remove `'` and `’`, strip `. , ! ? ~ · …` and quotes, collapse whitespace, trim. Hyphens are kept until R2 has looked at them, then removed for the comparison, so `gang-a-ji` gives exactly one finding (R2), not two.
 
 | Rule id | Severity | Fires when | Example message |
 |---|---|---|---|
-| `romanization-mismatch` (R1) | error | the hyphen-less normalised `given` differs from `romanize(ko).text` and no exception allows it | `윷놀이: given "yutnori", Revised Romanization is "yunnori"` |
+| `romanization-mismatch` (R1) | error | the hyphen-less normalised `given` differs from the **reviewed** value, `romanizeReviewed(ko).text` (the converter plus the reviewed entries, §3.2), and no whole-string entry for `ko` lists it. An entry excludes the converter's value unless it lists it: once `따뜻해요` has the entry `ttatteutaeyo`, a stored `ttatteuthaeyo` fails | `윷놀이: given "yutnori", Revised Romanization is "yunnori"`; when a detector names a gap in `ko`, the message ends ` (converter gap: n-insertion, AMENDMENTS-ROMANIZER-GAPS)` |
 | `romanization-hyphen` (R2) | error | `given` contains `-` (not allowed in stored romanization, C3) | `gang-a-ji: remove hyphens → "gangaji"` |
 | `romanization-spacing` (R3) | error | the number of space-separated words differs from the Korean | `가족식탁 / gajok siktak: 1 Korean word, 2 romanized` |
 | `romanization-missing` (R4) | error | a registered Korean field has no sibling romanization (§3.4 table) or it is empty | `labelKo "손 씻기" has no romanization` |
 | `romanization-inconsistent` (R5) | error | the same Korean string appears in two sources with different normalised romanizations | `호랑이: "horangi" (heritage-cards.ts:94) vs "ho-rang-i" (cards.json:175)` |
 | `romanization-prose` (R6) | error | an English prose field contains the syllable-hyphenated form of a registered word, or `romanized (한글)` / `한글 (romanized)` where the pair fails R1/R2 | `"gang-a-ji" in cards.json:9 (use "gangaji")` |
 | `jamo-value-unknown` (R7) | error | a jamo `romanization` is not in `JAMO_SOUND_VALUES` for its character, or a jamo name suffix is not in `JAMO_NAME_VALUES` | `ㅇ: "∅/ng" is not a listed value` |
-| `romanization-exception-stale` (R8) | error | an exception has no `reason`, or matches nothing in any scanned source | `exception 꽃잎 matched no source` |
+| `romanization-exception-stale` (R8) | error | an exception has no `reason`; or matches nothing in any scanned source (a whole-string entry: a substring of a source; a word entry: a **whole token** of a Korean string a data suite actually checks, so a source quote cannot keep it alive); or a detector-gap entry cites no article (`/제\s*\d+\s*항\|표준국어대사전/`); or a word entry holds more or fewer than one `allowed`; or a `predicate-h` entry's value is neither `romanize(ko, { predicateH: true })` nor, with a reason that says it is a noun (`/체언\|noun/`), `romanize(ko)` | `exception 꽃잎 matched no source` |
+| `romanization-gap` (R9) | error | for a token of `ko` (split and stripped as `romanize` does), `detectGaps(token)` is not empty and no entry covers it (a word entry whose `ko` is the token, or a whole-string entry for the trimmed string). It fires even when `given` equals the converter's output; when R1 already fires for the string R9 is not added (R1's message carries the gap). `checkProse` keeps filtering to R1 and R2, so prose never reports R9; `checkFrameRomanization` runs it on each piece between slots | `깻잎: saisiot (표준 발음법 제30항 3); the converter cannot tell. Check 표준국어대사전 and add { ko: '깻잎', allowed: ['…'], gap: 'saisiot', reason: '…' } to ROMANIZATION_EXCEPTIONS` |
 
 R6 has a bounded purpose: it catches the prose spellings of words that are in the registry. It does not guess at arbitrary hyphenated English (`left-to-right`, `half-moon` are fine). Words not in the registry (`jong-i-hak` at `heritage-cards.ts:34`) are fixed in review and by the content list in §3.7.
 
-`ROMANIZATION_EXCEPTIONS: readonly { ko: string; allowed: readonly string[]; reason: string }[]` ships **empty**: today's 12 mismatches are real errors, and no current entry hits a known limit. Each entry added later needs a reason that names the limit (ㄴ-insertion, `밟-`, a proper-noun convention).
+`ROMANIZATION_EXCEPTIONS: readonly RomanizationException[]` (`exceptions.ts`), with `RomanizationException = { ko: string; allowed: readonly string[]; reason: string; gap: 'n-insertion' | 'saisiot' | 'juncture' | 'predicate-h' | 'proper-noun' | 'other' }` (`gap` is required). An entry is either a **whole string** (a sentence, as before; it applies to that string only, compared without its edge marks and spaces, `송편은 솔잎을 깔고 쪄요.` and `송편은 솔잎을 깔고 쪄요` are one entry) or a **word** (a `ko` with no whitespace; it applies wherever that token stands alone in a text, and holds exactly one `allowed`, the reviewed value). It shipped empty in PR 1; since AMENDMENTS-ROMANIZER-GAPS RG-2b it holds the eight entries that came before RG-2b (the word entries 솔잎 and 기록했어요, six sentence entries from the story drafts) and the five it added: the confirmations 북한산 and 북한산에 (nouns that keep their ㅎ) and the predicates 따뜻해요, 딱딱해요 and 축하해요 (`ttatteutaeyo`, `ttakttakaeyo`, `chukahaeyo`). Because a word entry also applies per token, any text that holds the token composes the reviewed value, prose included: over `content/**/*.json` (50,785 distinct Hangul strings and tokens) 20 outputs differ from the converter's, the eight strings of the entries that existed then and a few strings that hold `기록했어요`; the prose ones carry no romanization and no suite checks them. A new entry is the line R9 prints, after the word has been looked up in 표준국어대사전; its `reason` names the article (표준 발음법 제N항, 로마자 표기법 제3장 제1항) or the dictionary pronunciation. Every stop + 하다 **predicate** needs its own word entry (one per inflected form: 생각해요, 생각했어요); a Sino-Korean word after a listed head that the converter already gets right (번역) needs a confirming entry. A loanword compound with a 히 block (빅히트) needs a `proper-noun` entry: F3 would aspirate it.
+
+**`romanizeReviewed(text, exceptions = ROMANIZATION_EXCEPTIONS)`** (`reviewed.ts`) is the one value for everything that composes or demands a romanization a learner sees: a whole-string entry gives its first `allowed` (normalised like `romanize()`: lower case, no `. , ! ?`, single spaces); otherwise each token that is a word entry gives that entry's value and every other token is read by the converter; with no matching entry it equals `romanize(text)`. R1, the week-drop build (`scripts/build-week-drops.mjs`, which throws unless a ready drop's stored romanization equals it), the lesson chooser's search terms, the stable-id slug of a new review item and the app's composed lines (Write Frame sentence and name gloss, lecture example line, `{ko:}` tokens, story-order slot face, Voice Echo fallback, the typed-text labels of Write Frame and Type Hangul) use it, so a stored value and the line the app composes for the same word agree. Code that needs a deterministic reading of the letters stays on `romanize` (`pronunciationKey`, `spelledReading`, jamo voice, single-block helpers); `hasSoundChange` (`lesson-lint-items.ts`) is also true for a word with a detected gap or a reviewed value that differs from the converter's, so such a word is not a Dictation target until recordings exist.
 
 `JAMO_SOUND_VALUES` (what `JamoSchema.romanization` may hold; C6): ㄱ `g/k`, ㄴ `n`, ㄷ `d/t`, ㄹ `r/l`, ㅁ `m`, ㅂ `b/p`, ㅅ `s`, ㅇ `silent/ng`, ㅈ `j`, ㅊ `ch`, ㅋ `k`, ㅌ `t`, ㅍ `p`, ㅎ `h`, ㅏ `a`, ㅑ `ya`, ㅓ `eo`, ㅕ `yeo`, ㅗ `o`, ㅛ `yo`, ㅜ `u`, ㅠ `yu`, ㅡ `eu`, ㅣ `i`, and the six batchim `k n l m p ng`. (`∅/ng` at `apps/mobile/src/content/jamo.ts:71` is replaced by `silent/ng`; `JamoSchema.romanization` is `.max(8)` at `schemas/jamo.ts:13`, so it is raised to `.max(12)`; screen-reader labels turn `/` into "or" through `a11yRomanization()` (`romanization/a11y.ts`, unit-tested in `romanization-compare.test.ts`; callers pass its result as the `accessibilityLabel` of `KoreanText`, F-I18N-001 §3.5) so VoiceOver does not say "empty set slash n g".) The dual values `g/k` stay as taught; showing or dropping final values for ㅅ ㅈ ㅊ ㅌ ㅎ is a pedagogy decision for F-AUDIO-004/F-QUEST-002, not this spec (audit F15).
 
@@ -251,7 +277,9 @@ Per C9, `AVATAR_PRESETS[2]` becomes `{ kind: 'hoya-green', pillarName: '예리',
 - **Given** a `labelKo` in `minigame-config.ts` with no sibling `romanization`, **then** `romanization-missing` fails.
 - **Given** `호랑이` as `horangi` in `heritage-cards.ts` and as `ho-rang-i` in `cards.json`, **then** `romanization-inconsistent` fails once, citing both files.
 - **Given** the jamo ㅇ with romanization `∅/ng`, **then** `jamo-value-unknown` fails; with `silent/ng` it passes and `a11yRomanization('silent/ng')` is `silent or ng`.
-- **Given** `꽃잎` stored as `kkonnip` (true RR) and no exception, **then** `romanization-mismatch` fails (the converter's known limit); **given** an exception `{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' }`, **then** it passes; **given** that exception while no source contains `꽃잎`, **then** `romanization-exception-stale` fails.
+- **Given** `꽃잎` stored as `kkonnip` (true RR) and no exception, **then** `romanization-mismatch` fails, with the gap named in its message (the converter's known limit); **given** an exception `{ ko: '꽃잎', allowed: ['kkonnip'], gap: 'n-insertion', reason: '표준 발음법 제29항 …' }`, **then** it passes; **given** that exception while no source contains `꽃잎` as a checked token, **then** `romanization-exception-stale` fails.
+- **Given** `깻잎` stored as `kkaesip` (the converter's value) and no exception, **then** `romanization-gap` fails (R9), not R1; **given** the entry `{ ko: '깻잎', allowed: ['kkaennip'], gap: 'saisiot', … }`, **then** `kkaennip` passes and `kkaesip` fails R1.
+- **Given** `따뜻해요` stored as `ttatteuthaeyo` with the entry `ttatteutaeyo`, **then** `romanization-mismatch` fails: an entry excludes the converter's value unless it lists it.
 - **Given** a new file under `apps/*/src` that contains a Hangul syllable and is neither registered in §3.4 nor in `ROMANIZATION_SCAN_IGNORE`, **then** `romanization-coverage.test.ts` fails and names the file.
 - **Given** `TapRespondGame` renders an option whose data has a romanization, **then** the label shows Korean, romanization and gloss.
 
@@ -271,8 +299,10 @@ Coverage: `packages/content-schema` 100 % lines and branches for `romanization/*
 
 | File | Level | Coverage |
 |---|---|---|
-| `packages/content-schema/src/__tests__/romanization-rr.test.ts` (new) | unit | every golden vector in §3.2; `romanizeSyllables` splits; `syllableSplit`; non-syllable input → `null`; each sound-change branch (liaison, ㅎ rules, palatalisation, nasalisation, liquid assimilation, compound finals, neutralisation); limit cases `꽃잎`, `밟다` are asserted as *known* converter output so a future fix is a conscious change |
-| `…/romanization-compare.test.ts` (new) | unit | normalisation (case, punctuation, apostrophes); R1 to R3, R6, R7 positive and negative; hyphen produces one finding; exception match, stale exception (R8), exception without reason |
+| `packages/content-schema/src/__tests__/romanization-rr.test.ts` (new) | unit | every golden vector in §3.2; `romanizeSyllables` splits; `syllableSplit`; non-syllable input → `null`; each sound-change branch (liaison, ㅎ rules, palatalisation, nasalisation, liquid assimilation, compound finals, neutralisation); the RG-1 vectors of F1 to F3 (읽고 `ilgo`, 닭고기 `dakgogi`, 밟다 `bapda`, 넓적다리 `neopjeokdari`, 좁히다 `jopida`, 묻혀 `muchyeo`, and the unchanged noun convention); the `predicateH` vectors (못해요 `motaeyo`, 입학해요 `ipakaeyo`, and 입학 still `iphak`); the remaining limits (`깻잎`, `서울역`, `맛없어요`, `첫인상`, `못해요`, `꽃잎`, `솔잎`, `한여름`, `색연필`, `담요`) are asserted as *known* converter output so a future fix is a conscious change |
+| `…/romanization-compare.test.ts` (new) | unit | normalisation (case, punctuation, apostrophes); R1 to R3, R6, R7 positive and negative; hyphen produces one finding; exception match, stale exception (R8), exception without reason; R1 against the reviewed value (a stored converter value fails once an entry excludes it); R9 present, absent, and folded into R1 (the gap hint); R8's article, one-value and `predicate-h` reading checks; the nine words of AMENDMENTS-ROMANIZER-GAPS §3.8 |
+| `…/romanization-gaps.test.ts`, `…/romanization-reviewed.test.ts`, `…/romanization-exceptions.test.ts` (new, RG-2a / RG-2b) | unit | `detectGaps` fires and does-not-fire vectors, every list constant non-empty and duplicate-free; `romanizeReviewed` (whole-string entry, word entry inside a sentence, no entry = `romanize`, normalised output); every shipped entry has a `gap`, an article, one value per word entry and a passing predicate reading |
+| `scripts/__tests__/build-week-drops.test.mjs` | unit | a drop item holding an entry word passes with the entry value and fails with the converter's value |
 | `…/romanization-extract.test.ts` (new) | unit | `extractKoreanPairs` on fixture strings: single-line object literal, multi-line, the middot JSX pattern, `romanized (한글)` prose, and no false positive on comments |
 | `…/romanization-content.test.ts` (new) | integration | scans `content/**/*.json`; fails today on 12+ sites until §3.7 lands; a temp-dir fixture proves a bad file would fail |
 | `…/romanization-coverage.test.ts` (new) | integration | every Hangul-bearing source file is registered or ignored; deleting a registered file fails |

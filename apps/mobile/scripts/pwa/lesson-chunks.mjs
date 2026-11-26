@@ -336,7 +336,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measurement plus a 4,041 B margin (one measured raise). Tried: keeping the lint code out of the app graph needs `compare.ts` and
   // `gaps.ts` off the barrel, which moves the imports of about 30 test files (every consumer of the lint functions is a test or helper), and
   // `hasSoundChange` would still pull `gaps.ts` in through the stable-id module: not a small change, so the line is raised instead.
-  startBundleRaw: 4_565_800,
+  // [DC] AMENDMENTS-STAGE1-DECODING-CHECK DC-1c (the quest Checks on the other games hold the romanization until answered: the look
+  // modules of the six games (`type-hangul/look.ts`, `tap-respond-look.ts`, the held-line views of Cloze Pick, Sentence Builder,
+  // Pic-Word Match and Realia Read) and `screens/minigames/held-line.tsx`, which Tap Respond and Pic-Word Match (static imports of
+  // `MinigameScreen`) share with the game chunks, so Metro hoists them into the start bundle; the design-system `glossReserved` and
+  // realia `romanizationReserved` props): on main b8496d52a with RG-2b (line 4,565,800 B) the release `build:web` (CI=1) measures
+  // 4,565,884 B raw / 1,255,976 B gzip, 84 B over the line (4,557,414 B on the DC-1c base before RG-2b). The line is the measurement plus
+  // a 4,016 B margin (one measured raise). A start bundle shrink row (SB-4) is planned after phase 2.
+  startBundleRaw: 4_569_900,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

@@ -305,6 +305,12 @@ export interface WordTileView extends TileBase {
   ko: string;
   /** Empty string draws no line (ChoiceCard). */
   romanization: string;
+  /**
+   * A Check's open board (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1c): the romanization held until this pair is
+   * matched right, a selected word and a missed one included. The tile keeps its line's room and draws nothing; '' when
+   * nothing is held.
+   */
+  heldRomanization: string;
   /** The meaning shows only once the pair is matched (it would give the answer away). */
   gloss: string | undefined;
 }
@@ -352,19 +358,28 @@ export function pictureTileView(pair: PicWordPair, state: PicWordFlowState, a11y
   };
 }
 
+export interface WordTileContext {
+  romanizationMode: RomanizationMode;
+  /** A quest Check holds each pair's romanization until it is matched right (row DC-1c). Absent: nothing held. */
+  hold?: boolean;
+}
+
 /** How one word tile looks and is announced in the current state. */
 export function wordTileView(
   pair: PicWordPair,
   state: PicWordFlowState,
-  context: { romanizationMode: RomanizationMode },
+  context: WordTileContext,
   a11y: MinigameA11y,
 ): WordTileView {
   const { announce, ...base } = tileBase(pair.id, 'word', state, a11y);
   const touched = base.selected || base.cardState === 'correct' || base.cardState === 'wrong';
-  const romanization = context.romanizationMode === 'always' || touched ? pair.word.romanization : '';
+  // What the learner's mode shows (a touched word shows it in `tap` mode), and what a Check's open pair holds back of it.
+  const shown = context.romanizationMode === 'always' || touched ? pair.word.romanization : '';
+  const held = context.hold === true && base.cardState !== 'correct';
   const gloss = base.cardState === 'correct' ? pair.word.en : undefined;
-  const spoken = [pair.word.ko, romanization, gloss].filter((part) => part !== undefined && part !== '').join(', ');
-  return { ...base, ko: pair.word.ko, romanization, gloss, accessibilityLabel: announce(spoken) };
+  // The name keeps the romanization the mode shows: the hold is visual.
+  const spoken = [pair.word.ko, shown, gloss].filter((part) => part !== undefined && part !== '').join(', ');
+  return { ...base, ko: pair.word.ko, romanization: held ? '' : shown, heldRomanization: held ? shown : '', gloss, accessibilityLabel: announce(spoken) };
 }
 
 /**
