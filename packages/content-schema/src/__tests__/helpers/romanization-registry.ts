@@ -40,6 +40,8 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/logic/lecture/content.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'lecture/content' },
   // F-QUEST-002 §3.9: the Hangul Check's five words and its final-syllable distractors.
   { path: 'apps/mobile/src/logic/stage1/hangul-check.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/hangul-check' },
+  // AMENDMENTS-MINIMAL-PAIRS §3.4: the contrast sets' members (the module mirrors content/audio/contrast-sets.json, which has no `ko` fields for class A).
+  { path: 'apps/mobile/src/content/__generated__/contrast-sets.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '__generated__/contrast-sets' },
   // F-CURR-001 §3.10: the generated lesson modules (built from content/episodes/stage-<n>/*.json, which class A scans).
   { path: 'apps/mobile/src/content/__generated__/lessons-index.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '__generated__/lessons-index' },
   // F-CURR-002 §10: every cell's body chunk and the es / ko title chunks, one folder (a path ending in `/` covers the files below it).

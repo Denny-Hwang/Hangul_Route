@@ -25,6 +25,7 @@ import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
+import { CONTRAST_SETS } from '../__generated__/contrast-sets';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { ALL_LESSON_STEPS, LESSON_CELL_MODULES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 
@@ -44,6 +45,7 @@ const F = {
   lecture: 'apps/mobile/src/logic/lecture/content.ts',
   check: 'apps/mobile/src/logic/stage1/hangul-check.ts',
   sentenceE2e: 'apps/mobile/src/navigation/sentence-builder-e2e-fixtures.ts',
+  contrast: 'apps/mobile/src/content/__generated__/contrast-sets.ts',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -378,6 +380,22 @@ describe('Sentence Builder e2e rounds romanization (B1, F-CURR-001 G-1)', () => 
       for (const t of texts) found.push(...pair(F.sentenceE2e, t.ko, t.romanization).map((m) => `${round.id}: ${m}`));
     }
     expect(SENTENCE_E2E_PRACTICE.length + SENTENCE_E2E_CHECK.length).toBe(5);
+    expect(found).toEqual([]);
+  });
+});
+
+describe('contrast sets romanization (B1, AMENDMENTS-MINIMAL-PAIRS section 3.4)', () => {
+  // The module mirrors content/audio/contrast-sets.json (its members carry `text`, not `ko`, so class A does not read them).
+  it('every member of every set carries its romanization (R1 to R4), and a Stage 1 gloss names it', () => {
+    const found: string[] = [];
+    for (const set of CONTRAST_SETS) {
+      for (const m of set.members) {
+        note(F.contrast, m.text, m.romanization);
+        found.push(...pair(F.contrast, m.text, m.romanization).map((x) => `${set.id}: ${x}`));
+        if (m.en.startsWith('the syllable ')) expect(m.en, `${set.id} ${m.text}`).toBe(`the syllable ${m.romanization}`);
+      }
+    }
+    expect(CONTRAST_SETS.length).toBeGreaterThan(0);
     expect(found).toEqual([]);
   });
 });
