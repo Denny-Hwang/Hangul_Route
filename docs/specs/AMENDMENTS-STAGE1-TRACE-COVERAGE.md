@@ -159,8 +159,8 @@ Acceptance: at every viewport of `e2e/web/layout.spec.ts:25-33` (320 × 568, 375
 - Measured choice: 320 × 568 short / short-b (canvas 160); 375 × 553 short-b (161–190); 375 × 667 compact (162–163; quest 8 short, 215); 844 × 390 side-short / side-short-b (207–264); 390 × 844 full (186–215); 768 × 1024 full (384); 1180 × 820 side (380); Largest on 390 × 844 beside (185–204).
 - Also for TC-1b: the strip keeps the height of its tallest line and at least the status row's; the heading keeps the room of the page's longest heading and a page with a final keeps the final's line; on the last letter Next letter's place stays empty; Next letter is `sm` (as rule 4's row); `StepActions` gets a row size (`md` in the short steps). Open to the owner: OQ-1 (the pinned row steps down to `md` on this page only) and OQ-2 (the title not drawn in compact and the short steps).
 
+**Owner decision 2026-11-26 (approved as recommended):** on the trace page only, the short layouts draw Previous / Continue 64 high (80 on the letter pages before it), and the compact and short layouts do not draw the step title "Trace the new letters" (the per-letter heading leads the page; the page label stays for screen readers). TC-1b adds the `StepActions` size option this needs. This answers OQ-1 and OQ-2.
 
-**Owner decision 2026-11-26 (approved as recommended):** on the trace page only, the short layouts draw Previous / Continue 64 high (80 on the letter pages before it), and the compact and short layouts do not draw the step title "Trace the new letters" (the per-letter heading leads the page; the page label stays for screen readers). TC-1b adds the `StepActions` size option this needs.
 ### 3.5 View model and reducer (row TC-1a)
 
 New module `logic/stage1/discover-write.ts`, pure, 100 % covered:
