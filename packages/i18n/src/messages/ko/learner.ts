@@ -529,6 +529,7 @@ export const learner = {
     discover: {
       hearIt: { cta: '들어 보기' },
       hearName: { cta: '글자 이름 들어 보기' },
+      hearVowels: { cta: '모음과 함께 들어 보기' },
       soundWith: { cta: '모음과 함께 들어 봐요' },
       sayLine: (spoken: string) => `소리 내어 읽어 봐요: ${spoken}`,
       showHowToSay: { cta: '읽는 법 보기' },

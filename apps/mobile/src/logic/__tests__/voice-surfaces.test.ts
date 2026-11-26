@@ -226,6 +226,13 @@ const SURFACES: readonly Surface[] = [
     said: () => discoverSaid('nameButton'),
   },
   {
+    // AMENDMENTS-DISCOVER-SOUND-FIRST SF-3 (§12): the initial ㅇ card's second button says 아, 오, 우, each vowel's sound.
+    name: 'Discover, the initial ㅇ card: Hear it with vowels',
+    files: ['logic/stage1/discover-flow.ts'],
+    type: () => 'sound',
+    said: () => discoverSaid('vowelsButton'),
+  },
+  {
     name: 'Lecture letter slide, main speaker (an initial or a vowel by name; a final by its closed syllable)',
     files: ['logic/lecture/deck-builder.ts', 'screens/presenter/slides/LetterSlide.tsx'],
     type: letterOrFinal,
@@ -296,8 +303,8 @@ const SURFACES: readonly Surface[] = [
   },
 ];
 
-/** The two Discover buttons of every symbol page of every quest and lesson. */
-function discoverSaid(button: 'hear' | 'nameButton'): Said[] {
+/** The Discover buttons of every symbol page of every quest and lesson ([SF-3] the vowels button: one row per vowel it says). */
+function discoverSaid(button: 'hear' | 'nameButton' | 'vowelsButton'): Said[] {
   const m = getMessages('en');
   return everyQuest().flatMap((quest) =>
     quest.steps.flatMap((step) => {
@@ -305,6 +312,10 @@ function discoverSaid(button: 'hear' | 'nameButton'): Said[] {
       return buildDiscover(step.discover.pages, m.learner.quest.discover, m.a11y).pages.flatMap((page) =>
         page.items.flatMap((item): Said[] => {
           if (item.kind !== 'symbol') return [];
+          if (button === 'vowelsButton') {
+            const series = item.vowelsButton?.action.series ?? [];
+            return series.map((spec, i): Said => ({ where: `${quest.id} ${item.key} #${i}`, target: jamoOf(['jamo:a', 'jamo:o', 'jamo:u'][i]!), spoken: spec.text }));
+          }
           const target = jamoOf(item.key.split('#')[0]!);
           const action = button === 'hear' ? item.hear : item.nameButton?.action;
           return action ? [{ where: `${quest.id} ${item.key}`, target, spoken: action.spec.text }] : [];
