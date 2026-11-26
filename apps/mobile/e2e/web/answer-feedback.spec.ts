@@ -40,7 +40,7 @@ test('Culture Quiz: a right answer is said once, in one polite live region, and 
   await expect(page.getByText('1 / 4', { exact: true })).toBeVisible();
 
   // The quiz word is one of five (`minigame:s1-life-q3-apply`); its English meaning is the answer.
-  const english: Record<string, string> = { 토마토: 'Tomato', 코코아: 'Cocoa', 쿠키: 'Cookie', 토스트: 'Toast', 김밥: 'Kimbap' };
+  const english: Record<string, string> = { 토마토: 'Tomato', 고구마: 'Sweet potato', 쿠키: 'Cookie', 도토리: 'Acorn', 김밥: 'Kimbap' };
   const word = await page.getByRole('heading').filter({ hasText: new RegExp(`^(${Object.keys(english).join('|')})$`) }).first().innerText();
   const answer = english[word.trim()];
   expect(answer, `the quiz word ${word} is one of the five`).toBeDefined();

@@ -24,14 +24,14 @@
     },
     "minigame:s1-life-q3-apply": {
       "cardPairs.tomato.gloss": "Tomate",
-      "cardPairs.kokoa.gloss": "Cacao",
+      "cardPairs.goguma.gloss": "Camote, batata",
       "cardPairs.kuki.gloss": "Galleta",
-      "cardPairs.toseuteu.gloss": "Pan tostado",
+      "cardPairs.dotori.gloss": "Bellota",
       "cardPairs.gimbap.gloss": "Kimbap"
     },
     "minigame:s1-life-q3-check": {
       "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "el sonido de la letra kieuk",
-      "listenPick.rounds.1.prompt": "tomate"
+      "listenPick.rounds.1.prompt": "bellota"
     },
     "minigame:s1-rites-q1-play": {
       "listenPick.rounds.0.prompt": "luna",
@@ -43,7 +43,7 @@
     },
     "minigame:s1-rites-q1-check": {
       "listenPick.rounds.0.prompt": "luna",
-      "listenPick.rounds.1.prompt": "Año Nuevo lunar"
+      "listenPick.rounds.1.prompt": "puerta"
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "la sílaba song",

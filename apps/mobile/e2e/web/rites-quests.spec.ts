@@ -77,8 +77,8 @@ test('quest 7: the Seollal greeting in Korean, finals n and l at the bottom of t
     for (const name of tiles) await page.getByRole('button', { name, exact: true }).click();
   }
 
-  // The Check: 달 among 다 달 단, then the word 설날.
-  await playCheckByIds(page, [{ answer: '달' }, { answer: '설날' }]);
+  // The Check: 달 among 다 달 단, then the word 문 among 문 물 달 산.
+  await playCheckByIds(page, [{ answer: '달' }, { answer: '문' }]);
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByText('Next up')).toBeVisible();
   expect(errors).toEqual([]);

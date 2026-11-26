@@ -132,6 +132,12 @@ test('quest 11: Mountain, River, Sea reads nature words, builds four closed bloc
   await expectPicturedWord(page, '바다');
   await expectPlainWord(page, '하늘');
   await nextPage(page);
+  // Page 3: the linking word 얼음, with its note (AMENDMENTS-STAGE1-CONTENT-FIXES CF-1b).
+  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  await expectPlainWord(page, '얼음');
+  await expect(page.getByTestId('discover-item-word:얼음')).toContainText('Read it smoothly: eol + eum sounds like eoreum.');
+  await page.screenshot({ path: test.info().outputPath('nature-q2-discover-linking.png'), fullPage: true });
+  await nextPage(page);
 
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await buildBlocks(page, [
@@ -245,6 +251,12 @@ test('quest 15: Read Hangul! shows hangeul and hoya on their cards, builds 한 �
   await nextPage(page);
   await expectPlainWord(page, '안녕');
   await expectPlainWord(page, '사랑');
+  await nextPage(page);
+  // Page 3: the linking word 한국어, with its note (AMENDMENTS-STAGE1-CONTENT-FIXES CF-1b).
+  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  await expectPlainWord(page, '한국어');
+  await expect(page.getByTestId('discover-item-word:한국어')).toContainText('Read it smoothly: hanguk + eo sounds like hangugeo.');
+  await page.screenshot({ path: test.info().outputPath('crafts-q3-discover-linking.png'), fullPage: true });
   await nextPage(page);
 
   await page.getByRole('button', { name: 'Skip for now' }).click();
