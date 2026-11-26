@@ -16,12 +16,10 @@ const OverrideContext = createContext<RomanizationMode | null>(null);
 
 /**
  * Sets the mode for everything below it, whatever a profile chose: the All
- * lessons display setting, which has no learner profile, and the Stage Check's
- * per-attempt "hide the romanization until I tap" switch (until row DC-1b removes
- * it). The Hangul Check no longer uses it: every Check holds its romanization until
- * the answer by `logic/locale/check-hold.ts`, not by an override
- * (AMENDMENTS-STAGE1-DECODING-CHECK section 3.1, row DC-1a). No other learner
- * screen is mounted under it.
+ * lessons display setting, which has no learner profile. No Check uses it: every
+ * Check holds its romanization until the answer by `logic/locale/check-hold.ts`,
+ * not by an override (AMENDMENTS-STAGE1-DECODING-CHECK section 3.1, rows DC-1a and
+ * DC-1b). No other learner screen is mounted under it.
  */
 export function RomanizationModeOverride({
   mode,

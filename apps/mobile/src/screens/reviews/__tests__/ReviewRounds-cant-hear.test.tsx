@@ -14,8 +14,8 @@ import type { ReviewRound } from '../../../logic/reviews/review-rounds';
  * "Can't hear it?" on the heard rounds of `RoundView` (AMENDMENTS-AUDIO-CANT-HEAR rows CH-1b and CH-1e, sections 3.1 and
  * 3.12, tests 18 and 21): the Daily Review, Keep going, This week in Korea and the Stage and Cell Check pass `cantHear`.
  * A heard pick round with a cue (a picture or a meaning) gets the guidance-only sheet; without one, Show the letters
- * brings the prompt's Korean with its romanization and focus goes to Hear again; in the Stage Check with its hide switch
- * on (`hidesRomanization`) the asked text is the romanization only. Text rounds never show the link.
+ * brings the prompt's Korean with its romanization and focus goes to Hear again; in a Check (`holdSurface`, row DC-1b)
+ * the asked text, and the text of Sound off, is the romanization only. Text rounds never show the link.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -200,8 +200,8 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
     await tick(400);
   };
 
-  it('with the hide switch on (hidesRomanization) the asked text is the romanization only: no Hangul in the prompt, focus on Hear again, the romanization announced once', async () => {
-    const r = await open(HEARD, { cantHear: true, hidesRomanization: true });
+  it('in a Check (holdSurface) the asked text is the romanization only: no Hangul in the prompt, focus on Hear again, the romanization announced once', async () => {
+    const r = await open(HEARD, { cantHear: true, holdSurface: 'stage-check' });
     await ask(r);
     expect(byTestId(r.root, 'daily-review-prompt-panel-text')).toHaveLength(1);
     expect(textOf(byTestId(r.root, 'daily-review-prompt-panel-text')[0]!)).toBe('namu');
@@ -212,7 +212,7 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
     expect(hasId(r.root, 'cant-hear')).toBe(false);
   });
 
-  it('with the switch off (the Cell Check, the Stage Check with the romanization shown) the asked text is the surface\'s own: the Korean with its romanization', async () => {
+  it('where nothing is held (the Daily Review\'s recognize rung, practice) the asked text is the surface\'s own: the Korean with its romanization', async () => {
     const r = await open(HEARD, { cantHear: true });
     await ask(r);
     expect(panelText(r)).toContain('나무');
@@ -222,10 +222,10 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
 
   it('Always show the letters does not reach a Check round (owner decision 2026-11-25): sound only with the link; a practice round still opens with its text', async () => {
     useAudioStore.setState({ showLetters: true });
-    const check = await open(HEARD, { cantHear: true, check: 'stage-check', hidesRomanization: true });
+    const check = await open(HEARD, { cantHear: true, check: 'stage-check', holdSurface: 'stage-check' });
     expect(panelText(check)).not.toContain('namu');
     expect(hasId(check.root, 'cant-hear')).toBe(true);
-    const cell = await open(HEARD, { cantHear: true, check: 'cell-check' });
+    const cell = await open(HEARD, { cantHear: true, check: 'cell-check', holdSurface: 'cell-check' });
     expect(panelText(cell)).not.toContain('namu');
     expect(hasId(cell.root, 'cant-hear')).toBe(true);
     const practice = await open(HEARD, { cantHear: true });
@@ -239,14 +239,19 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
     expect(hasId(r.root, 'cant-hear')).toBe(true);
   });
 
-  it('Sound off is not an ask: the surface keeps its own text (AD13) even with the switch on', async () => {
+  it('Sound off is not an ask, and in a Check its text is the romanization only (section 3.2); where nothing is held it keeps the surface\'s own text (AD13)', async () => {
     useAudioStore.setState({ muted: true });
-    const r = await open(HEARD, { cantHear: true, hidesRomanization: true });
-    expect(panelText(r)).toContain('나무');
+    const held = await open(HEARD, { cantHear: true, holdSurface: 'stage-check' });
+    expect(panelText(held)).toContain('namu');
+    expect(panelText(held)).not.toContain('나무');
+    const cell = await open(HEARD, { cantHear: true, check: 'cell-check', holdSurface: 'cell-check' });
+    expect(panelText(cell)).not.toContain('나무');
+    const practice = await open(HEARD, { cantHear: true });
+    expect(panelText(practice)).toContain('나무');
   });
 
   it('a round with a cue stays guidance only, with the switch on too', async () => {
-    const r = await open(CUED, { cantHear: true, hidesRomanization: true });
+    const r = await open(CUED, { cantHear: true, holdSurface: 'stage-check' });
     await press(pressableById(r.root, 'cant-hear'));
     expect(hasId(r.root, 'cant-hear-show-letters')).toBe(false);
     expect(panelText(r)).not.toContain('namu');
@@ -254,7 +259,7 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
 
   it('a right first answer after Show the letters is reported as a right one and the ask is counted once: identifiable as asked (CH-1f)', async () => {
     const first: Array<{ correct: boolean; asked?: boolean }> = [];
-    const r = await open(HEARD, { cantHear: true, hidesRomanization: true, check: 'stage-check', onFirst: (a) => void first.push(a) });
+    const r = await open(HEARD, { cantHear: true, check: 'stage-check', holdSurface: 'stage-check', onFirst: (a) => void first.push(a) });
     await ask(r);
     expect(events.filter((e) => e.name === 'audio.fallback_shown').map((e) => e.payload)).toEqual([{ source: 'stage-check', reason: 'asked' }]);
     await press(pressableById(r.root, 'daily-review-option-lex:namu'));
@@ -274,7 +279,7 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
   });
 
   it('with the hide switch on the heard options hold their romanization until the round is answered; the line keeps its room, the name keeps it, and the asked romanization matches no visible option text', async () => {
-    const r = await open(HEARD, { cantHear: true, hidesRomanization: true, check: 'stage-check' });
+    const r = await open(HEARD, { cantHear: true, check: 'stage-check', holdSurface: 'stage-check' });
     const card = (id: string) => byTestId(r.root, `daily-review-option-${id}`)[0]!;
     const reserved = (id: string) => byTestId(card(id), 'korean-text-romanization-reserved');
     expect(reserved('lex:namu')).toHaveLength(1);
@@ -290,19 +295,19 @@ describe('RoundView in the Stage Check and the Cell Check (CH-1e, section 3.12, 
     expect(textOf(card('lex:nabi'))).toContain('nabi');
   });
 
-  it('with the switch off the options show their romanization as before', async () => {
+  it('with no holdSurface (practice, the default) the options show their romanization as before', async () => {
     const r = await open(HEARD, { cantHear: true, check: 'stage-check' });
     expect(byTestId(r.root, 'korean-text-romanization-reserved')).toHaveLength(0);
     expect(textOf(byTestId(r.root, 'daily-review-option-lex:namu')[0]!)).toContain('namu');
   });
 
-  it('a Daily Review round (no switch) never holds its options romanization', async () => {
-    const r = await open(HEARD, { cantHear: true });
+  it('a Daily Review recognize round is practice: it never holds its options romanization', async () => {
+    const r = await open(HEARD, { cantHear: true, holdSurface: 'daily-review' });
     expect(byTestId(r.root, 'korean-text-romanization-reserved')).toHaveLength(0);
   });
 
   it('a Syllable Build round in a Check has its link; Show the letters shows the block\'s romanization, as ever', async () => {
-    const r = await open(BUILD, { cantHear: true, hidesRomanization: true });
+    const r = await open(BUILD, { cantHear: true, holdSurface: 'stage-check' });
     expect(hasId(r.root, 'cant-hear')).toBe(true);
   });
 });
@@ -317,9 +322,8 @@ describe('RoundView, the hinted mark (CH-1f, test 22)', () => {
   const REPLY: PickRound = { ...HEARD, ask: 'reply', prompt: { ko: '안녕하세요', romanization: 'annyeonghaseyo' }, question: question('lex:hi') };
   const hostProps = [
     ['the Daily Review (no check)', {}],
-    ['the Stage Check', { check: 'stage-check' as const, hidesRomanization: true }],
-    ['the Stage Check with the switch off', { check: 'stage-check' as const }],
-    ['the Cell Check', { check: 'cell-check' as const }],
+    ['the Stage Check', { check: 'stage-check' as const, holdSurface: 'stage-check' as const }],
+    ['the Cell Check', { check: 'cell-check' as const, holdSurface: 'cell-check' as const }],
   ] as const;
   const ask = async (r: ReactTestRenderer): Promise<void> => {
     await press(pressableById(r.root, 'cant-hear'));

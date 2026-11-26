@@ -2,7 +2,7 @@ import type { StageKey, UiLocale } from '@hangul-route/content-schema';
 import type { RoundAnswer } from './daily-review';
 import type { ReviewItemIndex } from './review-items-store';
 import type { KoText, PickOption, ReviewRound } from './review-rounds';
-import { isFreshCheckRun, SAVED_CHECK_VERSION, type SavedStageCheck } from './saved-check';
+import { isFreshCheckRun, SAVED_CHECK_VERSION, STORED_HIDE_ROMANIZATION, type SavedStageCheck } from './saved-check';
 import type { PlannedStageCheck } from './stage-check';
 
 /**
@@ -25,7 +25,6 @@ export function savedStageCheck(run: {
   itemsHash: string;
   rounds: readonly ReviewRound[];
   answers: ReadonlyMap<number, RoundAnswer>;
-  hideRomanization: boolean;
   startedAt: string;
   /** Set by the finish once the result is in the progress (see `finishedStageCheck`). */
   finishedAt?: string;
@@ -47,7 +46,8 @@ export function savedStageCheck(run: {
     itemsHash: run.itemsHash,
     rounds: [...run.rounds],
     answers,
-    hideRomanization: run.hideRomanization,
+    // The attempt switch is gone (every Check holds): a constant that an older build's shape check still requires.
+    hideRomanization: STORED_HIDE_ROMANIZATION,
     startedAt: run.startedAt,
     ...(run.finishedAt !== undefined ? { finishedAt: run.finishedAt } : {}),
   };
@@ -145,7 +145,6 @@ export interface ResumableStageCheck {
   plan: PlannedStageCheck;
   /** The first answers, by round index, each already in the memory store. */
   answers: Map<number, RoundAnswer>;
-  hideRomanization: boolean;
   startedAt: string;
   /**
    * The round the check goes on at: the first one without an answer, so a round whose answer could not be recorded is
@@ -175,6 +174,7 @@ export function resumableStageCheck(saved: unknown, now: number, ctx: StageCheck
   if (saved.v !== SAVED_CHECK_VERSION || saved.kind !== 'stage') return null;
   if (saved.stage !== ctx.stage || saved.locale !== ctx.locale || saved.itemsHash !== ctx.itemsHash) return null;
   if (!isFreshCheckRun(saved.startedAt, now)) return null;
+  // A stored `hideRomanization` is still required to be a boolean, and its value is ignored: every Check holds (DC-1b).
   if (typeof saved.hideRomanization !== 'boolean') return null;
   const { rounds, answers } = saved;
   if (!Array.isArray(rounds) || rounds.length === 0 || !Array.isArray(answers) || answers.length === 0) return null;
@@ -193,7 +193,7 @@ export function resumableStageCheck(saved: unknown, now: number, ctx: StageCheck
   let next = 0;
   while (next < rounds.length && restored.has(next)) next += 1;
   const plan: PlannedStageCheck = { stage: ctx.stage, rounds, soundNotice: rounds.some((r) => r.question.voiceFallback) };
-  return { plan, answers: restored, hideRomanization: saved.hideRomanization, startedAt: saved.startedAt as string, next };
+  return { plan, answers: restored, startedAt: saved.startedAt as string, next };
 }
 
 /**

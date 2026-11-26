@@ -108,9 +108,9 @@ export interface StageCheckApi {
    */
   resumeSession(world: StageCheckWorld, saved: unknown, locale: UiLocale, stage: StageKey, now?: Date): Promise<StageCheckResume>;
   /** [LR] The value to store for a check in progress: the answers given whose recording has settled. */
-  savedRun(plan: PlannedStageCheck, run: { locale: UiLocale; answers: ReadonlyMap<number, RoundAnswer>; hideRomanization: boolean; startedAt: string; finishedAt?: string }): SavedStageCheck;
+  savedRun(plan: PlannedStageCheck, run: { locale: UiLocale; answers: ReadonlyMap<number, RoundAnswer>; startedAt: string; finishedAt?: string }): SavedStageCheck;
   /** The learner starts the first part: `review.start`. */
-  begin(world: StageCheckWorld, plan: PlannedStageCheck, hideRomanization: boolean): void;
+  begin(world: StageCheckWorld, plan: PlannedStageCheck): void;
   /** Records a round's first answer now (the spacing rule). */
   recordRound(world: StageCheckWorld, plan: PlannedStageCheck, index: number, answer: RoundAnswer): Promise<void>;
   /**
@@ -249,8 +249,8 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       return savedStageCheck({ stage: plan.stage, itemsHash: deps.itemsHash(), rounds: plan.rounds, ...run });
     },
 
-    begin(world, plan, hideRomanization) {
-      deps.track(stageCheckStartEvent(world.profileId, plan.stage, hideRomanization));
+    begin(world, plan) {
+      deps.track(stageCheckStartEvent(world.profileId, plan.stage));
     },
 
     recordRound(world, plan, index, answer) {

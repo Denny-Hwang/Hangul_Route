@@ -167,7 +167,7 @@ describe('the entry and the telemetry (section 11.3)', () => {
   });
 
   it('review.start and review.complete carry the kind, the stage and the stars only: no item, no count, no score', () => {
-    expect(stageCheckStartEvent('p1', 'stage2', true)).toEqual({ name: 'review.start', profileId: 'p1', payload: { kind: 'stage-certificate', stageKey: 'stage2', hideRomanization: true } });
+    expect(stageCheckStartEvent('p1', 'stage2')).toEqual({ name: 'review.start', profileId: 'p1', payload: { kind: 'stage-certificate', stageKey: 'stage2' } });
     expect(stageCheckCompleteEvent('p1', 'stage3', 3)).toEqual({ name: 'review.complete', profileId: 'p1', payload: { kind: 'stage-certificate', stageKey: 'stage3', stars: 3 } });
   });
 });

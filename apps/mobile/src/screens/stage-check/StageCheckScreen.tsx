@@ -5,7 +5,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { RomanizationModeOverride } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { themeGlyph } from '../../logic/journey';
 import { memoryChunk } from '../../logic/memory/boot';
@@ -21,7 +20,7 @@ import { clearSavedCheck, readSavedCheck, saveCheck } from '../../store/check-ru
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
-import { AttemptSwitch, ResumeTitle } from '../reviews/StageReviewScreen';
+import { ResumeTitle } from '../reviews/StageReviewScreen';
 import { SaveLaterLine } from '../reviews/SaveLaterLine';
 import { useStageOffer } from './use-stage-offer';
 
@@ -31,7 +30,7 @@ import { useStageOffer } from './use-stage-offer';
  * row and the headline are the Daily Review chunk's (reached at run time through `dailyReviewChunk()`, so no module
  * sits in two chunks), the session logic the memory chunk's (`stageCheckApi()`).
  *
- * D the intro (about 7 minutes, no timer, the reading-practice switch), E the rounds in parts of 5 (the dots show the
+ * D the intro (about 7 minutes, no timer), E the rounds in parts of 5 (the dots show the
  * part only, with the theme line: the items mix all five themes), E2 a pause between parts, F the result (stars, then
  * "Your best result is kept"), H the stop sheet (the Hangul Check's). Never a percentage, an "n of m", a score, a
  * timer, "exam" or a certificate. A finish that could not be saved is the `failed` phase (AMENDMENTS-QUEST-LEAVE-RESUME
@@ -86,7 +85,6 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
   const [ui, setUi] = useState<Rounds | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const [hideRomanization, setHideRomanization] = useState(false);
   const [, setAnswered] = useState(0);
   // [LR] Something is stored for this check (an answer was kept): the stop sheet says Stop keeps it.
   const [kept, setKept] = useState(false);
@@ -101,11 +99,10 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   // Stop was chosen: a Try again still running finishes nothing.
   const stopped = useRef(false);
   const finishing = useRef(false);
-  // [LR] The answers whose recording settled (what is stored), the check's start time, its romanization choice, and the
-  // double-tap guards of Continue and Let's go.
+  // [LR] The answers whose recording settled (what is stored), the check's start time, and the double-tap guards of
+  // Continue and Let's go.
   const settled = useRef(new Map<number, RoundAnswer>());
   const startedAtRef = useRef<string | null>(null);
-  const hideRef = useRef(false);
   const continuing = useRef(false);
   const starting = useRef(false);
   const mounted = useRef(true);
@@ -223,7 +220,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     const a = api.current;
     const startedAt = startedAtRef.current;
     if (profileId === null || a === null || startedAt === null || settled.current.size === 0) return Promise.resolve();
-    return saveCheck(profileId, a.savedRun(plan, { locale, answers: settled.current, hideRomanization: hideRef.current, startedAt, ...(finishedAt !== undefined ? { finishedAt } : {}) }));
+    return saveCheck(profileId, a.savedRun(plan, { locale, answers: settled.current, startedAt, ...(finishedAt !== undefined ? { finishedAt } : {}) }));
   };
   // The result is in the progress: the stored run is marked finished (ordered before the complete event, and after the
   // entry and the latch), so a clear that does not happen never leaves a run that is offered or finished again.
@@ -309,8 +306,6 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     recorded.current = new Map();
     settled.current = new Map(run.answers);
     startedAtRef.current = run.startedAt;
-    hideRef.current = run.hideRomanization;
-    setHideRomanization(run.hideRomanization);
     setAnswered(run.answers.size);
     setKept(true);
     if (run.next >= run.plan.rounds.length) finish(run.plan);
@@ -341,8 +336,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
     setKept(false);
     if (profileId !== null) void clearSavedCheck(profileId);
     startedAtRef.current = new Date().toISOString();
-    hideRef.current = hideRomanization;
-    a.begin(w, planned, hideRomanization);
+    a.begin(w, planned);
     setPhase({ kind: 'playing', plan: planned, index: 0 });
   };
 
@@ -439,18 +433,16 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
                   </Body>
                 </View>
               ) : null}
-              <RomanizationModeOverride mode={hideRomanization ? 'tap' : 'always'}>
-                <ui.RoundView
-                  round={round}
-                  reducedMotion={reducedMotion}
-                  cantHear
-                  check="stage-check"
-                  hidesRomanization={hideRomanization}
-                  onFirst={(answer) => onFirst(index, answer)}
-                  onSolved={onSolved}
-                  grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
-                />
-              </RomanizationModeOverride>
+              <ui.RoundView
+                round={round}
+                reducedMotion={reducedMotion}
+                cantHear
+                check="stage-check"
+                holdSurface="stage-check"
+                onFirst={(answer) => onFirst(index, answer)}
+                onSolved={onSolved}
+                grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
+              />
             </View>
           ) : null}
         </Screen>
@@ -497,7 +489,7 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   }
 
   // [LR] The resume page (wireframe reviews/check-resume.md panel A): Continue goes on, Start again shows the intro and
-  // clears nothing yet. No reading-practice switch (the run keeps its choice) and no count of rounds.
+  // clears nothing yet. No count of rounds.
   if (phase.kind === 'resume' && ui !== null) {
     return (
       <Screen tone="canvas" scrollable testID="stage-check-resume">
@@ -533,8 +525,6 @@ export function StageCheckScreen({ navigation, route }: Props): ReactElement {
           <ui.DisplayHeadline testID="stage-check-title">{copy.title}</ui.DisplayHeadline>
           <Body align="center">{copy.intro}</Body>
         </View>
-        <Spacer size="lg" />
-        <AttemptSwitch label={m.learner.stageReview.intro.hideRomanization} value={hideRomanization} onChange={() => setHideRomanization((v) => !v)} />
         <Spacer size="xl" />
         <Button label={m.learner.stageReview.intro.start.cta} tone="primary" size="hero" fullWidth onPress={() => void onStart(phase.plan)} testID="stage-check-go" />
         <Spacer size="sm" />

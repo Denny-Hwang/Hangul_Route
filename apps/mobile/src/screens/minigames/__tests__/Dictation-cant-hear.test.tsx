@@ -355,6 +355,31 @@ describe('Dictation in a review round, "Can\'t hear it?"', () => {
     return r;
   }
 
+  it('a held Dictation round offers no "Show how it sounds": a Check holds the word\'s romanization until the answer, practice keeps the hint (DC-1b, section 3.1)', async () => {
+    const open = async (props: { holdSurface?: 'stage-check' | 'cell-check' | 'daily-review' | 'practice'; check?: 'stage-check' | 'cell-check' }): Promise<ReactTestRenderer> => {
+      const r = await render(
+        <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
+          <TypeRoundView round={ROUND} cantHear reducedMotion onFirst={() => undefined} onSolved={() => undefined} grade={(target, typed) => (typed === target ? 'right' : 'miss')} {...props} />
+        </LayoutProvider>,
+        { createNodeMock: focusNodes(FOCUS) as never },
+      );
+      mounted.push(r);
+      await tick(50);
+      return r;
+    };
+    for (const props of [{ holdSurface: 'stage-check', check: 'stage-check' }, { holdSurface: 'cell-check', check: 'cell-check' }, { holdSurface: 'daily-review' }] as const) {
+      const held = await open(props);
+      expect(hasId(held.root, 'daily-review-dictation-show-sound'), props.holdSurface).toBe(false);
+      expect(texts(held)).not.toContain('sagwa');
+    }
+    for (const props of [{}, { holdSurface: 'practice' }] as const) {
+      const free = await open(props);
+      expect(hasId(free.root, 'daily-review-dictation-show-sound')).toBe(true);
+      await tap(free, 'daily-review-dictation-show-sound');
+      expect(textOf(byTestId(free.root, 'daily-review-dictation-romanization')[0]!)).toBe('sagwa');
+    }
+  });
+
   it('the hinted mark (CH-1f): a right first Done after Show the letters says asked, a wrong one is a plain miss, no ask says nothing; the review keeps its stars (no `hinted`)', async () => {
     const askedRight = vi.fn();
     const a = await reviewWith(askedRight);

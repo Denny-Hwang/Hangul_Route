@@ -1,4 +1,4 @@
-import { savedHangulCheck, type SavedCheckRun } from '../logic/reviews/saved-check';
+import { savedHangulCheck, STORED_HIDE_ROMANIZATION, type SavedCheckRun } from '../logic/reviews/saved-check';
 import { removeKey, writeJson } from '../platform/storage';
 import { durableRead, type DurableRead } from './durable-read';
 import { onProfileRemoved } from './profile-removal';
@@ -86,13 +86,6 @@ export interface ReviewRunSaveContext {
   seed: number;
   startedAt: string;
 }
-
-/**
- * The stored shape still carries `hideRomanization` (`saved-check.ts` requires a boolean, so a run stored before the Check
- * switch went resumes). Every Check holds its romanization now, so a new run stores the constant `true` and readers ignore
- * the value (AMENDMENTS-STAGE1-DECODING-CHECK section 3.8, row DC-1a).
- */
-export const STORED_HIDE_ROMANIZATION = true;
 
 /**
  * Keeps the stored Hangul Check of `profileId` in step with the run in `review-run-store` (OD-LR9 (b), owner decision

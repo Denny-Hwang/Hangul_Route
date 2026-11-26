@@ -10,8 +10,8 @@ import { byTestId, cleanup, press, render, resetPlatform } from '../../../test-s
 
 /**
  * The call sites of "Can't hear it?" on `RoundView` (AMENDMENTS-AUDIO-CANT-HEAR rows CH-1b and CH-1e): the Daily Review
- * and Keep going (`DailyReviewScreen`), the Cell Check and the Stage Check pass `cantHear`; only the Stage Check passes
- * `hidesRomanization`, and only while its "hide the romanization" switch is on (the asked text is then the romanization
+ * and Keep going (`DailyReviewScreen`), the Cell Check and the Stage Check pass `cantHear`, and each names its
+ * `holdSurface` (every Check holds its romanization until the answer, DC-1b; the asked text is then the romanization
  * only, section 3.12). `RoundView` is a stub that shows the props it got, so deleting or adding a prop at a screen turns a test red
  * (`ReviewRounds-cant-hear.test.tsx` covers what the prop does). This week in Korea is `week-drop-ui.test.tsx`.
  * CH-1f: the stub also reports a right first answer after the ask (`asked`), and the screens must hand it whole to the
@@ -41,10 +41,10 @@ vi.mock('../../stage-check/use-stage-offer', async (importOriginal) => ({ ...(aw
 vi.mock('../ReviewRounds', async () => {
   const { createElement } = await import('react');
   return {
-    RoundView: ({ cantHear, hidesRomanization, check, onFirst }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string; onFirst?: (a: object) => void }) =>
+    RoundView: ({ cantHear, holdSurface, check, onFirst }: { cantHear?: boolean; holdSurface?: string; check?: string; onFirst?: (a: object) => void }) =>
       createElement(
         'div',
-        { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' },
+        { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hold': holdSurface ?? '', 'data-check': check ?? '' },
         createElement('button', { 'data-testid': 'round-first-asked', onClick: () => onFirst?.({ correct: true, asked: true }) }, 'round'),
       ),
   };
@@ -55,10 +55,10 @@ vi.mock('../DailyReviewRoute', async () => {
     dailyReviewChunk: async () => ({
       TopRow: () => createElement('div', { 'data-testid': 'top-row' }),
       DisplayHeadline: ({ children }: { children?: unknown }) => createElement('div', null, children as never),
-      RoundView: ({ cantHear, hidesRomanization, check, onFirst }: { cantHear?: boolean; hidesRomanization?: boolean; check?: string; onFirst?: (a: object) => void }) =>
+      RoundView: ({ cantHear, holdSurface, check, onFirst }: { cantHear?: boolean; holdSurface?: string; check?: string; onFirst?: (a: object) => void }) =>
         createElement(
           'div',
-          { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hides': hidesRomanization === true, 'data-check': check ?? '' },
+          { 'data-testid': 'round-stub', 'data-cant-hear': cantHear === true, 'data-hold': holdSurface ?? '', 'data-check': check ?? '' },
           createElement('button', { 'data-testid': 'round-first-asked', onClick: () => onFirst?.({ correct: true, asked: true }) }, 'round'),
         ),
     }),
@@ -134,7 +134,7 @@ async function draw(element: React.ReactElement): Promise<ReactTestRenderer> {
   return r;
 }
 const cantHearOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-cant-hear'];
-const hidesOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-hides'];
+const holdOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-hold'];
 const checkOf = (r: ReactTestRenderer): unknown => byTestId(r.root, 'round-stub')[0]?.props['data-check'];
 
 beforeEach(() => {
@@ -159,36 +159,34 @@ describe('where RoundView gets cantHear (CH-1b)', () => {
     const r = await draw(<DailyReviewScreen navigation={nav()} route={{ key: 'DailyReview', name: 'DailyReview' } as never} />);
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
     expect(cantHearOf(r)).toBe(true);
+    // DC-1b: the Daily Review holds the read and produce rungs (`holdsRomanization('daily-review', rung)`).
+    expect(holdOf(r)).toBe('daily-review');
   });
 
-  it('the Cell Check passes it (CH-1e), and no hide switch: its options show their romanization', async () => {
+  it('the Cell Check passes it (CH-1e) and holds every round (DC-1b)', async () => {
     const r = await draw(<CellCheckScreen navigation={nav()} route={{ key: 'CellCheck', name: 'CellCheck', params: { cellId: 'episode:stage2-letters', mode: 'check' } } as never} />);
     await press(byTestId(r.root, 'cell-check-go').find((n) => typeof n.props.onClick === 'function')!);
     await settle();
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
     expect(cantHearOf(r)).toBe(true);
-    expect(hidesOf(r)).toBe(false);
+    expect(holdOf(r)).toBe('cell-check');
     expect(checkOf(r)).toBe('cell-check');
   });
 
-  it('the Stage Check passes it (CH-1e); the hide switch off gives the surface\'s own text', async () => {
+  it('the Stage Check passes it (CH-1e) and holds every round (DC-1b)', async () => {
     const r = await draw(<StageCheckScreen navigation={nav()} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />);
     await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onClick === 'function')!);
     await settle();
     expect(byTestId(r.root, 'round-stub')).toHaveLength(1);
     expect(cantHearOf(r)).toBe(true);
-    expect(hidesOf(r)).toBe(false);
+    expect(holdOf(r)).toBe('stage-check');
     expect(checkOf(r)).toBe('stage-check');
   });
 
-  it('the Stage Check with its "hide the romanization" switch on passes hidesRomanization, so the asked text is the romanization only', async () => {
+  it('the Stage Check intro has no "hide the romanization" switch any more (OD-DC1)', async () => {
     const r = await draw(<StageCheckScreen navigation={nav()} route={{ key: 'StageCheck', name: 'StageCheck', params: { stageKey: 'stage2' } } as never} />);
-    await press(r.root.findAll((n) => n.props.role === 'switch')[0]!);
-    await press(byTestId(r.root, 'stage-check-go').find((n) => typeof n.props.onClick === 'function')!);
-    await settle();
-    expect(cantHearOf(r)).toBe(true);
-    expect(hidesOf(r)).toBe(true);
-    expect(checkOf(r)).toBe('stage-check');
+    expect(byTestId(r.root, 'stage-check-intro')).toHaveLength(1);
+    expect(r.root.findAll((n) => n.props.role === 'switch')).toHaveLength(0);
   });
 });
 
