@@ -133,7 +133,11 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
     expect(hook).toContain('export function useRomanizationResolver(');
     const host = readFileSync(join(SRC, 'screens', 'minigames', 'MinigameScreen.tsx'), 'utf8');
     expect(host).toContain('<RomanizationCheckScope active={step?.kind === \'check\'}>');
-    // one wrapper, set by the `check` host and nowhere else
-    expect(files.filter((f) => f.source.includes('<RomanizationCheckScope')).map((f) => f.rel)).toEqual(['screens/minigames/MinigameScreen.tsx']);
+    // set by the two Check hosts that mount a game reading the hook, and nowhere else
+    // and by the Hangul Check, whose Listen & Pick (host `review`) is not hosted by `MinigameScreen`
+    expect(files.filter((f) => f.source.includes('<RomanizationCheckScope')).map((f) => f.rel).sort()).toEqual([
+      'screens/minigames/MinigameScreen.tsx',
+      'screens/reviews/StageReviewScreen.tsx',
+    ]);
   });
 });

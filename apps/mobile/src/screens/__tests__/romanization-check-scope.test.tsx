@@ -1,4 +1,6 @@
 import type { Profile, ProgressSnapshot, RomanizationChoice } from '@hangul-route/content-schema';
+import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
+import { getMessages } from '@hangul-route/i18n';
 import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act } from 'react-test-renderer';
@@ -9,7 +11,9 @@ import { STAGE1_QUESTS } from '../../logic/stage1/curriculum';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { byTestId, cleanup, render, resetPlatform, setPlatform, textOf, unmount } from '../../test-support/render';
+import { episodesAll } from '../../content';
+import { gridEpisodesOf } from '../../logic/my-route/order';
+import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, setPlatform, textOf, unmount } from '../../test-support/render';
 
 /**
  * AMENDMENTS-ROMANIZATION-FADE section 3.7, row RF-1a: a game inside `RomanizationCheckScope` reads the resolver's `check`
@@ -31,6 +35,20 @@ vi.mock('../../platform/screen-reader', async (importOriginal) => ({
     };
   },
 }));
+
+// The Hangul Check's game (host `review`), reduced to the mode it reads (AMENDMENTS-ROMANIZATION-FADE section 3.7).
+vi.mock('../minigames/ListenPickGame', async () => {
+  const { createElement } = await import('react');
+  const { Text } = await import('react-native');
+  const { useRomanizationMode } = await import('../../i18n/use-romanization-mode');
+  return {
+    ListenPickGame: () => createElement(Text, { testID: 'hangul-check-mode' }, useRomanizationMode()),
+  };
+});
+vi.mock('@react-navigation/native', () => ({ CommonActions: { reset: (state: unknown) => ({ type: 'RESET', payload: state }) } }));
+vi.mock('../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => undefined) }));
+
+const { StageReviewScreen } = await import('../reviews/StageReviewScreen');
 
 const ID = 'profile:mina';
 const learner: Profile = { id: ID, displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-orange', role: 'learner', createdAt: '2026-10-01T00:00:00.000Z', learnerType: 'child' };
@@ -221,6 +239,43 @@ describe('RomanizationCheckScope and the resolver, for a profile on As I learn (
       useProgressStore.setState({ byProfile: { [ID]: reading() } });
     });
     expect(renders).toBe(before);
+  });
+});
+
+describe('the Hangul Check reads the check mode (section 3.7)', () => {
+  /** Every Stage 1 quest done and Word Builder tested out: the check opens, and the fade is in phase `all`. */
+  function stage1DoneAndAll(): ProgressSnapshot {
+    const at = '2026-10-01T10:00:00.000Z';
+    const quests = gridEpisodesOf(episodesAll)
+      .filter((e) => e.stage === 'stage1')
+      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: at, completedAt: at, stars: 2 as const, attempts: 1, accuracy: 0.9 })));
+    return { ...snapshotWith([]), profileId: ID, quests, testedOut: { 'episode:stage2-letters': at } };
+  }
+  const nav = () => ({ navigate: () => undefined, dispatch: () => undefined, goBack: () => undefined, canGoBack: () => true, addListener: () => () => undefined }) as never;
+
+  async function openCheck(choice: RomanizationChoice | undefined) {
+    seed(choice, stage1DoneAndAll());
+    useProgressStore.setState({ hydratedFor: new Set([ID]), saveRetryFailedFor: new Set(), loadFailedFor: new Set() });
+    const r = await render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 640 })}>
+        <StageReviewScreen navigation={nav()} route={{ key: 'StageReview', name: 'StageReview', params: { stageKey: 'stage1' } } as never} />
+      </LayoutProvider>,
+    );
+    await act(async () => {
+      for (let i = 0; i < 12; i += 1) await Promise.resolve();
+    });
+    await press(buttonsNamed(r.root, getMessages('en').learner.stageReview.intro.start.cta)[0]!);
+    return textOf(byTestId(r.root, 'hangul-check-mode')[0]!);
+  }
+
+  it('an auto profile in phase all (the default after RF-2) reads always in the Hangul Check, not tap', async () => {
+    expect(await openCheck('auto')).toBe('always');
+  });
+
+  it('an explicit tap still folds it, and always shows it', async () => {
+    expect(await openCheck('tap')).toBe('tap');
+    await cleanup();
+    expect(await openCheck('always')).toBe('always');
   });
 });
 
