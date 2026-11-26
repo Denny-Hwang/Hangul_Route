@@ -24,6 +24,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } 
 import { Platform, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll, stage1Cards } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { RomanizationCheckScope } from '../../i18n/use-romanization-mode';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
 import { resumableHangulCheck, type ResumableHangulCheck } from '../../logic/reviews/saved-check';
@@ -288,8 +289,11 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     const rounds = (check.chunks[flow.chunk] ?? []).slice(flow.from).map((i) => i.round);
     return (
       <>
-        {/* A Check holds its romanization until each answer (DC-1a): no override, the learner's own mode shows it after. */}
-        <ListenPickGame key={`${flow.chunk}:${flow.from}`} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
+        {/* A Check holds its romanization until each answer (DC-1a): no override, the learner's own mode shows it after. The
+            Check scope makes that mode the `check` one, so a profile on As I learn never folds it (RF section 3.7). */}
+        <RomanizationCheckScope>
+          <ListenPickGame key={`${flow.chunk}:${flow.from}`} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
+        </RomanizationCheckScope>
         {leaveSheet}
       </>
     );

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { announceWaitMs, answerAnnouncement, readerPath, segmentsText, type AnswerResult } from '../../logic/answer-feedback';
-import { announceAndWait, announceQueued, focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
+import { useNativeScreenReader } from '../../i18n/use-romanization-mode';
+import { announceAndWait, announceQueued, focusForScreenReader } from '../../platform/screen-reader';
 import { useLocaleStore } from '../../store/locale-store';
 import { EMPTY_ANNOUNCER_LINE, type AnnouncerLine } from './answer-announcer';
 
@@ -15,8 +16,9 @@ import { EMPTY_ANNOUNCER_LINE, type AnnouncerLine } from './answer-announcer';
  * - `announce(result)` writes the announcer's line (the channel of Android and the web) and makes the iOS call: one
  *   queued call per result, never on Android or the web. It settles once the line has been said: at once with the reader
  *   path off; on iOS on VoiceOver's own finish event for this line; on Android and the web after `announceWaitMs`.
- * - `readerOn`: native follows the platform reader (`subscribeScreenReader`); the web follows the device flag "I use a
- *   screen reader" (OD-AF3 (d)).
+ * - `readerOn`: native follows the platform reader, from the one app-wide holder in `i18n/use-romanization-mode.tsx` (the
+ *   romanization fade reads the same signal, AMENDMENTS-ROMANIZATION-FADE section 3.13); the web follows the device flag
+ *   "I use a screen reader" (OD-AF3 (d)).
  * - `focusPrompt()` moves screen-reader focus to the header node, only with the reader path on.
  */
 export interface AnswerAnnouncement {
@@ -34,7 +36,7 @@ const never = (): Promise<void> => new Promise<void>(() => undefined);
 export function useAnswerAnnouncement(): AnswerAnnouncement {
   const a11y = useMessages().a11y;
   const webFlag = useLocaleStore((s) => s.screenReader);
-  const [nativeReader, setNativeReader] = useState(false);
+  const nativeReader = useNativeScreenReader();
   const [line, setLine] = useState<AnnouncerLine>(EMPTY_ANNOUNCER_LINE);
   const readerOn = readerPath({ platform: Platform.OS, nativeReader, webFlag }) === 'reader';
 
@@ -47,16 +49,9 @@ export function useAnswerAnnouncement(): AnswerAnnouncement {
 
   useEffect(() => {
     mounted.current = true;
-    let alive = true;
-    void isScreenReaderEnabled().then((on) => {
-      if (alive) setNativeReader(on);
-    });
-    const off = subscribeScreenReader((on) => setNativeReader(on));
     const pending = timers.current;
     return () => {
-      alive = false;
       mounted.current = false;
-      off();
       for (const t of pending) clearTimeout(t);
       pending.clear();
     };

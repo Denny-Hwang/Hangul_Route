@@ -39,6 +39,9 @@ vi.mock('../TraceStrokeGame', () => ({ TraceStrokeGame: () => null }));
 vi.mock('../TraceWordGame', () => ({ TraceWordGame: () => null }));
 vi.mock('../../use-practice-session', () => ({ usePracticeSession: () => undefined }));
 vi.mock('../../../content', () => ({
+  // The hook's reading of the course (the romanization fade) needs the two lists; this screen's course is the one quest below.
+  episodesAll: [],
+  questsAll: [],
   questById: (id: string) => (id === 'q-write' ? { id, steps: [{ kind: 'minigame', minigameRef: 'mg-write-frame' }] } : undefined),
 }));
 vi.mock('../../../logic/minigame-config', async () => {
