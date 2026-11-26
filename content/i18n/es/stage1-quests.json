@@ -93,17 +93,17 @@
     "quest:stage1-life-q3": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "galleta",
       "steps.s2.discover.pages.0.items.1.example.gloss": "tomate",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "cacao",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "pan tostado",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "camote, batata",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "bellota",
       "title": "Meriendas de pícnic",
-      "blurb": "Dos letras con soplo de aire, k y t, y meriendas de pícnic para leer.",
+      "blurb": "Dos letras con soplo de aire, k y t, y palabras de pícnic para leer.",
       "steps.s1.title": "¡Hora del pícnic!",
       "steps.s2.title": "Dos letras nuevas",
       "steps.s3.title": "Une el sonido",
       "steps.s4.title": "¿Qué significa?",
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta del kimbap!",
-      "steps.s1.hoyaLine": "¡Hora del pícnic! ¿Qué meriendas llevamos?",
+      "steps.s1.hoyaLine": "¡Hora del pícnic! ¡Leamos palabras de pícnic!",
       "steps.s2.hoyaLine": "Toca Escuchar: la k es como la g con un soplo de aire, y la t es como la d con un soplo de aire.",
       "steps.s6.hoyaLine": "¡El kimbap, el favorito del pícnic, llega a tu colección!"
     },
@@ -123,7 +123,8 @@
       "steps.s1.hoyaLine": "¡Feliz Año Nuevo! Aprendamos el saludo.",
       "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va debajo del bloque.",
       "steps.s6.hoyaLine": "¡Una tarjeta del Año Nuevo lunar llega a tu colección!",
-      "steps.s2.discover.pages.1.caption": "Palabras del Seollal"
+      "steps.s2.discover.pages.1.caption": "Palabras del Seollal",
+      "steps.s2.discover.pages.1.items.0.note": "Aquí la n de nal suena como l: seol + nal suena como seollal."
     },
     "quest:stage1-rites-q2": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
@@ -197,7 +198,9 @@
       "steps.s6.title": "¡Tarjeta de la montaña!",
       "steps.s1.hoyaLine": "Corea tiene muchas montañas y mar por tres lados. ¡Leamos palabras de la naturaleza!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
-      "steps.s6.hoyaLine": "¡Una tarjeta de la montaña llega a tu colección!"
+      "steps.s6.hoyaLine": "¡Una tarjeta de la montaña llega a tu colección!",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "hielo",
+      "steps.s2.discover.pages.2.items.0.note": "Léelo de corrido: eol + eum suena como eoreum."
     },
     "quest:stage1-nature-q3": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "luna",
@@ -264,9 +267,11 @@
       "steps.s4.title": "Arma un bloque",
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta de la cometa!",
-      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leerlo!",
+      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leer palabras en coreano!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
-      "steps.s6.hoyaLine": "¡Una tarjeta de la cometa llega a tu colección!"
+      "steps.s6.hoyaLine": "¡Una tarjeta de la cometa llega a tu colección!",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "el idioma coreano",
+      "steps.s2.discover.pages.2.items.0.note": "Léelo de corrido: hanguk + eo suena como hangugeo."
     },
     "quest:stage1-crafts-q4": {
       "title": "De dónde vienen las formas",

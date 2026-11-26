@@ -142,14 +142,13 @@ const W = {
   banana: word('바나나', 'banana', 'banana', ['ba', 'na', 'na']),
   dubu: word('두부', 'dubu', 'tofu', ['du', 'bu']),
   tomato: word('토마토', 'tomato', 'tomato', ['to', 'ma', 'to']),
-  kokoa: word('코코아', 'kokoa', 'cocoa', ['ko', 'ko', 'a']),
+  goguma: word('고구마', 'goguma', 'sweet potato', ['go', 'gu', 'ma']),
   kuki: word('쿠키', 'kuki', 'cookie', ['ku', 'ki']),
-  toseuteu: word('토스트', 'toseuteu', 'toast', ['to', 'seu', 'teu']),
+  dotori: word('도토리', 'dotori', 'acorn', ['do', 'to', 'ri']),
   // Holidays (quests 7-9)
   dal: word('달', 'dal', 'moon'),
   mun: word('문', 'mun', 'door'),
-  seol: word('설', 'seol', 'New Year (short for seollal)'),
-  nal: word('날', 'nal', 'day'),
+  mul: word('물', 'mul', 'water'),
   seollal: word('설날', 'seollal', 'Lunar New Year', ['seol', 'lal']),
   songpyeon: word('송편', 'songpyeon', 'half-moon rice cake', ['song', 'pyeon']),
   podo: word('포도', 'podo', 'grape', ['po', 'do']),
@@ -337,9 +336,9 @@ export const minigameScopes: Record<string, MinigameScope> = {
     kind: 'culture-quiz',
     cardPairs: [
       { ko: '토마토', en: 'Tomato', romanization: 'tomato' },
-      { ko: '코코아', en: 'Cocoa', romanization: 'kokoa' },
+      { ko: '고구마', en: 'Sweet potato', romanization: 'goguma' },
       { ko: '쿠키', en: 'Cookie', romanization: 'kuki' },
-      { ko: '토스트', en: 'Toast', romanization: 'toseuteu' },
+      { ko: '도토리', en: 'Acorn', romanization: 'dotori' },
       { ko: '김밥', en: 'Kimbap', romanization: 'gimbap' },
     ],
     rounds: 4,
@@ -350,7 +349,7 @@ export const minigameScopes: Record<string, MinigameScope> = {
       rounds: [
         // SF-1: ㄱ is out (the series rule); ㅌ and ㄷ may stay together.
         lp.symSound(J('kieuk'), THRU_F3, { optionIds: [J('kieuk'), J('nieun'), J('tieut'), J('digeut')] }),
-        lp.word(W.tomato, [W.kokoa, W.kuki, W.toseuteu]),
+        lp.word(W.dotori, [W.tomato, W.kuki, W.goguma]),
       ],
     },
   },
@@ -382,7 +381,7 @@ export const minigameScopes: Record<string, MinigameScope> = {
   'minigame:s1-rites-q1-check': {
     kind: 'listen-pick',
     listenPick: {
-      rounds: [lp.syl('달', ['다', '단'], W.dal.en), lp.word(W.seollal, [W.seol, W.nal, W.dal])],
+      rounds: [lp.syl('달', ['다', '단'], W.dal.en), lp.word(W.mun, [W.mul, W.dal, W.san])],
     },
   },
 

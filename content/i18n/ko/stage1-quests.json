@@ -93,17 +93,17 @@
     "quest:stage1-life-q3": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "작고 바삭한 과자",
       "steps.s2.discover.pages.0.items.1.example.gloss": "빨갛고 동그란 열매 채소",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "초콜릿 맛이 나는 따뜻한 음료",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "노릇하게 구운 빵",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "땅속에서 자라는 달콤한 뿌리채소",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "참나무에 열리는 작은 열매",
       "title": "소풍 간식",
-      "blurb": "바람을 세게 내는 글자 k, t와 소풍 간식 낱말을 읽어요.",
+      "blurb": "바람을 세게 내는 글자 k, t와 소풍 낱말을 읽어요.",
       "steps.s1.title": "소풍 가요!",
       "steps.s2.title": "새 글자 두 개",
       "steps.s3.title": "소리 짝 맞추기",
       "steps.s4.title": "무슨 뜻일까요?",
       "steps.s5.title": "듣고 읽기",
       "steps.s6.title": "김밥 카드!",
-      "steps.s1.hoyaLine": "소풍 시간이에요! 어떤 간식을 챙겼을까요?",
+      "steps.s1.hoyaLine": "소풍 시간이에요! 소풍 낱말을 읽어 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러요. k는 g에 바람을 세게 더한 소리, t는 d에 바람을 세게 더한 소리예요.",
       "steps.s6.hoyaLine": "소풍에 빠질 수 없는 김밥이 라이브러리에 들어왔어요!"
     },
@@ -123,7 +123,8 @@
       "steps.s1.hoyaLine": "새해 축하해요! 새해 인사를 배워 봐요.",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러 들어 봐요. 받침은 블록 맨 아래에 와요.",
       "steps.s6.hoyaLine": "설날 카드가 라이브러리에 들어왔어요!",
-      "steps.s2.discover.pages.1.caption": "설날 낱말"
+      "steps.s2.discover.pages.1.caption": "설날 낱말",
+      "steps.s2.discover.pages.1.items.0.note": "여기서는 n이 l처럼 소리 나요. seol + nal은 seollal처럼 소리 나요."
     },
     "quest:stage1-rites-q2": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "방망이로 공을 치고 달리는 운동",
@@ -197,7 +198,9 @@
       "steps.s6.title": "산 카드!",
       "steps.s1.hoyaLine": "한국은 산이 많고 삼면이 바다예요. 자연 낱말을 읽어 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
-      "steps.s6.hoyaLine": "산 카드가 라이브러리에 들어왔어요!"
+      "steps.s6.hoyaLine": "산 카드가 라이브러리에 들어왔어요!",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "물이 얼어서 굳은 것",
+      "steps.s2.discover.pages.2.items.0.note": "이어서 읽어요. eol + eum은 eoreum처럼 소리 나요."
     },
     "quest:stage1-nature-q3": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "밤하늘에 둥글게 떠서 빛나는 것",
@@ -264,9 +267,11 @@
       "steps.s4.title": "블록 만들기",
       "steps.s5.title": "듣고 읽기",
       "steps.s6.title": "연 카드!",
-      "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한글을 읽을 수 있어요!",
+      "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한국어 낱말을 읽을 수 있어요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
-      "steps.s6.hoyaLine": "연 카드가 라이브러리에 들어왔어요!"
+      "steps.s6.hoyaLine": "연 카드가 라이브러리에 들어왔어요!",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "한국 사람이 쓰는 말",
+      "steps.s2.discover.pages.2.items.0.note": "이어서 읽어요. hanguk + eo는 hangugeo처럼 소리 나요."
     },
     "quest:stage1-crafts-q4": {
       "title": "모양은 어디서 왔을까요?",

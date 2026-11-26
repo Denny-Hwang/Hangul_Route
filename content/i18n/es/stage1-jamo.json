@@ -88,9 +88,9 @@
       "gloss": "entre la o y la a, con la boca bien abierta"
     },
     "jamo:yeo": {
-      "soundHint": "como «yo», con la boca bien abierta",
+      "soundHint": "entre «yo» y «ya», con la boca bien abierta",
       "exampleWord.gloss": "zorro",
-      "gloss": "como «yo», con la boca bien abierta"
+      "gloss": "entre «yo» y «ya», con la boca bien abierta"
     },
     "jamo:o": {
       "soundHint": "como la o de «oso», con los labios redondos",
@@ -98,9 +98,9 @@
       "gloss": "como la o de «oso», con los labios redondos"
     },
     "jamo:yo": {
-      "soundHint": "como «yo» en «yogur»",
+      "soundHint": "como «yo» en «yogur», con los labios redondos",
       "exampleWord.gloss": "cocinar, platillo",
-      "gloss": "como «yo» en «yogur»"
+      "gloss": "como «yo» en «yogur», con los labios redondos"
     },
     "jamo:u": {
       "soundHint": "como la u de «luna»",

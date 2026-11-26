@@ -1,6 +1,7 @@
 import {
   QuestSchema,
   ROMANIZATION_EXCEPTIONS,
+  romanizeWord,
   checkKindsFor,
   discoverItemTexts,
   checkRomanization,
@@ -9,6 +10,7 @@ import {
   type Quest,
   type QuestStepKind,
 } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { minigameScopes, scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import {
@@ -245,7 +247,7 @@ describe('the rebuilt Stage 1 quests', () => {
     const checkOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
     const optionTexts = (round: { options: Array<{ text?: KoText }> }): string[] => round.options.map((o) => o.text?.ko ?? '').sort();
     const table: Array<[string, string[], string, string[]]> = [
-      ['달', ['다', '달', '단'], '설날', ['설날', '설', '날', '달']],
+      ['달', ['다', '달', '단'], '문', ['문', '물', '달', '산']],
       ['송', ['소', '송', '손'], '송편', ['송편', '포도', '야구', '여우']],
       ['ㅛ', ['ㅛ', 'ㅗ', 'ㅠ', 'ㅕ'], '한복', ['한복', '한국', '효도', '우유']],
     ];
@@ -340,7 +342,7 @@ describe('the rebuilt Stage 1 quests', () => {
     const table: Array<[string, string[], string, string[]]> = [
       ['ㅊ', ['ㅊ', 'ㄴ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
       ['ㅅ', ['ㅅ', 'ㅈ', 'ㅂ', 'ㅁ'], '아버지', ['아버지', '아기', '바나나', '두부']],
-      ['ㅋ', ['ㅋ', 'ㄴ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
+      ['ㅋ', ['ㅋ', 'ㄴ', 'ㅌ', 'ㄷ'], '도토리', ['도토리', '토마토', '쿠키', '고구마']],
     ];
     REBUILT.slice(3, 6).forEach((quest, i) => {
       const [symbol, symbolOptions, word, wordOptions] = table[i]!;
@@ -490,6 +492,7 @@ describe('the Nature and Crafts quests (Q-8)', () => {
       [
         [['산', 'san', 'card:mountain'], ['강', 'gang', null]],
         [['바다', 'bada', 'card:sea'], ['하늘', 'haneul', null]],
+        [['얼음', 'eoreum', null]],
       ],
       [
         [['달', 'dal', 'card:moon'], ['별', 'byeol', null]],
@@ -506,6 +509,7 @@ describe('the Nature and Crafts quests (Q-8)', () => {
       [
         [['한글', 'hangeul', 'card:hangul-day'], ['호야', 'hoya', 'card:tiger']],
         [['안녕', 'annyeong', null], ['사랑', 'sarang', null]],
+        [['한국어', 'hangugeo', null]],
       ],
     ]);
     for (const quest of NATURE_CRAFTS().slice(1)) {
@@ -514,13 +518,82 @@ describe('the Nature and Crafts quests (Q-8)', () => {
         for (const item of page.items) expect(item.type, quest.id).toBe('word');
       }
       // Every word is a reading word: T7 reads them all (no theme pages in a quest that teaches nothing new).
-      expect(discoverReading(quest)).toHaveLength(4);
+      // Quests 11 and 15 add a third, one-item linking page (CF-1b): five reading words.
+      expect(discoverReading(quest)).toHaveLength(['quest:stage1-nature-q2', 'quest:stage1-crafts-q3'].includes(quest.id) ? 5 : 4);
     }
   });
 
   it('explains how the l of nol slides into the next block of nori', () => {
     const nori = discoverPages(REBUILT[12]!).flatMap((p) => p.items).find((i) => i.type === 'word' && i.word.ko === '놀이');
     expect(nori?.type === 'word' ? nori.noteEn : undefined).toMatch(/nol \+ i/);
+  });
+
+  it('puts a note on each linking page: 얼음 in quest 11 and 한국어 in quest 15 (CF-1b), and on 설날 in quest 7 (the sound change)', () => {
+    const noteOf = (quest: Quest, ko: string): string | undefined => {
+      const item = discoverPages(quest).flatMap((p) => p.items).find((i) => i.type === 'word' && i.word.ko === ko);
+      return item?.type === 'word' ? item.noteEn : undefined;
+    };
+    expect(noteOf(REBUILT[10]!, '얼음')).toBe('Read it smoothly: eol + eum sounds like eoreum.');
+    expect(noteOf(REBUILT[14]!, '한국어')).toBe('Read it smoothly: hanguk + eo sounds like hangugeo.');
+    expect(noteOf(REBUILT[6]!, '설날')).toBe('Here n sounds like l: seol + nal sounds like seollal.');
+    // Exactly one linking word per quest 11 and 15 (a "Read it smoothly:" note), and it is a reading word.
+    for (const quest of [REBUILT[10]!, REBUILT[14]!]) {
+      const linked = discoverPages(quest).flatMap((p) => p.items).filter((i) => i.type === 'word' && i.noteEn?.startsWith('Read it smoothly:'));
+      expect(linked, quest.id).toHaveLength(1);
+    }
+    // 설날 stays on the theme page only (it is looked at, not read).
+    expect(discoverReading(REBUILT[6]!).map((t) => t.ko)).not.toContain('설날');
+  });
+
+  it('gives quests 11 and 15 a third page of 60 seconds with one item and no caption', () => {
+    for (const quest of [REBUILT[10]!, REBUILT[14]!]) {
+      const discover = quest.steps.find((s) => s.kind === 'discover')!;
+      expect(discover.discover!.pages, quest.id).toHaveLength(3);
+      expect(discover.discover!.pages[2]!.items, quest.id).toHaveLength(1);
+      expect(discover.discover!.pages[2]!.captionEn, quest.id).toBeUndefined();
+      expect(discover.durationSeconds, quest.id).toBe(60);
+    }
+  });
+
+  it('keeps every sound change out of the Check of quests 1-7: a Check word reads letter by letter as it sounds (설날 can not come back)', () => {
+    const problems: string[] = [];
+    for (const quest of REBUILT.slice(0, 7)) {
+      const check = scopesOf(quest).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
+      for (const round of check) {
+        if (!round.id.startsWith('lp:word:')) continue;
+        for (const text of [round.prompt, ...round.options.flatMap((o) => (o.text ? [o.text] : []))]) {
+          const alone = [...text.ko].map((ch) => romanizeWord(ch)).join('');
+          if (alone !== romanizeWord(text.ko)) problems.push(`${quest.id}: ${text.ko} sounds ${romanizeWord(text.ko)}, not ${alone}`);
+          if (text.syllables && text.syllables.join('') !== alone) problems.push(`${quest.id}: ${text.ko} syllables ${text.syllables.join('')}`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('quest 6 reads picnic words: at least half the reading words are not loanwords, and the blurb and intro say "picnic words"', () => {
+    const LOANWORDS = new Set(['쿠키', '토마토', '코코아', '토스트']);
+    const quest = REBUILT[5]!;
+    const checkAnswer = scopeOf(quest, 'check').listenPick!.rounds.filter((r) => r.id.startsWith('lp:word:')).map((r) => r.answerId);
+    const reading = [...discoverReading(quest).map((t) => t.ko), ...checkAnswer];
+    expect(reading.filter((ko) => !LOANWORDS.has(ko)).length * 2).toBeGreaterThanOrEqual(reading.length);
+    expect(reading).toEqual(expect.arrayContaining(['고구마', '도토리']));
+    expect(reading).not.toContain('코코아');
+    expect(reading).not.toContain('토스트');
+    expect(quest.blurbEn).toBe('Two puff-of-air letters, k and t, and picnic words to read.');
+    expect(quest.steps.find((s) => s.kind === 'intro')!.hoyaLineEn).toBe("Picnic time! Let's read picnic words!");
+    const apply = scopeOf(quest, 'apply');
+    expect((apply.cardPairs ?? []).map((p) => p.ko)).toEqual(['토마토', '고구마', '쿠키', '도토리', '김밥']);
+  });
+
+  it('claims "Korean words" at the end of the quest 15 intro, not that the learner can read it all, in en, es and ko', () => {
+    const quest = REBUILT[14]!;
+    const line = quest.steps.find((s) => s.kind === 'intro')!.hoyaLineEn!;
+    expect(line).toBe('King Sejong made Hangul so everyone could read. Now you can read Korean words too!');
+    expect(line).not.toMatch(/read it too/);
+    const overlay = (locale: 'es' | 'ko'): unknown => OVERLAYS[locale]?.[quest.id]?.['steps.s1.hoyaLine'];
+    expect(overlay('es')).toBe('El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leer palabras en coreano!');
+    expect(overlay('ko')).toBe('세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한국어 낱말을 읽을 수 있어요!');
   });
 
   it('drills the quest 10 finals by ear: six closed syllables, each among four that differ only in the final', () => {
