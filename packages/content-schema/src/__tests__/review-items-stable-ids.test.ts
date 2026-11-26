@@ -97,7 +97,21 @@ describe('keys and derived ids', () => {
   it('slugs, labels and falls back to the reviewed romanization (AMENDMENTS-ROMANIZER-GAPS RG-2a)', () => {
     // The rule converter gives sorip; the reviewed entry for 솔잎 is sollip, and so is a sentence that holds it.
     expect(koSlug('솔잎')).toBe('sollip');
-    expect(koSlug('송편은 솔잎을 깔고 쪄요.')).toBe('songpyeoneun-sollipeul-kkalgo-jjyeoyo');
+    // The real path: identityOf strips the end mark (normalizeKo) before koSlug, so a sentence entry must match without it.
+    const sentences: ReadonlyArray<readonly [string, string]> = [
+      ['송편은 솔잎을 깔고 쪄요.', 'songpyeoneun-sollipeul-kkalgo-jjyeoyo'],
+      ['왜 기록할까요?', 'wae-girokalkkayo'],
+      ['호랑이가 엄마인 척해요.', 'horangiga-eommain-cheokaeyo'],
+    ];
+    for (const [ko, slug] of sentences) {
+      const withoutMark = ko.replace(/[.?!]$/, '');
+      const reply = { ko: '네.', romanization: 'ne.' };
+      expect(identityOf(occ({ kind: 'exc', ko, reply }), vocab)).toMatchObject({ derived: `exc:${slug}` });
+      expect(identityOf(occ({ kind: 'exc', ko: withoutMark, reply }), vocab)).toMatchObject({ derived: `exc:${slug}` });
+      expect(koSlug(ko), ko).toBe(slug);
+      expect(koSlug(withoutMark), withoutMark).toBe(slug);
+      expect(labelOfKey(`lex|${withoutMark}`, []).romanization, withoutMark).toBe(slug.replace(/-/g, ' '));
+    }
     expect(labelOfKey('lex|솔잎', [])).toEqual({ ko: '솔잎', romanization: 'sollip' });
     expect(labelOfKey('lex|사과', [])).toEqual({ ko: '사과', romanization: 'sagwa' });
     const { items } = buildReviewItems([occ({ kind: 'lex', ko: '솔잎', romanization: '', en: 'pine needle' })], EMPTY_SNAPSHOT, vocab);

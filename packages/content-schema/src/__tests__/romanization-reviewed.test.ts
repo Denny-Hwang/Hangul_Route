@@ -31,6 +31,18 @@ describe('romanizeReviewed: a whole-string entry', () => {
     expect(romanizeReviewed('꽃잎 한 장', exceptions).text).toBe('kkonnip han jang');
   });
 
+  it('compares a whole-string entry on edge-stripped text, both sides: with or without the end mark or a quote', () => {
+    expect(romanizeReviewed('송편은 솔잎을 깔고 쪄요').text).toBe('songpyeoneun sollipeul kkalgo jjyeoyo');
+    expect(romanizeReviewed('송편은 솔잎을 깔고 쪄요!').text).toBe('songpyeoneun sollipeul kkalgo jjyeoyo');
+    expect(romanizeReviewed('"왜 기록할까요?"').text).toBe('wae girokalkkayo');
+    expect(romanizeReviewed('왜 기록할까요').text).toBe('wae girokalkkayo');
+    const exceptions = [entry('"꽃잎 한 장"…', ['kkonnip han jang'])];
+    expect(romanizeReviewed('꽃잎 한 장', exceptions).text).toBe('kkonnip han jang');
+    expect(romanizeReviewed('꽃잎 한 장.', exceptions).text).toBe('kkonnip han jang');
+    // Inside the sentence a mark is not an edge: the converter reads it as it always did.
+    expect(romanizeReviewed('꽃잎, 한 장', exceptions).text).toBe(romanize('꽃잎, 한 장').text);
+  });
+
   it('matches a whole string only: a longer or shorter string is not the entry', () => {
     const exceptions = [entry('꽃잎 한 장', ['kkonnip han jang'])];
     expect(romanizeReviewed('꽃잎 한', exceptions).text).toBe(romanize('꽃잎 한').text);
