@@ -58,19 +58,29 @@ export const instructionOf = (round: SbRound, copy: MinigameCopy): string =>
  * - `slot`: an empty place; `next` is the one to fill now. `attached` sits against the stem before it.
  */
 export type LineUnitView =
-  | { kind: 'placed' | 'fixed'; key: string; ko: string; romanization: string; accessibilityLabel: string }
+  | { kind: 'placed' | 'fixed'; key: string; ko: string; romanization: string; heldRomanization: string; accessibilityLabel: string }
   | { kind: 'slot'; key: string; next: boolean; attached: boolean; stem: string | undefined; accessibilityLabel: string };
 
 export interface LineContext {
   romanizationMode: RomanizationMode;
+  /**
+   * A quest Check holds every romanization line of the round's tiles and words until the sentence is built (AMENDMENTS-STAGE1-
+   * DECODING-CHECK section 3.3, row DC-1c): a held line keeps its room (`heldRomanization`), draws nothing and is off the
+   * accessibility tree; the screen-reader names keep the romanization. Absent: nothing held.
+   */
+  hold?: boolean;
 }
 
 const shownRomanization = (romanization: string, mode: RomanizationMode): string => (mode === 'always' ? romanization : '');
+
+/** Whether the round's romanization lines are held now: a Check, and the sentence is not built yet. */
+const heldNow = (ctx: LineContext, state: SbState): boolean => ctx.hold === true && !finished(state);
 
 /** The sentence line, one unit per word, left to right. */
 export function lineView(round: SbRound, state: SbState, ctx: LineContext, a11y: MinigameA11y): LineUnitView[] {
   const total = round.words.length;
   const say = a11y.sentenceBuilder;
+  const held = heldNow(ctx, state);
   const filled = (word: number): boolean => {
     const at = round.open.indexOf(word);
     return at === -1 || at < state.placed.length;
@@ -83,7 +93,8 @@ export function lineView(round: SbRound, state: SbState, ctx: LineContext, a11y:
         kind,
         key,
         ko: word.ko,
-        romanization: shownRomanization(word.romanization, ctx.romanizationMode),
+        romanization: held ? '' : shownRomanization(word.romanization, ctx.romanizationMode),
+        heldRomanization: held ? shownRomanization(word.romanization, ctx.romanizationMode) : '',
         accessibilityLabel: say.slotFilled(i + 1, total, wordLabel(word.ko, word.romanization)),
       };
     }
@@ -130,6 +141,8 @@ export interface TileView {
   ko: string;
   /** Empty: no romanization line (`tap` mode); the accessible name still carries it. */
   romanization: string;
+  /** The line a Check holds while the sentence is open: its room is kept, nothing is drawn; '' when nothing is held. */
+  heldRomanization: string;
   look: TileLook;
   /** Sliding back to the tray after a miss. */
   returning: boolean;
@@ -139,6 +152,7 @@ export interface TileView {
 /** The tiles still in the tray (placed tiles leave it), in tray order. */
 export function trayView(round: SbRound, state: SbState, ctx: LineContext, a11y: MinigameA11y): TileView[] {
   if (finished(state)) return [];
+  const held = heldNow(ctx, state);
   const ringOn = state.slotMisses >= 2;
   const ringId = ringOn ? round.tray.find((t) => !state.placed.includes(t.id) && isRightTile(round, state.placed.length, t))?.id : undefined;
   return round.tray
@@ -151,7 +165,8 @@ export function trayView(round: SbRound, state: SbState, ctx: LineContext, a11y:
       return {
         id: t.id,
         ko: t.ko,
-        romanization: shownRomanization(t.romanization, ctx.romanizationMode),
+        romanization: held ? '' : shownRomanization(t.romanization, ctx.romanizationMode),
+        heldRomanization: held ? shownRomanization(t.romanization, ctx.romanizationMode) : '',
         look,
         returning: state.returning === t.id,
         accessibilityLabel: label,

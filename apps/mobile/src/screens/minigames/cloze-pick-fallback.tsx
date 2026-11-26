@@ -36,7 +36,7 @@ export function ClozePickFallback({ scope, host, onBack }: Omit<ClozePickStepPro
         missLine: copy.clozePick.miss,
         prompt: (round, focusRef, held) => (
           <>
-            {valueIds.has(round.id) && realia ? <ClozeRealia realia={realia} testID="cloze-pick-fallback-realia" /> : null}
+            {valueIds.has(round.id) && realia ? <ClozeRealia realia={realia} held={held} testID="cloze-pick-fallback-realia" /> : null}
             <View
               ref={focusRef}
               accessible
