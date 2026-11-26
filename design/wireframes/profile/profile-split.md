@@ -78,6 +78,7 @@ Panel C — a self-only device (an adult learning alone): the row reads **Accoun
 - Profile tile → switch learner (unchanged); Edit → Edit profile (gate as today); [+ Add] → new profile (gate as today).
 - Display row → `shell/display-sheet.md`.
 - Sound, Reading practice, Challenge → toggles (unchanged).
+- **[RF] Amended 2026-11-25 by `AMENDMENTS-ROMANIZATION-FADE.md`:** the Reading practice row is no longer a toggle. It is the Reading practice card with three choices (As I learn, Always, Only when I tap) drawn in `profile/reading-practice.md` Panel A; Sound and Challenge stay toggles.
 - Find my starting spot again → placement (not gated, unchanged); Make a weekly plan → route proposal (a child's goes through the gate, unchanged); My notes → Notes.
 - Got a class code? → Join (`JoinSpace`).
 - Plan card → Plan screen (no PIN).

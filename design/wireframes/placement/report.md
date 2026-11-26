@@ -1,6 +1,6 @@
 # Placement: Parent report and "Choose a different start" (`placement/report`)
 
-Spec: `docs/specs/F-PLC-001-placement-test.md` (section 3.9, AM-5, AM-12, AM-38, W-8)
+Spec: `docs/specs/F-PLC-001-placement-test.md` (section 3.9, AM-5, AM-12, AM-38, W-8); reading and listening apart: `docs/specs/AMENDMENTS-PLC-VALIDITY.md` §3.8 [PV]
 Audience: a grown-up, behind the PIN gate (`parent/placement-report`).
 Code (planned): `screens/parent/PlacementReportScreen.tsx`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko ~~` taught Korean drawn with `KoreanText`, `(o)` / `( )` a radio, `[x]` a switch on. No colours, no fonts, no pixel sizes, no final copy: every sentence in a box is a placeholder that says what the sentence does.
@@ -54,6 +54,42 @@ Choose a different start (sheet)
 - No comparison with other learners, no "behind" wording (F-PAR-001 section 3.6).
 - **Amended (F-PLC-001 AM-5, AM-12; F-ROUTE-001 R-0):** the report opens with the "Suggested weekly plan" card of `journey/my-route-overview.md` K2 (when `flags.routeEnabled`) and carries the skills note `caregiver.skillsNote` under "What we saw". Promoted here (F-PLC-001 P-0).
 
+## [PV] Reading and listening (AMENDMENTS-PLC-VALIDITY §3.8, row PV-4)
+
+The report says what the learner understands by ear and what the learner can read, apart. Only "What we saw" changes; the header line (the route's stage and band), "Where the route starts" and the buttons stay as drawn above.
+
+```
+┌──────────────────────────────────┐
+│ What we saw                       │
+│ ┌ Reading and listening ────────┐ │
+│ │ Reading     At the beginning  │ │  <- band label of the newest result; "not checked" + reason
+│ │ Listening   Understood the    │ │  <- from oralStage, said as this check: new for now |
+│ │             short sentences   │ │     knew most of the everyday words we said |
+│ │             we said           │ │     understood the short sentences we said | not checked
+│ │ "In this check, Name under-    │ │  <- only when listening is above reading in this check;
+│ │  stood more Korean than Name   │ │     never "behind", "only", "can't", a number, a comparison
+│ │  could read. That is common."  │ │     with others, or a word about the route
+│ └───────────────────────────────┘ │
+│  Letters (shapes)     secure      │
+│  Sounds of letters    not yet     │
+│  Reading syllables    not yet     │
+│  Words      listening: secure                          │  <- one status word per form that ran;
+│  Sentences  listening: secure                          │     a reader also sees "reading: …"; a form
+│                                                        │     that did not run is left out
+│   "Sentences, listening: 4 of 4"  (rung captions as today)
+│ Where the route starts            │
+│  quest title    [ Choose a different start ]
+│  "An earlier version of the check asked easier         │  <- only for a Stage 3 route reached by a
+│   sentence questions. If Stage 3 feels hard, choose a  │     sentence pass of bank version 1
+│   different start."                                    │
+└──────────────────────────────────┘
+```
+
+- The two labels are words, not pills of a colour that ranks them; the status words keep today's neutral tones (`not yet` is never `danger`).
+- Large text: the Reading and Listening values wrap under their labels; the Words and Sentences row puts each form on its own line below 360 pt.
+- Screen readers read the block as two lines: "Reading, At the beginning" and "Listening, Understood the short sentences we said".
+- The learner's result screen does not change.
+
 ## Interaction points
 
 - Choose a different start: opens the sheet; SAVE skips everything before the picked quest; Cancel closes.
@@ -75,7 +111,7 @@ Exit to: `parent/dashboard`, `placement/language` / `placement/options` (retake)
 
 ## Data needs
 
-- reads: the newest placement result, the route catalogue, the profile, flags
+- reads: the newest placement result (its `oralStage`, `bankVersion` and rows by form, [PV]), the route catalogue, the profile, flags
 - writes: an override of the start (route seed), telemetry
 
 ## Open questions
