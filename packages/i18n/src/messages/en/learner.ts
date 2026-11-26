@@ -790,7 +790,7 @@ export const learner = {
       hearIt: { cta: 'Hear it' },
       /** A consonant page's second button: the letter's name (ㄱ said giyeok); the taught line under it is content. */
       hearName: { cta: 'Hear the name' },
-      /** [SF-3] The initial ㅇ card's second button: 아, 오, 우 one after the other, so ㅇ's silence can be heard; the taught lines under it are content. */
+      /** [SF-3] The initial ㅇ card's second button: the syllables a, o, u one after the other, so ㅇ's silence can be heard; the taught lines under it are content. */
       hearVowels: { cta: 'Hear it with vowels' },
       /** No longer on Discover (SF-1); the presenter's letter slide still uses it (`LetterSlide.tsx`): the letter's sound on a vowel (ㄴ said na). */
       soundWith: { cta: 'Hear it with a vowel' },

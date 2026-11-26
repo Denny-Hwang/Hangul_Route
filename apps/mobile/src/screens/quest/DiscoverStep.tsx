@@ -143,7 +143,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
 
   // Recordings for every Hear it on these pages are fetched and decoded ahead (§3.10).
   useEffect(() => {
-    // [SF-3] Every sound of a button that says several (Hear it with vowels), so 오 and 우 do not load cold.
+    // [SF-3] Every sound of a button that says several (Hear it with vowels), so the o and u clips do not load cold.
     void warmClips(clipRefsOf([...actions.values()].flatMap(actionSpecs)));
   }, [actions]);
 
@@ -642,7 +642,7 @@ function DiscoverItemCard({
             tone="ghost"
             dispatch={dispatch}
           />
-          {/* The three carrier lines (아 = ㅇ + ㅏ, a) are content; each reads its syllable only, never the lone ㅇ as 이응. */}
+          {/* The three carrier lines (a = ㅇ + ㅏ, in Hangul) are content; each reads its syllable only, never the lone ㅇ by its name. */}
           <View testID={`discover-vowels-${item.key}`} style={{ alignItems: 'center', gap: spacing.xs }}>
             {item.vowelsButton.lines.map((line) => (
               <KoreanText key={line.ko} ko={line.ko} romanization={line.romanization} size="sm" accessibilityLabel={line.accessibilityLabel} />

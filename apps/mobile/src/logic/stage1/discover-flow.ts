@@ -19,7 +19,7 @@ import { decompose, symbolsOf } from './hangul';
  * Hear it says the SOUND (ㄴ is na, a vowel its sound, ㅇ its name, a final its closed
  * syllable; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1), and a consonant's second, optional
  * button, Hear the name, says the letter's name (nieun); the initial ㅇ's second button, Hear it with vowels, says
- * 아, 오, 우 one after the other, so its silence can be heard (SF-3); unavailable or muted audio
+ * a, o, u (the vowel cards' own sounds) one after the other, so its silence can be heard (SF-3); unavailable or muted audio
  * switches that item to a "say it out loud" text line and changes nothing else; Continue is enabled at once and
  * never waits for a Hear it; an item that cannot be resolved is skipped, and
  * a step with nothing left still has a Continue.
@@ -46,7 +46,7 @@ export interface HearAction {
   id: string;
   /** What it says; for a button that says several things in a row, the first of `series`. */
   spec: HearSpec;
-  /** [SF-3] A button that says several things one after the other (ㅇ's 아, 오, 우), in order. */
+  /** [SF-3] A button that says several things one after the other (ㅇ's a, o, u), in order. */
   series?: readonly HearSpec[];
   /**
    * The speech rate (F-AUDIO-004 §3.3): `sound` for a symbol and its name, `sentence` for a
@@ -105,9 +105,9 @@ export interface DiscoverItemView {
    */
   nameButton?: { action: HearAction; ko: string; romanization: string };
   /**
-   * [SF-3] The initial ㅇ's second button, Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12): 아, 오, 우 in a
-   * row, from the vowel cards' own clips, with a carrier line for each ("아 = ㅇ + ㅏ", a), drawn as content. Its
-   * `accessibilityLabel` is the syllable and its romanization only, so a Korean voice never reads the lone ㅇ as 이응.
+   * [SF-3] The initial ㅇ's second button, Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12): a, o, u in a
+   * row, from the vowel cards' own clips, with a carrier line for each (a = ㅇ + ㅏ, in Hangul), drawn as content. Its
+   * `accessibilityLabel` is the syllable and its romanization only, so a Korean voice never reads the lone ㅇ by its name (ieung).
    */
   vowelsButton?: { action: HearAction; lines: Array<{ ko: string; romanization: string; accessibilityLabel: string }> };
   block?: DiscoverBlockView;
