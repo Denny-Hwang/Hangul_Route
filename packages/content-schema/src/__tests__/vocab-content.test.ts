@@ -252,8 +252,8 @@ describe('rule edge cases', () => {
   it('an exception without a reason fails vocab-romanization; one with a reason is accepted', () => {
     const tree = validTree();
     food(tree).items[5] = { ...food(tree).items[5]!, romanization: 'kimchi' };
-    const withReason: RomanizationException[] = [{ ko: '김치', allowed: ['kimchi'], reason: 'converter limit: proper noun convention' }];
-    const noReason: RomanizationException[] = [{ ko: '김치', allowed: ['kimchi'], reason: '  ' }];
+    const withReason: RomanizationException[] = [{ ko: '김치', allowed: ['kimchi'], reason: 'converter limit: proper noun convention', gap: 'proper-noun' }];
+    const noReason: RomanizationException[] = [{ ko: '김치', allowed: ['kimchi'], reason: '  ', gap: 'proper-noun' }];
     expect(checkVocabTree(tree, { exceptions: withReason }).filter((f) => f.rule === 'vocab-romanization')).toEqual([]);
     const findings = checkVocabTree(tree, { exceptions: noReason }).filter((f) => f.rule === 'vocab-romanization');
     expect(findings.some((f) => f.message.includes('reason'))).toBe(true);

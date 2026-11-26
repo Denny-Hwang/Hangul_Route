@@ -5,6 +5,7 @@ import {
   composeSyllable,
   decomposeSyllable,
   isSyllable,
+  koTokens,
   romanize,
   romanizeSyllables,
   romanizeWord,
@@ -250,7 +251,13 @@ describe('sound-change rules', () => {
 });
 
 describe('documented converter limits (known output, a fix is a conscious change)', () => {
-  it('does not insert ㄴ in compounds', () => {
+  it('does not insert ㄴ in compounds, 사이시옷 before 이, the juncture or a predicate\'s ㅎ (gaps.ts detects them)', () => {
+    expect(romanizeWord('깻잎')).toBe('kkaesip');
+    expect(romanizeWord('서울역')).toBe('seouryeok');
+    expect(romanizeWord('맛없어요')).toBe('maseopseoyo');
+    expect(romanizeWord('첫인상')).toBe('cheosinsang');
+    expect(romanizeWord('못해요')).toBe('mothaeyo');
+    expect(romanizeWord('북한산')).toBe('bukhansan');
     expect(romanizeWord('꽃잎')).toBe('kkochip');
     expect(romanizeWord('솔잎')).toBe('sorip');
     expect(romanizeWord('한여름')).toBe('hanyeoreum');
@@ -400,6 +407,48 @@ describe('romanizeSyllables / syllableSplit', () => {
     expect(romanizeSyllables('\u{1F600}')).toBeNull();
     expect(romanizeWord('abc')).toBeNull();
     expect(syllableSplit('한글!')).toBeNull();
+  });
+});
+
+/** AMENDMENTS-ROMANIZER-GAPS §3.5 item 5 and §3.8 (row RG-2b): the predicate reading is an option, never the default. */
+describe('predicateH: a 하다 predicate aspirates every stop + ㅎ (RR 제3장 제1항 4, SP 제12항 붙임 2)', () => {
+  const table: ReadonlyArray<readonly [string, string]> = [
+    ['못해요', 'motaeyo'],
+    ['따뜻해요', 'ttatteutaeyo'],
+    ['딱딱해요', 'ttakttakaeyo'],
+    ['축하해요', 'chukahaeyo'],
+    ['입학해요', 'ipakaeyo'],
+    ['약혼해요', 'yakonhaeyo'],
+    ['숱하다', 'sutada'],
+    ['낮해요', 'nataeyo'],
+    ['기록했어요', 'girokaesseoyo'],
+    ['기록할까요', 'girokalkkayo'],
+    ['척해요', 'cheokaeyo'],
+  ];
+  it.each(table)('%s -> %s', (ko, rr) => {
+    expect(romanizeWord(ko, { predicateH: true })).toBe(rr);
+    expect(romanize(ko, { predicateH: true }).text).toBe(rr);
+  });
+
+  it('without the option, or without a 하다 block after the first block, nothing changes', () => {
+    expect(romanizeWord('입학')).toBe('iphak');
+    expect(romanizeWord('입학', { predicateH: true })).toBe('iphak');
+    expect(romanizeWord('하', { predicateH: true })).toBe('ha');
+    expect(romanizeWord('못해요', { predicateH: false })).toBe('mothaeyo');
+    expect(romanizeWord('북한산')).toBe('bukhansan');
+    expect(romanizeSyllables('못해요', {})).toEqual(['mot', 'hae', 'yo']);
+  });
+
+  it('a compound final keeps its own rule (앉하다)', () => {
+    expect(romanizeWord('앉하다', { predicateH: true })).toBe(romanizeWord('앉하다'));
+  });
+});
+
+describe('koTokens', () => {
+  it('splits on whitespace, strips marks and drops empty tokens, as romanize() reads them', () => {
+    expect(koTokens('  “거의!” 다… 했어? ~ ')).toEqual(['거의', '다', '했어']);
+    expect(koTokens('한-글')).toEqual(['한글']);
+    expect(koTokens('')).toEqual([]);
   });
 });
 

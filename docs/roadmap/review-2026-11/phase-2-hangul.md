@@ -95,6 +95,8 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 
 > 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — #8 의 그림은 `AMENDMENTS-PICTURES-2026-11.md` PX-2 (#1039) 가 방패연(직사각형, 가운데 구멍)으로 다시 그렸다(`docs/design/picture-review-2026-11/triage.md:40`, `HeritageCardArt/__tests__/stage1-art.test.ts`). 남은 것은 문구: `apps/mobile/src/content/heritage-cards.ts:65` 가 아직 "A diamond kite painted with a tiger's face.". #12 와 같은 방향의 일은 AU-15 (#1035) 가 했다: Stage 1 한 줄 소개, 완료 화면("You can read basic Hangul now!", "the basic letters and six final sounds"), 사전 6줄, Stage 2 Letters Volume 2 소개를 en/es/ko 에서 낮췄다(`apps/mobile/src/content/stages.ts`, `packages/i18n/src/__tests__/stage1-claims.test.ts`). 그러나 #12 가 가리키는 `quests.ts:595` 의 "Now you can read it too!" 는 그대로다. 나머지 행(#1–#7, #9–#11, #13)의 인용 파일(`jamo.json`, `jamo.ts`, `minigame-config.ts`, `quests.ts`)은 바뀌지 않았다. ko 오버레이 `content/i18n/ko/stage1-jamo.json` 은 #1044 의 한국어 다듬기로 일부 바뀌었지만 #1 의 ㅡ 설명("u와 i 사이")은 그대로다.
 
+> 상태 2026-11-26 (main `fb4ff3b3c`): 표의 #1–#12 완료 — `AMENDMENTS-STAGE1-CONTENT-FIXES.md` 의 CF-0 #1127, CF-1a #1135, CF-1b #1143, CF-2 #1145, CF-4 #1147 (후속: es ㅕ ㅛ, ko ㄹ ㅅ 힌트) 이 머지됐고 CF-3(F-QUEST-002 §3.6 표와 부록 A 를 main 에 맞춤)이 문서 마감이다. 콘텐츠만 바뀌어 기기 확인은 없다. **#13 (ㅇ 의 "아 · 오 · 우" 버튼)은 아직 만들어지지 않았다:** CF 사양은 WO-13 으로 넘겼고(OD-CF5), WO-13 의 사양(SF, `AMENDMENTS-DISCOVER-SOUND-FIRST.md` §4)은 범위 밖으로 두며 WO-12 item 13 에 돌려보냈으므로 담당 WO 를 정해야 한다.
+
 **목표.** 리뷰가 찾은 작은 오류와 불일치를 한 번에 고친다. 결정이 필요 없는 것만 모았다.
 
 **사양.** `docs/specs/AMENDMENTS-STAGE1-CONTENT-FIXES.md`. 표 하나에 행마다 "현재 → 변경" 을 적는다.
