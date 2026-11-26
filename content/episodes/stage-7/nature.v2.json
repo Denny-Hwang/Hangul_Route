@@ -61,19 +61,19 @@
                     "type": "pattern",
                     "frame": {
                       "ko": "___은/는 따뜻해요.",
-                      "romanization": "___eun/neun ttatteuthaeyo",
+                      "romanization": "___eun/neun ttatteutaeyo",
                       "en": "___ is warm."
                     },
                     "noteEn": "{ko:은} after a final consonant, {ko:는} after a vowel: it marks what the sentence is about.",
                     "examples": [
                       {
                         "ko": "봄은 따뜻해요.",
-                        "romanization": "bomeun ttatteuthaeyo",
+                        "romanization": "bomeun ttatteutaeyo",
                         "en": "Spring is warm."
                       },
                       {
                         "ko": "오늘은 따뜻해요.",
-                        "romanization": "oneureun ttatteuthaeyo",
+                        "romanization": "oneureun ttatteutaeyo",
                         "en": "It is warm today."
                       }
                     ]
@@ -208,7 +208,7 @@
               "promptEn": "Type: Spring is warm.",
               "target": {
                 "ko": "봄은 따뜻해요",
-                "romanization": "bomeun ttatteuthaeyo",
+                "romanization": "bomeun ttatteutaeyo",
                 "en": "spring is warm"
               }
             },
@@ -521,7 +521,7 @@
                   "bank": [
                     {
                       "ko": "따뜻해요",
-                      "romanization": "ttatteuthaeyo",
+                      "romanization": "ttatteutaeyo",
                       "en": "warm"
                     },
                     {
@@ -727,7 +727,7 @@
               "id": "r2",
               "sentence": {
                 "ko": "봄은 따뜻해요.",
-                "romanization": "bomeun ttatteuthaeyo",
+                "romanization": "bomeun ttatteutaeyo",
                 "en": "Spring is warm."
               },
               "distractors": [
@@ -839,7 +839,7 @@
                   "bank": [
                     {
                       "ko": "따뜻해요",
-                      "romanization": "ttatteuthaeyo",
+                      "romanization": "ttatteutaeyo",
                       "en": "warm"
                     },
                     {

@@ -5,7 +5,9 @@
  *
  * Rules: R1 romanization-mismatch, R2 romanization-hyphen, R3 romanization-spacing,
  * R4 romanization-missing, R5 romanization-inconsistent, R6 romanization-prose,
- * R7 jamo-value-unknown, R8 romanization-exception-stale. romanization-unchecked
+ * R7 jamo-value-unknown, R8 romanization-exception-stale, R9 romanization-gap
+ * (AMENDMENTS-ROMANIZER-GAPS). R1 compares with the reviewed value (`romanizeReviewed`); R9
+ * demands a reviewed entry for a word the detectors flag. romanization-unchecked
  * is a warning: the Korean holds a character the converter cannot read, so R1
  * could not run (reported instead of a false mismatch).
  */
@@ -13,9 +15,12 @@ import { extractProsePairs } from './extract';
 import {
   JAMO_NAME_VALUES,
   JAMO_SOUND_VALUES,
+  ROMANIZATION_EXCEPTIONS,
   type RomanizationException,
 } from './exceptions';
-import { romanize, syllableSplit } from './rr';
+import { GAP_ARTICLES, ROMANIZATION_GAPS, detectGaps, type RomanizationGap } from './gaps';
+import { romanizeReviewed, wholeEntryKey } from './reviewed';
+import { koTokens, romanize, syllableSplit } from './rr';
 
 export type RomanizationRule =
   | 'romanization-mismatch'
@@ -26,6 +31,7 @@ export type RomanizationRule =
   | 'romanization-prose'
   | 'jamo-value-unknown'
   | 'romanization-exception-stale'
+  | 'romanization-gap'
   | 'romanization-unchecked';
 
 export interface RomanizationIssue {
@@ -39,6 +45,7 @@ export interface RomanizationIssue {
 }
 
 export interface CheckContext {
+  /** The reviewed list; `ROMANIZATION_EXCEPTIONS` when omitted, `[]` for none. */
   exceptions?: readonly RomanizationException[];
 }
 
@@ -110,28 +117,56 @@ export function checkRomanization(ko: string, given: string, ctx?: CheckContext)
       ),
     );
   }
-  const rr = romanize(ko);
-  if (rr.unknown.length > 0) {
+  const exceptions = ctx?.exceptions ?? ROMANIZATION_EXCEPTIONS;
+  const reviewed = romanizeReviewed(ko, exceptions);
+  if (reviewed.unknown.length > 0) {
     issues.push(
       issue(
         'romanization-unchecked',
-        `${ko}: cannot be romanized by rule (${rr.unknown.join(' ')}), spelling not verified`,
+        `${ko}: cannot be romanized by rule (${reviewed.unknown.join(' ')}), spelling not verified`,
         ko,
         given,
         'warning',
       ),
     );
-  } else if (compact(given) !== compact(rr.text) && !isAllowed(ko, given, ctx)) {
+    return issues;
+  }
+  const gaps = uncoveredGaps(ko, exceptions);
+  if (compact(given) !== compact(reviewed.text) && !isAllowed(ko, given, exceptions)) {
+    const hint =
+      gaps.length === 0
+        ? ''
+        : ` (converter gap: ${[...new Set(gaps.map((g) => g.gap))].join('/')}, AMENDMENTS-ROMANIZER-GAPS)`;
     issues.push(
       issue(
         'romanization-mismatch',
-        `${ko}: given "${given.trim()}", Revised Romanization is "${rr.text}"`,
+        `${ko}: given "${given.trim()}", Revised Romanization is "${reviewed.text}"${hint}`,
         ko,
         given,
       ),
     );
+  } else {
+    for (const { token, gap } of gaps) {
+      issues.push(
+        issue(
+          'romanization-gap',
+          `${token}: ${gap} (${GAP_ARTICLES[gap]}); the converter cannot tell. Check 표준국어대사전 and add { ko: '${token}', allowed: ['…'], gap: '${gap}', reason: '…' } to ROMANIZATION_EXCEPTIONS`,
+          ko,
+          given,
+        ),
+      );
+    }
   }
   return issues;
+}
+
+/** The gaps the detectors name in the tokens of `ko` that no entry covers (a word entry, or a whole-string entry). */
+function uncoveredGaps(ko: string, exceptions: readonly RomanizationException[]): Array<{ token: string; gap: RomanizationGap }> {
+  const whole = wholeEntryKey(ko);
+  if (exceptions.some((e) => wholeEntryKey(e.ko) === whole)) return [];
+  return koTokens(ko).flatMap((token) =>
+    exceptions.some((e) => e.ko === token) ? [] : detectGaps(token).map((gap) => ({ token, gap })),
+  );
 }
 
 /** A frame's slot and the particle written after it: `___`, `___을/를`, `___에` (F-CURR-001 §3.4, §3.7). */
@@ -155,26 +190,49 @@ export function checkFrameRomanization(ko: string, given: string, ctx?: CheckCon
   return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(afterSlot(part, i), (romParts[i] as string).trim(), ctx) : []));
 }
 
-function isAllowed(ko: string, given: string, ctx: CheckContext | undefined): boolean {
-  const exceptions = ctx?.exceptions ?? [];
+function isAllowed(ko: string, given: string, exceptions: readonly RomanizationException[]): boolean {
   return exceptions.some((e) => e.ko === ko.trim() && e.allowed.some((a) => compact(a) === compact(given)));
 }
 
+/** What a detector-gap entry's reason must cite: an article of the rules, or the dictionary entry. */
+const ARTICLE = /제\s*\d+\s*항|표준국어대사전/;
+/** A predicate-h entry that keeps the ㅎ must say it is a noun. */
+const NOUN_REASON = /체언|noun/;
+
 /**
- * R8: an exception needs a reason and must match a Korean string in the scanned
- * sources (`seenKo`).
+ * R8: an exception needs a reason and must match a Korean string in the scanned sources (`seenKo`:
+ * a whole-string entry as a substring of a source, a word entry as a whole token of a checked string,
+ * see `seenExceptionKo`). A detector-gap entry cites its article, a word entry holds exactly one
+ * allowed value, and a `predicate-h` entry agrees with `romanize(ko, { predicateH: true })` (or is a
+ * noun that keeps the ㅎ, as 북한산).
  */
 export function checkExceptions(
   exceptions: readonly RomanizationException[],
   seenKo: readonly string[],
 ): RomanizationIssue[] {
   const issues: RomanizationIssue[] = [];
+  const stale = (message: string, ko: string): void => {
+    issues.push(issue('romanization-exception-stale', message, ko));
+  };
   for (const e of exceptions) {
-    if (e.reason.trim() === '') {
-      issues.push(issue('romanization-exception-stale', `exception ${e.ko} has no reason`, e.ko));
+    if (e.reason.trim() === '') stale(`exception ${e.ko} has no reason`, e.ko);
+    if (seenKo.indexOf(e.ko) < 0) stale(`exception ${e.ko} matched no source`, e.ko);
+    if (!/\s/.test(e.ko.trim()) && e.allowed.length !== 1) {
+      stale(`exception ${e.ko} is a word entry and must hold exactly one allowed value, not ${e.allowed.length}`, e.ko);
     }
-    if (seenKo.indexOf(e.ko) < 0) {
-      issues.push(issue('romanization-exception-stale', `exception ${e.ko} matched no source`, e.ko));
+    if (ROMANIZATION_GAPS.indexOf(e.gap as RomanizationGap) >= 0 && !ARTICLE.test(e.reason)) {
+      stale(`exception ${e.ko} (${e.gap}) cites no article (표준 발음법 제N항, 로마자 표기법 제3장 제1항) or 표준국어대사전 entry`, e.ko);
+    }
+    if (e.gap === 'predicate-h') {
+      const value = compact(e.allowed[0] ?? '');
+      const asPredicate = compact(romanize(e.ko, { predicateH: true }).text);
+      const asNoun = compact(romanize(e.ko).text);
+      if (value !== asPredicate && !(value === asNoun && NOUN_REASON.test(e.reason))) {
+        stale(
+          `exception ${e.ko} (predicate-h) holds "${e.allowed[0] ?? ''}", the predicate reading is "${asPredicate}" (or the noun reading "${asNoun}" with a reason that says it is a noun, 체언)`,
+          e.ko,
+        );
+      }
     }
   }
   return issues;

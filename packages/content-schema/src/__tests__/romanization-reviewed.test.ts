@@ -9,7 +9,7 @@ import {
 
 /** AMENDMENTS-ROMANIZER-GAPS §3.3: one reviewed romanization for every value that is composed. */
 
-const entry = (ko: string, allowed: string[]): RomanizationException => ({ ko, allowed, reason: 'test entry' });
+const entry = (ko: string, allowed: string[]): RomanizationException => ({ ko, allowed, reason: 'test entry', gap: 'other' });
 
 describe('romanizeReviewed: a whole-string entry', () => {
   it('gives the entry value for the exact string, in the shape romanize() returns', () => {
@@ -50,7 +50,7 @@ describe('romanizeReviewed: a whole-string entry', () => {
   });
 
   it('is the shipped value of every shipped whole-string entry, normalised as the checker does', () => {
-    expect(ROMANIZATION_EXCEPTIONS).toHaveLength(8);
+    expect(ROMANIZATION_EXCEPTIONS).toHaveLength(13);
     for (const e of ROMANIZATION_EXCEPTIONS) {
       const result = romanizeReviewed(e.ko);
       expect(result.text, e.ko).toBe(normalizeRomanization(e.allowed[0] as string).replace(/-/g, ''));
@@ -58,9 +58,10 @@ describe('romanizeReviewed: a whole-string entry', () => {
     }
   });
 
-  it('keeps the eight corrections the spec names: each differs from the converter, nothing else is added', () => {
+  it('keeps the eleven corrections the spec names: each differs from the converter; the two noun confirmations (북한산, 북한산에) do not', () => {
     const changed = ROMANIZATION_EXCEPTIONS.filter((e) => romanizeReviewed(e.ko).text !== romanize(e.ko).text).map((e) => e.ko);
-    expect(changed).toEqual(ROMANIZATION_EXCEPTIONS.map((e) => e.ko));
+    expect(changed).toEqual(ROMANIZATION_EXCEPTIONS.map((e) => e.ko).filter((ko) => !ko.startsWith('북한산')));
+    expect(changed).toHaveLength(11);
   });
 });
 

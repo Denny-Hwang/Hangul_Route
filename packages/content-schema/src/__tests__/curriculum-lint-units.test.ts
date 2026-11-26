@@ -327,6 +327,10 @@ describe('taught items and pronunciation', () => {
     expect(hasSoundChange('사과')).toBe(false);
     // After ㄹ or a nasal in a compound the spelling does not show it: the explicit flag covers it.
     expect(hasSoundChange('물고기')).toBe(false);
+    // AMENDMENTS-ROMANIZER-GAPS §3.5 item 6: a word the gap detectors flag, or a reviewed entry word, is a sound change.
+    for (const word of ['깻잎', '색연필', '서울역', '맛없어요', '첫인상', '못해요', '따뜻해요', '북한산']) expect(hasSoundChange(word), word).toBe(true);
+    expect(hasSoundChange('오늘은 따뜻해요.')).toBe(true);
+    expect(hasSoundChange('송별연')).toBe(false);
   });
 
   it('lists the lesson bodies of a tree in file order, cells and pack levels only', () => {

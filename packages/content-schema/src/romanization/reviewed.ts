@@ -18,7 +18,7 @@ const STRIPPED = /[-!?.,~·…"'“”‘’]/g;
 const EDGE = /^[-!?.,~·…"'“”‘’\s]+|[-!?.,~·…"'“”‘’\s]+$/g;
 
 /** The key a whole-string entry is looked up by: the text without its edge marks (`…쪄요.` and `…쪄요` are one entry). */
-function wholeKey(text: string): string {
+export function wholeEntryKey(text: string): string {
   return text.replace(EDGE, '');
 }
 
@@ -54,7 +54,7 @@ function indexOf(exceptions: readonly RomanizationException[]): EntryIndex {
     if (first === undefined) continue;
     const value = normalizeValue(first);
     const ko = e.ko.trim();
-    const key = wholeKey(ko);
+    const key = wholeEntryKey(ko);
     if (!whole.has(key)) whole.set(key, value);
     const core = ko.replace(STRIPPED, '');
     if (!/\s/.test(ko) && !word.has(core)) word.set(core, value);
@@ -73,7 +73,7 @@ export function romanizeReviewed(
   exceptions: readonly RomanizationException[] = ROMANIZATION_EXCEPTIONS,
 ): { text: string; unknown: string[] } {
   const index = indexOf(exceptions);
-  const whole = index.whole.get(wholeKey(text));
+  const whole = index.whole.get(wholeEntryKey(text));
   if (whole !== undefined) return { text: whole, unknown: [] };
   const words: string[] = [];
   const unknown: string[] = [];

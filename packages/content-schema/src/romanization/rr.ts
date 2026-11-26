@@ -15,14 +15,15 @@
  * 넓적- are heard [ㅂ], and a simple stop before the suffix 히 / 혀 / 혔 / 힌 / 힐 aspirates
  * (좁히다 jopida, 잡혀 japyeo).
  *
- * Known limits (deliberately not implemented; cover them with an entry in
- * ROMANIZATION_EXCEPTIONS): ㄴ-insertion in compounds (꽃잎 RR kkonnip, here
- * kkochip; 솔잎 RR sollip, here sorip), 사이시옷 before 이 (깻잎), the juncture before a
+ * Known limits (deliberately not implemented; `detectGaps` in gaps.ts names them and the checker
+ * demands an entry in ROMANIZATION_EXCEPTIONS): ㄴ-insertion in compounds (꽃잎 RR kkonnip,
+ * here kkochip; 솔잎 RR sollip, here sorip), 사이시옷 before 이 (깻잎), the juncture before a
  * content morpheme (맛없어요, 첫인상), a predicate's ㅎ after a stop before a 하다 form
- * (못해요 RR motaeyo, here mothaeyo; the noun 북한산 keeps its ㅎ), word-internal compound
- * boundaries and Sino-Korean exceptions; see AMENDMENTS-ROMANIZER-GAPS.
- * Cross-word sandhi is not applied either (RR does not mark it).
+ * (못해요 RR motaeyo, here mothaeyo; the noun 북한산 keeps its ㅎ; `predicateH` reads the
+ * predicate), word-internal compound boundaries and Sino-Korean exceptions; see
+ * AMENDMENTS-ROMANIZER-GAPS. Cross-word sandhi is not applied either (RR does not mark it).
  */
+import { HADA_BLOCKS } from './gaps';
 import {
   INITIAL_JAMO,
   INITIAL_RR,
@@ -88,8 +89,18 @@ const ASPIRATED_BEFORE_SUFFIX_HI: Readonly<Record<string, string>> = {
   'ㅈ': 'ㅊ', 'ㅊ': 'ㅊ',
 };
 
+/** Options of the converter (AMENDMENTS-ROMANIZER-GAPS §3.5 item 5). */
+export interface RomanizeOptions {
+  /**
+   * Read a word with a 하다 form (하 한 할 함 합 해 했 after its first block) as a predicate: every
+   * simple stop before a ㅎ aspirates (못해요 motaeyo, 축하해요 chukahaeyo; RR 제3장 제1항 4), where
+   * the default keeps the noun's ㅎ (북한산 bukhansan). A reviewed entry names which reading a word has.
+   */
+  predicateH?: boolean;
+}
+
 /** Apply ㅎ, liaison and palatalisation rules between neighbouring blocks, left to right. */
-function applyBoundaryRules(word: string, blocks: SyllableParts[]): void {
+function applyBoundaryRules(word: string, blocks: SyllableParts[], predicate: boolean): void {
   for (let i = 0; i < blocks.length - 1; i++) {
     const cur = blocks[i] as SyllableParts;
     const next = blocks[i + 1] as SyllableParts;
@@ -121,11 +132,14 @@ function applyBoundaryRules(word: string, blocks: SyllableParts[]): void {
     // (읽- 앉- 밟-) only occur in verb and adjective stems, which do aspirate.
     const pair = SPLIT[coda];
     const keepsH =
-      (pair === undefined || pair[0] === '') && coda !== 'ㅎ' && ASPIRATED_BY_CODA[NEUTRAL[coda] as string] !== undefined;
+      !predicate &&
+      (pair === undefined || pair[0] === '') &&
+      coda !== 'ㅎ' &&
+      ASPIRATED_BY_CODA[NEUTRAL[coda] as string] !== undefined;
     if (next.initial === 'ㅎ' && !keepsH) {
       const base = pair !== undefined && pair[0] !== '' ? pair[1] : coda;
       const kept = pair === undefined ? '' : pair[0];
-      if (base === 'ㅈ') {
+      if (base === 'ㅈ' && pair !== undefined) {
         next.initial = 'ㅊ';
         cur.final = kept;
         continue;
@@ -157,7 +171,7 @@ function applyBoundaryRules(word: string, blocks: SyllableParts[]): void {
  * One romanized piece per syllable block, pronunciation-based.
  * Returns null if the word has any character that is not a Hangul syllable block.
  */
-export function romanizeSyllables(word: string): string[] | null {
+export function romanizeSyllables(word: string, options: RomanizeOptions = {}): string[] | null {
   const blocks: SyllableParts[] = [];
   for (let i = 0; i < word.length; i++) {
     const parts = decomposeSyllable(word.charAt(i));
@@ -165,7 +179,8 @@ export function romanizeSyllables(word: string): string[] | null {
     blocks.push(parts);
   }
 
-  applyBoundaryRules(word, blocks);
+  const predicate = options.predicateH === true && [...word].some((ch, i) => i > 0 && HADA_BLOCKS.includes(ch));
+  applyBoundaryRules(word, blocks, predicate);
 
   const codas: Coda[] = blocks.map((b) => NEUTRAL[b.final] as Coda);
   for (let i = 0; i < blocks.length - 1; i++) {
@@ -206,8 +221,8 @@ export function romanizeSyllables(word: string): string[] | null {
 }
 
 /** romanizeSyllables(word) joined, or null. */
-export function romanizeWord(word: string): string | null {
-  const pieces = romanizeSyllables(word);
+export function romanizeWord(word: string, options: RomanizeOptions = {}): string | null {
+  const pieces = romanizeSyllables(word, options);
   return pieces === null ? null : pieces.join('');
 }
 
@@ -219,13 +234,13 @@ const STRIPPED = /[-!?.,~·…"'“”‘’]/g;
  * Tokens that still hold a non-syllable character are kept as written, in both
  * `text` and `unknown`.
  */
-export function romanize(text: string): { text: string; unknown: string[] } {
+export function romanize(text: string, options: RomanizeOptions = {}): { text: string; unknown: string[] } {
   const words: string[] = [];
   const unknown: string[] = [];
   for (const token of text.split(/\s+/)) {
     const core = token.replace(STRIPPED, '');
     if (core === '') continue;
-    const rr = romanizeWord(core);
+    const rr = romanizeWord(core, options);
     if (rr === null) {
       unknown.push(token);
       words.push(token);
@@ -234,6 +249,14 @@ export function romanize(text: string): { text: string; unknown: string[] } {
     }
   }
   return { text: words.join(' '), unknown };
+}
+
+/** The tokens `romanize()` reads: split on whitespace, marks stripped, empty ones dropped. */
+export function koTokens(text: string): string[] {
+  return text
+    .split(/\s+/)
+    .map((token) => token.replace(STRIPPED, ''))
+    .filter((core) => core !== '');
 }
 
 /** 'han-geul-lal' for teaching UI; null when not all syllable blocks. Computed, never stored. */
