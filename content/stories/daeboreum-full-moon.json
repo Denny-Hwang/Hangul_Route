@@ -105,7 +105,7 @@
     {
       "id": "ttakttakhaeyo",
       "ko": "딱딱해요",
-      "romanization": "ttakttakhaeyo",
+      "romanization": "ttakttakaeyo",
       "en": "is hard",
       "kind": "word"
     },
@@ -702,13 +702,13 @@
           "keyword": {
             "id": "ttakttakhaeyo",
             "ko": "딱딱해요",
-            "romanization": "ttakttakhaeyo",
+            "romanization": "ttakttakaeyo",
             "en": "is hard",
             "kind": "word"
           },
           "line": {
             "ko": "호두가 딱딱해요.",
-            "romanization": "Hoduga ttakttakhaeyo.",
+            "romanization": "Hoduga ttakttakaeyo.",
             "en": "The walnut is hard.",
             "speaker": "narrator"
           },
