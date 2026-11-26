@@ -2,6 +2,8 @@
 
 Status: ready (multi-agent review 2026-11-25, §11; open decisions SF-OD-1 to SF-OD-5 adopted provisionally, §10). Written for work order WO-13 of `docs/roadmap/review-2026-11/phase-2-hangul.md`, row SF-0, on main `8676b5de5`. Built on **owner decision 2026-11-22 (OD-R2)**, approved as recommended (`docs/roadmap/review-2026-11/README.md` §4): keep the letter-name decision AU-OD-1 (2026-10-29), but put the sound first in Discover, using the "one table change" that `AMENDMENTS-AUDIO-CLIPS.md` promised (`:80`, `:509`).
 
+**Owner decision 2026-11-25**: the open decisions SF-OD-1 to SF-OD-5 are approved as recommended ("권고대로 진행해줘"); they are no longer provisional.
+
 > **Amended 2026-11-25 by `AMENDMENTS-MINIMAL-PAIRS.md` [MP]** (work order WO-16 of the 2026-11 review: hear plain, aspirated and tense consonants apart, on approved clips only) (SF-OD-5, SF-OD-4): SF-OD-5 is answered there (§3.11, MP-OD-5): Match Sound keeps the name; quest 6's new contrast step is the sound practice of 가 / 카 and the other plain / aspirated pairs, on approved clips. SF-OD-4 (a): the four Check rounds keep the series rule; practice now includes the contrast, in contrast rounds only.
 
 **Amends** (each gets an "Amended 2026-11-25 by AMENDMENTS-DISCOVER-SOUND-FIRST [SF]" line in this PR):
