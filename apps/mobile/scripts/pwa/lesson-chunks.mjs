@@ -312,7 +312,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // phases and the once-only finish come with it. On main with SB-3 (4,533,364 B raw / 1,245,521 B gzip) the release
   // `build:web` (CI=1) measures 4,540,705 B raw / 1,247,661 B gzip (+7,341 B raw, +2,140 B gzip), 2,705 B over the line. The
   // line is the measurement plus a 3,895 B margin (one measured raise, 6,600 B over the previous line).
-  startBundleRaw: 4_544_600,
+  // [RG] AMENDMENTS-ROMANIZER-GAPS RG-2a (`romanizeReviewed` and its eight reviewed entries, whose app call sites now reach
+  // the start bundle: the Write Frame sentence line, the lecture example line, the `{ko:}` note tokens, the typed-text labels).
+  // On main f51cb81a3 (RG-1) the release `build:web` (CI=1) measures 4,544,073 B raw / 1,248,797 B gzip; with RG-2a it measures
+  // 4,545,421 B raw / 1,249,206 B gzip (+1,348 B raw, +409 B gzip), 821 B over the line. Metro does not tree-shake the package, so
+  // splitting the `reason` texts out of `exceptions.ts` was tried and measured 4,546,245 B (it added a module): not kept. The line
+  // is the measurement plus a 579 B margin (one measured raise, 1,400 B over the previous line).
+  startBundleRaw: 4_546_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

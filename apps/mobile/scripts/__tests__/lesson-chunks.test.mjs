@@ -756,7 +756,8 @@ describe('precacheReport and its budget lines', () => {
     // SB-3; from here only the newer ones must fit.
     // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-3a (the Hangul Check's resume page, the stored-check rules and store, in the start
     // bundle) on top of SB-3 (4,533,364 B) measures 4,540,705 B (release build, CI=1): 4,544,600 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_544_600);
+    // [RG] AMENDMENTS-ROMANIZER-GAPS RG-2a (the reviewed romanization in the start bundle) measures 4,545,421 B (release build, CI=1): 4,546,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_546_000);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown
     // about 30 KB since FN-7 (4,574,000 to 4,604,100 B), so it now stays at least 140 KB (was 150 KB) under each of them.
@@ -768,16 +769,18 @@ describe('precacheReport and its budget lines', () => {
     // [AF] [LR] Merged AF-4a and LR-4: 4,638,500 B, so the gap stays at least 110 KB (AF-4a's value; not lowered further): the closest old size, 4,751,444 B, is 112,944 B above it.
     // [SB] Row SB-3: 4,538,000 B, so the gap is back to FN-7's 150 KB: the closest old size, 4,751,444 B, is 213,444 B above it.
     // [LR] Row LR-3a: 4,544,600 B; the closest old size, 4,751,444 B, is 206,844 B above it (the gap holds).
+    // [RG] Row RG-2a: 4,546,000 B; the closest old size, 4,751,444 B, is 205,444 B above it (the gap holds).
     for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(150_000);
     // SB took about 100 KB out: the line is under every measurement from FN-7 to SB, the closest (FN-7's own, 4,570,041 B)
     // 32,041 B above it. [LR] Row LR-3a: 4,544,600 B, so the closest is 25,441 B above it and the gap is 25 KB (was 30 KB).
     const fn7ToSb = [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387, 4_617_949, 4_625_094, 4_629_855, 4_630_569, 4_633_012, 4_634_508, 4_636_329];
-    for (const measured of fn7ToSb) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(25_000);
-    for (const measured of [4_533_869, 4_533_364, 4_540_705]) {
+    // [RG] Row RG-2a: 4,546,000 B, so the closest (4,570,041 B) is 24,041 B above it and the gap is 20 KB (was 25 KB).
+    for (const measured of fn7ToSb) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(20_000);
+    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_545_421]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_540_705).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_545_421).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
