@@ -20,6 +20,7 @@ import {
   buildTraceStrokeRounds,
 } from '../../logic/round-builder';
 import { STAGE1_QUESTS, questTeaches } from '../../logic/stage1/curriculum';
+import { writeLetters } from '../../logic/stage1/discover-write';
 import { symbolsOf } from '../../logic/stage1/hangul';
 import { cardById } from '../heritage-cards';
 import { episodesAll } from '../episodes';
@@ -321,10 +322,10 @@ describe('the rebuilt Stage 1 quests', () => {
       ['설날', 'card:seollal'],
       ['떡국', 'card:tteokguk'],
     ]);
-    expect(themeWords(REBUILT[7]!)).toEqual([
-      ['추석', 'card:chuseok'],
-      ['송편', 'card:songpyeon'],
-    ]);
+    // [TC] TC-1b (OD-TC-3): the theme page keeps 추석 alone; the songpyeon picture moved onto the final ㅇ card, whose example it is.
+    expect(themeWords(REBUILT[7]!)).toEqual([['추석', 'card:chuseok']]);
+    const finalNg = REBUILT[7]!.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).find((i) => i.type === 'jamo' && i.jamoId === 'jamo:ieung-batchim');
+    expect(finalNg).toMatchObject({ type: 'jamo', example: { ko: '송편' }, picture: 'card:songpyeon' });
   });
 
   it('keeps the life titles and reward cards of section 3.6, 4 minutes each', () => {
@@ -904,6 +905,40 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
   it('T11 has no Hangul in any English field', () => {
     const found = englishFieldsOf(quest).filter((f) => HANGUL.test(f.text));
     expect(found).toEqual([]);
+  });
+
+  it('T12 every new symbol of quests 1-10 is on its quest\'s trace page, in order; quests 11-15 have none (AMENDMENTS-STAGE1-TRACE-COVERAGE §6)', () => {
+    const pages = quest.steps.find((s) => s.kind === 'discover')?.discover?.pages ?? [];
+    const first10 = REBUILT.indexOf(quest) < 10;
+    expect(writeLetters(pages)).toEqual(first10 ? questTeaches(quest) : []);
+  });
+
+  it('T13 its step seconds add up to 300 or less, every quest of Stage 1 (OD-TC-2; T10 still holds)', () => {
+    const seconds = quest.steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
+    expect(seconds).toBeLessThanOrEqual(300);
+  });
+});
+
+describe('T12 across quests 1-10 (AMENDMENTS-STAGE1-TRACE-COVERAGE)', () => {
+  it('traces all 30 symbols once between them: 24 letters and the 6 finals', () => {
+    const traced = REBUILT.slice(0, 10).flatMap((q) => writeLetters(q.steps.find((s) => s.kind === 'discover')?.discover?.pages ?? []));
+    expect(traced).toHaveLength(30);
+    expect(new Set(traced).size).toBe(30);
+    expect(traced.filter((id) => id.endsWith('-batchim'))).toHaveLength(6);
+  });
+
+  it('keeps each quest\'s estimated seconds as the spec table has them (§3.2)', () => {
+    const total = (q: Quest): number => q.steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
+    expect(REBUILT.slice(0, 10).map(total)).toEqual([296, 294, 296, 246, 264, 244, 246, 291, 296, 266]);
+    expect(REBUILT.slice(0, 10).map((q) => q.estimatedMinutes)).toEqual([5, 5, 5, 4, 4, 4, 4, 5, 5, 4]);
+  });
+
+  it('quest 8\'s Build a Letter is 60 s and quest 9\'s Listen & Pick practice 75 s, as the other Stage 1 steps of their kind', () => {
+    const seconds = (q: Quest, kind: QuestStepKind): number | undefined => q.steps.find((s) => s.kind === kind)?.durationSeconds;
+    expect(seconds(REBUILT[7]!, 'apply')).toBe(60);
+    expect(seconds(REBUILT[8]!, 'practice')).toBe(75);
+    // Story Order keeps its 90 s and the reason it gives.
+    expect(seconds(REBUILT[8]!, 'apply')).toBe(90);
   });
 });
 
