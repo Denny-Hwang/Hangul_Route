@@ -29,7 +29,10 @@ import {
   decomposeSyllable,
   romanizeReviewed,
   ROMANIZATION_EXCEPTIONS,
+  PLACEMENT_MODES,
+  startRun,
   type PlacementBank,
+  type PlacementConfig,
   type PlacementGate,
   type PlacementStrand,
   type PlacementTemplate,
@@ -80,13 +83,13 @@ describe('content/placement: the bank as shipped', () => {
     expect(warmup.question.options.find((o) => o.isCorrect)?.pictureRef).toBe('card:rice');
   });
 
-  it('holds the 260 templates of appendix A, by strand', () => {
+  it('holds the 258 templates of appendix A (vocabulary as AMENDMENTS-PLC-VALIDITY PV-2 rebuilt it), by strand', () => {
     expect(byStrand('hangul-recognition')).toHaveLength(40);
     expect(byStrand('sound-letter')).toHaveLength(46);
     expect(byStrand('syllable-reading')).toHaveLength(72);
-    expect(byStrand('vocabulary')).toHaveLength(48);
+    expect(byStrand('vocabulary')).toHaveLength(46);
     expect(byStrand('sentences')).toHaveLength(54);
-    expect(all).toHaveLength(260);
+    expect(all).toHaveLength(258);
   });
 
   it('counts the gates and forms the way appendix A does', () => {
@@ -98,8 +101,8 @@ describe('content/placement: the bank as shipped', () => {
     expect(count('sound-rest', 'see-pick-sound')).toBe(12);
     expect([count('syl-cv', 'hear-pick-written'), count('syl-cv', 'see-pick-sound'), count('syl-cv', 'build-syllable')]).toEqual([18, 12, 6]);
     expect([count('syl-cvc', 'hear-pick-written'), count('syl-cvc', 'see-pick-sound'), count('syl-cvc', 'build-syllable')]).toEqual([18, 12, 6]);
-    expect(byGate('vocab').filter((t) => t.form === 'oral')).toHaveLength(29);
-    expect(byGate('vocab').filter((t) => t.form === 'read')).toHaveLength(19);
+    expect(byGate('vocab').filter((t) => t.form === 'oral')).toHaveLength(25);
+    expect(byGate('vocab').filter((t) => t.form === 'read')).toHaveLength(21);
     expect(count('sentence', 'reply-pick')).toBe(10);
     expect(byGate('sentence').filter((t) => t.question.format !== 'reply-pick' && t.form === 'oral')).toHaveLength(14 + 8);
     expect(byGate('sentence').filter((t) => t.question.format === 'read-pick-picture')).toHaveLength(14 + 8);
@@ -110,7 +113,7 @@ describe('content/placement: the bank as shipped', () => {
     for (const strand of ['hangul-recognition', 'sound-letter', 'syllable-reading', 'vocabulary', 'sentences'] as const) {
       expect(byStrand(strand).filter((t) => t.status === 'ready').length, strand).toBeGreaterThanOrEqual(40);
     }
-    expect(ready).toHaveLength(260);
+    expect(ready).toHaveLength(258);
   });
 
   it('every sentence carries the language review record (section 9)', () => {
@@ -474,6 +477,152 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
   });
 });
 
+describe('content/placement: the word items (AMENDMENTS-PLC-VALIDITY section 3.2, row PV-2)', () => {
+  const vocab = byGate('vocab');
+  const keyOf = (ref: string | undefined): string => (ref ?? '').slice('word:'.length);
+  /** The warm-up's word: the app leaves its templates out of every draw (`avoidTags`), so they are not balanced with the rest. */
+  const WARMUP_WORDS = warmup.question.tags.filter((x) => x.startsWith('word:'));
+  const drawable = vocab.filter((t) => !t.question.tags.some((x) => WARMUP_WORDS.includes(x)));
+  /**
+   * Pictures that look alike at tile size or belong to one group share a row, and an item shows four rows (W3):
+   * every figure (the family, the teacher and the friends, the body parts, which are one figure with a ring, and the
+   * other drawn people) is one row, so an item never shows two people; food and festivals, school things and balls,
+   * nature and travel, and animals are the others.
+   */
+  const FIGURES = /^(family-|body-|school-(teacher|friend)$|culture-(dance|seollal)$|science-shadow$|sport-(swimming|taekwondo|running|jumprope|skiing)$)/;
+  const ROWS: Record<string, string> = { food: 'food', culture: 'food', school: 'school', sport: 'school', nature: 'nature', travel: 'nature', science: 'nature', animal: 'animal', prop: 'animal' };
+  const rowOf = (key: string): string => (FIGURES.test(key) ? 'figure' : (ROWS[key.slice(0, key.indexOf('-'))] ?? key));
+  /**
+   * Pictures of two rows that still show the same thing, belong to each other or sound alike, never offered together
+   * (the conflict list of F-PLC-001 section 3.4, for `word:` keys; review 2026-11-26): two round things; the duck on its
+   * blue wave and the water pictures; the Chuseok moon and the moon; the bird on its branch and the tree; the fish, the
+   * boat and the water; the head and nose pictures (a face) and the animal faces; and, in the heard form, the words a
+   * beginner hears as near pairs: 산 / 손, 꽃 / 공, 달 / 딸기.
+   */
+  const WORD_CONFLICTS: Array<[string, string]> = [
+    ['sport-ball', 'food-apple'],
+    ['animal-duck', 'nature-sea'],
+    ['animal-duck', 'nature-river'],
+    ['culture-chuseok', 'nature-moon'],
+    ['animal-bird', 'nature-tree'],
+    ['animal-fish', 'nature-sea'],
+    ['animal-fish', 'nature-river'],
+    ['travel-boat', 'nature-sea'],
+    ...(['body-nose', 'body-head', 'body-face'] as const).flatMap((f) =>
+      ['animal-bear', 'animal-tiger', 'animal-fox', 'animal-cat', 'animal-puppy', 'animal-monkey', 'animal-rabbit', 'animal-elephant'].map((a): [string, string] => [f, a]),
+    ),
+    ['nature-mountain', 'body-hand'],
+    ['nature-flower', 'sport-ball'],
+    ['nature-moon', 'food-strawberry'],
+  ];
+  const glyphKeys = ((): Set<string> => {
+    const dir = join(REPO_ROOT, 'packages/design-system/src/word-art');
+    const sources = readdirSync(join(dir, 'glyphs')).map((f) => readFileSync(join(dir, 'glyphs', f), 'utf8')).join('\n');
+    const keys = new Set([...sources.matchAll(/^\s+'([a-z]+-[a-z0-9-]+)':/gm)].map((m) => m[1] as string));
+    const body = /BODY_PARTS = Object\.freeze\(\[([^\]]+)\]/.exec(readFileSync(join(dir, 'generated/body.ts'), 'utf8'));
+    for (const m of (body?.[1] ?? '').matchAll(/'([a-z]+)'/g)) keys.add(`body-${m[1] as string}`);
+    return keys;
+  })();
+
+  it('shows four different word pictures that the WordArt registry draws, with no text label', () => {
+    expect(glyphKeys.has('family-mom') && glyphKeys.has('body-hand')).toBe(true);
+    for (const t of vocab) {
+      expect(t.question.requires.picture, t.id).toBe('word');
+      const keys = t.question.options.map((o) => keyOf(o.pictureRef));
+      expect(new Set(keys).size, t.id).toBe(4);
+      for (const k of keys) expect(glyphKeys.has(k), `${t.id} ${k}`).toBe(true);
+      expect(t.question.options.every((o) => o.ko === undefined && o.en !== undefined), t.id).toBe(true);
+    }
+  });
+
+  it('offers four rows, so an item never shows two people or two foods, and never a conflict pair', () => {
+    for (const t of vocab) {
+      const keys = t.question.options.map((o) => keyOf(o.pictureRef));
+      expect(new Set(keys.map(rowOf)).size, `${t.id} ${keys.join(' ')}`).toBe(4);
+      for (const [a, b] of WORD_CONFLICTS) expect(keys.includes(a) && keys.includes(b), `${t.id} ${a} + ${b}`).toBe(false);
+    }
+  });
+
+  it('every item of a form shows the same four rows, so the rows on screen never point at the answer', () => {
+    for (const form of ['oral', 'read'] as const) {
+      const signatures = new Set(drawable.filter((t) => t.form === form).map((t) => t.question.options.map((o) => rowOf(keyOf(o.pictureRef))).sort().join(' ')));
+      expect([...signatures], form).toHaveLength(1);
+    }
+  });
+
+  it('no picture or row tells the answer by how often it is shown: each picture is right once and wrong three times in its form', () => {
+    for (const form of ['oral', 'read'] as const) {
+      const items = drawable.filter((t) => t.form === form);
+      const shown = new Map<string, number>();
+      const right = new Map<string, number>();
+      for (const t of items) {
+        for (const o of t.question.options) shown.set(keyOf(o.pictureRef), (shown.get(keyOf(o.pictureRef)) ?? 0) + 1);
+        right.set(keyOf(correctOf(t).pictureRef), (right.get(keyOf(correctOf(t).pictureRef)) ?? 0) + 1);
+      }
+      expect([...shown.keys()].sort(), form).toEqual([...right.keys()].sort());
+      for (const [k, n] of shown) expect([n, right.get(k)], `${form} ${k}`).toEqual([4, 1]);
+    }
+  });
+
+  it('a word is heard or read, not both, so the read rung never shows the heard answers first (the warm-up word aside)', () => {
+    const heard = new Set(drawable.filter((t) => t.form === 'oral').map((t) => t.question.promptKo));
+    for (const t of drawable.filter((x) => x.form === 'read')) expect(heard.has(t.question.promptKo), t.id).toBe(false);
+  });
+
+  it('read words carry a nikl tag of that word, grade A or B; the one culture word without it is a Stage 1 card name', () => {
+    const nikl = niklIndex(JSON.parse(readFileSync(join(REPO_ROOT, 'scripts/nikl-vocab-2003.json'), 'utf8'))).byRank as Map<number, { word: string; grade: string }>;
+    const untagged: string[] = [];
+    for (const t of vocab.filter((x) => x.form === 'read')) {
+      const rank = tagOf(t, 'nikl:');
+      if (rank === '') {
+        untagged.push(t.question.promptKo as string);
+        continue;
+      }
+      const entry = nikl.get(Number(rank));
+      expect(/[가-힣]+/.exec(entry?.word ?? '')?.[0], t.id).toBe(t.question.promptKo);
+      expect(['A', 'B'], t.id).toContain(entry?.grade);
+    }
+    expect(untagged).toEqual(['추석']);
+    expect(readFileSync(join(REPO_ROOT, 'apps/mobile/src/content/quests.ts'), 'utf8')).toContain("ko: '추석'");
+  });
+
+  it('every mode draws three different heard words besides the warm-up word, and full read draws', () => {
+    const config = (mode: PlacementConfig['mode'], seed: number, over: Partial<PlacementConfig> = {}): PlacementConfig => ({
+      mode,
+      avoidTags: WARMUP_WORDS,
+      revealMode: 'tap',
+      audio: true,
+      visual: true,
+      takeMyTime: false,
+      seed,
+      exclude: [],
+      resolvesPicture: () => true,
+      ...over,
+    });
+    const wordsOf = (qs: ReadonlyArray<{ tags: readonly string[] }>): string[] => qs.map((q) => q.tags.find((x) => x.startsWith('word:')) as string);
+    for (const mode of PLACEMENT_MODES) {
+      for (const over of [{}, { listenFirst: true }, { revealMode: 'always' as const }]) {
+        for (let seed = 1; seed <= 100; seed += 1) {
+          const state = startRun(parsed, config(mode, seed, over), 0);
+          // the first rung that can be asked is already open (with the guide always shown, Short opens on the heard words)
+          const open = (form: string) => (state.current?.gate === 'vocab' && state.current.form === form ? state.current.questions : undefined);
+          const oral = state.draws['vocab:oral'] ?? open('oral');
+          expect(oral, `${mode} ${JSON.stringify(over)} ${seed}`).toBeDefined();
+          const heard = wordsOf(oral ?? []);
+          expect(heard, `${mode} ${seed}`).toHaveLength(3);
+          expect(new Set(heard).size).toBe(3);
+          for (const w of heard) expect(WARMUP_WORDS).not.toContain(w);
+          const read = state.draws['vocab:read'] ?? open('read');
+          if (read !== undefined) {
+            expect(new Set(wordsOf(read)).size).toBe(3);
+            for (const w of wordsOf(read)) expect(WARMUP_WORDS).not.toContain(w);
+          }
+        }
+      }
+    }
+  });
+});
+
 describe('content/i18n/es/placement.json: the Spanish overlay skeleton', () => {
   const overlay = JSON.parse(readFileSync(join(REPO_ROOT, 'content/i18n/es/placement.json'), 'utf8')) as {
     locale: string;
@@ -551,7 +700,7 @@ describe('content/i18n/ko/placement*.json: the Korean overlays', () => {
       set.add(ko);
       wordOf.set(correctOf(t).id, set);
     }
-    expect(wordOf.get('family-table')).toEqual(new Set(['밥상']));
+    expect(wordOf.get('sea')).toEqual(new Set(['바다']));
     for (const { file, overlay } of overlays) {
       for (const [id, entry] of Object.entries(overlay.entries)) {
         const t = byId.get(id) as PlacementTemplate;
@@ -601,9 +750,6 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
       'placement-reply-echo': 5,
       'placement-sentence-family': 1,
       'placement-sentence-options': 44,
-      'placement-vocab-frequency': 29,
-      'placement-vocab-pictures': 29,
-      'placement-vocab-read-share': 1,
     });
   });
 
