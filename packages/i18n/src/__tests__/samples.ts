@@ -242,6 +242,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.placementReport.takenOn': [['Oct 9', 'English']],
   'caregiver.placementReport.needsStage': [['Sam', 2]],
   'caregiver.placementReport.noStart': [['Sam']],
+  // AMENDMENTS-PLC-VALIDITY section 3.8 (PV-4): the Reading and listening block and a form's status word.
+  'caregiver.placementReport.skills.ahead': [['Sam']],
+  'caregiver.placementReport.formStatus': [['reading', 'secure'], ['listening', 'getting there']],
   'caregiver.placementReport.plan.title': [['Sam']],
   'caregiver.placementReport.plan.basis': [['Stage 1 · Letters and sounds', 2, 10], ['Stage 1 · Letters and sounds', 1, 15]],
   'caregiver.placementReport.plan.warning.notIncluded': [[1], [3]],

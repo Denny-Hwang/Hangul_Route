@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { stripCopyProblems } from '../copy';
 import {
   decodingNotTested,
+  reportSkills,
   reportView,
   resultView,
   shortHintFires,
@@ -355,6 +356,13 @@ describe('resultView: the weekly-plan strip matrix (AM-9)', () => {
 
 describe('reportView (section 3.9: rows grouped by gate/form)', () => {
   const formatOf = (id: string) => (id.startsWith('pitem:build') ? 'build-syllable' : 'hear-pick-written');
+  /** The four decoding steps a `vocab` read row is asked after (`stepPassed` counts it only when they passed). */
+  const decoded = () => [
+    gate('sound-basic', 'decode', 'pass', 3),
+    gate('syl-cv', 'decode', 'pass', 3),
+    gate('sound-rest', 'decode', 'pass', 3),
+    gate('syl-cvc', 'decode', 'pass', 3),
+  ];
 
   it('a Standard result: status words per rung with counts out of 3 framed as growth', () => {
     const result = placementResult({
@@ -379,6 +387,8 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
     expect(view.shortHint).toBe(false);
     expect(view.spellingTiles).toBeNull();
     expect(view.strands.map((s) => s.status)).toEqual(['secure', 'not-yet', 'not-tested', 'getting-there', 'not-yet']);
+    // Words and Sentences split by form, only for a form that ran (PV-4): the sentence oral row was never asked.
+    expect(view.strands.map((s) => s.forms)).toEqual([[], [], [], [{ form: 'oral', status: 'not-yet' }], []]);
   });
 
   it('a Deep result: status words only, checked twice or not finished, never a count out of 6', () => {
@@ -413,9 +423,9 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
 
   it('counts only rows that were asked, out of what was asked; a stopped row is "not finished" in any mode', () => {
     const unavailableSecond = placementResult({
-      gates: [gate('vocab', 'read', 'pass', 3), gate('vocab', 'read', 'not-run', 0, { asked: 0, reason: 'unavailable' })],
+      gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('vocab', 'read', 'not-run', 0, { asked: 0, reason: 'unavailable' })],
     });
-    expect(reportView(unavailableSecond, formatOf).rungs).toEqual([
+    expect(reportView(unavailableSecond, formatOf).rungs.filter((r) => r.gate === 'vocab')).toEqual([
       { gate: 'vocab', form: 'read', status: 'secure', counts: [{ correct: 3, asked: 3 }], note: null },
     ]);
     const stopped = placementResult({
@@ -461,11 +471,11 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
     });
     const view = reportView(result, formatOf);
     expect(view.strands).toEqual([
-      { strand: 'hangul-recognition', status: 'not-tested-short' },
-      { strand: 'sound-letter', status: 'getting-there' },
-      { strand: 'syllable-reading', status: 'getting-there' },
-      { strand: 'vocabulary', status: 'secure' },
-      { strand: 'sentences', status: 'not-tested-short' },
+      { strand: 'hangul-recognition', status: 'not-tested-short', forms: [] },
+      { strand: 'sound-letter', status: 'getting-there', forms: [] },
+      { strand: 'syllable-reading', status: 'getting-there', forms: [] },
+      { strand: 'vocabulary', status: 'secure', forms: [{ form: 'oral', status: 'secure' }] },
+      { strand: 'sentences', status: 'not-tested-short', forms: [] },
     ]);
     expect(view.shortNotTested).toBe(true);
     expect(view.shortHint).toBe(true);
@@ -494,5 +504,117 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
     expect(tiles([answer('pitem:build-a', 'correct'), answer('pitem:build-b', 'wrong')])).toBe('getting-there');
     expect(tiles([answer('pitem:build-a', 'correct', true)])).toBe('not-yet');
     expect(tiles([answer('pitem:unknown', 'correct')])).toBeNull();
+  });
+});
+
+describe('reportView: Words and Sentences say each form apart (AMENDMENTS-PLC-VALIDITY section 3.8, PV-4)', () => {
+  const formatOf = () => 'hear-pick-written' as const;
+  const forms = (gates: ReturnType<typeof gate>[], strand: 'vocabulary' | 'sentences') =>
+    reportView(placementResult({ mode: 'deep', gates }), formatOf).strands.find((s) => s.strand === strand)?.forms;
+
+  it('a heritage listener: listening is secure and reading was not reached, so only the listening row shows', () => {
+    const gates = [
+      gate('sound-basic', 'decode', 'fail', 1),
+      gate('vocab', 'oral', 'pass', 3),
+      gate('sentence', 'oral', 'pass', 3),
+    ];
+    const view = reportView(placementResult({ gates, oralStage: 'stage3' }), formatOf);
+    expect(view.strands.find((s) => s.strand === 'vocabulary')?.forms).toEqual([{ form: 'oral', status: 'secure' }]);
+    expect(view.strands.find((s) => s.strand === 'sentences')?.forms).toEqual([{ form: 'oral', status: 'secure' }]);
+  });
+
+  it('a reader sees reading and listening, each with its own word, in the rung order', () => {
+    const gates = [
+      gate('sound-basic', 'decode', 'pass', 3),
+      gate('syl-cv', 'decode', 'pass', 3),
+      gate('sound-rest', 'decode', 'pass', 3),
+      gate('syl-cvc', 'decode', 'pass', 3),
+      gate('vocab', 'read', 'fail', 1),
+      gate('vocab', 'oral', 'pass', 3),
+    ];
+    expect(forms(gates, 'vocabulary')).toEqual([
+      { form: 'read', status: 'getting-there' },
+      { form: 'oral', status: 'secure' },
+    ]);
+    // Sentences did not run at all: no forms, so the screen keeps the strand's own word.
+    expect(forms(gates, 'sentences')).toEqual([]);
+  });
+
+  it('a form that was never asked (unavailable, nothing answered) is left out', () => {
+    const off = gate('vocab', 'oral', 'not-run', 0, { asked: 0, reason: 'unavailable' });
+    const decoded = [
+      gate('sound-basic', 'decode', 'pass', 3),
+      gate('syl-cv', 'decode', 'pass', 3),
+      gate('sound-rest', 'decode', 'pass', 3),
+      gate('syl-cvc', 'decode', 'pass', 3),
+    ];
+    expect(forms([...decoded, gate('vocab', 'read', 'pass', 3), off], 'vocabulary')).toEqual([{ form: 'read', status: 'secure' }]);
+    expect(forms([off], 'vocabulary')).toEqual([]);
+  });
+
+  it('a row that passed beyond a failed confirmation does not read as secure (stepPassed, E-1)', () => {
+    // Deep asks a confirming draw one step later: syl-cvc failed its confirmation, so the vocab read row
+    // that was asked before it is an unconfirmed pass and shows what happened, not "secure".
+    const gates = [
+      gate('sound-basic', 'decode', 'pass', 3),
+      gate('syl-cv', 'decode', 'pass', 3),
+      gate('sound-rest', 'decode', 'pass', 3),
+      gate('syl-cvc', 'decode', 'pass', 3),
+      gate('vocab', 'read', 'pass', 3),
+      gate('syl-cvc', 'decode', 'fail', 1),
+    ];
+    const view = reportView(placementResult({ mode: 'deep', gates }), formatOf);
+    expect(view.rungs.find((r) => r.gate === 'vocab')?.status).toBe('getting-there');
+    expect(view.rungs.find((r) => r.gate === 'syl-cvc')?.status).toBe('getting-there');
+    expect(view.rungs.find((r) => r.gate === 'sound-basic')?.status).toBe('secure');
+    expect(forms(gates, 'vocabulary')).toEqual([{ form: 'read', status: 'getting-there' }]);
+  });
+});
+
+describe('reportSkills: the "Reading and listening" block (section 3.8, PV-4)', () => {
+  const NOT_TESTED = {
+    'hangul-recognition': 'not-tested',
+    'sound-letter': 'not-tested',
+    'syllable-reading': 'not-tested',
+    vocabulary: 'not-tested',
+    sentences: 'not-tested',
+  } as const;
+  const tested = { ...NOT_TESTED, 'sound-letter': 'not-yet', 'syllable-reading': 'not-yet' } as const;
+
+  it('a heritage listener: reading at the beginning, listening at sentences, and listening is ahead', () => {
+    const result = placementResult({ strands: tested, level: { stage: 'stage1', band: 0 }, oralStage: 'stage3' });
+    expect(reportSkills(result)).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage3', ahead: true });
+  });
+
+  it('says what the newest check saw for each listening stage', () => {
+    const at = (oralStage: PlacementResult['oralStage']) =>
+      reportSkills(placementResult({ strands: tested, level: { stage: 'stage1', band: 0 }, oralStage }));
+    expect(at('stage1')).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage1', ahead: false });
+    expect(at('stage2')).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage2', ahead: true });
+    expect(at(null)).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: null, ahead: false });
+    // Stages above the sentences are never measured; they read as the sentence words.
+    expect(at('stage5').listening).toBe('stage3');
+  });
+
+  it('no "ahead" line when reading is level with listening or above it', () => {
+    const level = (stage: PlacementResult['level']['stage'], oralStage: PlacementResult['oralStage']) =>
+      reportSkills(placementResult({ strands: tested, level: { stage, band: 0 }, oralStage })).ahead;
+    expect(level('stage2', 'stage2')).toBe(false);
+    expect(level('stage3', 'stage2')).toBe(false);
+    expect(level('stage2', 'stage3')).toBe(true);
+  });
+
+  it('reading is "not checked" when no decoding strand ran, and then nothing is compared', () => {
+    const result = placementResult({ strands: NOT_TESTED, level: { stage: 'stage1', band: 0 }, oralStage: 'stage3' });
+    expect(reportSkills(result)).toEqual({ reading: null, listening: 'stage3', ahead: false });
+    // Letter shapes alone are not reading the sound of letters: the sound guide run is still "not checked".
+    expect(reportSkills(placementResult({ strands: { ...NOT_TESTED, 'hangul-recognition': 'secure' }, oralStage: 'stage2' })).reading).toBeNull();
+  });
+
+  it('one decoding strand that ran is enough to name the band', () => {
+    expect(reportSkills(placementResult({ strands: { ...NOT_TESTED, 'syllable-reading': 'getting-there' }, oralStage: null })).reading).toEqual({
+      stage: 'stage1',
+      band: 0,
+    });
   });
 });

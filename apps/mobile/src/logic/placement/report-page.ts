@@ -4,6 +4,7 @@ import {
   isRouteStartQuest,
   modeOf,
   placementStageNumber,
+  stepPassed,
   type PlacementGate,
   type PlacementLevel,
   type Jamo,
@@ -168,6 +169,16 @@ export function startingSpotRow(placements: readonly StoredResult[] | undefined)
   };
 }
 
+/**
+ * The first bank version whose sentence items need the verb (AMENDMENTS-PLC-VALIDITY PV-1c). Versions 1 and 2
+ * asked the older, easier sentence questions: PV-2 raised the version to 2 for the word items alone. A route at
+ * Stage 3 that such a check placed gets one plain line next to Choose a different start (section 3.7, PV-OD-3).
+ */
+export const SENTENCES_REVISED_BANK_VERSION = 3;
+
+/** The sentence part of this result was read and passed (`stepPassed`: every step before it passed too). */
+const passedSentenceRead = (result: StoredResult): boolean => stepPassed(result.gates, 'sentence', 'read');
+
 export interface ReportPageInput {
   /** `snapshot.placements` (a missing key is `[]`). */
   placements: readonly StoredResult[];
@@ -200,6 +211,11 @@ export interface ReportPageView {
    * (section 3.1 step 7, AM-23); a self profile has it on the result.
    */
   retakeHidden: { mode: 'standard' | 'deep' } | null;
+  /**
+   * The route is at Stage 3 because of a sentence pass on the older sentence questions, and no check on the
+   * revised ones passed them: "An earlier version of the check asked easier sentence questions."
+   */
+  olderSentences: boolean;
   /** "The short check looks at the first letters only..." with Try the standard check (any profile). */
   shortHint: boolean;
   choices: StartChoice[];
@@ -226,6 +242,10 @@ export function reportPage(input: ReportPageInput): ReportPage {
   const seed = effectiveRoute(sorted as readonly PlacementResult[], input.catalog, opts) as RouteSeed;
   const view = reportView(newest, (id) => input.lookup(id)?.format);
   const mode = modeOf(newest);
+  const olderSentences =
+    placementStageNumber(seed.level.stage) >= placementStageNumber('stage3') &&
+    sorted.some((r) => r.bankVersion < SENTENCES_REVISED_BANK_VERSION && passedSentenceRead(r)) &&
+    !sorted.some((r) => r.bankVersion >= SENTENCES_REVISED_BANK_VERSION && passedSentenceRead(r));
   return {
     kind: 'report',
     resultId: newest.id,
@@ -240,6 +260,7 @@ export function reportPage(input: ReportPageInput): ReportPage {
     overridden: input.placements.some((r) => r.override !== undefined),
     retakeHidden:
       input.profileType === 'child' && decodingNotTested(newest) && mode !== 'short' ? { mode } : null,
+    olderSentences,
     shortHint: view.shortHint,
     choices: startChoices(seed, input.catalog, input.completedQuestIds, input.isEntitled),
   };
