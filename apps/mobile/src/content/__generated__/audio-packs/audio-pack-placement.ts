@@ -128,7 +128,7 @@ export const AUDIO_PACK: AudioPackChunk = {
     'card:mugunghwa': [22],
     'card:sebae': [77],
     'card:yutnori': [9],
-    'episode:stage2-letters': [38, 77, 87],
+    'episode:stage2-letters': [1, 38, 77, 87],
     'episode:stage2-letters-v2': [87],
     'episode:stage2-life': [62],
     'episode:stage2-life-v2': [62],

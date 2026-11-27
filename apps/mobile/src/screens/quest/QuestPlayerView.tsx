@@ -21,7 +21,7 @@ import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import type { MinigameScope } from '../../logic/minigame-config';
+import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { cardWaits } from '../../logic/reward';
 import {
@@ -39,7 +39,8 @@ import {
   type QuestPlayerPorts,
 } from '../../logic/quest-flow/quest-player-ports';
 import { questStepLabel } from '../../logic/quest-steps';
-import { stop } from '../../platform/audio';
+import { contrastStepVerdict, passByDirection, type ContrastVerdict } from '../../logic/quest-flow/contrast-pass';
+import { hasClipFor, stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { LaterNeedsInternet, LessonWaiting, combinedChunkState, useLessonQuestState } from '../lesson-content';
@@ -51,7 +52,9 @@ import { CultureTip } from './culture-tip-entry';
 import { useQuestCardLines } from './reward-card-note';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
-import { useLessonClips } from '../../platform/audio-assets-store';
+import { useLessonClips, waitForClipPacks } from '../../platform/audio-assets-store';
+import { useAudioStore } from '../../store/audio-store';
+import { loadContrastKit } from '../minigames/contrast-entry';
 
 type QuestMessages = Messages['learner']['quest'];
 
@@ -235,11 +238,49 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
 
   const step = quest?.steps[stepIndex];
 
+  // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.6 (row MP-2b): a contrast step decides, each time it is entered, whether it has rounds
+  // to play (the clip packs first, then the contrast chunk and the device as it is now). With nothing to play it is passed by:
+  // the player moves on the way the learner was going, as if the step were done (no screen, no `minigame.finished`, not in
+  // `skippedSteps`; its dot fills as the run passes it). The verdict resets on leaving the step, so a step entered again decides again.
+  const contrastRef = step?.contrast === true ? (step.minigameRef ?? '') : undefined;
+  const [contrastVerdict, setContrastVerdict] = useState<ContrastVerdict | null>(null);
+  useEffect(() => {
+    if (contrastRef === undefined) return undefined;
+    let live = true;
+    const rounds = scopeFor(contrastRef)?.listenPick?.rounds ?? [];
+    void contrastStepVerdict(rounds, {
+      waitForPacks: () => waitForClipPacks(),
+      loadKit: () => loadContrastKit(),
+      env: () => ({
+        // The clip of a contrast member is its own ref and nothing else (`clipOnly`), asked as the game asks.
+        hasClip: (ref) => hasClipFor({ text: '', audioRef: ref, clipOnly: true }),
+        soundOn: !useAudioStore.getState().muted,
+        alwaysShowLetters: useAudioStore.getState().showLetters,
+        host: 'quest',
+      }),
+    }).then((verdict) => {
+      if (!live) return;
+      if (verdict === 'play') {
+        setContrastVerdict('play');
+        return;
+      }
+      const run = useQuestRunStore.getState();
+      if (passByDirection(run.cameBack) === 'prev') run.goPrevStep();
+      else run.goNextStep();
+    });
+    return () => {
+      live = false;
+      setContrastVerdict(null);
+    };
+  }, [stepIndex, contrastRef]);
+
   // Past Practice, once: the chunk notes a strong round for the cell and, after a hard one, gives the scaffold round,
-  // played before Apply outside the steps and the score. Before paint, so Apply's card never flashes under it.
+  // played before Apply outside the steps and the score. Before paint, so Apply's card never flashes under it. The
+  // trigger is Apply (`applyAt`), not the step after Practice: a contrast step between the two does not move it (MP-2b).
   const [scaffold, setScaffold] = useState<MinigameScope | null>(null);
-  const practiceAt = quest?.steps.findIndex((s) => s.kind === 'practice') ?? -1;
-  const pastPractice = practiceAt >= 0 && stepIndex === practiceAt + 1;
+  const practiceAt = quest?.steps.findIndex((s) => s.kind === 'practice' && s.contrast !== true) ?? -1;
+  const applyAt = quest?.steps.findIndex((s) => s.kind === 'apply') ?? -1;
+  const pastPractice = practiceAt >= 0 && applyAt > practiceAt && stepIndex === applyAt;
   const practiceRead = useRef(false);
   useLayoutEffect(() => {
     if (!pacing || !pastPractice || practiceRead.current || reviewsFor === null) return;
@@ -402,6 +443,9 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     const { ScaffoldRound } = pacing.chunk;
     return <ScaffoldRound scope={scaffold} onDone={() => setScaffold(null)} />;
   }
+
+  // [MP] A contrast step shows nothing until it has decided to play (a moment: the packs, the chunk); one with nothing to play never shows.
+  if (step.contrast === true && contrastVerdict !== 'play') return <LessonWaiting />;
 
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (

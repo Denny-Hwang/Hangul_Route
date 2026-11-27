@@ -347,7 +347,7 @@ describe('fill rule', () => {
     const m = (b: LectureBlock): number => presetBlockMinutes(b, CATALOG);
     expect(m({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(5);
     expect(m({ kind: 'quest', id: 'quest:nope' })).toBe(0);
-    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(25);
+    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(26);
     expect(m({ kind: 'episode', id: 'episode:nope' })).toBe(0);
     expect(m({ kind: 'story', storyId: 'story:pansori-tales', checks: true })).toBe(6);
     expect(m({ kind: 'story', storyId: 'story:nope', checks: true })).toBe(0);

@@ -576,6 +576,9 @@ function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add:
           const flagged = round.soundChange === true || target.soundChange === true || hasSoundChange(ko);
           if (flagged && !SOUND_CHANGE_RECORDINGS_READY) add('dictation-unambiguous', at, `${ko} has a sound change; it stays out of Dictation until recordings A-9 and A-10 exist`);
         }
+        // A contrast round (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b) is told apart by its clips and is never spelled or
+        // scored: its options sound alike on purpose (개 beside 깨), so this rule about spelling a sound is not its rule.
+        if (round.contrastSet !== undefined) return;
         if (scope.kind === 'listen-pick') for (const issue of spellingRoundIssues(round)) add('dictation-unambiguous', `${at}.${issue.path}`, issue.message);
         if (scope.kind === 'listen-pick' && Array.isArray(round.options)) {
           const options = round.options.filter(isRecord);

@@ -295,6 +295,27 @@ describe('QuestSchema', () => {
     ).not.toThrow();
   });
 
+  it('takes one contrast step: a practice step that plays Listen & Pick (AMENDMENTS-MINIMAL-PAIRS, row MP-2b)', () => {
+    const quest = (second: Record<string, unknown>, third: Record<string, unknown> = {}) => ({
+      id: 'quest:test',
+      titleEn: 'Test',
+      estimatedMinutes: 5,
+      steps: [
+        { id: 's1', kind: 'intro', titleEn: 'Intro' },
+        { id: 's3', kind: 'practice', titleEn: 'Practice' },
+        { id: 's3p', kind: 'practice', titleEn: 'Contrast', contrast: true, minigameKind: 'listen-pick', minigameRef: 'minigame:x-pairs', ...second },
+        { id: 's5', kind: 'reward', titleEn: 'Reward', ...third },
+      ],
+    });
+    expect(QuestSchema.parse(quest({})).steps[2]!.contrast).toBe(true);
+    expect(QuestSchema.safeParse(quest({ kind: 'apply' })).success).toBe(false);
+    expect(QuestSchema.safeParse(quest({ minigameKind: 'match-sound' })).success).toBe(false);
+    expect(QuestSchema.safeParse(quest({ minigameRef: undefined })).success).toBe(false);
+    const two = quest({});
+    two.steps.splice(1, 1, { id: 's3', kind: 'practice', titleEn: 'Practice', contrast: true, minigameKind: 'listen-pick', minigameRef: 'minigame:x-more' } as never);
+    expect(QuestSchema.safeParse(two).success).toBe(false);
+  });
+
   it('rejects fewer than 3 steps', () => {
     expect(() =>
       QuestSchema.parse({
