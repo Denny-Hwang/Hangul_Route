@@ -70,6 +70,15 @@ function segmentStyle(selected: boolean, state: Pressed, layout: RowLayout): Rec
   };
 }
 
+/**
+ * Roving focus belongs to the web. React Native 0.76 turns `tabIndex={-1}` into `focusable={false}` on Android (`View`:
+ * `focusable={!tabIndex}`), which takes an unselected radio out of reach of a hardware keyboard and Switch Access; native
+ * passes neither prop, so every row stays focusable and the platform moves between them (AMENDMENTS-DISPLAY-NAV DN-2b).
+ */
+function rovingFocus(isSelected: boolean, onKeyDown: (event: { key: string; preventDefault?: () => void }) => void): Record<string, unknown> {
+  return Platform.OS === 'web' ? { tabIndex: isSelected ? 0 : -1, onKeyDown } : {};
+}
+
 function RadioRow<T extends string>({
   label,
   options,
@@ -121,7 +130,7 @@ function RadioRow<T extends string>({
             accessibilityState={{ checked: isSelected }}
             accessibilityLabel={option.label}
             {...(option.lang ? { accessibilityLanguage: option.lang, lang: option.lang } : {})}
-            {...{ tabIndex: isSelected ? 0 : -1, onKeyDown: onKey }}
+            {...rovingFocus(isSelected, onKey)}
             testID={`${testID}-${option.value}`}
             onPress={() => onSelect(option.value)}
             style={(state: Pressed) => segmentStyle(isSelected, state, layout)}
