@@ -50,7 +50,7 @@ Trace rounds that reach learners today: Stage 1 q2 (`minigame:s1-letters-q2-*`, 
 
 ### 3.1 One gate
 
-- `logic/stroke-order-taught.ts`: `strokeOrderTaught(jamoId: string, reviewed: readonly string[] = reviewedStrokeIds): boolean` = `reviewed.includes(jamoId)`. Every surface below asks it; SO-3 turns order teaching back on letter by letter by adding an id.
+- `logic/stroke-order-taught.ts`: `strokeOrderTaught(jamoId: string, reviewed: readonly string[] = reviewedStrokeIds): boolean` = `reviewed.includes(jamoId)`. Every surface below asks it; SO-3 turns order teaching back on letter by letter by adding an id. **[TC] 2026-11-26, as built:** one more surface asks it, the **Trace the new letters** page of Discover in quests 1-10 (`screens/quest/DiscoverTracePad.tsx`, `strokeOrderTaught(jamoId)` for its Show me, #1171): shape reveal and "Shape guide" while untaught, the ordered animation once the id is in `reviewedStrokeIds`; it reads the list and never writes it.
 - For a Trace Word unit or a composite letter (ㅘ = ㅗ + ㅏ, ㄲ, ㄺ …), order is taught only when **every** jamo id of every letter in the unit is taught. `UnitLetter` (`trace-word/evaluate.ts:24`) gains `jamoIds` from `PlacedLetter.jamoIds` (`block-strokes.ts:31-32`).
 
 ### 3.2 Row SO-1 (now): unreviewed letters get no order or direction teaching
@@ -121,7 +121,7 @@ Rules:
 ## 4. Out of scope
 
 - Turning strict mode on.
-- New trace rounds for more letters (WO-14).
+- New trace rounds for more letters (WO-14). **[TC] 2026-11-26:** WO-14 was built as an unscored trace page in Discover (`AMENDMENTS-STAGE1-TRACE-COVERAGE.md`, merged #1171), not as scored rounds; scored rounds for more letters stay out of scope here.
 - Changing F-006's rule that an unmatched target counts as a wrong direction (it no longer reaches untaught letters: `loopNudgeFor` looks at closed targets only; for taught letters it stays, since their data matches the taught stroke count).
 
 ## 5. UI sketch
