@@ -225,7 +225,7 @@ export const stage1Quests: Quest[] = [
     id: 'quest:stage1-life-q3',
     titleEn: 'Picnic Snacks',
     blurbEn: 'Two puff-of-air letters, k and t, and picnic words to read.',
-    estimatedMinutes: 4,
+    estimatedMinutes: 5, // [TC][MP] 224 s + 20 s trace page + 40 s optional contrast step = 284 s: labelled 5 min (owner decision 2026-11-26)
     steps: [
       { id: 's1', kind: 'intro', titleEn: 'Picnic Time!', hoyaLineEn: 'Picnic time! Let\'s read picnic words!', durationSeconds: 6 },
       {

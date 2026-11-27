@@ -16,6 +16,7 @@ import { useQuestRunStore } from '../../../store/quest-run-store';
 import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { DiscoverStep } from '../DiscoverStep';
+import { srOnly } from '../../minigames/sr-only';
 import { discoverTraceDoor } from '../discover-trace-entry';
 
 /**
@@ -194,6 +195,14 @@ describe('[TC] the trace page opens', () => {
     expect(rig.current!.synth.spoken).toEqual([]);
     for (const label of [COPY.hearIt.cta, TRACE.showMe.cta, TRACE.clear.cta, WRITE.next.cta, COPY.continue.cta]) expect(named(r, label)).toHaveLength(1);
     expect(named(r, 'Done')).toHaveLength(0);
+  });
+
+  it('says the letter row and the page label through the repo\'s srOnly style, not opacity 0 (VoiceOver skips it)', async () => {
+    const r = await openTracePage();
+    const holders = r.root.findAll((n) => typeof n.type !== 'string' && n.props.style === srOnly);
+    const said = holders.map((h) => screenTexts(h).join(' ')).join(' | ');
+    expect(said).toContain(m.a11y.discoverWriteProgress(0, 4));
+    expect(holders.every((h) => (h.props.style as { opacity?: number }).opacity === undefined)).toBe(true);
   });
 
   it('never sits in a scroll view: the canvas has no scrolling ancestor', async () => {

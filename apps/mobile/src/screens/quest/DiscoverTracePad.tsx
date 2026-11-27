@@ -48,6 +48,7 @@ import { TRACE_KEEP_GOING_MS, isLetterFinishedInForms } from '../../logic/trace-
 import { hasClipFor } from '../../platform/audio';
 import { success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
+import { srOnly } from '../minigames/sr-only';
 import { TraceControls } from '../minigames/TraceControls';
 
 /**
@@ -330,7 +331,7 @@ export function DiscoverTracePad({ plan, render, page, dispatch, audio, pinned, 
   // The letter row is decorative: hidden from screen readers behind one summary (a visually hidden line), never buttons.
   const chipsRow = plan.chips ? (
     <View>
-      <View style={HIDDEN_LINE}>
+      <View style={srOnly}>
         <Text {...KOREAN_LINE_BREAK} testID="discover-write-summary">{summary}</Text>
       </View>
       <View {...SIZER} testID="discover-write-chip-row">{chips}</View>
@@ -394,7 +395,7 @@ export function DiscoverTracePad({ plan, render, page, dispatch, audio, pinned, 
     </View>
   ) : (
     // Where the page row is not drawn its label stays for screen readers, before the heading.
-    <View style={HIDDEN_LINE}>
+    <View style={srOnly}>
       <Text {...KOREAN_LINE_BREAK} testID="discover-write-page-label">{page.label}</Text>
     </View>
   );
@@ -627,8 +628,6 @@ export function DiscoverTracePad({ plan, render, page, dispatch, audio, pinned, 
 }
 
 const noop = (): void => undefined;
-/** Text a screen reader reads and the eye does not: one line, one pixel. */
-const HIDDEN_LINE = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0 };
 const ABSOLUTE_FILL = { position: 'absolute' as const, top: 0, left: 0, right: 0, bottom: 0 };
 const ABSOLUTE_FILL_CENTER = { ...ABSOLUTE_FILL, justifyContent: 'center' as const };
 

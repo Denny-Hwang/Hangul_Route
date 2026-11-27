@@ -130,7 +130,7 @@ describe('every preset at every length against CATALOG', () => {
     ['hangul-week-1', 30, 'hangul-week-1', 24, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · quiz 4 · air-write 5', null],
     ['by-stage', 10, 'by-stage', 10, 'stage1-letters-q1 · stage1-letters-q2', null],
     ['by-stage', 20, 'by-stage', 19, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1', null],
-    ['by-stage', 30, 'by-stage', 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 3', null],
+    ['by-stage', 30, 'by-stage', 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 2', null],
     // Section 4.2 T: ready stories by order, filled to the length (4 to 6 minutes each); checks from 20 min.
     ['story-time', 10, 'story-time', 9, 'story:sejong-new-letters · story:shapes-of-hangeul', null],
     [
@@ -175,7 +175,7 @@ describe('every preset at every length against CATALOG', () => {
       30,
       'stage3-life-q2 · stage3-life-q3 · stage3-rites-q1 · stage3-rites-q2 · stage3-rites-q3 · stage3-nature-q1',
     ],
-    ['next-lesson', 20, { catalog: CATALOG, position: { questId: 'quest:stage1-life-q3' } }, 20, 'stage1-life-q3 · stage1-rites-q1 · stage1-rites-q2 · stage1-rites-q3 · air-write 2'],
+    ['next-lesson', 20, { catalog: CATALOG, position: { questId: 'quest:stage1-life-q3' } }, 19, 'stage1-life-q3 · stage1-rites-q1 · stage1-rites-q2 · stage1-rites-q3'],
     [
       'story-time',
       20,
@@ -199,7 +199,7 @@ describe('every preset at every length against CATALOG', () => {
   const byStage: [StageKey, number, minutes: number, outline: string][] = [
     ['stage1', 10, 10, 'stage1-letters-q1 · stage1-letters-q2'],
     ['stage1', 20, 19, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1'],
-    ['stage1', 30, 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 3'],
+    ['stage1', 30, 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 2'],
     ['stage2', 10, 10, 'stage2-letters-q1 · stage2-letters-q2 · copy-on-paper 2'],
     ['stage2', 20, 20, 'stage2-letters-q1 · stage2-letters-q2 · stage2-letters-q3 · stage2-letters-q4 · stage2-letters-q5'],
     ['stage2', 30, 30, 'stage2-letters-q1 · stage2-letters-q2 · stage2-letters-q3 · stage2-letters-q4 · stage2-letters-q5 · stage2-letters-q6 · stage2-life-q1 · copy-on-paper 2'],
@@ -316,7 +316,8 @@ describe('fill rule', () => {
   });
 
   it('the activity: air-write when every taken block is Stage 1, else copy-on-paper; at least 2 minutes left, at most 5', () => {
-    expect(fillToLength([{ kind: 'episode', id: 'episode:stage1-life' }], 15, false, CATALOG).map(short)).toEqual(['episode', 'air-write 3']);
+    // [TC][MP] Around the Korean Table is 13 minutes (quest 6 is labelled 5, owner decision 2026-11-26): 2 minutes are left to fill.
+    expect(fillToLength([{ kind: 'episode', id: 'episode:stage1-life' }], 15, false, CATALOG).map(short)).toEqual(['episode', 'air-write 2']);
     expect(fillToLength([q('stage1-letters-q1'), q('stage2-life-q1')], 20, false, CATALOG).map(short)).toEqual([
       'stage1-letters-q1',
       'stage2-life-q1',
@@ -667,7 +668,7 @@ describe('learnerPosition (N3)', () => {
     const done = ['quest:stage1-letters-q1', 'quest:stage1-life-q2', 'quest:stage1-letters-q2', 'quest:story-sun-and-moon-listen'];
     const position = learnerPosition('quest:story-sun-and-moon-listen', done, CATALOG);
     expect(position).toEqual({ questId: 'quest:stage1-life-q3' });
-    expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1 · air-write 2');
+    expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1');
   });
 
   it('never steps into a cell\'s later volume: a Volume 2 is off the route (F-CURR-002 row CM-40, CM-43 S3)', () => {
@@ -925,7 +926,7 @@ describe('fillOutline (BL-5)', () => {
 
   it('a 45- and a 60-minute class day over 30 catalogue minutes keeps every lesson (fillToLength at 30 would cut)', () => {
     const seven = eight.slice(0, 7);
-    expect([presetMinutesOf(seven, CATALOG), presetMinutesOf(eight, CATALOG)]).toEqual([31, 36]);
+    expect([presetMinutesOf(seven, CATALOG), presetMinutesOf(eight, CATALOG)]).toEqual([32, 37]);
     expect(fillToLength(seven, 30, true, CATALOG).filter((b) => b.kind === 'quest')).toHaveLength(6);
     // 45: 31 + quiz 4 = 35, 10 left: air-write 5.
     expect(fillOutline(seven, 45, true, CATALOG).map(short)).toEqual([...seven.map(short), 'quiz 4', 'air-write 5']);

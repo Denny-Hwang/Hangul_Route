@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import type { ReactNode, ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenReserveContext } from '../../components/screen-reserve';
 import { useMessages } from '../../i18n/use-messages';
 import { BROWSE_TEXT_SCALE_CAP } from '../../logic/browse/layout';
 
@@ -41,6 +42,9 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): ReactEle
   const capped = useCappedFont('body', BROWSE_TEXT_SCALE_CAP);
   const insets = useSafeAreaInsets();
   const [focused, setFocused] = useState(false);
+  // [TC] The strip's measured height, told to the screens below (`ScreenReserveContext`): they size from the window and must not plan
+  // the room the strip takes. Until it is measured, the strip's least height.
+  const [stripHeight, setStripHeight] = useState(touchTarget.min + insets.top + 2 * spacing.xs + borderWidth.thin);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,6 +58,7 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): ReactEle
     <View style={{ flex: 1, backgroundColor: colors.surface.canvas }}>
       <View
         testID="preview-strip"
+        onLayout={(e) => setStripHeight((prev) => (prev === e.nativeEvent.layout.height ? prev : e.nativeEvent.layout.height))}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -120,7 +125,9 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): ReactEle
           </Pressable>
         ) : null}
       </View>
-      <View style={{ flex: 1 }}>{children}</View>
+      <ScreenReserveContext.Provider value={stripHeight}>
+        <View style={{ flex: 1 }}>{children}</View>
+      </ScreenReserveContext.Provider>
     </View>
   );
 }
