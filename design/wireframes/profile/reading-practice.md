@@ -132,5 +132,6 @@ Enter Panel C from: Panel B → Continue. Exit: the next page or step (Continue)
 
 ## Open questions
 
-- Whether **As I learn** should also show a one-line status ("Now: words you can read hide their romanization") once the fade has started. Not in v1: the hint line and Hoya's line say it; the mock pass (row RF-0b) may propose it.
-- Panel A grows the Profile page by about three rows; the mock pass checks 320 x 568 at 200 % text.
+- Whether **As I learn** should also show a one-line status ("Now: words you can read hide their romanization") once the fade has started. Not in v1: the hint line and Hoya's line say it; the mock pass (row RF-0b) may propose it. **Settled by RF-0b (Q6): not added.**
+- Panel A grows the Profile page by about three rows; the mock pass checks 320 x 568 at 200 % text. **Settled by RF-0b (Q7): +160 px; at 320 x 568 and 200 % the card is 20 px taller than the window, Profile scrolls.**
+- **[RF-0b] Amended 2026-11-26** (`design/screens/profile/reading-practice.md` Q4, Q5): in Panel B the line's bubble has no Hoya figure of its own, and on that one run the card does not draw the waving Hoya at its top, so Continue stays where it is today.

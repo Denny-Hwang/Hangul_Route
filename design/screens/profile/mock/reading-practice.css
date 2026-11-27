@@ -1,0 +1,208 @@
+/*
+ * RF-0b: static design mock of the Profile "Reading practice" card (three choices) and of Hoya's one-time reading line on
+ * a Stage 1 quest's Hello step (not shipped code). Spec: docs/specs/AMENDMENTS-ROMANIZATION-FADE.md sections 3.9, 3.10,
+ * 3.11. Wireframe: design/wireframes/profile/reading-practice.md (Panels A and B). Note: ../reading-practice.md.
+ *
+ * Every value below is a token of packages/design-system/src/tokens.ts, copied once as a custom property named after it
+ * (checked against tokens.ts on this commit): --spacing-xl is spacing.xl, --colors-brand-primary is
+ * colors.brand.primary. The few numbers that are not tokens are in the second block, each with the code constant it
+ * comes from (../reading-practice.md, "Constants"). colors.feedback.danger is deliberately not copied.
+ *
+ * Type follows the app's text size engine (packages/design-system/src/text-size.ts): reading sizes (caption .. prompt)
+ * scale by the step factor f; large type (title) by 1 + (f - 1) / 2. Here f is set per device frame (.ts-largest,
+ * .ts-200), so one board can hold several text sizes. Heights of buttons, rows, rings and gaps are px (dp) and do not
+ * grow with the text, as in the app. Each device frame is a size container (the app's width classes).
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-brand-primaryDark: #8D3A11;
+  --colors-brand-primaryLight: #FAD9C6;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-surface-paper: #FFFFFF;
+  --colors-surface-sunken: #F2EBDE;
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-muted: #6F614D;
+  --colors-text-onPrimary: #FFFFFF;
+  --colors-feedback-success: #397952;
+  --colors-feedback-successLight: #D6EFDF;
+  --colors-border-subtle: #E8DFCD;
+  --colors-border-strong: #C5B8A1;
+  --colors-border-focus: #3A7FB5;
+  --colors-border-shape: #857360;
+  --colors-hoya-fur: #F2B33D;
+  --colors-hoya-furDark: #B5862A;
+  --colors-hoya-stripes: #2A1F14;
+  --colors-hoya-belly: #FCF8F1;
+  --colors-hoya-nose: #2A1F14;
+  --colors-hoya-cheek: #F8B4B4;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --radii-sm: 8px;
+  --radii-md: 12px;
+  --radii-lg: 16px;
+  --radii-xl: 24px;
+  --radii-pill: 999px;
+  --radii-circle: 9999px;
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.35;
+  --family-mono: Menlo, Courier, monospace;
+  --touch-min: 64px;
+  --touch-child: 80px;
+  --touch-hero: 96px;
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --max-width-reading: 720px;
+  --gutter-compact: 16px;
+  --gutter-regular: 24px;
+  --gutter-wide: 32px;
+  /* shadows.card: 0 2 8 colors.text.primary (#2A1F14) at 0.06 */
+  --shadow-card: 0 2px 8px rgba(42, 31, 20, 0.06);
+}
+:root {
+  /* Constants (../reading-practice.md, "Constants") */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') on the web build */
+  --ring: var(--spacing-xl);      /* the radio ring: 24 (LessonDisplaySheet.tsx RING = spacing.xl) */
+  --ring-dot: var(--spacing-md);  /* its dot: 12 (LessonDisplaySheet.tsx DOT = spacing.md) */
+  --press-scale: 0.97;            /* press-look.ts PRESS_SCALE */
+  --hoya-step: 120px;             /* NarrativeStepBody: <Hoya size={120}> */
+  --hoya-bubble: 72px;            /* HoyaBubble: <Hoya size={72}> */
+  --dot: var(--spacing-md);       /* Progress dots: 12 */
+}
+.device { --f: 1; }
+.device.ts-largest { --f: 1.5; }
+.device.ts-200 { --f: 2; }
+.device {
+  /* typography.size at f (reading sizes), whole points as the engine rounds them */
+  --size-caption: round(calc(14px * var(--f)), 1px);
+  --size-bodySm: round(calc(16px * var(--f)), 1px);
+  --size-body: round(calc(18px * var(--f)), 1px);
+  --size-bodyLg: round(calc(20px * var(--f)), 1px);
+  --size-prompt: round(calc(22px * var(--f)), 1px);
+  /* large type: 1 + (f - 1) / 2 */
+  --size-title: round(calc(28px * (1 + (var(--f) - 1) / 2)), 1px);
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Base and the design board (annotations are board notes, not UI)                             */
+/* ------------------------------------------------------------------------------------------ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-stack); color: var(--colors-text-primary); background: var(--colors-surface-sunken); line-height: var(--leading-normal); }
+button { font: inherit; color: inherit; }
+.board { padding: var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-xl); }
+.board-title { font-family: var(--family-mono); font-size: 16px; font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.board-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spacing-xxl); }
+.board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-label, .note { font-family: var(--family-mono); font-size: 13px; color: var(--colors-text-secondary); max-width: 360px; line-height: var(--leading-normal); }
+.note { border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-sm); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.unchanged { opacity: 0.55; }
+
+/* A device: the window the app gets. */
+.device { container-type: size; container-name: device; position: relative; overflow: hidden; background: var(--colors-surface-canvas); outline: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); flex: none; }
+.scr { height: 100%; display: flex; flex-direction: column; padding: var(--gutter-compact); overflow: hidden; }
+.scr > * { width: 100%; max-width: var(--max-width-reading); margin-left: auto; margin-right: auto; flex: none; }
+@container device (min-width: 600px) { .scr { padding: var(--gutter-regular); } }
+@container device (min-width: 900px) { .scr { padding: var(--gutter-wide); } }
+.icon { display: block; flex: none; }
+.scrolled-note { font-family: var(--family-mono); font-size: 12px; color: var(--colors-text-muted); padding-bottom: var(--spacing-sm); }
+
+/* Type (Heading / Body / Caption) */
+.t-title { font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.t-prompt { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.t-body { font-size: var(--size-body); line-height: var(--leading-normal); }
+.t-bodyLg { font-size: var(--size-bodyLg); line-height: var(--leading-normal); }
+.t-caption { font-size: var(--size-caption); line-height: var(--leading-normal); }
+.semibold { font-weight: var(--weight-semibold); }
+.secondary { color: var(--colors-text-secondary); }
+.muted { color: var(--colors-text-muted); }
+.gap-xs { height: var(--spacing-xs); flex: none; }
+.gap-sm { height: var(--spacing-sm); flex: none; }
+.gap-md { height: var(--spacing-md); flex: none; }
+.gap-lg { height: var(--spacing-lg); flex: none; }
+.gap-xxl { height: var(--spacing-xxl); flex: none; }
+
+/* Card (padding md = spacing.lg; lg = spacing.xl; radii.lg; shadows.card) */
+.card { background: var(--colors-surface-paper); border-radius: var(--radii-lg); padding: var(--spacing-lg); box-shadow: var(--shadow-card); }
+.card.pad-lg { padding: var(--spacing-xl); }
+.card.tone-brand { background: var(--colors-brand-primaryLight); }
+
+/* Pill (size sm: caption, spacing.xxs x spacing.sm, radii.pill) */
+.pill { display: inline-flex; align-items: center; max-width: 100%; border-radius: var(--radii-pill); padding: var(--spacing-xxs) var(--spacing-sm); font-size: var(--size-caption); font-weight: var(--weight-semibold); line-height: var(--leading-normal); }
+.pill.neutral { background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+.pill.success { background: var(--colors-feedback-successLight); color: var(--colors-text-primary); }
+.pill.primary { background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); }
+
+/* A neighbour row (Display, Challenge): unchanged, drawn for context */
+.row { min-height: var(--touch-min); display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.row > .grow { flex: 1; min-width: 0; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The Reading practice card: a radio group of three rows                                      */
+/* ------------------------------------------------------------------------------------------ */
+.rp-group { display: flex; flex-direction: column; }
+/* The whole row is the radio (role="radio"): at least touchTarget.min high, a thick transparent border at rest that
+   becomes the focus ring (border.focus) or the press look (border.shape), so neither moves anything. */
+.radio {
+  position: relative;
+  min-height: var(--touch-min);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 var(--spacing-xs);
+  border: var(--border-width-thick) solid transparent;
+  border-radius: var(--radii-md);
+  background: transparent;
+  text-align: start;
+  width: 100%;
+  cursor: pointer;
+}
+.radio.is-focus { border-color: var(--colors-border-focus); }
+/* While pressed the press look wins over the focus ring (a web tap also focuses the row). */
+.radio.is-pressed { border-color: var(--colors-border-shape); }
+.radio.is-pressed > .radio-in { transform: scale(var(--press-scale)); }
+.radio-in { display: flex; flex-direction: row; align-items: flex-start; gap: var(--spacing-md); }
+/* The ring sits on the label's first line: its slot is one label line high (body x leading.normal). */
+.ring-slot { flex: none; height: calc(var(--size-body) * var(--leading-normal)); display: flex; align-items: center; }
+.ring { width: var(--ring); height: var(--ring); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-text-primary); display: flex; align-items: center; justify-content: center; }
+.ring > i { display: block; width: var(--ring-dot); height: var(--ring-dot); border-radius: var(--radii-circle); background: var(--colors-text-primary); }
+.radio-text { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: break-word; }
+.radio-label { font-size: var(--size-body); line-height: var(--leading-normal); }
+.radio[aria-checked="true"] .radio-label { font-weight: var(--weight-semibold); }
+.radio-hint { font-size: var(--size-caption); line-height: var(--leading-normal); color: var(--colors-text-muted); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The quest's Hello step                                                                      */
+/* ------------------------------------------------------------------------------------------ */
+.hdr { display: flex; align-items: center; justify-content: space-between; min-height: var(--touch-min); }
+.hdr-close { width: var(--touch-min); height: var(--touch-min); margin-left: calc(-1 * var(--spacing-md)); border-radius: var(--radii-pill); display: inline-flex; align-items: center; justify-content: center; background: transparent; border: var(--border-width-base) solid transparent; }
+.aa-btn { min-width: var(--touch-min); min-height: var(--touch-min); border-radius: var(--radii-pill); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); font-size: var(--size-body); font-weight: var(--weight-bold); padding: 0 var(--spacing-lg); }
+.scroll { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.scroll-in { display: flex; flex-direction: column; min-height: 100%; }
+.dots-row { display: flex; align-items: center; gap: var(--spacing-md); }
+.dots { flex: 1; display: flex; align-items: center; gap: var(--spacing-sm); }
+.dots > i { display: block; width: var(--dot); height: var(--dot); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); border: var(--border-width-thin) solid var(--colors-border-strong); }
+.dots > i.on { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); }
+.hoya-step { width: var(--hoya-step); height: var(--hoya-step); align-self: center; display: block; }
+.step-card { display: flex; flex-direction: column; }
+/* HoyaBubble (tone idle): paper, borderWidth.base border.subtle, radii.xl, padding spacing.lg, shadows.card; Hoya 72 then
+   the message (Body lg semibold). */
+.bubble { display: flex; flex-direction: row; align-items: flex-start; gap: var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-xl); padding: var(--spacing-lg); box-shadow: var(--shadow-card); }
+.bubble .hoya-bubble { width: var(--hoya-bubble); height: var(--hoya-bubble); flex: none; display: block; }
+.bubble .msg { flex: 1; min-width: 0; font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); line-height: var(--leading-normal); overflow-wrap: break-word; }
+.spacer { flex: 1 1 auto; min-height: 0; }
+.btn { display: flex; align-items: center; justify-content: center; width: 100%; border: none; border-radius: var(--radii-pill); font-weight: var(--weight-bold); text-align: center; line-height: var(--leading-tight); }
+.btn-hero { min-height: var(--touch-hero); padding: var(--spacing-sm) var(--spacing-xxl); font-size: var(--size-prompt); background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
+.fold { position: absolute; left: 0; right: 0; border-top: var(--border-width-base) dashed var(--colors-border-focus); pointer-events: none; }
+.fold > span { position: absolute; right: var(--spacing-xs); top: var(--spacing-xxs); font-family: var(--family-mono); font-size: 11px; color: var(--colors-border-focus); background: var(--colors-surface-paper); padding: 0 var(--spacing-xs); }
+
+/* Korean UI text wraps at spaces, as the web build (apps/web/src/app/globals.css :lang(ko) word-break: keep-all) and
+   iOS (KOREAN_LINE_BREAK, hangul-word). Android keeps per-syllable breaks (line-break.ts). */
+:lang(ko) { word-break: keep-all; }
