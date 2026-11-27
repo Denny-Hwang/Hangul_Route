@@ -815,6 +815,22 @@ export const learner = {
       },
       /** The compact page's line (F-CURR-002 section 4.6, row CM-24): two words on one card, each with its own Hear it. */
       compactLine: 'Two on one card. Tap Hear it for each.',
+      /**
+       * [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE section 3.6: the page after a step's letter pages where each new letter is traced
+       * once, unscored. One verb, "trace", on the whole page; the heading, Show me, Clear, the praise and "Shape guide" are
+       * `minigame.trace`'s own, and Hear it is `hearIt`.
+       */
+      write: {
+        /** The title in the step title's slot. */
+        title: 'Trace the new letters',
+        /** The idle line (no Done on this page). */
+        idle: 'Trace each line slowly.',
+        /** After a pause on ink that is not a finished letter: it names the way on. */
+        keepGoing: 'Keep going, or tap Next letter.',
+        /** The same on the last letter, where Continue is the way on. */
+        keepGoingLast: 'Keep going, or tap Continue.',
+        next: { cta: 'Next letter' },
+      },
     },
     /** Adaptive pacing (F-CURR-002 section 4.6, row CM-24): the scaffold round's line over the highlighted card. Never about speed. */
     adapt: {

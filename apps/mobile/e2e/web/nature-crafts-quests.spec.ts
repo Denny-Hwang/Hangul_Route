@@ -82,7 +82,7 @@ test('quest 10: finals m and p at the bottom of the block, the payoff words, the
   await startQuest(page, 0);
 
   // Page 1: final ㅁ with 곰 and final ㅂ with 집, each with its block diagram.
-  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 4', { exact: true })).toBeVisible();
   await expect(page.getByTestId('discover-block-jamo:mieum-batchim')).toBeVisible();
   await expect(page.getByTestId('discover-item-jamo:mieum-batchim')).toContainText('곰');
   await expect(page.getByTestId('discover-block-jamo:bieup-batchim')).toBeVisible();
@@ -90,15 +90,20 @@ test('quest 10: finals m and p at the bottom of the block, the payoff words, the
   await page.screenshot({ path: test.info().outputPath('nature-q1-discover-finals.png'), fullPage: true });
   await nextPage(page);
 
-  // Page 2: 봄 and 밥 (on the rice card), words you can read now.
-  await expect(page.getByText('Page 2 of 3', { exact: true })).toBeVisible();
+  // Page 2: the trace page of the two finals (AMENDMENTS-STAGE1-TRACE-COVERAGE).
+  await expect(page.getByText('Page 2 of 4', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', /^Trace the final /);
+  await nextPage(page);
+
+  // Page 3: 봄 and 밥 (on the rice card), words you can read now.
+  await expect(page.getByText('Page 3 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('Words you can read now', { exact: true })).toBeVisible();
   await expectPlainWord(page, '봄');
   await expectPicturedWord(page, '밥');
   await nextPage(page);
 
-  // Page 3: the payoff, 김치 (on the kimchi card) and 엄마.
-  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  // Page 4: the payoff, 김치 (on the kimchi card) and 엄마.
+  await expect(page.getByText('Page 4 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('You can read these now!', { exact: true })).toBeVisible();
   await expectPicturedWord(page, '김치');
   await expectPlainWord(page, '엄마');

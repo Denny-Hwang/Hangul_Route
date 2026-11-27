@@ -84,15 +84,18 @@ test('quest 5: Family at the Table pages through a 3-page Discover with a pictur
   await expect(page.getByText('Family at the Table', { exact: true })).toBeVisible();
   await startQuest(page, 1);
 
-  // Discover: ㅂ ㅅ on page 1, 아버지 and 아기 on page 2, 엄마 and the pictured 가족 on page 3.
+  // Discover: ㅂ ㅅ on page 1, their trace page on page 2 (AMENDMENTS-STAGE1-TRACE-COVERAGE), 아버지 and 아기 on page 3, 엄마 and the pictured 가족 on page 4.
   await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('바나나').first()).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Page 2 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 2 of 4', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', /^Trace the letter b/);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Page 3 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('아버지').first()).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 4 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('엄마').first()).toBeVisible();
   await expect(page.getByText('가족').first()).toBeVisible();
   // 가족 carries the family-table card art (an svg), not the text-tile fallback.

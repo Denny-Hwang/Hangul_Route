@@ -62,6 +62,7 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `한글 글자 ${romanization}` : `한글 글자 ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `한글 받침 ${romanization}`,
+  discoverWriteProgress: (traced: number, total: number) => `글자 ${total}개 중 ${traced}개를 따라 썼어요`,
   practiceLetter: (romanization: string) => `글자 다시 연습하기: ${romanization}`,
   practiceFinal: (romanization: string) => `받침 다시 연습하기: ${romanization}`,
   lockedCard: '잠긴 카드',

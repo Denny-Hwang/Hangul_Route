@@ -199,7 +199,7 @@ test('soft prerequisite: "Start there" opens the earlier quest', async ({ page }
   // [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: the earlier quest was left by a reload on its Look and learn step, so it
   // goes on from that step (its first page), not from the intro ("Hi from Hoya") again.
   await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-  await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
   await expect(page.getByText('Hi from Hoya')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

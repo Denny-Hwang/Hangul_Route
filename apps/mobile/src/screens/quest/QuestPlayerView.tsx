@@ -38,6 +38,7 @@ import {
   runQuestStart,
   type QuestPlayerPorts,
 } from '../../logic/quest-flow/quest-player-ports';
+import type { TracePadPlan } from '../../logic/stage1/trace-pad-layout';
 import { questStepLabel } from '../../logic/quest-steps';
 import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
@@ -238,6 +239,14 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // Past Practice, once: the chunk notes a strong round for the cell and, after a hard one, gives the scaffold round,
   // played before Apply outside the steps and the score. Before paint, so Apply's card never flashes under it.
   const [scaffold, setScaffold] = useState<MinigameScope | null>(null);
+  // [TC] The trace page's arrangement while it shows (the Discover step reports it); null on every other page and step.
+  const [trace, setTrace] = useState<TracePadPlan | null>(null);
+  const onPageKind = useCallback((kind: 'cards' | 'trace', plan: TracePadPlan | null): void => {
+    setTrace((prev) => {
+      const next = kind === 'trace' ? plan : null;
+      return prev?.arrangement === next?.arrangement && prev?.canvasSlot === next?.canvasSlot ? prev : next;
+    });
+  }, []);
   const practiceAt = quest?.steps.findIndex((s) => s.kind === 'practice') ?? -1;
   const pastPractice = practiceAt >= 0 && stepIndex === practiceAt + 1;
   const practiceRead = useRef(false);
@@ -381,12 +390,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     );
   }
 
-  const discoverDone = (result: { pages: number; heard: number }): void => {
+  const discoverDone = (result: { pages: number; heard: number; written?: number; writeSeconds?: number }): void => {
     // [QB] Once per step per run (QB-3): Continue on the last page of a step shown again reports nothing.
     if (useQuestRunStore.getState().reportOnce('quest.discover_completed', stepIndex)) {
       ports.track({
         name: 'quest.discover_completed',
-        payload: discoverCompletedPayload(questId, result),
+        payload: discoverCompletedPayload(questId, { ...result, written: result.written ?? 0, writeSeconds: result.writeSeconds ?? 0 }),
       });
     }
     advance();
@@ -403,30 +412,51 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     return <ScaffoldRound scope={scaffold} onDone={() => setScaffold(null)} />;
   }
 
+  // [TC] On the trace page of a Discover step (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.4) the chrome follows the page's arrangement: the
+  // title slot reads "Trace the new letters" (or is not drawn when the page is short), the step pill is hidden, and the step dots
+  // ride in the ScreenHeader between Close and Aa when the page is short.
+  const tracePlan = step.kind === 'discover' ? trace : null;
+  const stepDots = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+      <View style={{ flex: 1 }}>
+        {/* [QB] The dots keep the furthest step (they only fill); a step shown again is ringed, and the pill and the meter's words name it (QB-2). */}
+        <Progress
+          value={Math.max(furthestStep, stepIndex) + 1}
+          max={quest.steps.length}
+          tone="primary"
+          variant="dots"
+          testID="quest-step-dots"
+          {...(revisit ? { current: stepIndex + 1, accessibilityValueText: m.a11y.progress.value(stepIndex + 1, quest.steps.length) } : {})}
+        />
+      </View>
+      {tracePlan === null || tracePlan.pill ? <Pill tone="neutral" label={q.progress(stepIndex + 1, quest.steps.length)} size="sm" /> : null}
+    </View>
+  );
+  const headerLeading = ownClose ? ({ leading: { kind: 'close', onPress: askLeave } } as const) : {};
+  const headerOptions = tracePlan?.dotsInHeader ? { ...headerLeading, middle: stepDots } : ownClose ? headerLeading : undefined;
+
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
-    <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={ownClose ? { leading: { kind: 'close', onPress: askLeave } } : undefined}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <View style={{ flex: 1 }}>
-          {/* [QB] The dots keep the furthest step (they only fill); a step shown again is ringed, and the pill and the meter's words name it (QB-2). */}
-          <Progress
-            value={Math.max(furthestStep, stepIndex) + 1}
-            max={quest.steps.length}
-            tone="primary"
-            variant="dots"
-            testID="quest-step-dots"
-            {...(revisit ? { current: stepIndex + 1, accessibilityValueText: m.a11y.progress.value(stepIndex + 1, quest.steps.length) } : {})}
-          />
-        </View>
-        <Pill tone="neutral" label={q.progress(stepIndex + 1, quest.steps.length)} size="sm" />
-      </View>
+    <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={headerOptions}>
+      {tracePlan?.dotsInHeader ? null : stepDots}
 
-      <Spacer size="lg" />
-      <Heading level="title">{cardLines?.title ?? step.titleEn}</Heading>
-      <Spacer size="xs" />
-      <Pill tone="primary" label={questStepLabel(step.kind, q.step)} size="sm" />
-
-      <Spacer size="lg" />
+      {tracePlan === null ? (
+        <>
+          <Spacer size="lg" />
+          <Heading level="title">{cardLines?.title ?? step.titleEn}</Heading>
+          <Spacer size="xs" />
+          <Pill tone="primary" label={questStepLabel(step.kind, q.step)} size="sm" />
+          <Spacer size="lg" />
+        </>
+      ) : tracePlan.title ? (
+        <>
+          <Spacer size="lg" />
+          <Heading level="title">{q.discover.write.title}</Heading>
+          <Spacer size="lg" />
+        </>
+      ) : (
+        <Spacer size={tracePlan.dotsInHeader ? 'sm' : 'lg'} />
+      )}
       {step.kind === 'discover' && step.discover ? (
         <DiscoverStep
           key={step.id}
@@ -438,6 +468,10 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           // [QB] On page 1 Previous is the step's; reached by Previous the step opens on its last page (QB-2).
           onPrevious={goPrevious}
           start={{ lastPage: cameBack, seen: revisit }}
+          // [TC] The trace page after the letter pages, in every Discover step the player renders (the All lessons preview too:
+          // a grown-up sees what the learner sees).
+          writeOnce
+          onPageKind={onPageKind}
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher

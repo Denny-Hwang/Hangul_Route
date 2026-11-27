@@ -67,11 +67,23 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
 });
 
 describe('telemetry payloads', () => {
-  it('quest.discover_completed carries { questId, pages, heard }', () => {
-    expect(discoverCompletedPayload('quest:stage1-letters-q1', { pages: 2, heard: 3 })).toEqual({
+  it('quest.discover_completed carries { questId, pages, heard, written, writeSeconds } (TC-1b, OD-TC-8)', () => {
+    expect(discoverCompletedPayload('quest:stage1-letters-q1', { pages: 3, heard: 3, written: 4, writeSeconds: 52 })).toEqual({
       questId: 'quest:stage1-letters-q1',
-      pages: 2,
+      pages: 3,
       heard: 3,
+      written: 4,
+      writeSeconds: 52,
+    });
+  });
+
+  it('quest.discover_completed of a step with no trace page carries written 0 and writeSeconds 0', () => {
+    expect(discoverCompletedPayload('quest:stage1-life-q4', { pages: 2, heard: 1, written: 0, writeSeconds: 0 })).toEqual({
+      questId: 'quest:stage1-life-q4',
+      pages: 2,
+      heard: 1,
+      written: 0,
+      writeSeconds: 0,
     });
   });
 

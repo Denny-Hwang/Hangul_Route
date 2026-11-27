@@ -572,6 +572,13 @@ export const learner = {
         lineLabel: (line: number, total: number, speaker: string) => `Línea ${line} de ${total}, ${speaker}`,
       },
       compactLine: 'Dos en una tarjeta. Toca Escuchar en cada una.',
+      write: {
+        title: 'Traza las letras nuevas',
+        idle: 'Traza cada línea despacio.',
+        keepGoing: 'Sigue trazando, o toca Siguiente letra.',
+        keepGoingLast: 'Sigue trazando, o toca Continuar.',
+        next: { cta: 'Siguiente letra' },
+      },
     },
     adapt: {
       scaffoldHint: 'Una más, con una pista. Escucha y toca la tarjeta resaltada.',

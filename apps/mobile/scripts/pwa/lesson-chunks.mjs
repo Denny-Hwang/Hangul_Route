@@ -357,7 +357,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,569,996 B raw (+1,818 B); on top of main with MP-2a (line 4,577,600 B) it measures 4,579,228 B raw / 1,259,979 B gzip,
   // 1,628 B over the line. The line is that measurement plus a 6,072 B margin (one measured raise; a wider margin than before, so every
   // PR stops tripping the line until the start bundle shrink row SB-4, planned after phase 2).
-  startBundleRaw: 4_585_300,
+  // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b (`DiscoverStep`'s trace branch and its door `discover-trace-entry.tsx`, the arrangement
+  // chooser `stage1/trace-pad-layout.ts`, `use-screen-content-box.ts`, `StepActions`' row size, `QuestPlayerView`'s chrome for the page,
+  // the quest content seconds and the en strings stay in the start bundle; the pad itself, its canvas and gesture, is
+  // `discover-trace-chunk`, a screen chunk of 13.7 KB raw, asked for as a Discover step with letters opens): on top of main with RF-1b
+  // (line 4,585,300 B) the release `build:web` (CI=1) measures 4,589,675 B raw / 1,263,245 B gzip, 4,375 B over the line. The line is that
+  // measurement plus a 6,025 B margin (one measured raise), as TC-1a did, until the start bundle shrink row SB-4, planned after phase 2.
+  startBundleRaw: 4_595_700,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -656,6 +662,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // literal `import()` of `src/screens/minigames/contrast-entry.ts` when a Listen & Pick scope holds a round with `contrastSet`):
   // two optional steps play it, so the start bundle carries none of it; a chunk that cannot load drops the contrast rounds.
   Object.freeze({ name: 'contrast-chunk', marker: 'screen-chunk:contrast' }),
+  // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE row TC-1b: the trace page of Discover, "Trace the new letters" (its pad,
+  // `src/screens/quest/discover-trace-chunk.tsx`, reached only through the literal `import()` of `src/screens/quest/discover-trace-entry.tsx`):
+  // its canvas pulls the gesture handler and the stroke tables, so the start bundle carries none of it; the step asks for the
+  // chunk as it opens and, until it is in, draws its pinned buttons alone.
+  Object.freeze({ name: 'discover-trace-chunk', marker: 'screen-chunk:discover-trace' }),
 ]);
 
 /**

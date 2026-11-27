@@ -62,7 +62,10 @@ import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait, focusForScreenReader, isScreenReaderEnabled } from '../../platform/screen-reader';
 import { useAudioStore } from '../../store/audio-store';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
+import { traceArrangement, type TracePadPlan } from '../../logic/stage1/trace-pad-layout';
+import { DiscoverTracePad, preloadTracePad } from './discover-trace-entry';
 import { StepActions } from './StepActions';
+import { useScreenContentBox } from './use-screen-content-box';
 
 /**
  * Discover (F-QUEST-002 §3.2): teach before play. One or two new things per
@@ -90,8 +93,11 @@ interface Props {
   pages: readonly DiscoverPage[];
   /** The step's Hoya line, shown once and small. */
   hoyaLine?: string;
-  /** Continue on the last page: the player advances and reports `quest.discover_completed`. */
-  onDone: (result: { pages: number; heard: number }) => void;
+  /**
+   * Continue on the last page: the player advances and reports `quest.discover_completed`. `written` and `writeSeconds` (the
+   * letters traced and the whole seconds the trace page was shown) are there only when the step has a trace page.
+   */
+  onDone: (result: { pages: number; heard: number; written?: number; writeSeconds?: number }) => void;
   /** A strong round earlier in the cell: the second page, when it holds two words, draws both on one card (F-CURR-002 section 4.6). */
   compact?: boolean;
   /**
@@ -106,15 +112,27 @@ interface Props {
   onPrevious?: () => void;
   /** [QB] How the step opens (QB-2): on its last page when it was reached by Previous, with full dots when it is shown again. Read once. */
   start?: DiscoverStart;
+  /**
+   * [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE: a step whose letter cards have stroke data gets one more page, "Trace the new letters",
+   * after its last letter page. Off by default, so the other screens that show a Discover step stay as they are; the quest player
+   * turns it on for every Discover step it renders.
+   */
+  writeOnce?: boolean;
+  /**
+   * [TC] Tells the player which page kind shows and, on the trace page, the arrangement it took (§3.4): the player draws the title
+   * slot, the step pill and the step dots by it. Called when the page changes and with `'cards'` when the step goes.
+   */
+  onPageKind?: (kind: 'cards' | 'trace', plan: TracePadPlan | null) => void;
 }
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
-export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHear = false, onPrevious, start }: Props): ReactElement {
+export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHear = false, onPrevious, start, writeOnce = false, onPageKind }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
   const locale = useLocale();
-  const model = useMemo(() => buildDiscover(pages, copy, m.a11y, locale), [pages, copy, m.a11y, locale]);
+  const model = useMemo(() => buildDiscover(pages, copy, m.a11y, locale, undefined, { writeOnce }), [pages, copy, m.a11y, locale, writeOnce]);
+  const hasTracePage = useMemo(() => model.pages.some((p) => p.write !== undefined), [model]);
   const actions = useMemo(() => {
     const map = new Map<string, HearAction>();
     for (const page of model.pages) {
@@ -125,6 +143,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
       for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
+      // [TC] The trace page's Hear it and Show me play each letter's own sound under `write|<jamoId>`.
+      for (const letter of page.write?.letters ?? []) map.set(letter.hear.id, letter.hear);
     }
     return map;
   }, [model]);
@@ -146,6 +166,11 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
     // [SF-3] Every sound of a button that says several (Hear it with vowels), so the o and u clips do not load cold.
     void warmClips(clipRefsOf([...actions.values()].flatMap(actionSpecs)));
   }, [actions]);
+
+  // [TC] The trace page's chunk is asked for as the step opens, so it is in long before the page shows.
+  useEffect(() => {
+    if (hasTracePage) preloadTracePad();
+  }, [hasTracePage]);
 
   const romanizationMode = useRomanizationMode();
   // [RF] The item-level mode (AMENDMENTS-ROMANIZATION-FADE sections 3.3, 3.6): the resolver of the first draw, kept for the
@@ -214,12 +239,27 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   const [helpOpen, setHelpOpen] = useState(false);
   const openHelp = useCallback(() => setHelpOpen(true), []);
 
+  /**
+   * [TC] `writeSeconds` of `quest.discover_completed` (OD-TC-8): the whole seconds the trace page was shown in this mount,
+   * summed over its visits (Previous and Continue back). 0 without a trace page. Kept in refs: nothing renders from it.
+   */
+  const writeShown = useRef({ at: null as number | null, ms: 0 });
+  const writeSecondsNow = useCallback((): number => {
+    const shown = writeShown.current;
+    const live = shown.at === null ? 0 : Date.now() - shown.at;
+    return Math.floor((shown.ms + live) / 1000);
+  }, []);
+
   /** Runs one effect; the returned promise settles when the next effect of the same batch may start. */
   const runEffect = useCallback(
     (effect: DiscoverEffect): Promise<void> | void => {
       switch (effect.type) {
         case 'done':
-          onDoneRef.current({ pages: effect.pages, heard: effect.heard });
+          onDoneRef.current({
+            pages: effect.pages,
+            heard: effect.heard,
+            ...(hasTracePage ? { written: effect.written, writeSeconds: writeSecondsNow() } : {}),
+          });
           return;
         case 'stopAudio':
           if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
@@ -266,7 +306,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
         }
       }
     },
-    [actions, exchanges, endSeries, seriesGap],
+    [actions, exchanges, endSeries, seriesGap, writeSecondsNow, hasTracePage],
   );
 
   const dispatch = useCallback(
@@ -351,11 +391,80 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
 
   const render = pageRender(model, state, romanizationMode, copy, romanizationModeOf);
   const page = model.pages[state.page];
+  // [TC] The trace page's arrangement: chosen once for the page, from the Screen content box, the text size and the page's
+  // letters (a pure function, `logic/stage1/trace-pad-layout.ts`), so the canvas keeps one size across the page's letters.
+  const contentBox = useScreenContentBox();
+  const typeScale = useTypeScale();
+  const traceCopy = m.learner.minigame.trace;
+  const writeLetters = page?.write?.letters;
+  const plan = useMemo<TracePadPlan | null>(() => {
+    if (writeLetters === undefined) return null;
+    return traceArrangement({
+      box: contentBox,
+      scale: typeScale,
+      letters: writeLetters.length,
+      page: {
+        headings: writeLetters.map((l) => (l.final ? traceCopy.headingFinal(l.romanization) : traceCopy.heading(l.romanization))),
+        hasFinal: writeLetters.some((l) => l.final),
+      },
+    });
+  }, [writeLetters, contentBox, typeScale, traceCopy]);
+  const kind: 'cards' | 'trace' = plan === null ? 'cards' : 'trace';
+  const onPageKindRef = useRef(onPageKind);
+  onPageKindRef.current = onPageKind;
+  useEffect(() => {
+    onPageKindRef.current?.(kind, plan);
+  }, [kind, plan]);
+  useEffect(
+    () => () => {
+      onPageKindRef.current?.('cards', null);
+    },
+    [],
+  );
+  // The seconds the trace page is on screen (telemetry): opened when it shows, closed when the page changes or the step goes.
+  useEffect(() => {
+    if (kind !== 'trace') return undefined;
+    const shown = writeShown.current;
+    shown.at = Date.now();
+    return () => {
+      if (shown.at !== null) shown.ms += Date.now() - shown.at;
+      shown.at = null;
+    };
+  }, [kind, state.page]);
   const cards = page ? discoverCards(page, compact && state.page === 1) : [];
   /** The card's panel action: play the button it played last again (the main Hear it before any). */
   const replay = useCallback((card: string, fallbackId: string): void => {
     dispatchRef.current({ type: 'hear', id: lastPlayed.current.get(card) ?? fallbackId });
   }, []);
+
+  const previous = render.hasPrevious ? () => dispatch({ type: 'prev' }) : onPrevious;
+  if (render.write && plan && page?.write) {
+    // [TC] The trace page: a fixed column, never a scroll view (the canvas owns vertical drags), above the pinned buttons.
+    return (
+      <View style={{ flex: 1 }}>
+        <DiscoverTracePad
+          plan={plan}
+          render={render.write}
+          page={{ label: copy.pageLabel(render.page, render.dots.max), dots: render.dots }}
+          dispatch={dispatch}
+          audio={{ register: registerSlot, replay, onHelp: openHelp }}
+          headings={page.write.letters.map((l) => (l.final ? traceCopy.headingFinal(l.romanization) : traceCopy.heading(l.romanization)))}
+          pinned={
+            <View style={{ paddingTop: plan.rowSize === 'lg' ? spacing.md : plan.side ? spacing.xs : spacing.sm }}>
+              <StepActions
+                main={{ label: copy.continue.cta, size: 'lg', onPress: () => dispatch({ type: 'next' }), testID: 'discover-continue' }}
+                previousLabel={m.learner.quest.previous.cta}
+                onPrevious={previous}
+                rowSize={plan.rowSize}
+              />
+              {plan.rowSize === 'lg' ? <Spacer size="lg" /> : null}
+            </View>
+          }
+        />
+        <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -451,7 +560,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
         <StepActions
           main={{ label: copy.continue.cta, size: 'lg', disabled: !render.continueEnabled, onPress: () => dispatch({ type: 'next' }), testID: 'discover-continue' }}
           previousLabel={m.learner.quest.previous.cta}
-          onPrevious={render.hasPrevious ? () => dispatch({ type: 'prev' }) : onPrevious}
+          onPrevious={previous}
         />
         <Spacer size="lg" />
       </View>

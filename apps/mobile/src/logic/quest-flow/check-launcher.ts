@@ -49,12 +49,16 @@ export function launcherView(kind: QuestStepKind, copy: Messages['learner']['que
   };
 }
 
-/** `quest.discover_completed`: Continue on the last Discover page. */
+/**
+ * `quest.discover_completed`: Continue on the last Discover page. [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE OD-TC-8: `pages`
+ * counts the trace page, `heard` the Hear it taps (a `write|` tap on the trace page included), `written` the letters traced
+ * to the end on this visit and `writeSeconds` the whole seconds the trace page was shown in this mount (0 without one).
+ */
 export function discoverCompletedPayload(
   questId: string,
-  result: { pages: number; heard: number },
-): { questId: string; pages: number; heard: number } {
-  return { questId, pages: result.pages, heard: result.heard };
+  result: { pages: number; heard: number; written: number; writeSeconds: number },
+): { questId: string; pages: number; heard: number; written: number; writeSeconds: number } {
+  return { questId, pages: result.pages, heard: result.heard, written: result.written, writeSeconds: result.writeSeconds };
 }
 
 export interface RunCounts {

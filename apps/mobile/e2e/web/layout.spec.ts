@@ -100,6 +100,43 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Hi, Dani!')).toBeVisible();
     });
 
+    // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE §3.4 (row TC-1b): quest 1's trace page, "Trace the new letters", at every window: the
+    // canvas is at least 160 and wholly on screen, every control and Continue are on screen without scrolling, and a drag on
+    // the canvas moves nothing (it is never inside a scroll view).
+    test('Discover trace page: the canvas, every control and Continue are on screen; a drag does not scroll', async ({ page }) => {
+      await onboard(page, 'Tara');
+      const cont = page.getByRole('button', { name: 'Continue' });
+      await expectReachable(page, cont);
+      await cont.click();
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      for (let i = 0; i < 2; i += 1) {
+        await expectReachable(page, cont);
+        await cont.click();
+      }
+      await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', /^Trace the letter a/);
+
+      const canvas = page.locator('#trace-canvas');
+      await expect(canvas).toBeInViewport({ ratio: 1 });
+      const box = (await canvas.boundingBox())!;
+      expect(box.width, 'canvas stays usable').toBeGreaterThanOrEqual(160);
+      expect(box.height).toBeCloseTo(box.width, 0);
+      for (const name of ['Hear it', 'Show me', 'Clear', 'Next letter', 'Previous', 'Continue']) {
+        await expect(page.getByRole('button', { name }).first(), name).toBeInViewport({ ratio: 1 });
+      }
+      const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      expect(overflow, 'page overflow').toBeLessThanOrEqual(0);
+
+      const next = page.getByRole('button', { name: 'Next letter' });
+      const before = await next.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.25);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.75, { steps: 8 });
+      await page.mouse.up();
+      expect((await next.boundingBox())!.y, 'Next letter did not move').toBe(before!.y);
+      expect((await canvas.boundingBox())!.width, 'the canvas keeps its size').toBe(box.width);
+      await expect(cont).toBeInViewport({ ratio: 1 });
+    });
+
     test('Profile entry is labelled, the PIN pad fits, and rescue-code field stays on screen', async ({ page }) => {
       await onboard(page, 'Rio');
       // A device set up before the form made the PIN (L8): the first grown-up action shows the PIN setup screen.
