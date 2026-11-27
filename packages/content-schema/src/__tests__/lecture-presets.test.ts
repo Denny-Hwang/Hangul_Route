@@ -202,7 +202,8 @@ describe('every preset at every length against CATALOG', () => {
     ['stage1', 30, 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 3'],
     ['stage2', 10, 10, 'stage2-letters-q1 · stage2-letters-q2 · copy-on-paper 2'],
     ['stage2', 20, 20, 'stage2-letters-q1 · stage2-letters-q2 · stage2-letters-q3 · stage2-letters-q4 · stage2-letters-q5'],
-    ['stage2', 30, 30, 'stage2-letters-q1 · stage2-letters-q2 · stage2-letters-q3 · stage2-letters-q4 · stage2-letters-q5 · stage2-letters-q6 · stage2-life-q1 · copy-on-paper 2'],
+    // AMENDMENTS-BATCHIM-COMPLETE BC-1 (BC-OD-14): Word Builder's optional q7 follows q6 in route order.
+    ['stage2', 30, 30, 'stage2-letters-q1 · stage2-letters-q2 · stage2-letters-q3 · stage2-letters-q4 · stage2-letters-q5 · stage2-letters-q6 · stage2-letters-q7 · copy-on-paper 2'],
     ['stage3', 10, 10, 'stage3-letters-q1 · stage3-letters-q2'],
     ['stage3', 20, 20, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1'],
     ['stage3', 30, 30, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1 · stage3-life-q2 · stage3-life-q3'],
@@ -347,7 +348,8 @@ describe('fill rule', () => {
     const m = (b: LectureBlock): number => presetBlockMinutes(b, CATALOG);
     expect(m({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(5);
     expect(m({ kind: 'quest', id: 'quest:nope' })).toBe(0);
-    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(26);
+    // [BC][MP] Word Builder's nine quests (BC-1: q7-q9 add steps) plus quest 2's contrast step (MP-2b), minutes from the generator (39).
+    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(39);
     expect(m({ kind: 'episode', id: 'episode:nope' })).toBe(0);
     expect(m({ kind: 'story', storyId: 'story:pansori-tales', checks: true })).toBe(6);
     expect(m({ kind: 'story', storyId: 'story:nope', checks: true })).toBe(0);

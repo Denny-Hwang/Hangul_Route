@@ -7,7 +7,7 @@ import { ITEMS, LATER_VOLUMES, LESSON_QUESTS, PLACEMENT, RETIRED, finished, hist
 
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
- * snapshot points and for a learner with every lesson quest done (107, and 108 with the Stage 1 addition of row CM-33). A
+ * snapshot points and for a learner with every lesson quest done (107, 108 with the Stage 1 addition of row CM-33, and 111 with Word Builder's optional q7-q9 of AMENDMENTS-BATCHIM-COMPLETE BC-1). A
  * cell's later volume (row CM-40) is not in the fixture while `volumes` is off (row CM-42 S6: Play Volume 2 ships dark).
  */
 
@@ -139,13 +139,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 108 first-volume quests since row CM-33)', () => {
-  const snap = finished(108);
+describe('the all-quests fixture (scenario S-c; 111 first-volume quests since row BC-1)', () => {
+  const snap = finished(111);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
+    expect(LESSON_QUESTS).toHaveLength(111);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {

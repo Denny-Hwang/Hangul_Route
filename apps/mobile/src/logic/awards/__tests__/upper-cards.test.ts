@@ -1,4 +1,4 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { requiredQuestIds, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { awardWorld, awardWorldFor } from '../../../content/award-world';
 import { episodesAll } from '../../../content/episodes';
@@ -22,6 +22,8 @@ const LIFE = episodesAll.find((e) => e.id === 'episode:stage2-life')!;
 const S4_LETTERS = episodesAll.find((e) => e.id === 'episode:stage4-letters')!;
 const S4_RITES = episodesAll.find((e) => e.id === 'episode:stage4-rites')!;
 const T = (d: number): string => `2026-10-${String(d).padStart(2, '0')}T10:00:00.000Z`;
+/** [BC] Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE §3.1) never date its card: the latest required quest does, T(6). */
+const REQUIRED = requiredQuestIds(LETTERS).length;
 
 /** A snapshot that finished every quest of `episode`: the first finish of quest i on day 1+i, its last replay on `replay`. */
 function finished(episode: typeof LETTERS, replay: string | null, extra: Partial<ProgressSnapshot> = {}): ProgressSnapshot {
@@ -76,10 +78,11 @@ describe('withUpperCards and the cell page list (logic/awards/upper-cards.ts)', 
 describe('firstFinishedAt (F-CURR-002 §4.8 step 7)', () => {
   it('is the latest first finish: the latch, else the run, the earlier of the two when both exist', () => {
     const snap = finished(LETTERS, T(20));
-    expect(firstFinishedAt(LETTERS, snap)).toBe(T(LETTERS.questIds.length));
+    expect([REQUIRED, LETTERS.questIds.length]).toEqual([6, 9]);
+    expect(firstFinishedAt(LETTERS, snap)).toBe(T(REQUIRED));
     // A run earlier than its latch (a merge brought another device's earlier finish) wins.
-    const early = { ...snap, quests: snap.quests.map((q, i) => (i === LETTERS.questIds.length - 1 ? { ...q, completedAt: T(1) } : q)) };
-    expect(firstFinishedAt(LETTERS, early)).toBe(T(LETTERS.questIds.length - 1));
+    const early = { ...snap, quests: snap.quests.map((q, i) => (i === REQUIRED - 1 ? { ...q, completedAt: T(1) } : q)) };
+    expect(firstFinishedAt(LETTERS, early)).toBe(T(REQUIRED - 1));
     // No latch at all (an older record): the runs date it.
     expect(firstFinishedAt(LETTERS, { ...snap, questDoneAt: undefined })).toBe(T(20));
   });
@@ -96,7 +99,7 @@ describe('firstFinishedAt (F-CURR-002 §4.8 step 7)', () => {
 
   it('a latch entry from another device counts even when this copy holds no run of that quest', () => {
     const snap = finished(LETTERS, null);
-    expect(firstFinishedAt(LETTERS, { ...snap, quests: snap.quests.slice(1) })).toBe(T(LETTERS.questIds.length));
+    expect(firstFinishedAt(LETTERS, { ...snap, quests: snap.quests.slice(1) })).toBe(T(REQUIRED));
   });
 });
 
@@ -104,9 +107,9 @@ describe('the retroactive award (row CM-23)', () => {
   it('a cell finished before the row shipped brings its card on reconcile, dated by the first finishes, once', () => {
     const before = finished(LETTERS, T(20));
     const award = awardOf(before, 'card:norae');
-    expect(award).toEqual({ cardId: 'card:norae', source: 'episode', via: 'episode:stage2-letters', unlockedAt: T(LETTERS.questIds.length) });
+    expect(award).toEqual({ cardId: 'card:norae', source: 'episode', via: 'episode:stage2-letters', unlockedAt: T(REQUIRED) });
     const once = applyAwards(before, missingAwards(awardWorld, before, PROFILE), NOW);
-    expect(once.cards.filter((c) => c.cardId === 'card:norae')).toEqual([{ cardId: 'card:norae', unlockedAt: T(LETTERS.questIds.length), newSinceLastView: true }]);
+    expect(once.cards.filter((c) => c.cardId === 'card:norae')).toEqual([{ cardId: 'card:norae', unlockedAt: T(REQUIRED), newSinceLastView: true }]);
     // Idempotent: a second reconcile adds nothing.
     expect(missingAwards(awardWorld, once, PROFILE)).toEqual([]);
   });
@@ -118,7 +121,7 @@ describe('the retroactive award (row CM-23)', () => {
     const ra = applyAwards(a, missingAwards(awardWorld, a, PROFILE), NOW);
     const rb = applyAwards(b, missingAwards(awardWorld, b, PROFILE), NOW);
     const merged = mergeSnapshots(ra, rb, { now: new Date(NOW) });
-    expect(merged.cards.filter((c) => c.cardId === 'card:norae').map((c) => c.unlockedAt)).toEqual([T(LETTERS.questIds.length)]);
+    expect(merged.cards.filter((c) => c.cardId === 'card:norae').map((c) => c.unlockedAt)).toEqual([T(REQUIRED)]);
     expect(missingAwards(awardWorld, merged, PROFILE).filter((x) => x.cardId === 'card:norae')).toEqual([]);
   });
 

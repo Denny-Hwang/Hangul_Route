@@ -107,8 +107,11 @@ export const BUDGET = Object.freeze({
   manifestRaw: 60_000, // F-CURR-002 CM-5: the start-loaded lessons-index.ts (372,236 B before the split)
   titleChunkRaw: 30_000, // F-CURR-002 CM-5: one locale's title chunk (titles only since CM-40: es 6,133 B, ko 6,324 B on Volume 1)
   headersChunkRaw: 40_000, // F-CURR-002 CM-40: one locale's headers chunk (the display lines; Volume 1: en 15,095, es 14,800, ko 15,751 B; about 31 KB projected with Volume 2)
-  cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
-  cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
+  // [BC] AMENDMENTS-BATCHIM-COMPLETE BC-1 (Word Builder q7-q9, nine quests with their es and ko overlays): the
+  // stage2-letters chunk measures 103,768 B raw / 17,423 B gzip (was 73,354 B / 12,727 B for six), over the CM-5 lines; each
+  // line is that measurement plus a rounding margin (one measured raise). The chunk is lazy (OD-5): no weight on start-up.
+  cellChunkRaw: 110_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (was 90,000; largest at CM-5: stage2-letters, 61,381 B for six quests)
+  cellChunkGzip: 19_000, // F-CURR-002 CM-5: the same, gzip (was 16,000; largest at CM-5: stage2-letters, 11,070 B)
   // The F-CURR-002 Volume 2 integration (integrate/cm-1105: rows CM-41..CM-45, twenty-three Volume 2 cells, on CM-5B)
   // measures Stage 6 361,807 B raw / 45,094 B gzip (the largest stage), and in total 2,284,376 B raw / 385,617 B gzip:
   // past the CM-5 lines, so each line is that measurement plus a rounding margin. No weight on start-up (OD-5): the

@@ -1,3 +1,4 @@
+import { requiredQuestIds } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../platform/storage', () => ({
@@ -45,10 +46,10 @@ function visit(questId: string): QuestResultOutcome {
   );
 }
 
-/** Every quest of Word Builder in order; the outcome of the last. */
+/** Every required quest of Word Builder in order; the outcome of the last ([BC]: optional q7-q9 never finish the cell). */
 function finishCell(): QuestResultOutcome {
   let last: QuestResultOutcome | null = null;
-  for (const q of LETTERS.questIds) last = visit(q);
+  for (const q of requiredQuestIds(LETTERS)) last = visit(q);
   return last!;
 }
 

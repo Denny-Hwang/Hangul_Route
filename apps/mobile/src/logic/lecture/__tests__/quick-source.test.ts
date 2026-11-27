@@ -34,9 +34,9 @@ describe('presenterChooserGroups: what Customize offers', () => {
       expect(row.lessons.map((l) => l.key)).toEqual(CATALOG.cells.find((c) => c.episodeId === row.key)!.questIds);
       expect(row.minutes).toBe(CATALOG.cells.find((c) => c.episodeId === row.key)!.minutes);
     }
-    // At most five rows a stage (one per theme), Word Builder with six lessons.
+    // At most five rows a stage (one per theme), Word Builder with nine lessons ([BC]: six required, q7-q9 optional).
     for (const group of groups.filter((g) => g.stage !== null)) expect(group.rows.filter((r) => r.kind === 'episode').length).toBeLessThanOrEqual(5);
-    expect(episodes.find((e) => e.key === 'episode:stage2-letters')!.lessons).toHaveLength(6);
+    expect(episodes.find((e) => e.key === 'episode:stage2-letters')!.lessons).toHaveLength(9);
   });
 
   it('adds the 14 consonants and 10 vowels to Stage 1 (the Letters tab draws them)', () => {

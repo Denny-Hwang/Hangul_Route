@@ -357,7 +357,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,569,996 B raw (+1,818 B); on top of main with MP-2a (line 4,577,600 B) it measures 4,579,228 B raw / 1,259,979 B gzip,
   // 1,628 B over the line. The line is that measurement plus a 6,072 B margin (one measured raise; a wider margin than before, so every
   // PR stops tripping the line until the start bundle shrink row SB-4, planned after phase 2).
-  startBundleRaw: 4_585_300,
+  // [BC] AMENDMENTS-BATCHIM-COMPLETE BC-1 (Word Builder q7-q9: three more quest headers and optional-quest ids in the start-loaded
+  // lesson manifest and catalogue, the required-only cell rule and the optional-quest next-quest logic, the review-item cell rules)
+  // on top of main with MP-2b (line 4,585,300 B; 4,582,055 B measured on the MP-2b head) the release `build:web` (CI=1) measures
+  // 4,586,149 B raw / 1,261,993 B gzip, 849 B over the line. The line is that measurement plus a 4,151 B margin (one measured raise).
+  startBundleRaw: 4_590_300,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

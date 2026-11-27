@@ -22,13 +22,14 @@ const OVERLAYS = {
 };
 
 describe('Read Pick Meaning: options in the UI language (row CM-3A S2)', () => {
-  it('the Stage 2 Read Pick Checks are shipped: twelve scopes (the Volume 2 checks of rows CM-41 S2, CM-42 S2, CM-43 S2, CM-44 S2 and CM-45 S2)', () => {
+  it('the Stage 2 Read Pick Checks are shipped: thirteen scopes (the Volume 2 checks of rows CM-41 S2, CM-42 S2, CM-43 S2, CM-44 S2 and CM-45 S2, and Word Builder q8 of AMENDMENTS-BATCHIM-COMPLETE BC-1)', () => {
     expect(readPick.filter(([ref]) => ref.startsWith('minigame:s2-')).map(([ref]) => ref).sort()).toEqual([
       'minigame:s2-crafts-q3-check',
       'minigame:s2-crafts-v2-q1-check',
       'minigame:s2-letters-q1-check',
       'minigame:s2-letters-q4-check',
       'minigame:s2-letters-q6-check',
+      'minigame:s2-letters-q8-check',
       'minigame:s2-letters-v2-q1-check',
       'minigame:s2-life-q1-check',
       'minigame:s2-life-v2-q3-check',

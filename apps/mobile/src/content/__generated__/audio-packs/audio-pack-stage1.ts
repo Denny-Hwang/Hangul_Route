@@ -189,7 +189,7 @@ export const AUDIO_PACK: AudioPackChunk = {
     'card:yut': [8],
     'episode:stage2-crafts': [8, 21, 29, 42, 44, 62, 76, 99, 104],
     'episode:stage2-crafts-v2': [8, 21, 29, 76, 104],
-    'episode:stage2-letters': [9, 10, 12, 14, 19, 23, 25, 41, 42, 47, 48, 93, 95, 99, 109, 136],
+    'episode:stage2-letters': [9, 10, 12, 14, 19, 23, 25, 29, 41, 42, 47, 48, 69, 93, 95, 99, 109, 118, 119, 136],
     'episode:stage2-letters-v2': [19, 24, 25, 29, 41, 69, 92, 93, 95, 99, 109, 118],
     'episode:stage2-life': [23, 24, 30, 32, 47, 48, 69],
     'episode:stage2-life-v2': [12, 23, 24, 32, 47, 48, 69],

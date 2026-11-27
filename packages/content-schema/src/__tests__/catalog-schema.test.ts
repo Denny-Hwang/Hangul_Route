@@ -143,7 +143,8 @@ describe('the shipped catalogue data', () => {
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
     // + the twenty-five Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +75 lesson quests.
     // + the Stage 5 books 2 of row CM-46 (Letters 8, Food 2, Nature 3 and Play 2 read quests): +15 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(198);
+    // + Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE BC-1): +3 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(201);
   });
 
   // F-CURR-002 row CM-46 adds the two Letters book 2 tales and the two Holidays book 2 tales (5 minutes each), listed as
@@ -489,6 +490,10 @@ describe('routeCatalogOf', () => {
       'quest:stage2-letters-q4',
       'quest:stage2-letters-q5',
       'quest:stage2-letters-q6',
+      // AMENDMENTS-BATCHIM-COMPLETE BC-1: the optional q7-q9 follow q6 in route order.
+      'quest:stage2-letters-q7',
+      'quest:stage2-letters-q8',
+      'quest:stage2-letters-q9',
       'quest:stage2-life-q1',
       'quest:stage2-life-q2',
       'quest:stage2-life-q3',

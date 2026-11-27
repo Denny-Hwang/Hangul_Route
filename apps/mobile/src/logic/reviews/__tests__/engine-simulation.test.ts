@@ -93,14 +93,24 @@ describe('S-a: one quest a day, the Daily Review every day, Keep going on days t
   });
 });
 
+/**
+ * [BC] S-b's allowance is +32, not +30 (owner decision 2026-11-26; F-CURR-002 section 4.3 amended by
+ * AMENDMENTS-BATCHIM-COMPLETE BC-1). Word Builder's three optional quests q7-q9 are offered right after q6, so the
+ * simulated learner plays them in place, and the end of the route moves later into the 60 days. Opening pool d30 / d60
+ * per seed 1-5: main f57a57ef9 39/44, 32/54, 43/48, 51/36, 39/48; with BC-1 35/66, 22/43, 47/63, 48/58, 56/49 (seed 1
+ * needs +31). Left pool d30 / d60 with BC-1: 0/21, 15/0, 4/18, 5/14, 10/6. The line moves by two items only, so the gate
+ * still catches runaway growth: a pool that keeps growing crosses it.
+ */
+const S_B_ALLOWANCE = 32;
+
 describe('S-b: two quests a day; on review-first days the Daily Review and Keep going replace the second quest', () => {
   for (const seed of SEEDS) {
-    it(`seed ${seed}: the pool on day 60 is no more than the pool on day 30 plus 30`, () => {
+    it(`seed ${seed}: the pool on day 60 is no more than the pool on day 30 plus ${S_B_ALLOWANCE}`, () => {
       const sim = new Sim(seed);
       scenarioB(sim, DAYS);
       const [day30, day60] = [sim.days[29], sim.days[59]];
-      expect(day60?.left, series(sim, 'left')).toBeLessThanOrEqual((day30?.left ?? 0) + 30);
-      expect(day60?.pool, series(sim, 'pool')).toBeLessThanOrEqual((day30?.pool ?? 0) + 30);
+      expect(day60?.left, series(sim, 'left')).toBeLessThanOrEqual((day30?.left ?? 0) + S_B_ALLOWANCE);
+      expect(day60?.pool, series(sim, 'pool')).toBeLessThanOrEqual((day30?.pool ?? 0) + S_B_ALLOWANCE);
       expect(sim.days.some((d) => d.reviewFirst)).toBe(true);
     });
   }

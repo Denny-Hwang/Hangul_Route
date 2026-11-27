@@ -160,6 +160,10 @@ describe('placedOutGrowth', () => {
     const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2' && q.kind === 'lesson').map((q) => q.id);
     expect(shippedSince).toEqual([
       ...WB,
+      // Word Builder's optional q7-q9 (AMENDMENTS-BATCHIM-COMPLETE BC-1): placed out at stage3 and above, like q1-q6.
+      'quest:stage2-letters-q7',
+      'quest:stage2-letters-q8',
+      'quest:stage2-letters-q9',
       'quest:stage2-life-q2',
       'quest:stage2-life-q3',
       'quest:stage2-rites-q1',

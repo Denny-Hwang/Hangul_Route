@@ -11,7 +11,10 @@
       "culture.n3.text": "{ko:ㅘ}, {ko:ㅝ}, {ko:ㅟ} y {ko:ㅢ} se escriben uniendo dos letras vocales simples, y cada una puede decirse como un solo sonido que se desliza.",
       "culture.n4.text": "{ko:ㅚ} puede decirse como una vocal que se desliza y, como hoy {ko:ㅐ} y {ko:ㅔ} suenan igual, {ko:ㅚ}, {ko:ㅙ} y {ko:ㅞ} suelen sonar casi igual; su forma es lo que las distingue.",
       "culture.n5.text": "Al final de una palabra o antes de una consonante, la letra de abajo se dice como uno de siete sonidos: {ko:ㅅ ㅆ ㅈ ㅊ ㅌ} terminan como {ko:ㄷ}, en t; {ko:ㄲ ㅋ}, como {ko:ㄱ}, en k; y {ko:ㅍ}, como {ko:ㅂ}, en p.",
-      "culture.n6.text": "Cuando sigue una terminación o partícula que empieza por vocal, estas letras de abajo pasan al bloque siguiente y conservan su propio sonido: {ko:옷이} se dice osi, sin t."
+      "culture.n6.text": "Cuando sigue una terminación o partícula que empieza por vocal, estas letras de abajo pasan al bloque siguiente y conservan su propio sonido: {ko:옷이} se dice osi, sin t.",
+      "culture.n7.text": "{ko:입} (boca) y {ko:잎} (hoja) se dicen los dos ip: al final de una palabra, {ko:ㅂ} y {ko:ㅍ} suenan igual. La escritura muestra qué palabra es.",
+      "culture.n8.text": "Con dos letras abajo, al final de una palabra se dice solo una: {ko:닭} se dice dak. Cuando sigue una terminación o partícula que empieza por vocal, la segunda pasa al bloque siguiente: {ko:읽어요} se dice ilgeoyo.",
+      "culture.n9.text": "Cuando sigue una terminación o sufijo que empieza por vocal, la {ko:ㅎ} de abajo no se dice: {ko:좋아요} se dice joayo. En {ko:많이}, la {ko:ㅎ} no suena, así que la {ko:ㄴ} pasa al bloque siguiente: mani."
     },
     "quest:stage2-letters-q1": {
       "title": "Pares de vocales ae y e",
@@ -119,7 +122,7 @@
       "steps.s6.title": "¡Constructor de palabras completo!",
       "steps.s1.hoyaLine": "Ya conoces la g y la b de abajo, que suenan k y p. ¡Tres letras más hacen esos sonidos!",
       "steps.s2.hoyaLine": "Al final de una palabra o antes de otra consonante, la k con soplo y la k doble suenan como una g de abajo, una k corta. La p con soplo suena como una b de abajo, una p corta.",
-      "steps.s6.hoyaLine": "Conociste las últimas letras nuevas de Constructor de palabras. ¡Genial!",
+      "steps.s6.hoyaLine": "Ya conociste todas las letras del hangul. ¡Genial!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "cocina",
       "steps.s2.discover.pages.0.items.1.example.gloss": "afuera",
       "steps.s2.discover.pages.1.items.0.example.gloss": "frente, delante",
@@ -357,6 +360,148 @@
       "picWord.boards.5.pairs.uija.word.gloss": "silla",
       "picWord.boards.5.pairs.gabang.word.gloss": "bolsa o mochila",
       "picWord.boards.5.pairs.ip.word.gloss": "hoja"
+    },
+    "quest:stage2-letters-q7": {
+      "title": "Muchas letras, siete sonidos",
+      "blurb": "Muchas letras de abajo, solo siete sonidos finales.",
+      "steps.s1.title": "Siete sonidos finales",
+      "steps.s2.title": "Siete sonidos al final",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Escucha el final",
+      "steps.s5.title": "Lee y une",
+      "steps.s6.title": "¡Solo siete sonidos!",
+      "steps.s1.hoyaLine": "¡Cuántas letras de abajo! Pero solo hay siete sonidos finales.",
+      "steps.s2.hoyaLine": "Al final de una palabra, las letras de abajo hacen solo siete sonidos: k, n, t, l, m, p y ng.",
+      "steps.s6.hoyaLine": "Siete sonidos finales: k, n, t, l, m, p, ng. ¡Ya los conoces todos!",
+      "steps.s2.discover.pages.0.caption": "Estas terminan en t.",
+      "steps.s2.discover.pages.1.caption": "Estas terminan en k.",
+      "steps.s2.discover.pages.2.caption": "Mismo sonido. Mira la letra de abajo.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "flor",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "campo de cultivo",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "libro",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "afuera",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "boca",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "hoja"
+    },
+    "minigame:s2-letters-q7-practice": {
+      "picWord.boards.0.pairs.kkot.word.gloss": "flor",
+      "picWord.boards.0.pairs.chaek.word.gloss": "libro",
+      "picWord.boards.0.pairs.gom.word.gloss": "oso",
+      "picWord.boards.1.pairs.but.word.gloss": "pincel",
+      "picWord.boards.1.pairs.tteok.word.gloss": "pastel de arroz",
+      "picWord.boards.1.pairs.byeol.word.gloss": "estrella",
+      "picWord.boards.2.pairs.ip-mouth.word.gloss": "boca",
+      "picWord.boards.2.pairs.ip-leaf.word.gloss": "hoja",
+      "picWord.boards.2.pairs.son.word.gloss": "mano",
+      "picWord.boards.3.pairs.bap.word.gloss": "arroz cocido",
+      "picWord.boards.3.pairs.bit.word.gloss": "luz",
+      "picWord.boards.3.pairs.gang.word.gloss": "río",
+      "picWord.boards.4.pairs.dal.word.gloss": "luna",
+      "picWord.boards.4.pairs.gong.word.gloss": "pelota",
+      "picWord.boards.4.pairs.ramyeon.word.gloss": "fideos instantáneos",
+      "picWord.boards.5.pairs.byeol.word.gloss": "estrella",
+      "picWord.boards.5.pairs.son.word.gloss": "mano",
+      "picWord.boards.5.pairs.chaek.word.gloss": "libro"
+    },
+    "minigame:s2-letters-q7-apply": {
+      "listenPick.rounds.hear-bap.prompt": "arroz cocido",
+      "listenPick.rounds.hear-gom.prompt": "oso",
+      "listenPick.rounds.hear-bat.prompt": "campo de cultivo",
+      "listenPick.rounds.hear-bal.prompt": "pie"
+    },
+    "minigame:s2-letters-q7-check": {
+      "picWord.boards.0.pairs.ip-mouth.word.gloss": "boca",
+      "picWord.boards.0.pairs.ip-leaf.word.gloss": "hoja",
+      "picWord.boards.0.pairs.kkot.word.gloss": "flor",
+      "picWord.boards.1.pairs.bap.word.gloss": "arroz cocido",
+      "picWord.boards.1.pairs.bal.word.gloss": "pie",
+      "picWord.boards.1.pairs.gom.word.gloss": "oso"
+    },
+    "quest:stage2-letters-q8": {
+      "title": "Dos letras abajo",
+      "blurb": "Algunos bloques tienen dos letras abajo.",
+      "steps.s1.title": "Dos abajo",
+      "steps.s2.title": "Dos letras de abajo",
+      "steps.s3.title": "Escucha y elige",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Lee la palabra",
+      "steps.s6.title": "¡Dos letras, un bloque!",
+      "steps.s1.hoyaLine": "¡Mira! Algunos bloques tienen dos letras abajo.",
+      "steps.s2.hoyaLine": "¡Dos letras abajo! Al final de una palabra, di solo una. Antes de una vocal, la segunda pasa al bloque siguiente.",
+      "steps.s6.hoyaLine": "¿Dos letras abajo? ¡Ya puedes leerlas!",
+      "steps.s2.discover.pages.0.caption": "Al final de una palabra, se dice solo una de las dos. Aprende cuál con cada palabra.",
+      "steps.s2.discover.pages.1.caption": "Antes de una vocal, la segunda pasa al bloque siguiente.",
+      "steps.s2.discover.pages.2.caption": "Una más: se dice m.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "gallina, pollo",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "precio",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "leer",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "no hay; no lo tengo",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "vida"
+    },
+    "minigame:s2-letters-q8-practice": {
+      "listenPick.rounds.hear-dak.prompt": "gallina, pollo",
+      "listenPick.rounds.hear-gap.prompt": "precio",
+      "listenPick.rounds.hear-ilgeoyo.prompt": "leer",
+      "listenPick.rounds.hear-eopseoyo.prompt": "no hay; no lo tengo",
+      "listenPick.rounds.hear-gap-2.prompt": "precio",
+      "listenPick.rounds.hear-dak-2.prompt": "gallina, pollo"
+    },
+    "minigame:s2-letters-q8-apply": {
+      "cardPairs.dak.gloss": "gallina, pollo",
+      "cardPairs.dal.gloss": "luna",
+      "cardPairs.sam.gloss": "vida",
+      "cardPairs.chaek.gloss": "libro"
+    },
+    "minigame:s2-letters-q8-check": {
+      "listenPick.rounds.see-gong.prompt": "pelota",
+      "listenPick.rounds.see-ip-leaf.prompt": "hoja",
+      "listenPick.rounds.see-gong.options.gom.label": "oso",
+      "listenPick.rounds.see-gong.options.gong.label": "pelota",
+      "listenPick.rounds.see-gong.options.bal.label": "pie",
+      "listenPick.rounds.see-ip-leaf.options.ip-mouth.label": "boca",
+      "listenPick.rounds.see-ip-leaf.options.kkot.label": "flor",
+      "listenPick.rounds.see-ip-leaf.options.ip-leaf.label": "hoja"
+    },
+    "quest:stage2-letters-q9": {
+      "title": "Una h callada",
+      "blurb": "Una h de abajo no suena antes de una vocal.",
+      "steps.s1.title": "Una letra callada",
+      "steps.s2.title": "Callada antes de una vocal",
+      "steps.s3.title": "Escucha y elige",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escribe la palabra",
+      "steps.s6.title": "¡La h callada!",
+      "steps.s1.hoyaLine": "¡Shh! Una h de abajo puede quedarse callada.",
+      "steps.s2.hoyaLine": "Antes de una vocal, la h de abajo no suena. La ves, pero no la dices.",
+      "steps.s6.hoyaLine": "¿Una h de abajo antes de una vocal? ¡Ya puedes leerla!",
+      "steps.s2.discover.pages.0.caption": "Antes de una vocal, la h de abajo no suena.",
+      "steps.s2.discover.pages.1.caption": "Dos letras: la h no suena y la otra pasa al bloque siguiente.",
+      "steps.s2.discover.pages.2.caption": "Una más: la h no suena y la otra pasa al bloque siguiente.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "bueno; me gusta",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "poner dentro",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "mucho",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "está bien",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "no me gusta"
+    },
+    "minigame:s2-letters-q9-practice": {
+      "listenPick.rounds.hear-joayo.prompt": "bueno; me gusta",
+      "listenPick.rounds.hear-mani.prompt": "mucho",
+      "listenPick.rounds.hear-sireoyo.prompt": "no me gusta",
+      "listenPick.rounds.hear-gwaenchanayo.prompt": "está bien",
+      "listenPick.rounds.hear-neoeoyo.prompt": "poner dentro",
+      "listenPick.rounds.hear-joayo-2.prompt": "bueno; me gusta"
+    },
+    "minigame:s2-letters-q9-apply": {
+      "cardPairs.joayo.gloss": "bueno; me gusta",
+      "cardPairs.sireoyo.gloss": "no me gusta",
+      "cardPairs.mani.gloss": "mucho",
+      "cardPairs.norae.gloss": "canción"
+    },
+    "minigame:s2-letters-q9-check": {
+      "typeHangul.rounds.see-joayo.prompt": "Escribe la palabra que significa bueno.",
+      "typeHangul.rounds.see-gwaenchanayo.prompt": "Escribe la palabra que significa «está bien».",
+      "typeHangul.rounds.see-joayo.target.gloss": "bueno; me gusta",
+      "typeHangul.rounds.see-gwaenchanayo.target.gloss": "está bien"
     }
   }
 }

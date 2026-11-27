@@ -44,8 +44,10 @@ const otherStamps = (): number => {
     for (const f of readdirSync(new URL(`../../../../../content/episodes/stage-${n}/`, import.meta.url)).filter((x) => x.endsWith('.json'))) {
       const later = /\.v\d+\.json$/.test(f);
       if (later && !(n === 7 && ['nature.v2.json', 'crafts.v2.json', 'life.v2.json'].includes(f))) continue;
-      const other = read(`content/episodes/stage-${n}/${f}`) as { quests?: { addedIn?: number }[] };
-      for (const q of other.quests ?? []) max = Math.max(max, q.addedIn ?? 0);
+      const other = read(`content/episodes/stage-${n}/${f}`) as { quests?: { id: string; addedIn?: number }[]; optionalQuestIds?: string[] };
+      // [BC] An optional quest appended to a Volume 1 cell later (Word Builder q7-q9, AMENDMENTS-BATCHIM-COMPLETE BC-1)
+      // was not in the catalogue this cell joined.
+      for (const q of other.quests ?? []) if (!(other.optionalQuestIds ?? []).includes(q.id)) max = Math.max(max, q.addedIn ?? 0);
     }
   }
   return max;
