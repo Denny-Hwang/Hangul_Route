@@ -374,6 +374,8 @@ describe('content sources (content-sources.mjs)', () => {
     expect(packOfContentFile('content/episodes/stage-2/life.json')).toBe('stage2');
     expect(packOfContentFile('content/episodes/stage-7/rites.json')).toBe('stage7');
     expect(packOfContentFile('content/placement/sentences.json')).toBe('placement');
+    // [PV] the sentence families are lint data, never spoken (PV-1c)
+    expect(packOfContentFile('content/placement/sentence-families.json')).toBeNull();
     expect(packOfContentFile('content/vocab/animals.json')).toBe('vocab');
     expect(packOfContentFile('content/stories/sun-and-moon.json')).toBe('stories');
     expect(packOfContentFile('content/episodes/stage-1/jamo.json')).toBeNull();

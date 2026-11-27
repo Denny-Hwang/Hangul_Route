@@ -83,13 +83,13 @@ describe('content/placement: the bank as shipped', () => {
     expect(warmup.question.options.find((o) => o.isCorrect)?.pictureRef).toBe('card:rice');
   });
 
-  it('holds the 258 templates of appendix A (vocabulary as AMENDMENTS-PLC-VALIDITY PV-2 rebuilt it), by strand', () => {
+  it('holds the 274 templates of appendix A (vocabulary as PV-2 rebuilt it, sentences as PV-1c did), by strand', () => {
     expect(byStrand('hangul-recognition')).toHaveLength(40);
     expect(byStrand('sound-letter')).toHaveLength(46);
     expect(byStrand('syllable-reading')).toHaveLength(72);
     expect(byStrand('vocabulary')).toHaveLength(46);
-    expect(byStrand('sentences')).toHaveLength(54);
-    expect(all).toHaveLength(258);
+    expect(byStrand('sentences')).toHaveLength(70);
+    expect(all).toHaveLength(274);
   });
 
   it('counts the gates and forms the way appendix A does', () => {
@@ -103,9 +103,10 @@ describe('content/placement: the bank as shipped', () => {
     expect([count('syl-cvc', 'hear-pick-written'), count('syl-cvc', 'see-pick-sound'), count('syl-cvc', 'build-syllable')]).toEqual([18, 12, 6]);
     expect(byGate('vocab').filter((t) => t.form === 'oral')).toHaveLength(25);
     expect(byGate('vocab').filter((t) => t.form === 'read')).toHaveLength(21);
+    // PV-1c: ten families of three action pictures, each picture the right one of one template per form, and ten replies.
     expect(count('sentence', 'reply-pick')).toBe(10);
-    expect(byGate('sentence').filter((t) => t.question.format !== 'reply-pick' && t.form === 'oral')).toHaveLength(14 + 8);
-    expect(byGate('sentence').filter((t) => t.question.format === 'read-pick-picture')).toHaveLength(14 + 8);
+    expect(byGate('sentence').filter((t) => t.question.format !== 'reply-pick' && t.form === 'oral')).toHaveLength(30);
+    expect(byGate('sentence').filter((t) => t.question.format === 'read-pick-picture')).toHaveLength(30);
   });
 
   it('is production ready: every template is ready, at least 40 per strand', () => {
@@ -113,13 +114,13 @@ describe('content/placement: the bank as shipped', () => {
     for (const strand of ['hangul-recognition', 'sound-letter', 'syllable-reading', 'vocabulary', 'sentences'] as const) {
       expect(byStrand(strand).filter((t) => t.status === 'ready').length, strand).toBeGreaterThanOrEqual(40);
     }
-    expect(ready).toHaveLength(258);
+    expect(ready).toHaveLength(274);
   });
 
-  it('every sentence carries the language review record (section 9)', () => {
+  it('every sentence carries the language review record (section 9; PV-1c re-reviewed the strand)', () => {
     for (const t of byStrand('sentences')) {
       expect(t.reviewedBy, t.id).toBe('ai-3-lens');
-      expect(t.reviewedAt, t.id).toBe('2026-10-11');
+      expect(t.reviewedAt, t.id).toBe('2026-11-26');
     }
   });
 
@@ -157,7 +158,7 @@ describe('content/placement: the bank as shipped', () => {
       'syl-cv': /^pitem:syl-cv-(hear|see|build)-[a-z]+$/,
       'syl-cvc': /^pitem:syl-cvc-(hear|see|build)-[a-z]+$/,
       vocab: /^pitem:vocab-(hear|read)-[a-z]+$/,
-      sentence: /^pitem:sent-(n|v)-(hear|read)-[a-z]+$|^pitem:sent-reply-([1-9]|10)$/,
+      sentence: /^pitem:sent-(hear|read)-(run|swim|sleep|eat|fly)-[a-z]+$|^pitem:sent-reply-([1-9]|1[0-9])$/,
     };
     for (const t of all) expect(t.id, t.id).toMatch(pattern[t.gate]);
   });
@@ -439,20 +440,13 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
     }
   });
 
-  it('sentences use the two patterns and the ten replies, and name the picture noun', () => {
-    const sentences = byGate('sentence');
-    expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'n-ieyo')).toHaveLength(28);
-    expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'n-eul-v')).toHaveLength(16);
-    expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'reply')).toHaveLength(10);
-    for (const t of sentences.filter((x) => x.question.format !== 'reply-pick')) {
-      expect(t.question.promptKo, t.id).toMatch(/(예요|이에요|먹어요|읽어요|입어요|날려요)$/);
-      expect(tagOf(t, 'word:'), t.id).not.toBe('');
-    }
-  });
-
   it('replies: three written options, the other two come from other rows, and never a natural answer too', () => {
     const replies = byGate('sentence').filter((t) => t.question.format === 'reply-pick');
-    expect(replies.map((t) => t.id)).toEqual(Array.from({ length: 10 }, (_, i) => `pitem:sent-reply-${i + 1}`));
+    // PV-1c: rows 3 (만나서 반가워요!), 7 (이거 김치예요?) and 8 (밥 먹었어요?) left, because their right reply was the
+    // only reply that echoed the line (S6); rows 11 to 13 are new.
+    const rows = [1, 2, 4, 5, 6, 9, 10, 11, 12, 13];
+    expect(replies.map((t) => t.id)).toEqual(rows.map((n) => `pitem:sent-reply-${n}`));
+    const rowOf = (optionId: string): PlacementTemplate => replies.find((t) => t.id === `pitem:sent-${optionId}`) as PlacementTemplate;
     for (const t of replies) {
       expect(t.question.options, t.id).toHaveLength(3);
       expect(t.question.requires, t.id).toEqual({ audio: true, picture: null });
@@ -463,16 +457,127 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
       expect(t.question.promptKo, t.id).toMatch(/[.?!]$/);
       for (const o of t.question.options) expect(o.ko, `${t.id} ${o.id}`).toMatch(/[.?!]$/);
       // a reply of a row is the same text wherever it is offered
-      for (const o of t.question.options) expect(o.ko).toBe(correctOf(replies[Number(o.id.slice('reply-'.length)) - 1] as PlacementTemplate).ko);
+      for (const o of t.question.options) expect(o.ko, `${t.id} ${o.id}`).toBe(correctOf(rowOf(o.id)).ko);
       // a distractor is never the natural answer of an incompatible row
       for (const o of t.question.options.filter((x) => !x.isCorrect)) expect(t.incompatibleWith ?? [], `${t.id} ${o.id}`).not.toContain(`pitem:sent-${o.id}`);
     }
-    const clusters = [[1, 3], [4, 9, 10], [6, 8]];
-    for (const cluster of clusters) {
-      for (const n of cluster) {
-        const t = replies[n - 1] as PlacementTemplate;
-        expect(t.incompatibleWith?.slice().sort(), t.id).toEqual(cluster.filter((m) => m !== n).map((m) => `pitem:sent-reply-${m}`).sort());
+    // Thanks and sorry: each of their replies would also answer the others (아니에요 after 미안해요), so they never meet.
+    const clusters = [[4, 9, 10]];
+    for (const n of rows) {
+      const t = replies.find((x) => x.id === `pitem:sent-reply-${n}`) as PlacementTemplate;
+      const cluster = clusters.find((c) => c.includes(n)) ?? [n];
+      expect(t.incompatibleWith?.slice().sort(), t.id).toEqual(cluster.filter((m) => m !== n).map((m) => `pitem:sent-reply-${m}`).sort());
+    }
+  });
+
+  it('replies follow S6: 아니에요 for thanks (no 천만에요), no yes-no line offered a no, one row per line and right reply', () => {
+    const replies = byGate('sentence').filter((t) => t.question.format === 'reply-pick');
+    const texts = replies.flatMap((t) => [t.question.promptKo as string, ...t.question.options.map((o) => o.ko as string)]);
+    expect(texts.some((x) => x.includes('천만에요'))).toBe(false);
+    expect(correctOf(replies.find((t) => t.question.promptKo === '감사합니다.') as PlacementTemplate).ko).toBe('아니에요.');
+    // A yes-no line (잘 지냈어요?) is never offered 아니요, 아니에요 or a negative reply: each could be true.
+    const NO = /^(아니요|아니에요)|안 |못 |없어요/;
+    const yesNo = replies.filter((x) => (x.question.promptKo as string).endsWith('?') && !/뭐|어디|누구|언제|어때/.test(x.question.promptKo as string));
+    expect(yesNo.map((t) => t.question.promptKo)).toEqual(['잘 지냈어요?']);
+    for (const t of yesNo) for (const o of t.question.options.filter((x) => !x.isCorrect)) expect(o.ko, `${t.id} ${o.id}`).not.toMatch(NO);
+    // No wrong reply is the line said back (안녕히 가세요. after 안녕히 가세요. is right when both leave).
+    for (const t of replies) for (const o of t.question.options.filter((x) => !x.isCorrect)) expect(o.ko, t.id).not.toBe(t.question.promptKo);
+    const pairs = replies.map((t) => `${t.question.promptKo} > ${correctOf(t).ko}`);
+    expect(new Set(pairs).size).toBe(pairs.length);
+    // WO-18's heard 주세요 enters as a line, answered as Stage 4 teaches it.
+    expect(correctOf(replies.find((t) => t.question.promptKo === '물 주세요.') as PlacementTemplate).ko).toBe('네, 여기 있어요.');
+  });
+});
+
+describe('content/placement: the sentence pictures (AMENDMENTS-PLC-VALIDITY S1 to S5, row PV-1c)', () => {
+  type Word = { ko: string; romanization: string; en: string; slug: string };
+  type Family = { noun: Word; predicates: Word[] };
+  const families = (JSON.parse(readFileSync(join(REPO_ROOT, 'content/placement/sentence-families.json'), 'utf8')) as { families: Family[] }).families;
+  const index = JSON.parse(readFileSync(join(REPO_ROOT, 'content/placement/index.json'), 'utf8')) as { families?: string; version: number };
+  const pictures = byGate('sentence').filter((t) => t.question.format !== 'reply-pick');
+  const partsOf = (ref: string | undefined): { predicate: string; noun: string } => {
+    const m = /^word:act-([a-z]+)-([a-z]+)$/.exec(ref ?? '');
+    if (m === null) throw new Error(`not an act picture: ${ref}`);
+    return { predicate: m[1] as string, noun: m[2] as string };
+  };
+  /** The registry's family table, read from its source (`ACT_FAMILIES`, packages/design-system/src/word-art/registry.ts). */
+  const registry = readFileSync(join(REPO_ROOT, 'packages/design-system/src/word-art/registry.ts'), 'utf8');
+  const table = registry.slice(registry.indexOf('export const ACT_FAMILIES')).split('});')[0] as string;
+  const actFamilies = [...table.matchAll(/(\w+): Object\.freeze\(\[([^\]]*)\]\)/g)].map((m) => [m[1] as string, [...(m[2] as string).matchAll(/'([a-z]+)'/g)].map((x) => x[1] as string)] as const);
+  /** Pictures that look alike at tile size (design/brief/illustrations/word-art.md section 10): never offered together. */
+  const LOOK_ALIKE: Array<[string, string]> = [['tiger', 'cat'], ['bear', 'monkey'], ['bear', 'puppy'], ['monkey', 'puppy'], ['bird', 'duck'], ['sibling', 'friend']];
+
+  it('index.json names the families file, and the bank is version 3 (PV-2 took 2; up by one per content row, section 3.7)', () => {
+    expect(index.families).toBe('sentence-families.json');
+    expect(index.version).toBe(3);
+    expect(parsed.version).toBe(3);
+  });
+
+  it('the families are the action pictures PV-1a drew: the same nouns and predicates, in the same order', () => {
+    expect(actFamilies).toHaveLength(10);
+    expect(families.map((f) => [f.noun.slug, f.predicates.map((p) => p.slug)])).toEqual(actFamilies.map(([n, ps]) => [n, ps]));
+  });
+
+  it('a family row carries its Korean with the converter romanization and an English word; the noun romanization is the word: tag', () => {
+    for (const f of families) {
+      expect(f.noun.romanization).toBe(romanizeReviewed(f.noun.ko).text);
+      for (const p of f.predicates) expect(p.romanization, p.ko).toBe(romanizeReviewed(p.ko).text);
+      const own = pictures.filter((x) => partsOf(correctOf(x).pictureRef).noun === f.noun.slug);
+      expect(own, f.noun.slug).toHaveLength(6);
+      for (const t of own) expect(tagOf(t, 'word:'), t.id).toBe(f.noun.romanization);
+    }
+  });
+
+  it('every sentence is the noun with its subject particle and one predicate of its family (N이/가 V-요, pattern:n-i-v)', () => {
+    for (const t of pictures) {
+      const { predicate, noun } = partsOf(correctOf(t).pictureRef);
+      const f = families.find((x) => x.noun.slug === noun) as Family;
+      const p = f.predicates.find((x) => x.slug === predicate) as Word;
+      const last = (f.noun.ko.codePointAt(f.noun.ko.length - 1) as number) - 0xac00;
+      expect(t.question.promptKo, t.id).toBe(`${f.noun.ko}${last % 28 === 0 ? '가' : '이'} ${p.ko}.`);
+      expect(t.question.tags, t.id).toEqual(['pattern:n-i-v', `word:${f.noun.romanization}`]);
+      expect(t.id).toBe(`pitem:sent-${t.form === 'oral' ? 'hear' : 'read'}-${predicate}-${noun}`);
+      expect(t.question.requires, t.id).toEqual({ audio: t.form === 'oral', picture: 'word' });
+      expect(t.question.leaks, t.id).toBe(t.form === 'read');
+    }
+    // N-이에요 left the sentence gate (S4); N을 V-요 stays only in the replies (S5).
+    expect(byGate('sentence').filter((t) => ['n-ieyo', 'n-eul-v'].includes(tagOf(t, 'pattern:'))).map((t) => t.id)).toEqual([]);
+  });
+
+  it('a picture option is named in English by what it shows (its accessible label), never in Korean', () => {
+    for (const t of pictures) {
+      for (const o of t.question.options) {
+        const { predicate, noun } = partsOf(o.pictureRef);
+        expect(o.id, t.id).toBe(`${predicate}-${noun}`);
+        expect(o.en, `${t.id} ${o.id}`).toMatch(/^(The|My) [a-z ]+ (runs|hops|swims|sleeps|eats|flies)$/);
+        expect(o.ko, t.id).toBeUndefined();
       }
+    }
+  });
+
+  it('never offers two pictures that look alike at tile size (cat and tiger; bear, monkey and puppy; bird and duck; the two children)', () => {
+    for (const t of pictures) {
+      const nouns = new Set(t.question.options.map((o) => partsOf(o.pictureRef).noun));
+      for (const [a, b] of LOOK_ALIKE) expect(nouns.has(a) && nouns.has(b), `${t.id} ${a} + ${b}`).toBe(false);
+    }
+  });
+
+  it('every sentence is true of something a learner could see: only the bird and the duck fly (no 토끼가 날아요)', () => {
+    for (const t of pictures) {
+      const { predicate, noun } = partsOf(correctOf(t).pictureRef);
+      if (predicate === 'fly') expect(['bird', 'duck'], t.id).toContain(noun);
+    }
+  });
+
+  it('the read and the heard item of one sentence offer different fourth pictures', () => {
+    const fourthOf = (t: PlacementTemplate): string | undefined => {
+      const right = partsOf(correctOf(t).pictureRef);
+      return t.question.options.find((o) => partsOf(o.pictureRef).noun !== right.noun)?.pictureRef;
+    };
+    for (const t of pictures.filter((x) => x.form === 'read')) {
+      const heard = pictures.find((x) => x.id === t.id.replace('-read-', '-hear-')) as PlacementTemplate;
+      expect(heard, t.id).toBeDefined();
+      expect(fourthOf(heard), t.id).not.toBe(fourthOf(t));
     }
   });
 });
@@ -743,13 +848,10 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
   it("counts today's findings per rule (each row that fixes a rule empties its count; PV-7 deletes the file)", () => {
     const counts: Record<string, number> = {};
     for (const f of findings) counts[f.rule] = (counts[f.rule] ?? 0) + 1;
+    // PV-2 emptied the word rules and PV-1c the sentence rules (sentence-options, sentence-family, reply-echo, both sentence pools).
     expect(counts).toEqual({
       'placement-decode-balanced': 60,
       'placement-decode-ear': 29,
-      'placement-pools': 2,
-      'placement-reply-echo': 5,
-      'placement-sentence-family': 1,
-      'placement-sentence-options': 44,
     });
   });
 

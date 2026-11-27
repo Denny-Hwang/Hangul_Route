@@ -28,6 +28,18 @@ function supportedCardIds(): string[] {
   return [...(block[1] as string).matchAll(/'(card:[a-z0-9-]+)'/g)].map((m) => m[1] as string);
 }
 
+/**
+ * The level check's action pictures (`ACT_FAMILIES` of the WordArt registry, AMENDMENTS-PLC-VALIDITY PV-1a), as
+ * `word:act-<predicate>-<noun>` refs, read from the registry's source for the same reason as above.
+ */
+function actKeys(): string[] {
+  const source = readFileSync(join(REPO_ROOT, 'packages/design-system/src/word-art/registry.ts'), 'utf8');
+  const table = source.slice(source.indexOf('export const ACT_FAMILIES')).split('});')[0] as string;
+  return [...table.matchAll(/(\w+): Object\.freeze\(\[([^\]]*)\]\)/g)].flatMap((m) =>
+    [...(m[2] as string).matchAll(/'([a-z]+)'/g)].map((p) => `word:act-${p[1] as string}-${m[1] as string}`),
+  );
+}
+
 const pictures = (options: ReadonlyArray<{ pictureRef?: string }>): string[] =>
   options.flatMap((o) => (o.pictureRef === undefined ? [] : [o.pictureRef]));
 
@@ -43,19 +55,26 @@ describe('placement.generated.ts (F-PLC-001 P-4)', () => {
   it('parses with PlacementBankSchema, and the warm-up with PlacementTemplateSchema', () => {
     expect(() => PlacementBankSchema.parse(PLACEMENT_BANK)).not.toThrow();
     expect(() => PlacementTemplateSchema.parse(PLACEMENT_WARMUP)).not.toThrow();
-    expect(PLACEMENT_BANK.templates).toHaveLength(258);
+    expect(PLACEMENT_BANK.templates).toHaveLength(274);
   });
 
-  it('every template is ready, and every picture of a template and of the warm-up resolves in supportedCardIds or WORD_ART_KEYS', () => {
+  it('every template is ready, and every picture resolves: a card in supportedCardIds, a word picture in WORD_ART_KEYS, an action picture in ACT_KEYS (PV-1c)', () => {
     const art = supportedCardIds();
     expect(art).toHaveLength(30);
+    const acts = actKeys();
+    expect(acts).toHaveLength(30);
     expect(PLACEMENT_BANK.templates.filter((t) => t.status !== 'ready').map((t) => t.id)).toEqual([]);
+    let actRefs = 0;
     for (const t of [...PLACEMENT_BANK.templates, PLACEMENT_WARMUP]) {
       for (const ref of pictures(t.question.options)) {
-        if (ref.startsWith('word:')) expect(WORD_ART_KEYS, `${t.id} ${ref}`).toContain(ref.slice('word:'.length));
+        if (ref.startsWith('word:act-')) {
+          actRefs += 1;
+          expect(acts, `${t.id} ${ref}`).toContain(ref);
+        } else if (ref.startsWith('word:')) expect(WORD_ART_KEYS, `${t.id} ${ref}`).toContain(ref.slice('word:'.length));
         else expect(art, `${t.id} ${ref}`).toContain(ref);
       }
     }
+    expect(actRefs).toBe(240);
   });
 });
 

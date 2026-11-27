@@ -155,14 +155,15 @@ describe('the draw', () => {
   const askedIn = (over: Partial<PlacementConfig> = {}, verdicts: Record<string, Verdict> = {}, bank = makeBank()) =>
     play(run(over, bank), verdicts).asked;
 
-  it('asks three questions per rung from three distinct spread keys', () => {
+  it('asks three questions per rung (four per sentence rung, PV-1c) from distinct spread keys', () => {
     const asked = askedIn({}, ALL_PASS);
     const bank = makeBank();
     const tagsOf = (id: string) => bank.templates.find((t) => t.id === id)!.question.tags;
     const group = (rung: string) => asked.filter((id) => rungOf(id) === rung);
-    expect(asked).toHaveLength(24);
+    expect(asked).toHaveLength(25);
     for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc']) expect(group(rung)).toHaveLength(3);
     expect(group('vocab:read')).toHaveLength(6); // Standard confirms a vocab read pass
+    expect(group('sentence:read')).toHaveLength(4);
     const pairs = group('recog').map((id) => tagsOf(id).filter((t) => t.startsWith('sym:')).sort().join('|'));
     expect(new Set(pairs).size).toBe(3);
     const syms = group('sound-basic').map((id) => tagsOf(id)[0]);
@@ -171,17 +172,17 @@ describe('the draw', () => {
     expect(new Set(syls).size).toBe(3);
   });
 
-  it('sentence read is two read-pick-picture then one reply-pick', () => {
+  it('sentence read is three read-pick-picture then one reply-pick (PV-1c)', () => {
     const asked = askedIn({}, ALL_PASS).filter((id) => rungOf(id) === 'sentence:read');
     const bank = makeBank();
     const formats = asked.map((id) => bank.templates.find((t) => t.id === id)!.question.format);
-    expect(formats).toEqual(['read-pick-picture', 'read-pick-picture', 'reply-pick']);
+    expect(formats).toEqual(['read-pick-picture', 'read-pick-picture', 'read-pick-picture', 'reply-pick']);
   });
 
   it('sentence read tops up from read items when there is no reply item, and is unavailable when still short', () => {
     const noReplies = only(makeBank(), (t) => t.question.format !== 'reply-pick');
     const asked = askedIn({}, ALL_PASS, noReplies).filter((id) => rungOf(id) === 'sentence:read');
-    expect(asked).toHaveLength(3);
+    expect(asked).toHaveLength(4);
     const short = only(makeBank(), (t) => !(t.gate === 'sentence' && t.form === 'read' && t.id !== 'pitem:sent-read-0' && t.id !== 'pitem:sent-read-1'));
     expect(askedIn({}, ALL_PASS, short).filter((id) => rungOf(id) === 'sentence:read')).toHaveLength(0);
   });
@@ -257,14 +258,14 @@ describe('the draw', () => {
 });
 
 describe('a run end to end (the section 3.14 behaviours)', () => {
-  it('fails sound-basic: exactly the two oral rungs follow, 12 questions, stage1 band 0, nothing placed out', () => {
+  it('fails sound-basic: exactly the two oral rungs follow, 13 questions (the sentence rung is four, PV-1c), stage1 band 0, nothing placed out', () => {
     const { state, asked } = play(run(), FAIL_FROM('sound-basic'));
-    expect(asked).toHaveLength(12);
+    expect(asked).toHaveLength(13);
     expect(asked.map(rungOf)).toEqual([
       ...Array(3).fill('recog'),
       ...Array(3).fill('sound-basic'),
       ...Array(3).fill('vocab:oral'),
-      ...Array(3).fill('sentence:oral'),
+      ...Array(4).fill('sentence:oral'),
     ]);
     const r = finishRun(state, context());
     expect(PlacementResultSchema.parse(r)).toEqual(r);
@@ -285,9 +286,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     ]);
   });
 
-  it('answers every rung through syl-cvc and reads vocabulary twice: 24 questions at most, stage2 band 0, all 15 placed out, none completed', () => {
+  it('answers every rung through syl-cvc and reads vocabulary twice: 25 questions at most, stage2 band 0, all 15 placed out, none completed', () => {
     const { state, asked } = play(run(), { 'sentence:read': 'wrong' });
-    expect(asked.length).toBeLessThanOrEqual(24);
+    expect(asked.length).toBeLessThanOrEqual(25);
     const r = finishRun(state, context());
     expect(r.level).toEqual({ stage: 'stage2', band: 0 });
     expect(r.placedOutQuestIds).toEqual(ids(STAGE1_15.quests));
@@ -306,9 +307,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.placedOutQuestIds).toHaveLength(15);
   });
 
-  it('a learner who passes everything lands at stage3 (beyond the content), 24 questions, cap', () => {
+  it('a learner who passes everything lands at stage3 (beyond the content), 25 questions, cap', () => {
     const { state, asked } = play(run());
-    expect(asked).toHaveLength(24);
+    expect(asked).toHaveLength(25);
     const r = finishRun(state, context({ catalog: FULL_ROUTE }));
     expect(r.level).toEqual({ stage: 'stage3', band: 0 });
     expect(r.beyondContent).toBe(true);
@@ -405,9 +406,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(asked.map(rungOf)).toEqual(Array(3).fill('recog'));
   });
 
-  it('Standard with the sound guide shown and no screen reader is 9; with a screen reader too, 6', () => {
-    expect(play(run({ revealMode: 'always' })).asked).toHaveLength(9);
-    expect(play(run({ revealMode: 'always', visual: false })).asked).toHaveLength(6);
+  it('Standard with the sound guide shown and no screen reader is 10; with a screen reader too, 7 (PV-1c: the heard sentence rung is four)', () => {
+    expect(play(run({ revealMode: 'always' })).asked).toHaveLength(10);
+    expect(play(run({ revealMode: 'always', visual: false })).asked).toHaveLength(7);
   });
 
   it('leaves out templates that share a tag with the warm-up (avoidTags)', () => {
@@ -420,7 +421,7 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
 
   it('Deep stores one row per draw and the result parses; Deep is stored as full + deep', () => {
     const { state, asked } = play(run({ mode: 'deep' }));
-    expect(asked).toHaveLength(42);
+    expect(asked).toHaveLength(45);
     const r = finishRun(state, context({ catalog: FULL_ROUTE }));
     expect(PlacementResultSchema.parse(r)).toEqual(r);
     expect(r.length).toBe('full');
@@ -609,9 +610,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.priorityTokens.length).toBeGreaterThan(0);
   });
 
-  it('the sound guide always on: recognition and listening only, decoding not tested, 9 questions, band 0', () => {
+  it('the sound guide always on: recognition and listening only, decoding not tested, 10 questions, band 0', () => {
     const { state, asked } = play(run({ revealMode: 'always' }));
-    expect(asked).toHaveLength(9);
+    expect(asked).toHaveLength(10);
     const r = finishRun(state, context());
     expect(r.revealMode).toBe('always');
     expect(r.level).toEqual({ stage: 'stage1', band: 0 });
@@ -634,9 +635,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.responses).toHaveLength(6);
   });
 
-  it('a screen reader (no recognition rung): the floor is 9 and recog is reported unavailable', () => {
+  it('a screen reader (no recognition rung): the floor is 10 and recog is reported unavailable', () => {
     const { state, asked } = play(run({ visual: false }), FAIL_FROM('sound-basic'));
-    expect(asked).toHaveLength(9);
+    expect(asked).toHaveLength(10);
     const r = finishRun(state, context());
     expect(r.gates[0]).toMatchObject({ gate: 'recog', result: 'not-run', reason: 'unavailable', asked: 0 });
     expect(r.strands['hangul-recognition']).toBe('not-tested');
@@ -655,15 +656,15 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(asked.some((id) => rungOf(id) === 'sound-basic')).toBe(true);
   });
 
-  it('never exceeds 24 questions over many seeds and verdict mixes', () => {
+  it('never exceeds 25 questions over many seeds and verdict mixes', () => {
     for (let seed = 1; seed <= 60; seed += 1) {
       const verdicts: Record<string, Verdict> = {};
       for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read', 'sentence:read', 'vocab:oral', 'sentence:oral']) {
         verdicts[rung] = (seed >> (rung.length % 5)) % 3 === 0 ? 'wrong' : 'correct';
       }
       const { asked } = play(run({ seed }), verdicts);
-      expect(asked.length).toBeLessThanOrEqual(24);
-      expect(asked.length).toBeGreaterThanOrEqual(12);
+      expect(asked.length).toBeLessThanOrEqual(25);
+      expect(asked.length).toBeGreaterThanOrEqual(13);
     }
   });
 
@@ -701,18 +702,29 @@ describe('stored shape: old readers (the pre-mode schema) parse what the engine 
     return verdicts;
   };
 
-  it('every Short and Standard result parses with the old schema; the old reader drops mode', () => {
+  // PV-1c (AMENDMENTS-PLC-VALIDITY section 3.7, recorded as the new expectation): a four-question sentence
+  // row is beyond the pre-change bounds, so a Standard result parses with the old schema only when it holds
+  // no such row; every Short result still does (Short has no sentence rung).
+  it('every Short result, and every Standard result without a four-question row, parses with the old schema; the old reader drops mode', () => {
+    let rejected = 0;
     for (let seed = 1; seed <= 80; seed += 1) {
       for (const mode of ['short', 'standard'] as const) {
         for (const verdicts of [mixes(seed), ALL_PASS]) {
           const r = finishRun(play(run({ seed, mode }), verdicts).state, context({ catalog: FULL_ROUTE }));
           const old = PlacementResultSchemaV1.safeParse(r);
-          expect(old.success).toBe(true);
+          const fourRow = r.gates.some((g) => g.asked > 3);
+          expect(old.success, `${mode} ${seed}`).toBe(!fourRow);
+          if (mode === 'short') expect(old.success).toBe(true);
+          if (!old.success) {
+            rejected += 1;
+            continue;
+          }
           expect(old.data).not.toHaveProperty('mode');
           expect(modeOf(old.data!)).toBe(mode);
         }
       }
     }
+    expect(rejected).toBeGreaterThan(0);
   });
 
   it('a long Deep result needs the relaxed bounds; with mode stripped it reads as Standard and its rows still score', () => {
@@ -721,8 +733,11 @@ describe('stored shape: old readers (the pre-mode schema) parse what the engine 
     const { mode: _m, ...stripped } = r;
     expect(modeOf(stripped)).toBe('standard');
     expect(levelOf(stripped.gates)).toEqual(r.level);
+    // PV-1c: the heard sentence row is four questions, past the old bounds; without it a short Deep result still parses.
     const shortDeep = finishRun(play(run({ mode: 'deep' }), FAIL_FROM('sound-basic')).state, context());
-    expect(PlacementResultSchemaV1.safeParse(shortDeep).success).toBe(true);
+    expect(PlacementResultSchemaV1.safeParse(shortDeep).success).toBe(false);
+    const shortDeepNoSentences = finishRun(play(run({ mode: 'deep', skipGates: ['sentence'] }), FAIL_FROM('sound-basic')).state, context());
+    expect(PlacementResultSchemaV1.safeParse(shortDeepNoSentences).success).toBe(true);
   });
 });
 
@@ -926,7 +941,10 @@ describe('pauses', () => {
     })();
     // Undecided because a prompt could not play: not-run (unavailable), never a fail.
     expect(undecided.done[0]).toEqual({ gate: 'recog', form: 'decode', asked: 2, correct: 1, assisted: 0, result: 'not-run', reason: 'unavailable' });
-    const result = finishRun(play(s).state, context({ catalog: FULL_ROUTE }));
+    // Without the sentence rungs, so the old reader (three questions per row at most) can parse it (PV-1c).
+    let t = run({ skipGates: ['sentence'] });
+    t = apply(t, { type: 'notSure', cause: 'no-sound' }, 2_000);
+    const result = finishRun(play(t).state, context({ catalog: FULL_ROUTE }));
     expect(result.responses[0]).toMatchObject({ noSound: true });
     expect(PlacementResultSchema.parse(result).responses[0]).toMatchObject({ noSound: true });
     const old = PlacementResultSchemaV1.safeParse(result);
@@ -1253,7 +1271,7 @@ describe('Deep: the sentence oral draw prefers nouns the read draws did not use 
       const s = startRun(bank, config({ mode: 'deep', seed }), 1_000);
       const readNouns = readNounsOf(bank, s);
       const oral = nounsOf(bank, s.draws['sentence:oral'] ?? []);
-      expect(oral).toHaveLength(3);
+      expect(oral).toHaveLength(4);
       expect(readNouns.length).toBeGreaterThanOrEqual(4);
       for (const noun of oral) expect(readNouns).not.toContain(noun);
     }
@@ -1263,7 +1281,7 @@ describe('Deep: the sentence oral draw prefers nouns the read draws did not use 
     const bank = sharedNouns(4, 4);
     for (let seed = 1; seed <= 30; seed += 1) {
       const s = startRun(bank, config({ mode: 'deep', seed }), 1_000);
-      expect(s.draws['sentence:oral']).toHaveLength(3);
+      expect(s.draws['sentence:oral']).toHaveLength(4);
     }
   });
 

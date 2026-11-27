@@ -79,9 +79,10 @@ const ITEM_S: Record<string, number> = {
   'see-pick-sound': 9,
   'build-syllable': 14,
   'hear-pick-picture:vocab': 8,
-  'hear-pick-picture:sentence': 11,
+  // [PV] PV-1c: the action pictures take longer to scan than the old noun cards (AMENDMENTS-PLC-VALIDITY section 3.6, 2 s more).
+  'hear-pick-picture:sentence': 13,
   'read-pick-picture:vocab': 10,
-  'read-pick-picture:sentence': 14,
+  'read-pick-picture:sentence': 16,
   'reply-pick': 15,
 };
 const NOT_SURE_S = 5;
@@ -265,12 +266,12 @@ describe('Standard (Some reading pace): the default, usually under 10 minutes', 
   const intermediate = runs(INTERMEDIATE, 'standard', 1);
   const advanced = runs(ADVANCED, 'standard', 1);
 
-  it('asks 12 to 24 questions', () => {
+  it('asks 13 to 25 questions (the sentence rungs are four, PV-1c)', () => {
     for (const r of [...guessers.flatMap((g) => g.runs), ...notSure, ...intermediate, ...advanced]) {
-      expect(r.asked).toBeGreaterThanOrEqual(12);
-      expect(r.asked).toBeLessThanOrEqual(24);
+      expect(r.asked).toBeGreaterThanOrEqual(13);
+      expect(r.asked).toBeLessThanOrEqual(25);
     }
-    expect(notSure.every((r) => r.asked === 12 && r.rank === 0)).toBe(true);
+    expect(notSure.every((r) => r.asked === 13 && r.rank === 0)).toBe(true);
   });
 
   it('every guessing pattern: band 1 or lower in at least 98.5 %, above band 0 in at most 5 %', () => {
@@ -295,11 +296,15 @@ describe('Standard (Some reading pace): the default, usually under 10 minutes', 
     }
   });
 
-  it('every result parses with the pre-change schema and reads back as Standard', () => {
-    for (const r of [...guessers.flatMap((g) => g.runs), ...intermediate, ...advanced]) {
-      expect(r.parsesWithOldSchema).toBe(true);
+  // PV-1c (AMENDMENTS-PLC-VALIDITY section 3.7, recorded as the new expectation): only the paths that end with
+  // vocab oral (21 and 24 questions) hold no four-question row and still parse with the pre-change schema.
+  it('a result parses with the pre-change schema only on the paths without a sentence rung, and reads back as Standard', () => {
+    const all = [...guessers.flatMap((g) => g.runs), ...intermediate, ...advanced];
+    for (const r of all) {
+      expect(r.parsesWithOldSchema, `${r.asked}`).toBe(r.asked === 21 || r.asked === 24);
       expect(r.modeRecovered).toBe('standard');
     }
+    expect(share(advanced, (r) => r.parsesWithOldSchema)).toBeLessThan(0.1);
   });
 
   it('a Pictures first learner never meets Latin sound chips or tiles', () => {
@@ -316,12 +321,12 @@ describe('Deep (Some reading pace): thorough, opt-in', () => {
   const intermediate = runs(INTERMEDIATE, 'deep', 1);
   const advanced = runs(ADVANCED, 'deep', 1);
 
-  it('asks 12 to 42 questions; a beginner is done after 12', () => {
+  it('asks 13 to 45 questions; a beginner is done after 13', () => {
     for (const r of [...guessers.flatMap((g) => g.runs), ...notSure, ...intermediate, ...advanced]) {
-      expect(r.asked).toBeGreaterThanOrEqual(12);
-      expect(r.asked).toBeLessThanOrEqual(42);
+      expect(r.asked).toBeGreaterThanOrEqual(13);
+      expect(r.asked).toBeLessThanOrEqual(45);
     }
-    expect(notSure.every((r) => r.asked === 12 && r.rank === 0)).toBe(true);
+    expect(notSure.every((r) => r.asked === 13 && r.rank === 0)).toBe(true);
   });
 
   it('every guessing pattern: above band 1 in at most 0.5 %, above band 0 in at most 1 %', () => {

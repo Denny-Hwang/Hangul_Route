@@ -1,19 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-// PV-1b ships the sentence switch at 3. This file raises it to 4 for every importer of `placement/rungs`
-// (the engine reads the derived helpers there), so the engine rules PV-1c turns on are tested before PV-1c.
-vi.mock('../placement/rungs', async (importOriginal) => {
-  const real = await importOriginal<typeof import('../placement/rungs')>();
-  return {
-    ...real,
-    SENTENCE_QUESTIONS: 4,
-    questionsFor: (gate: Parameters<typeof real.questionsFor>[0]) => real.questionsFor(gate, 4),
-    passAtFor: (mode: Parameters<typeof real.passAtFor>[0], gate: Parameters<typeof real.passAtFor>[1], size?: number) =>
-      real.passAtFor(mode, gate, size ?? real.questionsFor(gate, 4)),
-    questionCap: (mode: Parameters<typeof real.questionCap>[0]) => real.questionCap(mode, 4),
-  };
-});
+// PV-1b tested these engine rules with the switch raised to 4 by a module mock; PV-1c turned the switch itself
+// (`SENTENCE_QUESTIONS = 4` in `placement/rungs.ts`), so this file now runs against the real constant.
 
 import {
   PlacementResultSchema,
@@ -91,8 +80,8 @@ const fail = (...rungs: string[]): Record<string, Verdict> => Object.fromEntries
 const formatOf = (id: string): string => makeBank().templates.find((t) => t.id === id)!.question.format;
 const result = (state: PlacementRunState) => finishRun(state, context);
 
-describe('with the switch at 4 (PV-1c will turn it; PV-1b tests the engine rules)', () => {
-  it('SENTENCE_QUESTIONS is 4 here and the caps follow: Standard 25, Deep 45', () => {
+describe('with the switch at 4 (turned by PV-1c; the engine rules PV-1b built)', () => {
+  it('SENTENCE_QUESTIONS is 4 and the caps follow: Standard 25, Deep 45', () => {
     expect(SENTENCE_QUESTIONS).toBe(4);
     expect(questionCap('standard')).toBe(25);
     expect(questionCap('deep')).toBe(45);
@@ -218,6 +207,27 @@ describe('question counts at 4 (spec section 3.6)', () => {
     const early = play(run({ mode: 'deep' }), fail('sound-basic'));
     expect(early.asked.length).toBeLessThan(45);
     expect(early.state.stop).toBe('complete');
+  });
+
+  it('Deep worst case: a heard sentence rung whose four prompts all fail to play is not-run, vocab oral follows, 48 responses that still parse', () => {
+    let s = run({ mode: 'deep' });
+    let t = 1_000;
+    for (let guard = 0; guard < 120 && !isFinished(s); guard += 1) {
+      if (s.pause !== null) {
+        s = apply(s, { type: 'keepGoing' }, (t += 1_000));
+        continue;
+      }
+      const q = currentQuestion(s) as AssessmentQuestion;
+      t += 3_000;
+      s = apply(s, rungOf(q.id) === 'sentence:oral' ? { type: 'notSure', cause: 'no-sound' } : eventFor(q, 'correct'), t);
+    }
+    expect(isFinished(s)).toBe(true);
+    expect(s.responses).toHaveLength(3 + 24 + 6 + 8 + 4 + 3);
+    expect(s.done.find((d) => d.gate === 'sentence' && d.form === 'oral')).toMatchObject({ result: 'not-run', reason: 'unavailable' });
+    expect(s.done.find((d) => d.gate === 'vocab' && d.form === 'oral')).toMatchObject({ asked: 3, result: 'pass' });
+    const r = result(s);
+    expect(r.responses).toHaveLength(48);
+    expect(PlacementResultSchema.parse(r)).toEqual(r);
   });
 
   it('every Standard and Deep run on a seeded sweep stays within 13 to 25 and 13 to 45 questions', () => {

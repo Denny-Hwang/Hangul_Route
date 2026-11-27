@@ -70,10 +70,10 @@ describe('limits', () => {
     expect(IDLE_PAUSE_MS).toBe(45_000);
   });
 
-  it('Short has no cap label and no clock; Standard 24 and 10 minutes; Deep 42 and 20 minutes; take-my-time has no clock', () => {
+  it('Short has no cap label and no clock; Standard 25 and 10 minutes; Deep 45 and 20 minutes; take-my-time has no clock', () => {
     expect(questionCap('short')).toBeNull();
-    expect(questionCap('standard')).toBe(24);
-    expect(questionCap('deep')).toBe(42);
+    expect(questionCap('standard')).toBe(25);
+    expect(questionCap('deep')).toBe(45);
     expect(backstopMs('short', false)).toBeNull();
     expect(backstopMs('standard', false)).toBe(600_000);
     expect(backstopMs('deep', false)).toBe(1_200_000);
@@ -83,8 +83,8 @@ describe('limits', () => {
 });
 
 describe('SENTENCE_QUESTIONS: one switch, everything derived from it (AMENDMENTS-PLC-VALIDITY section 3.6)', () => {
-  it('is 3 in PV-1b (PV-1c turns it to 4), so the engine asks what it asked before', () => {
-    expect(SENTENCE_QUESTIONS).toBe(3);
+  it('is 4 from PV-1c (3 in PV-1b): a sentence rung asks four and passes at 3 of 4', () => {
+    expect(SENTENCE_QUESTIONS).toBe(4);
   });
 
   it('questionsFor: the switch for sentence, three for every other gate', () => {

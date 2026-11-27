@@ -136,6 +136,9 @@ export function bareLetterSpeech(files) {
 const CONTENT_FILE_PACKS = [
   { file: /^content\/episodes\/stage-1\//, pack: null },
   { file: /^content\/episodes\/stage-([2-7])\//, pack: (m) => `stage${m[1]}` },
+  // [PV] The level check's sentence families (AMENDMENTS-PLC-VALIDITY S5, row PV-1c): data of the placement lint, never
+  // spoken (the templates in sentences.json carry the sentences the voice says).
+  { file: /^content\/placement\/sentence-families\.json$/, pack: null },
   { file: /^content\/placement\//, pack: () => 'placement' },
   { file: /^content\/vocab\//, pack: () => 'vocab' },
   { file: /^content\/stories\//, pack: () => 'stories' },
