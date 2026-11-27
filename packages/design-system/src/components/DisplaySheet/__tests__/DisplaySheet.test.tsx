@@ -277,6 +277,23 @@ describe('DisplaySheet element tree', () => {
     }
   });
 
+  it.each(['ios', 'android'])('on %s no radio is taken out of focus: no tabIndex (React Native maps -1 to focusable=false) and no key handler', (os) => {
+    platform.OS = os;
+    try {
+      const tree = render(props({ textSize: { ...props().textSize, selected: 'large' } }));
+      const radios = [...segments(tree, 'text-size'), ...segments(tree, 'language')];
+      expect(radios).toHaveLength(7);
+      for (const radio of radios) {
+        expect('tabIndex' in radio.props).toBe(false);
+        expect('onKeyDown' in radio.props).toBe(false);
+        expect(radio.props.focusable).not.toBe(false);
+        expect(typeof radio.props.onPress).toBe('function');
+      }
+    } finally {
+      platform.OS = 'ios';
+    }
+  });
+
   it('focus follows the confirm step: its question when it opens, the selected language when Use or Back closes it', () => {
     platform.OS = 'web';
     try {
@@ -307,12 +324,12 @@ describe('DisplaySheet element tree', () => {
     }
   });
 
-  it('native: no focus calls', () => {
+  it('native: no key handler, so no focus calls (the platform moves between the rows)', () => {
     const log: string[] = [];
     const p = props();
     const tree = render(p);
     attach(tree, log);
-    (segments(tree, 'text-size')[0]!.props.onKeyDown as (e: { key: string }) => void)({ key: 'ArrowRight' });
+    expect(segments(tree, 'text-size')[0]!.props.onKeyDown).toBeUndefined();
     expect(log).toEqual([]);
   });
 
