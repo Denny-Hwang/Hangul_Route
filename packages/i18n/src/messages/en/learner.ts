@@ -928,6 +928,24 @@ export const learner = {
       missHoya: 'Listen again',
       empty: 'Nothing to play here',
     },
+    /**
+     * A contrast round of Listen & Pick (AMENDMENTS-MINIMAL-PAIRS section 3.7, row MP-2a): hear two or three sounds that differ
+     * only in their first consonant. `missHoya` is Hoya's line over the compare row; `kind` is the line under each member
+     * once the round is answered. Both cues are named (the air and where the voice starts); the s and ss letters have their
+     * own lines (s starts high, so no "starts lower" for it). No Hangul and no age word in a string.
+     */
+    contrast: {
+      missHoya: 'Listen to both.',
+      /** The meaning shown under a syllable once the round is answered ("the syllable ga"); a word keeps its own meaning. */
+      syllable: (sound: string) => `the syllable ${sound}`,
+      kind: {
+        plain: 'Soft, starts lower.',
+        aspirated: 'Big puff, starts higher.',
+        tense: 'Tight, no puff.',
+        plainS: 'Soft, with a little breath.',
+        tenseS: 'A long, sharp hiss.',
+      },
+    },
     /** Realia Read (F-CURR-001 G-2): the line hint under the drawn sheet, the miss bubble, the empty state. */
     realia: {
       lineHint: 'Tap a line to hear it.',

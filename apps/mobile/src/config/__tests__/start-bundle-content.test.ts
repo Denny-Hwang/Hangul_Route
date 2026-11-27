@@ -141,6 +141,22 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     expect(unread).toEqual([]);
   });
 
+  it('[MP] MP-2a: the contrast round is a chunk of its own; its catalogue, runtime and compare row are not in the start bundle', () => {
+    for (const file of [
+      'apps/mobile/src/content/__generated__/contrast-sets.ts',
+      'apps/mobile/src/logic/audio/contrast-sets.ts',
+      'apps/mobile/src/logic/listen-pick-contrast.ts',
+      'apps/mobile/src/screens/minigames/ContrastCompare.tsx',
+      'apps/mobile/src/screens/minigames/contrast-chunk.tsx',
+    ]) {
+      expect(reached(file), file).toBeUndefined();
+    }
+    expect(graph.chunks.has('apps/mobile/src/screens/minigames/contrast-chunk.tsx')).toBe(true);
+    // Its door is the start bundle's: Listen & Pick reaches the chunk through it and through nothing else.
+    expect(graph.files.has('apps/mobile/src/screens/minigames/contrast-entry.ts')).toBe(true);
+    expect(graph.files.has('apps/mobile/src/screens/minigames/ListenPickGame.tsx')).toBe(true);
+  });
+
   it('console.ts is not in the start bundle; the twin\'s console-app.ts is', () => {
     expect(reached('packages/i18n/src/messages/en/console.ts')).toBeUndefined();
     expect(graph.files.has('packages/i18n/src/messages/en/console-app.ts')).toBe(true);

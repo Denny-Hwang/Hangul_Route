@@ -7,6 +7,7 @@ import { voiceLine } from '../audio/jamo-lines';
 import { jamoVoice } from '../audio/jamo-voice';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
+import { jamoIdOfKey, writeLetters, writePageIndex } from './discover-write';
 import { decompose, symbolsOf } from './hangul';
 
 /**
@@ -140,7 +141,27 @@ export interface DiscoverExchangeView {
   lines: DiscoverExchangeLineView[];
 }
 
+/**
+ * [TC] One letter of the trace page (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.5): its glyph, the romanization its heading shows,
+ * whether it is a final, and the letter card's own Hear it under the id `write|<jamoId>` (Show me plays the same).
+ */
+export interface DiscoverWriteLetter {
+  jamoId: string;
+  glyph: string;
+  romanization: string;
+  final: boolean;
+  hear: HearAction;
+}
+
+/** [TC] The trace page "Trace the new letters": the letters of the step, in page order. Its page has no items. */
+export interface DiscoverWriteView {
+  key: 'write';
+  letters: DiscoverWriteLetter[];
+}
+
 export interface DiscoverPageView {
+  /** [TC] Set only on the trace page (`items` is empty and there is no `exchange`). */
+  write?: DiscoverWriteView;
   title?: string;
   /**
    * The page's exchange, drawn first. A page holds at most one heavy item (D-1 "item weights"), so
@@ -384,6 +405,7 @@ export function buildDiscover(
   a11y: DiscoverA11y,
   locale: UiLocale = 'en',
   overlays?: Overlays,
+  options: { writeOnce?: boolean } = {},
 ): DiscoverModel {
   const used = new Map<string, number>();
   const uniqueKey = (base: string): string => {
@@ -424,7 +446,39 @@ export function buildDiscover(
     const title = page.captionEn ?? (allWords ? copy.wordsTitle : undefined);
     built.push({ ...(title === undefined ? {} : { title }), ...(exchange === undefined ? {} : { exchange }), items });
   }
+  if (options.writeOnce === true) {
+    const at = writePageIndex(built);
+    const write = at < 0 ? undefined : writeView(writeLetters(pages), built);
+    if (write !== undefined) built.splice(at, 0, { write, items: [] });
+  }
   return { pages: built };
+}
+
+/**
+ * [TC] The trace page's letters: each content letter that built a card (an unresolved item is skipped), taken from the
+ * first card that shows it. A letter with no card, or none at all, gives no page.
+ */
+function writeView(ids: readonly string[], built: readonly DiscoverPageView[]): DiscoverWriteView | undefined {
+  const cards = new Map<string, DiscoverItemView>();
+  for (const page of built) {
+    for (const item of page.items) {
+      if (item.kind === 'symbol' && !cards.has(jamoIdOfKey(item.key))) cards.set(jamoIdOfKey(item.key), item);
+    }
+  }
+  const letters = ids.flatMap((jamoId): DiscoverWriteLetter[] => {
+    const card = cards.get(jamoId);
+    if (card === undefined) return [];
+    return [
+      {
+        jamoId,
+        glyph: card.glyph,
+        romanization: card.romanization,
+        final: card.finalLine !== undefined,
+        hear: { ...card.hear, id: `write|${jamoId}` },
+      },
+    ];
+  });
+  return letters.length === 0 ? undefined : { key: 'write', letters };
 }
 
 /**
@@ -465,6 +519,11 @@ export interface DiscoverState {
   readAlong: ReadAlongState | null;
   /** Counts Read along runs, so a result of a stopped run never moves the highlight. */
   runs: number;
+  /**
+   * [TC] The trace page (§3.5): the letter shown (`at`), how many letters the page has (`count`, 0 with no trace page: it
+   * caps `at`), and the letters traced on this visit (`traced`, the `written` of `quest.discover_completed`). Never persisted.
+   */
+  write: { at: number; count: number; traced: readonly string[] };
 }
 
 export type DiscoverEvent =
@@ -483,7 +542,14 @@ export type DiscoverEvent =
   | { type: 'readAlongNext'; run: number }
   | { type: 'next' }
   /** [QB] Previous (QB-1): the page before, with every sound stopped. On the first page nothing moves (the step's own Previous is the player's). */
-  | { type: 'prev' };
+  | { type: 'prev' }
+  /** [TC] A letter was traced to the end (the pad's idle gate fired); it is recorded once and never removed. */
+  | { type: 'traced'; jamoId: string }
+  /**
+   * [TC] The next letter of the trace page, from letter `from`: it moves only when `from` is the letter shown, so the advance
+   * timer and a Next letter tap can never skip a letter.
+   */
+  | { type: 'writeNext'; from: number };
 
 export type DiscoverEffect =
   /** Play a button's audio; a line of an exchange item carries its run, which the `audio` result echoes. */
@@ -494,7 +560,7 @@ export type DiscoverEffect =
   | { type: 'pause'; run: number }
   /** Stop the audio that is playing (Stop, Continue, or a line's own speaker during Read along). */
   | { type: 'stopAudio' }
-  | { type: 'done'; pages: number; heard: number };
+  | { type: 'done'; pages: number; heard: number; written: number };
 
 export interface DiscoverStepOut {
   state: DiscoverState;
@@ -540,6 +606,7 @@ export function startDiscover(model: DiscoverModel, start: DiscoverStart = {}): 
     revealed: [],
     readAlong: null,
     runs: 0,
+    write: { at: 0, count: model.pages.find((p) => p.write !== undefined)?.write?.letters.length ?? 0, traced: [] },
   };
 }
 
@@ -630,11 +697,16 @@ export function stepDiscover(
       if (state.page < state.pageCount - 1) {
         return { state: { ...quiet, page: state.page + 1, furthest: Math.max(state.furthest, state.page + 1) }, effects: stopping };
       }
-      return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
+      return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length, written: state.write.traced.length }] };
     }
     case 'prev':
       // [QB] Whatever is sounding stops (a word, a sentence, a Read along); what was heard and revealed stays.
       return { state: { ...state, readAlong: null, page: Math.max(0, state.page - 1) }, effects: [{ type: 'stopAudio' }] };
+    case 'traced':
+      return { state: { ...state, write: { ...state.write, traced: add(state.write.traced, event.jamoId) } }, effects: [] };
+    case 'writeNext':
+      if (event.from !== state.write.at) return { state, effects: [] };
+      return { state: { ...state, write: { ...state.write, at: Math.min(event.from + 1, Math.max(0, state.write.count - 1)) } }, effects: [] };
   }
 }
 
@@ -672,7 +744,17 @@ export interface DiscoverExchangeRender {
   liveLine?: string;
 }
 
+/** [TC] What the trace page shows: its letters, the one shown, the letters traced so far, and whether it is the last letter. */
+export interface DiscoverWriteRender {
+  letters: readonly DiscoverWriteLetter[];
+  at: number;
+  traced: readonly string[];
+  last: boolean;
+}
+
 export interface DiscoverPageRender {
+  /** [TC] Set only on the trace page, which has no `items`. */
+  write?: DiscoverWriteRender;
   empty: boolean;
   emptyLine?: string;
   title?: string;
@@ -703,6 +785,12 @@ export function pageRender(
   if (!page) {
     return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, page: 0, hasPrevious: false, isLast: true, continueEnabled: true };
   }
+  const write: DiscoverWriteRender | undefined = page.write && {
+    letters: page.write.letters,
+    at: state.write.at,
+    traced: state.write.traced,
+    last: state.write.at >= page.write.letters.length - 1,
+  };
   const items = page.items.map((item, index): DiscoverItemRender => {
     const ids = [item.hear.id, item.nameButton?.action.id, item.vowelsButton?.action.id, item.example?.hear.id];
     const sayLines: string[] = [];
@@ -722,6 +810,7 @@ export function pageRender(
   });
   return {
     empty: false,
+    ...(write === undefined ? {} : { write }),
     ...(page.title === undefined ? {} : { title: page.title }),
     ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy) }),
     items,

@@ -12,7 +12,11 @@ import type { AudioCapability } from './capability';
  */
 export type PlayResult = 'played' | 'muted' | 'unavailable';
 export type PromptPhase = 'idle' | 'playing' | 'ok' | 'text';
-export type FallbackReason = 'muted' | 'no_voice' | 'error' | 'blocked';
+/**
+ * `'clip-only'`: a clip-only prompt (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6) could not play its clip. It
+ * has no panel line and no action: a round that cannot be heard is dropped, never shown as text.
+ */
+export type FallbackReason = 'muted' | 'no_voice' | 'error' | 'blocked' | 'clip-only';
 
 export interface PromptState {
   phase: PromptPhase;
@@ -66,6 +70,18 @@ export function promptReducer(s: PromptState, e: PromptEvent): PromptState {
   }
   if (e.muted) return { ...s, phase: 'text', reason: 'muted' };
   return s.phase === 'text' && s.reason === 'muted' ? { ...s, reason: null } : s;
+}
+
+/**
+ * The reducer of a slot that never shows text (`noText`, a contrast round: the text would print the answer): the same
+ * events, but a play that did not sound, a muted switch or a missing voice leaves the slot where it was instead of
+ * moving it to `text`. The attempts still count, so the panel's own rules keep working.
+ */
+export function noTextReducer(s: PromptState, e: PromptEvent): PromptState {
+  if (e === 'show_text') return s;
+  const next = promptReducer(s, e);
+  if (next.phase !== 'text') return next;
+  return { ...next, phase: next.attempts > 0 ? 'ok' : 'idle', reason: null };
 }
 
 /**

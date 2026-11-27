@@ -229,3 +229,20 @@ describe('promptPanelView takes its words as a parameter (F-I18N-001 §3.4 rule 
     expect(wrongAnswerBubble(jamoAll.find((j) => j.id === 'jamo:giyeok')!, pseudo).message).toBe(pseudoText('Listen again. This letter is'));
   });
 });
+
+describe('promptPanelView with noText (a contrast round, AMENDMENTS-MINIMAL-PAIRS section 3.6)', () => {
+  const view = (s: PromptState, cap: AudioCapability, muted: boolean, always = false): PromptPanelView => promptPanelViewWith(s, cap, muted, false, COPY, always, true);
+
+  it('never shows the text: sound off, no voice, a failed play and "Always show the letters" all leave the audio prompt', () => {
+    for (const v of [view(INITIAL_PROMPT_STATE, readyCap, true), view(INITIAL_PROMPT_STATE, noneCap, false), view(run(['play', { result: 'unavailable', failure: 'clip-only' }]), readyCap, false), view(INITIAL_PROMPT_STATE, readyCap, false, true)]) {
+      expect(v.textShown).toBe(false);
+      expect(v.reason).toBeNull();
+      expect(v.statusShown).toBe(false);
+      expect(fallbackVisible(v, false)).toBe(false);
+    }
+  });
+
+  it('the same inputs without noText still show it', () => {
+    expect(promptPanelViewWith(INITIAL_PROMPT_STATE, readyCap, true, false, COPY, false, false).textShown).toBe(true);
+  });
+});

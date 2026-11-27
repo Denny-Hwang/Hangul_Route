@@ -30,6 +30,7 @@ export function fallbackMessage(reason: FallbackReason | null, copy: AudioCopy):
       return copy.didNotPlay;
     case 'blocked':
       return copy.tapToHear;
+    case 'clip-only':
     case null:
       return null;
   }
@@ -60,6 +61,7 @@ export function panelDetail(reason: FallbackReason | null, copy: AudioCopy): str
     case 'error':
       return copy.didNotPlay;
     case 'blocked':
+    case 'clip-only':
     case null:
       return null;
   }

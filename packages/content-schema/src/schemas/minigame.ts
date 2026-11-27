@@ -148,6 +148,13 @@ export const ListenPickRoundSchema = z
      * name follows the lecture quiz's `frame: 'endsWith'`.
      */
     frame: z.literal('startsWith').optional(),
+    /**
+     * AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2a): a contrast round. The id of its contrast set
+     * (`content/audio/contrast-sets.json`); its options are exactly the set's members, each played by the clip the set
+     * names, never by the voice. The round is unscored and is no review item. `prompt` and `answerId` hold the set's
+     * first member until the step draws the round's target when it starts.
+     */
+    contrastSet: z.string().optional(),
   })
   .superRefine((round, ctx) => {
     const ids = new Set<string>();

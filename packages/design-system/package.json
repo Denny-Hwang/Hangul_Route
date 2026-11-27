@@ -19,6 +19,7 @@
     "./word-art": "./src/word-art/index.ts",
     "./word-art/color-science": "./src/word-art/color-science.ts",
     "./word-art-budget": "./src/word-art-budget.ts",
+    "./src/word-art/glyphs/act": "./src/word-art/glyphs/act.ts",
     "./choice-card-style": "./src/components/ChoiceCard/style.ts",
     "./icon-glyphs": "./src/components/Icon/glyphs.ts",
     "./icon-glyphs/dom": "./src/components/Icon/dom.tsx",

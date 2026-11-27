@@ -343,7 +343,21 @@ export const PRECACHE_BUDGET = Object.freeze({
   // realia `romanizationReserved` props): on main b8496d52a with RG-2b (line 4,565,800 B) the release `build:web` (CI=1) measures
   // 4,565,884 B raw / 1,255,976 B gzip, 84 B over the line (4,557,414 B on the DC-1c base before RG-2b). The line is the measurement plus
   // a 4,016 B margin (one measured raise). A start bundle shrink row (SB-4) is planned after phase 2.
-  startBundleRaw: 4_569_900,
+  // [MP] AMENDMENTS-MINIMAL-PAIRS MP-2a (the contrast round: the flow's contrast branches, `ListenPickGame`'s wrapper and its contrast
+  // branches, `clipOnly` in the controller and `noText` in the prompt slot, the en strings, `contrastSet` in the schema and the review-item
+  // extract stay in the start bundle; the catalogue (the generated `contrast-sets.ts`), its playable rules and draw, the kind lines
+  // and the compare row are `contrast-chunk`, a screen chunk of about 12 KB raw, loaded only by a Listen & Pick scope that holds a
+  // contrast round): on top of main (line 4,569,900 B after DC-1c; 4,562,459 B measured on 46f721b2e before it) the release `build:web`
+  // (CI=1) measures 4,573,615 B raw / 1,258,181 B gzip, 3,715 B over main's line (about 7.7 KB over main's own size; the whole
+  // feature in the start bundle was about 13 KB). The line is that measurement plus a 3,985 B margin (one measured raise). Moving the
+  // game's inline contrast branches into the chunk too is the work of the start bundle shrink row (SB-4), planned after phase 2.
+  // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1a (the trace page's logic behind `writeOnce`: `stage1/discover-write.ts`, the trace page's
+  // view model, state, two events and render in `discover-flow.ts`, which `DiscoverStep` carries; `content/jamo-strokes` was already in
+  // the start bundle through `TraceStrokeGame`): on main with MP-2a (4,568,178 B measured on 32dd7af8f) the release `build:web` (CI=1)
+  // measures 4,569,996 B raw (+1,818 B); on top of main with MP-2a (line 4,577,600 B) it measures 4,579,228 B raw / 1,259,979 B gzip,
+  // 1,628 B over the line. The line is that measurement plus a 6,072 B margin (one measured raise; a wider margin than before, so every
+  // PR stops tripping the line until the start bundle shrink row SB-4, planned after phase 2).
+  startBundleRaw: 4_585_300,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -637,6 +651,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // `import()` of `src/screens/minigames/realia-read-entry.tsx`): the answer feedback of the choice games took the start
   // bundle over its line, and this game is only played from Stage 4 on.
   Object.freeze({ name: 'realia-read-chunk', marker: 'screen-chunk:realia-read' }),
+  // [MP] AMENDMENTS-MINIMAL-PAIRS row MP-2a: the contrast round's catalogue (the generated `contrast-sets.ts`), its playable rules
+  // and draw, the lines of a miss and the compare row (`src/screens/minigames/contrast-chunk.tsx`, reached only through the
+  // literal `import()` of `src/screens/minigames/contrast-entry.ts` when a Listen & Pick scope holds a round with `contrastSet`):
+  // two optional steps play it, so the start bundle carries none of it; a chunk that cannot load drops the contrast rounds.
+  Object.freeze({ name: 'contrast-chunk', marker: 'screen-chunk:contrast' }),
 ]);
 
 /**

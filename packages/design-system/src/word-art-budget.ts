@@ -1,16 +1,20 @@
 /**
  * The WordArt source budget (F-VOC-002 W7, §3.8): all WordArt source
- * (`src/word-art/**`, tests excluded) stays within 160 KB raw and 48 KB
+ * (`src/word-art/**`, tests excluded) stays within 184 KB raw and 56 KB
  * gzipped (raised at W-5 from 120 / 30 KB, the §8.1 (b) decision: the
  * measured projection for all 99 hand glyphs plus room for the card-art
- * exits). One definition, read by `word-art/__tests__/budget.test.ts` and by
+ * exits; [PV] raised again from 160 / 48 KB by AMENDMENTS-PLC-VALIDITY PV-1a,
+ * the 30 action pictures, to the measurement plus a margin, as the PX-1 note
+ * in the budget test foresaw. The `act` glyphs load with the level check's
+ * chunk, so this source line grows while the app's start bundle does not).
+ * One definition, read by `word-art/__tests__/budget.test.ts` and by
  * the web contact sheet's totals line, so raising the budget (§8.1 (b)) moves
  * both. It sits outside `src/word-art/` so it does not count against itself,
  * and is pure: the caller passes the file reads and the gzip.
  */
 
-export const BUDGET_RAW = 160 * 1024;
-export const BUDGET_GZIP = 48 * 1024;
+export const BUDGET_RAW = 184 * 1024;
+export const BUDGET_GZIP = 56 * 1024;
 
 export interface WordArtSize {
   raw: number;

@@ -42,6 +42,27 @@ describe('Listen & Pick round frame (AMENDMENTS-DISCOVER-SOUND-FIRST SF-1)', () 
   });
 });
 
+describe('Listen & Pick round contrastSet (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a)', () => {
+  const base = {
+    id: 'lp:pair:ga-ka',
+    prompt: kText('가', 'ga', 'the syllable ga'),
+    options: [
+      { id: 'ga', text: kText('가', 'ga', 'the syllable ga') },
+      { id: 'ka', text: kText('카', 'ka', 'the syllable ka') },
+    ],
+    answerId: 'ga',
+  };
+
+  it('is optional: a round carries the set id, and one without it still parses', () => {
+    expect(ListenPickRoundSchema.parse({ ...base, contrastSet: 'ga-ka' }).contrastSet).toBe('ga-ka');
+    expect(ListenPickRoundSchema.parse(base).contrastSet).toBeUndefined();
+  });
+
+  it('is a string', () => {
+    expect(ListenPickRoundSchema.safeParse({ ...base, contrastSet: 7 }).success).toBe(false);
+  });
+});
+
 describe('minigame kinds', () => {
   it('adds listen-pick and pic-word-match without removing any kind', () => {
     expect(MinigameKindSchema.options).toEqual(

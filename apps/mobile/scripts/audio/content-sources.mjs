@@ -363,6 +363,70 @@ export function contrastOccurrencesOf(catalogue) {
   return out;
 }
 
+// ---- the Hangul Check's decode item pool (AMENDMENTS-STAGE1-DECODING-CHECK section 3.4, row DC-2b) ------------------
+// apps/mobile/src/logic/stage1/decode-items.json lists the syllables a decode item plays: every option of its `items`
+// (clips shipped today) and of its `awaitingClips` (the blocks DC-2c's owner run generates). It is a manifest source:
+// each option is an occurrence of the pool's pack with the file as its source, so a block no content says yet gets a
+// manifest row (said with a full stop) in that pack, and a block another pack already owns stays there (the first-pack
+// rule): the Hangul Check opens the pool's pack as a scope (`packsUpTo`), which loads every pack before it too.
+
+export const DECODE_ITEMS_FILE = 'apps/mobile/src/logic/stage1/decode-items.json';
+const DECODE_ID = /^decode:[a-z]+$/;
+const ONE_BLOCK = /^[가-힣]$/u;
+
+/**
+ * Validates a parsed decode-items.json and returns it; throws naming the item and the field. The language rules (the
+ * balanced set, the contrasts, the practised blocks, the clips) are the pool test's
+ * (`apps/mobile/src/logic/stage1/__tests__/decode-items.test.ts`).
+ */
+export function parseDecodeItems(json, file = DECODE_ITEMS_FILE) {
+  const fail = (message) => {
+    throw new Error(`${file}: ${message}`);
+  };
+  if (json === null || typeof json !== 'object' || Array.isArray(json)) fail('not an object');
+  if (json.schemaVersion !== 1) fail('schemaVersion must be 1');
+  if (typeof json.pack !== 'string' || json.pack === '') fail('pack must name a clip pack');
+  const extra = Object.keys(json).filter((k) => !['schemaVersion', 'pack', 'items', 'awaitingClips'].includes(k));
+  if (extra.length > 0) fail(`unknown fields ${extra.join(', ')}`);
+  const ids = new Set();
+  for (const list of ['items', 'awaitingClips']) {
+    if (!Array.isArray(json[list])) fail(`${list} must be an array`);
+    for (const item of json[list]) {
+      const id = item?.id;
+      if (typeof id !== 'string' || !DECODE_ID.test(id)) fail(`${list}: id ${JSON.stringify(id)} must look like decode:geu`);
+      if (ids.has(id)) fail(`${id} is listed twice`);
+      ids.add(id);
+      const keys = Object.keys(item).filter((k) => !['id', 'target', 'options'].includes(k));
+      if (keys.length > 0) fail(`${id} has unknown fields ${keys.join(', ')}`);
+      if (typeof item.target !== 'string' || !ONE_BLOCK.test(item.target)) fail(`${id}: target must be one Hangul block`);
+      if (!Array.isArray(item.options) || item.options.length !== 4) fail(`${id}: options must be four blocks`);
+      for (const o of item.options) {
+        if (typeof o?.ko !== 'string' || !ONE_BLOCK.test(o.ko) || typeof o.romanization !== 'string' || o.romanization === '') fail(`${id}: every option needs one block (ko) and its romanization`);
+        const more = Object.keys(o).filter((k) => !['ko', 'romanization'].includes(k));
+        if (more.length > 0) fail(`${id}: option ${o.ko} has unknown fields ${more.join(', ')}`);
+      }
+      if (item.options.filter((o) => o.ko === item.target).length !== 1) fail(`${id}: the target must be exactly one of the options`);
+    }
+  }
+  return json;
+}
+
+/** The committed pool, validated. */
+export function readDecodeItems(root = repoRoot) {
+  return parseDecodeItems(JSON.parse(readFileSync(join(root, DECODE_ITEMS_FILE), 'utf8')));
+}
+
+/** The pool's say texts: one occurrence per option of every item (shipped and awaiting), in the pool's pack. */
+export function decodeOccurrencesOf(pool, source = DECODE_ITEMS_FILE) {
+  const out = [];
+  for (const list of ['items', 'awaitingClips']) {
+    pool[list].forEach((item, i) => {
+      item.options.forEach((o, j) => out.push(occurrenceOf(pool.pack, source, [list, i, 'options', j], { ko: o.ko })));
+    });
+  }
+  return out;
+}
+
 /**
  * Every jamo clip voice and every spoken-text occurrence of the shipped content, in a fixed order: the jamo records
  * and the Stage 1 quests, the heritage cards (TypeScript, through ts-loader), the content JSON, and the review items
@@ -382,6 +446,7 @@ export async function readClipSources(root = repoRoot) {
       ...stage1OccurrencesOf(stage1Quests, minigameScopes),
       ...contentOccurrences(readShippedContent(root)),
       ...contrastOccurrencesOf(readContrastSets(root)),
+      ...decodeOccurrencesOf(readDecodeItems(root)),
       ...reviewOccurrencesOf(items),
       ...cardOccurrencesOf(heritageCardsAll),
     ],

@@ -4,6 +4,7 @@ import { AUDIO_ASSETS } from '../../content/__generated__/audio-assets';
 import { findJamo, jamoAll } from '../../content/jamo';
 import { jamoVoice } from '../audio/jamo-voice';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
+import { validRounds } from '../listen-pick';
 import { lp, pw } from '../scope-builders';
 import * as config from '../minigame-config';
 
@@ -329,6 +330,20 @@ describe('pw (one Pic-Word Match board)', () => {
 
   it('rejects a repeated word', () => {
     expect(() => pw([pairs[0], pairs[1], { word: pairs[0].word }])).toThrow();
+  });
+});
+
+describe('lp.pair (a contrast round; AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2a)', () => {
+  it('is a stub that names its set and keeps the catalogue out of the start bundle: two placeholder options, no Hangul', () => {
+    const r = lp.pair('ga-ka');
+    expect(r).toMatchObject({ id: 'lp:pair:ga-ka', contrastSet: 'ga-ka', answerId: 'a' });
+    expect(r.options.map((o) => o.id)).toEqual(['a', 'b']);
+    expect(JSON.stringify(r)).not.toMatch(/[가-힣]/);
+  });
+
+  it('is a round `validRounds` keeps, and plays clip only', () => {
+    expect(validRounds({ listenPick: { rounds: [lp.pair('ga-ka')] } })).toHaveLength(1);
+    expect(listenPickSpeech(lp.pair('go-ko'))).toMatchObject({ clipOnly: true });
   });
 });
 
