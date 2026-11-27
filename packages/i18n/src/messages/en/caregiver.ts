@@ -641,6 +641,30 @@ export const caregiver = {
       sentence: 'Sentences',
     },
     form: { decode: 'reading', read: 'reading', oral: 'listening' },
+    /**
+     * The "Reading and listening" block that opens "What we saw" (AMENDMENTS-PLC-VALIDITY section 3.8, PV-4):
+     * what this check saw by ear and in reading, said apart. Words of what happened in this check; never
+     * "behind", "only", "can't", a number, or a comparison with other learners.
+     */
+    skills: {
+      title: 'Reading and listening',
+      reading: 'Reading',
+      listening: 'Listening',
+      notChecked: 'not checked',
+      /** Only when listening is above reading in this check; it says nothing about the route. */
+      ahead: (name: string) => `In this check, ${name} understood more Korean than ${name} could read. That is common.`,
+    },
+    /** What the newest check saw by ear, from its listening stage (the words we said, never the learner's score). */
+    listening: {
+      stage1: 'Everyday words: new for now',
+      stage2: 'Knew most of the everyday words we said',
+      stage3: 'Understood the short sentences we said',
+    },
+    /** One form of a Words or Sentences row: its name, then its status word ("listening: secure"). */
+    formStatus: (form: string, status: string) => `${form}: ${status}`,
+    /** Next to Choose a different start, for a Stage 3 route placed by the older, easier sentence questions (PV-OD-3). */
+    olderSentences:
+      'An earlier version of the check asked easier sentence questions. If Stage 3 feels hard, choose a different start.',
     /** One row of a rung, correct out of what was asked, framed as growth (Short and Standard only). */
     count: (correct: number, asked: number) => `${correct} of ${asked}`,
     notTestedReason: {
