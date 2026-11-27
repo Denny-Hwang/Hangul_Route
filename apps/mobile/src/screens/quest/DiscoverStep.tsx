@@ -32,7 +32,7 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot, type PromptSlot } from '../../components/use-prompt-slot';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { useRomanizationMode, useRomanizationResolver } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
   DISCOVER_AUDIO_SOURCE,
@@ -59,7 +59,7 @@ import { exampleWordLabel } from '../../logic/stage1/example-label';
 import { afterScreenSettles } from '../../logic/audio/settle';
 import { hasClipFor, playPrompt, stop as stopAudio, warmClips, type PlayResult } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
-import { announceAndWait, isScreenReaderEnabled } from '../../platform/screen-reader';
+import { announceAndWait, focusForScreenReader, isScreenReaderEnabled } from '../../platform/screen-reader';
 import { useAudioStore } from '../../store/audio-store';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 import { StepActions } from './StepActions';
@@ -148,6 +148,11 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   }, [actions]);
 
   const romanizationMode = useRomanizationMode();
+  // [RF] The item-level mode (AMENDMENTS-ROMANIZATION-FADE sections 3.3, 3.6): the resolver of the first draw, kept for the
+  // whole step, so a change of phase under an open step applies from the next screen. Discover is a quest step.
+  const liveResolver = useRomanizationResolver();
+  const resolverRef = useRef(liveResolver);
+  const romanizationModeOf = resolverRef.current.forText;
 
   const [state, setState] = useState<DiscoverState>(() => startDiscover(model, start));
   const stateRef = useRef(state);
@@ -344,7 +349,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
     };
   }, [autoHear, state.page]);
 
-  const render = pageRender(model, state, romanizationMode, copy);
+  const render = pageRender(model, state, romanizationMode, copy, romanizationModeOf);
   const page = model.pages[state.page];
   const cards = page ? discoverCards(page, compact && state.page === 1) : [];
   /** The card's panel action: play the button it played last again (the main Hear it before any). */
@@ -550,6 +555,13 @@ function DiscoverItemCard({
   const audioCopy = useMessages().learner.audio;
   const slot = useCardSlot(item.key, [item.hear, item.nameButton?.action, item.vowelsButton?.action, item.example?.hear], audio, cantHear);
   const example = item.example;
+  // [RF] After a word card's reveal its button is gone: the screen reader's focus goes to the word.
+  const wordRef = useRef<View | null>(null);
+  const wasFolded = useRef(!render.romanizationShown);
+  useEffect(() => {
+    if (item.kind === 'word' && wasFolded.current && render.romanizationShown) focusForScreenReader(wordRef.current);
+    wasFolded.current = !render.romanizationShown;
+  }, [item.kind, render.romanizationShown]);
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
   const itemPicture = item.kind === 'word' && hasPicture(item.picture, itemGloss, PICTURE_CONTEXT);
@@ -565,13 +577,22 @@ function DiscoverItemCard({
     >
       {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
 
-      <KoreanText
-        ko={item.glyph}
-        romanization={item.romanization}
-        {...(item.gloss === undefined ? {} : { gloss: item.gloss })}
-        size={item.kind === 'symbol' ? 'lg' : 'md'}
-        accessibilityLabel={item.accessibilityLabel}
-      />
+      {/* [RF] A word card folds its romanization like the example word, keeping the line's room so the reveal moves nothing; a
+          letter card's own sound value is never folded. The name follows what is drawn; Hear it keeps the full one. */}
+      <View ref={wordRef} focusable={item.kind === 'word'} {...(item.kind === 'word' ? { tabIndex: -1 } : {})}>
+        <KoreanText
+          ko={item.glyph}
+          romanization={item.romanization}
+          {...(item.gloss === undefined ? {} : { gloss: item.gloss })}
+          size={item.kind === 'symbol' ? 'lg' : 'md'}
+          romanizationShown={render.romanizationShown}
+          romanizationReserved={!render.romanizationShown}
+          accessibilityLabel={render.romanizationShown ? item.accessibilityLabel : (item.foldedAccessibilityLabel ?? item.accessibilityLabel)}
+        />
+      </View>
+      {item.kind === 'word' && render.showReveal ? (
+        <Button label={copy.showHowToSay.cta} tone="ghost" size="md" onPress={() => dispatch({ type: 'reveal', key: item.key })} testID={`discover-reveal-${item.key}`} />
+      ) : null}
       {item.soundHint ? (
         <Body tone="secondary" align="center">
           {item.soundHint}

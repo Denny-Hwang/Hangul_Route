@@ -3,6 +3,7 @@ import type { Messages } from '@hangul-route/i18n';
 import { answerItem } from './answer-feedback';
 import { seededRandom } from './listen-pick';
 import type { MinigameScope } from './minigame-config';
+import type { HostMode } from '../screens/minigames/host';
 
 /**
  * Pic-Word Match flow (F-QUEST-002 §3.11): the reducer and view-models behind
@@ -360,6 +361,14 @@ export function pictureTileView(pair: PicWordPair, state: PicWordFlowState, a11y
 
 export interface WordTileContext {
   romanizationMode: RomanizationMode;
+  /** The host the board runs in; `romanizationModeOf` applies to `quest` only (AMENDMENTS-ROMANIZATION-FADE section 3.6). */
+  mode?: HostMode;
+  /**
+   * [RF] The mode of one tile's Korean (`RomanizationResolver.forText`), on the `quest` host only: a decodable word folds in
+   * the reading phase, a theme word with an unmet letter stays shown. The Stage 2 Check, Words and Hidden Heritage's
+   * fallback ignore it. Absent: the one mode.
+   */
+  romanizationModeOf?: (ko: string) => RomanizationMode;
   /** A quest Check holds each pair's romanization until it is matched right (row DC-1c). Absent: nothing held. */
   hold?: boolean;
 }
@@ -374,7 +383,8 @@ export function wordTileView(
   const { announce, ...base } = tileBase(pair.id, 'word', state, a11y);
   const touched = base.selected || base.cardState === 'correct' || base.cardState === 'wrong';
   // What the learner's mode shows (a touched word shows it in `tap` mode), and what a Check's open pair holds back of it.
-  const shown = context.romanizationMode === 'always' || touched ? pair.word.romanization : '';
+  const mode = context.mode === 'quest' && context.romanizationModeOf ? context.romanizationModeOf(pair.word.ko) : context.romanizationMode;
+  const shown = mode === 'always' || touched ? pair.word.romanization : '';
   const held = context.hold === true && base.cardState !== 'correct';
   const gloss = base.cardState === 'correct' ? pair.word.en : undefined;
   // The name keeps the romanization the mode shows: the hold is visual.

@@ -7,6 +7,9 @@ import { AUDIO_PACK as JAMO_WB_PACK } from '../../../content/__generated__/audio
 import { findJamo } from '../../../content/jamo';
 import { lessonQuests } from '../../../content/lessons';
 import { jamoVoice } from '../../audio/jamo-voice';
+import { FADE_READING_FROM_QUEST } from '../../locale/romanization-fade';
+import { romanizationResolver } from '../../locale/romanization-mode';
+import { symbolsMetThrough } from '../curriculum';
 import {
   DISCOVER_AUDIO_SOURCE,
   SERIES_GAP_MS,
@@ -30,7 +33,8 @@ const pageRender = (
   model: Parameters<typeof pageRenderWith>[0],
   state: Parameters<typeof pageRenderWith>[1],
   mode: Parameters<typeof pageRenderWith>[2],
-): ReturnType<typeof pageRenderWith> => pageRenderWith(model, state, mode, COPY);
+  modeOf?: Parameters<typeof pageRenderWith>[4],
+): ReturnType<typeof pageRenderWith> => pageRenderWith(model, state, mode, COPY, modeOf);
 
 const ko = (text: string, romanization: string, en: string, extra: Record<string, unknown> = {}) => ({
   ko: text,
@@ -558,11 +562,127 @@ describe('romanization mode "tap" (reading practice)', () => {
     expect(stepDiscover(out.state, { type: 'reveal', key: 'jamo:giyeok' }).state.revealed).toEqual(['jamo:giyeok']);
   });
 
-  it('word items have no example, so nothing to reveal and the word romanization stays', () => {
+  it('word cards fold their own romanization under tap, with the same reveal (RF-1b, DEP-2)', () => {
     const words = buildDiscover([wordsPage]);
-    const item = pageRender(words, startDiscover(words), 'tap').items[0]!;
-    expect(item.showReveal).toBe(false);
-    expect(item.item.romanization).toBe('a·beo·ji');
+    const state = startDiscover(words);
+    const [first, second] = pageRender(words, state, 'tap').items;
+    expect(first).toMatchObject({ romanizationShown: false, exampleRomanizationShown: false, showReveal: true });
+    expect(second).toMatchObject({ romanizationShown: false, showReveal: true });
+    // The data keeps it, the gloss is never folded, and the name while folded is the Korean and the gloss.
+    expect(first!.item.romanization).toBe('a·beo·ji');
+    expect(first!.item.gloss).toBe('father');
+    expect(first!.item.accessibilityLabel).toBe('아버지, abeoji, father');
+    expect(first!.item.foldedAccessibilityLabel).toBe('아버지, father');
+    // A reveal shows it for that card only, and the button goes.
+    const out = stepDiscover(state, { type: 'reveal', key: first!.item.key });
+    const render = pageRender(words, out.state, 'tap');
+    expect(render.items[0]).toMatchObject({ romanizationShown: true, showReveal: false });
+    expect(render.items[1]).toMatchObject({ romanizationShown: false, showReveal: true });
+  });
+
+  it('always: a word card shows its romanization and offers no reveal', () => {
+    const words = buildDiscover([wordsPage]);
+    for (const item of pageRender(words, startDiscover(words), 'always').items) {
+      expect(item).toMatchObject({ romanizationShown: true, showReveal: false });
+    }
+  });
+
+  it("a letter card's own sound value is never folded, in any mode", () => {
+    const model = buildDiscover([pageTwo]);
+    for (const mode of ['always', 'tap'] as const) {
+      const item = pageRender(model, startDiscover(model), mode).items[0]!;
+      expect(item.romanizationShown).toBe(true);
+      expect(item.item.romanization).toBe('g/k');
+    }
+  });
+});
+
+describe('item-level folding with `modeOf` (AMENDMENTS-ROMANIZATION-FADE section 3.6, row RF-1b)', () => {
+  // Phase `reading`: quests 1 to 10 met, so every Stage 1 letter is met; a tense consonant (까) is not.
+  const reading = (met: ReadonlySet<string>) => ({ phase: 'reading' as const, met, screenReader: false });
+  const everyStage1Letter = new Set<string>(symbolsMetThrough(FADE_READING_FROM_QUEST));
+  const resolverOf = (choice: 'auto' | 'always' | 'tap', fade = reading(everyStage1Letter)) =>
+    romanizationResolver(null, { romanizationChoice: choice }, fade);
+
+  const mixed: DiscoverPage = {
+    items: [
+      { type: 'word', word: ko('나무', 'namu', 'tree') },
+      { type: 'word', word: ko('까치', 'kkachi', 'magpie') },
+    ],
+  };
+
+  it('auto in the reading phase folds a decodable word card and keeps a word with an unmet letter shown', () => {
+    const model = buildDiscover([mixed]);
+    const [tree, magpie] = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).items;
+    expect(tree).toMatchObject({ romanizationShown: false, showReveal: true });
+    expect(magpie).toMatchObject({ romanizationShown: true, showReveal: false });
+  });
+
+  it('a reveal reaches the romanization of a folded card, which then stays shown', () => {
+    const model = buildDiscover([mixed]);
+    const state = stepDiscover(startDiscover(model), { type: 'reveal', key: 'word:나무' }).state;
+    expect(pageRender(model, state, 'always', resolverOf('auto').forText).items[0]).toMatchObject({ romanizationShown: true, showReveal: false });
+  });
+
+  it('a letter card folds its example word when it is decodable; its own value stays', () => {
+    const model = buildDiscover([pageTwo]);
+    const [giyeok, nieun] = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).items;
+    expect(giyeok).toMatchObject({ romanizationShown: true, exampleRomanizationShown: false, showReveal: true });
+    expect(nieun).toMatchObject({ romanizationShown: true, exampleRomanizationShown: false, showReveal: true });
+    expect(giyeok!.item.romanization).toBe('g/k');
+  });
+
+  it('an exchange line folds when its text is decodable', () => {
+    const exchangePage: DiscoverPage = {
+      items: [
+        {
+          type: 'exchange',
+          lines: [
+            { speaker: 'a', speakerEn: 'Hoya', line: ko('나무', 'namu', 'tree') },
+            { speaker: 'b', speakerEn: 'You', line: ko('까치', 'kkachi', 'magpie') },
+          ],
+        },
+      ],
+    };
+    const model = buildDiscover([exchangePage]);
+    const lines = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).exchange!.lines;
+    expect(lines.map((l) => [l.romanizationShown, l.showReveal])).toEqual([
+      [false, true],
+      [true, false],
+    ]);
+  });
+
+  it('phase letters, an always choice, a screen reader and the Check-free default fold nothing', () => {
+    const model = buildDiscover([mixed, pageTwo]);
+    const state = startDiscover(model);
+    const letters = romanizationResolver(null, { romanizationChoice: 'auto' }, { phase: 'letters', met: everyStage1Letter, screenReader: false });
+    const reader = romanizationResolver(null, { romanizationChoice: 'auto' }, { phase: 'reading', met: everyStage1Letter, screenReader: true });
+    for (const resolver of [letters, reader, resolverOf('always'), romanizationResolver(null, undefined, null)]) {
+      for (let page = 0; page < model.pages.length; page += 1) {
+        const render = pageRender(model, { ...state, page }, 'always', resolver.forText);
+        expect(render.items.every((i) => i.romanizationShown && i.exampleRomanizationShown && !i.showReveal)).toBe(true);
+      }
+    }
+  });
+
+  it('explicit tap folds word cards and example words alike', () => {
+    const model = buildDiscover([mixed]);
+    const render = pageRender(model, startDiscover(model), 'tap', resolverOf('tap').forText);
+    expect(render.items.map((i) => [i.romanizationShown, i.showReveal])).toEqual([
+      [false, true],
+      [false, true],
+    ]);
+  });
+
+  it('with the shipped default choice nothing renders differently: modeOf from a default resolver equals no modeOf, in every phase', () => {
+    const model = buildDiscover([mixed, pageOne, pageTwo, wordsPage]);
+    for (const phase of ['letters', 'reading', 'all'] as const) {
+      const resolver = romanizationResolver(null, undefined, { phase, met: everyStage1Letter, screenReader: false });
+      for (let page = 0; page < model.pages.length; page += 1) {
+        const state = { ...startDiscover(model), page };
+        expect(pageRender(model, state, 'always', resolver.forText)).toEqual(pageRender(model, state, 'always'));
+      }
+    }
   });
 });
 
