@@ -771,6 +771,7 @@ describe('precacheReport and its budget lines', () => {
     // [DC] AMENDMENTS-STAGE1-DECODING-CHECK DC-1c (the quest Checks on the other games hold the romanization until answered: the games' look modules and `held-line`, in the start bundle) measures 4,565,884 B on main b8496d52a (release build, CI=1): 4,569,900 B.
     // [MP] AMENDMENTS-MINIMAL-PAIRS MP-2a (the contrast round: its flow and game branches in the start bundle, its catalogue, draw and compare row in `contrast-chunk`) on top of main (line 4,569,900 B) measures 4,573,615 B (release build, CI=1): 4,577,600 B.
     // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1a (the trace page's logic and view model in `discover-flow.ts` and `discover-write.ts`, in the start bundle) on top of main with MP-2a (line 4,577,600 B) measures 4,579,228 B (release build, CI=1): 4,585,300 B.
+    // [PV] AMENDMENTS-PLC-VALIDITY PV-6 on main with MP-2b and PV-4 measures 4,585,548 B (release build, CI=1): 4,591,600 B.
     // [TC] TC-1b (the trace page's door, chooser and chrome; the pad is `discover-trace-chunk`) on top of main with RF-1b (line 4,585,300 B) measures 4,589,675 B (release build, CI=1): 4,595,700 B.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_595_700);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
@@ -801,7 +802,7 @@ describe('precacheReport and its budget lines', () => {
     // [MP] Row MP-2a: 4,577,600 B, so the line is now above FN-7's own size (4,570,041 B) and the closer measurements after it: the start bundle is
     // above FN-7's own size, so "the line is under every measurement from FN-7 to SB" no longer holds and is not asserted. The start bundle shrink
     // row (SB-4, planned after phase 2) brings it back; the 150 KB gap under every measurement before FN-7 (above) still holds.
-    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_573_615, 4_579_228, 4_589_675]) {
+    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_573_615, 4_579_228, 4_585_548, 4_589_675]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.

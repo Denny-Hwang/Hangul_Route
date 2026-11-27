@@ -11,9 +11,9 @@ const file = (overrides) => ({ schemaVersion: 1, overrides });
 describe('content/audio/pronunciation-overrides.json', () => {
   it('the committed file is valid and holds only the second-take overrides of the real runs (Polly Seoyeon)', () => {
     const overrides = parseOverrides(JSON.parse(readFileSync(FILE, 'utf8')));
-    // The 13 of the 2026-11-07 jamo runs, then the clips the owner heard as bad on 2026-11-10 (위 and ten say texts).
+    // The 13 of the 2026-11-07 jamo runs, then the clips the owner heard as bad on 2026-11-10 (위 and nine say texts; 슨 left with PV-6, which no longer offers it).
     const jamo = ['까', '디귿', '라', '리을', '바', '비읍', '악', '압', '어', '지읒', '짜', '키읔', '피읖'];
-    const listen = ['위', '갑', '밥', '슨', '낮', '세 개에 천 원', '부', '책 여기 있어요.', '금줄', '샅바'];
+    const listen = ['위', '갑', '밥', '낮', '세 개에 천 원', '부', '책 여기 있어요.', '금줄', '샅바'];
     expect(Object.keys(overrides).sort()).toEqual([...jamo, ...listen].sort());
     for (const o of Object.values(overrides)) expect([o.engine, o.voice]).toEqual(['polly', 'Seoyeon']);
   });

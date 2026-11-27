@@ -357,6 +357,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,569,996 B raw (+1,818 B); on top of main with MP-2a (line 4,577,600 B) it measures 4,579,228 B raw / 1,259,979 B gzip,
   // 1,628 B over the line. The line is that measurement plus a 6,072 B margin (one measured raise; a wider margin than before, so every
   // PR stops tripping the line until the start bundle shrink row SB-4, planned after phase 2).
+  // [PV] AMENDMENTS-PLC-VALIDITY PV-6 (the placement decode items, on main with MP-2b #1168 and PV-4 #1169): the release
+  // `build:web` (CI=1) measures 4,585,548 B raw / 1,261,880 B gzip, 248 B over the line; PV-6 adds no start-bundle code (the
+  // ear-contrast list is a subpath export), so the growth is main's own (PV-4's report block). The line is the measurement
+  // plus a 6,052 B margin (one measured raise; the SB-4 shrink row after phase 2 brings it down).
   // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b (`DiscoverStep`'s trace branch and its door `discover-trace-entry.tsx`, the arrangement
   // chooser `stage1/trace-pad-layout.ts`, `use-screen-content-box.ts`, `StepActions`' row size, `QuestPlayerView`'s chrome for the page,
   // the quest content seconds and the en strings stay in the start bundle; the pad itself, its canvas and gesture, is

@@ -15,6 +15,7 @@
     "./storage-telemetry": "./src/schemas/storage-telemetry.ts",
     "./review-items": "./src/review-items/review-item.ts",
     "./letter-names": "./src/hangul/letter-names.ts",
+    "./ear-contrasts": "./src/hangul/ear-contrasts.ts",
     "./memory": "./src/memory/memory-sync.ts",
     "./week-drops": "./src/week-drops/week-drop.ts",
     "./match-shape": "./src/schemas/match-shape.ts",
