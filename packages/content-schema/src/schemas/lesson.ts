@@ -373,10 +373,16 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
     const prefix = `${stage}-${own}-q${qi + 1}`;
     if (quest.id !== `quest:${prefix}`) issue(at('id'), `quest ${qi + 1} of this cell has id quest:${prefix}`);
 
-    const kinds = quest.steps.map((s) => s.kind);
+    // The six steps, with the one optional contrast step (a second `practice`, right after the first) left out of the
+    // order (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b).
+    const kinds = quest.steps.filter((s) => s.contrast !== true).map((s) => s.kind);
     if (kinds.join() !== LESSON_STEP_ORDER.join()) {
       issue(at('steps'), `a lesson quest has the six steps ${LESSON_STEP_ORDER.join(' -> ')}`);
     }
+    const practiceAt = quest.steps.findIndex((s) => s.kind === 'practice' && s.contrast !== true);
+    quest.steps.forEach((step, si) => {
+      if (step.contrast === true && si !== practiceAt + 1) issue(at('steps', si, 'contrast'), 'the contrast step comes right after Practice');
+    });
     if (quest.rewardCardId !== undefined && !cell.rewardCardIds.includes(quest.rewardCardId)) {
       issue(at('rewardCardId'), `${quest.rewardCardId} is not in the cell's rewardCardIds`);
     }
@@ -415,6 +421,12 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
       }
       if (scope.kind !== step.minigameKind) {
         issue(at('steps', si, 'minigameKind'), `the step plays ${String(step.minigameKind)} but its scope is ${scope.kind}`);
+      }
+      // A contrast round is played by a contrast step and by no other (section 3.5): every round of the one, none of the rest.
+      if (scope.kind === 'listen-pick') {
+        const named = scope.rounds.filter((r) => r.contrastSet !== undefined).length;
+        if (step.contrast === true && named !== scope.rounds.length) issue(at('steps', si, 'minigameRef'), 'every round of a contrast step names its contrast set');
+        if (step.contrast !== true && named > 0) issue(at('steps', si, 'minigameRef'), 'only a contrast step plays contrast rounds');
       }
       if (step.kind === 'check') {
         if (!checkKindsFor(stage).includes(scope.kind)) {

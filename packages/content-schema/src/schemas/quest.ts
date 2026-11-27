@@ -143,6 +143,13 @@ export const QuestStepSchema = z.object({
   minigameRef: z.string().optional(),
   discover: DiscoverSchema.optional(),
   durationSeconds: z.number().int().positive().optional(),
+  /**
+   * AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): a contrast step, a `practice` step that plays Listen & Pick
+   * contrast rounds (`contrastSet`) and is never scored. A quest may have one, right after its practice step. Nothing
+   * that counts steps or answers counts it (the skip cap, the review items, the known words, the pacing index); a
+   * step with nothing to play is passed by (`QuestPlayerView`).
+   */
+  contrast: z.boolean().optional(),
 });
 
 export type QuestStep = z.infer<typeof QuestStepSchema>;
@@ -213,6 +220,13 @@ export function questRules(quest: z.output<typeof QuestObjectSchema>, ctx: z.Ref
       if (!step.minigameRef) issue([i, 'minigameRef'], 'a check step needs a minigameRef');
     }
   });
+
+  steps.forEach((step, i) => {
+    if (step.contrast !== true) return;
+    if (step.kind !== 'practice') issue([i, 'contrast'], 'contrast: true is for a practice step');
+    if (step.minigameKind !== 'listen-pick' || !step.minigameRef) issue([i, 'contrast'], 'a contrast step plays Listen & Pick');
+  });
+  steps.flatMap((step, i) => (step.contrast === true ? [i] : [])).slice(1).forEach((i) => issue([i, 'contrast'], 'one contrast step at most per quest'));
 
   const indexesOf = (kind: QuestStepKind) =>
     steps.flatMap((step, i) => (step.kind === kind ? [i] : []));

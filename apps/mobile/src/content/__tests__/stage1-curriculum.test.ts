@@ -12,6 +12,7 @@ import {
 } from '@hangul-route/content-schema';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
+import { CONTRAST_SETS } from '../__generated__/contrast-sets';
 import { minigameScopes, scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import {
   buildBuildLetterRounds,
@@ -55,8 +56,12 @@ function taughtThrough(quest: Quest): Set<string> {
   return new Set(REBUILT.slice(0, at + 1).flatMap(questTeaches));
 }
 
+/**
+ * The scopes a quest scores and teaches from. A contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b) is left out: it
+ * is never scored, asks no symbol to be read and carries stub rounds (`lp.pair`); the tests of the contrast step hold it to its own rules.
+ */
 function scopesOf(quest: Quest): Array<{ stepId: string; kind: QuestStepKind; ref: string; scope: MinigameScope | undefined }> {
-  return quest.steps.flatMap((s) => (s.minigameRef ? [{ stepId: s.id, kind: s.kind, ref: s.minigameRef, scope: scopeFor(s.minigameRef) }] : []));
+  return quest.steps.flatMap((s) => (s.minigameRef && s.contrast !== true ? [{ stepId: s.id, kind: s.kind, ref: s.minigameRef, scope: scopeFor(s.minigameRef) }] : []));
 }
 
 /** Rounds a scope scores (one per pair for Pic-Word Match, capped by the pool for Trace). */
@@ -767,8 +772,8 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
     expect(problems).toEqual([]);
   });
 
-  it('T4 has the six steps in order, a short Discover, and 6 + 4 + 2 rounds', () => {
-    expect(quest.steps.map((s) => s.kind)).toEqual(STEP_ORDER);
+  it('T4 has the six steps in order (one optional contrast step after Practice), a short Discover, and 6 + 4 + 2 rounds', () => {
+    expect(quest.steps.filter((s) => s.contrast !== true).map((s) => s.kind)).toEqual(STEP_ORDER);
     const discover = quest.steps.find((s) => s.kind === 'discover')?.discover;
     expect(discover?.pages.length).toBeLessThanOrEqual(3);
     for (const page of discover?.pages ?? []) expect(page.items.length).toBeLessThanOrEqual(2);
@@ -939,6 +944,56 @@ describe('T12 across quests 1-10 (AMENDMENTS-STAGE1-TRACE-COVERAGE)', () => {
     expect(seconds(REBUILT[8]!, 'practice')).toBe(75);
     // Story Order keeps its 90 s and the reason it gives.
     expect(seconds(REBUILT[8]!, 'apply')).toBe(90);
+  });
+});
+
+/** [MP] AMENDMENTS-MINIMAL-PAIRS section 3.5 and 3.8 (row MP-2b): the one Stage 1 contrast step. */
+describe('the contrast step of quest 6 (MP-2b)', () => {
+  const quest6 = REBUILT.find((q) => q.id === 'quest:stage1-life-q3')!;
+  const contrastSteps = (quest: Quest) => quest.steps.filter((s) => s.contrast === true);
+
+  it('is the only Stage 1 quest with one, a Listen & Pick practice step right after Match Sound', () => {
+    expect(STAGE1_QUESTS.filter((q) => contrastSteps(q).length > 0).map((q) => q.id)).toEqual(['quest:stage1-life-q3']);
+    const at = quest6.steps.findIndex((s) => s.contrast === true);
+    expect(quest6.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's3p', 's4', 's5', 's6']);
+    expect(quest6.steps[at - 1]).toMatchObject({ kind: 'practice', minigameKind: 'match-sound' });
+    expect(quest6.steps[at]).toEqual({
+      id: 's3p',
+      kind: 'practice',
+      contrast: true,
+      titleEn: 'Hear the Puff',
+      minigameKind: 'listen-pick',
+      minigameRef: 'minigame:s1-life-q3-pairs',
+      durationSeconds: 40,
+    });
+  });
+
+  it('plays the twelve plain / aspirated sets of the catalogue, each named by its set, and nothing else', () => {
+    const rounds = scopeFor('minigame:s1-life-q3-pairs')!.listenPick!.rounds;
+    expect(rounds.map((r) => r.contrastSet)).toEqual(['ga-ka', 'go-ko', 'gu-ku', 'gi-ki', 'da-ta', 'do-to', 'du-tu', 'di-ti', 'ja-cha', 'jo-cho', 'ju-chu', 'ji-chi']);
+    expect(rounds.every((r) => r.id === `lp:pair:${r.contrastSet}`)).toBe(true);
+    const unit = CONTRAST_SETS.filter((set) => set.unit === 'minigame:s1-life-q3-pairs').map((set) => set.id);
+    expect(unit).toEqual(rounds.map((r) => r.contrastSet));
+  });
+
+  it('takes the quest from 224 s to 264 s, which stays 4 minutes (T10)', () => {
+    const seconds = (steps: readonly { durationSeconds?: number | undefined }[]) => steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
+    expect(seconds(quest6.steps)).toBe(264);
+    expect(seconds(quest6.steps.filter((s) => s.contrast !== true))).toBe(224);
+    expect(quest6.estimatedMinutes).toBe(4);
+  });
+
+  it('has no contrast round in a Check, an Apply or any scope another step plays, and none in a scope the quests do not play', () => {
+    const played = new Set(contrastSteps(quest6).map((s) => s.minigameRef));
+    const holding = Object.entries(minigameScopes).filter(([, scope]) => (scope.listenPick?.rounds ?? []).some((r) => r.contrastSet !== undefined));
+    expect(holding.map(([ref]) => ref)).toEqual([...played]);
+    for (const [, scope] of holding) expect(scope.listenPick!.rounds.every((r) => r.contrastSet !== undefined)).toBe(true);
+    for (const quest of questsAll) {
+      for (const step of quest.steps) {
+        if (step.contrast === true || step.minigameRef === undefined) continue;
+        expect((scopeFor(step.minigameRef)?.listenPick?.rounds ?? []).filter((r) => r.contrastSet !== undefined), `${quest.id} ${step.id}`).toEqual([]);
+      }
+    }
   });
 });
 

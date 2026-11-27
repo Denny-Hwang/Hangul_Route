@@ -16,6 +16,8 @@ const LaxStepSchema = z
     kind: z.string(),
     minigameKind: z.string().optional(),
     minigameRef: z.string().optional(),
+    /** AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): a contrast step, never counted as taught or asked. */
+    contrast: z.boolean().optional(),
     discover: z
       .object({ pages: z.array(z.object({ items: z.array(z.record(z.unknown())) }).passthrough()) })
       .passthrough()
@@ -153,15 +155,18 @@ export function questUnits(quest: LessonBodyQuest): TaughtUnit[] {
   return units;
 }
 
-/** The scope a step plays, or undefined when the step plays none (or names a missing scope). */
+/**
+ * The scope a step plays, or undefined when the step plays none (or names a missing scope). A contrast step
+ * (`contrast: true`, a second practice step) is never "the practice step": it is no source of what a quest asks.
+ */
 export function scopeOfStep(quest: LessonBodyQuest, kind: string): LessonBodyScope | undefined {
-  const step = quest.steps.find((s) => s.kind === kind);
+  const step = quest.steps.find((s) => s.kind === kind && s.contrast !== true);
   return step?.minigameRef === undefined ? undefined : quest.scopes.find((s) => s.ref === step.minigameRef);
 }
 
 /** The game kind a step plays (the step's minigameKind, else its scope's kind). */
 export function stepGameKind(quest: LessonBodyQuest, kind: string): string | undefined {
-  const step = quest.steps.find((s) => s.kind === kind);
+  const step = quest.steps.find((s) => s.kind === kind && s.contrast !== true);
   return step?.minigameKind ?? scopeOfStep(quest, kind)?.kind;
 }
 
@@ -229,7 +234,9 @@ function clozeAskedKo(round: Record<string, unknown>, out: string[]): string[] {
 
 /** What the quest teaches: its Discover units' keys and texts, and the answers its rounds ask for. */
 export function questKnownAfter(quest: LessonBodyQuest): string[] {
-  return [...questUnits(quest).flatMap((u) => [u.key, ...u.texts]), ...askedKo(quest.scopes)];
+  // A contrast step's rounds ask the learner to tell sounds apart, not to know the words (AMENDMENTS-MINIMAL-PAIRS section 3.8).
+  const contrastRefs = new Set(quest.steps.flatMap((s) => (s.contrast === true && s.minigameRef !== undefined ? [s.minigameRef] : [])));
+  return [...questUnits(quest).flatMap((u) => [u.key, ...u.texts]), ...askedKo(quest.scopes.filter((s) => !contrastRefs.has(s.ref)))];
 }
 
 /** The distinct Korean the quest's Practice and Check rounds ask for (the `lesson-recycle` items). */

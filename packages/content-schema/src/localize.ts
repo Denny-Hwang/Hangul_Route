@@ -231,6 +231,8 @@ export function translatableFields(entityId: string, entity: unknown): Translata
   for (const pattern of patterns) {
     if (OPTIONAL_OVERLAY_FIELDS.includes(pattern)) continue;
     for (const [field, path] of expand(entity, pattern.split('.'), [], [])) {
+      // A blank English source has nothing to translate (the contrast round stub `lp.pair`, AMENDMENTS-MINIMAL-PAIRS MP-2b).
+      if (getIn(entity, path) === '') continue;
       const at = path.join('\u0000');
       const first = bySource.get(at);
       if (first !== undefined) {
