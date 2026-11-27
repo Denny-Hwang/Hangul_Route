@@ -529,6 +529,7 @@ export const learner = {
     discover: {
       hearIt: { cta: '들어 보기' },
       hearName: { cta: '글자 이름 들어 보기' },
+      hearVowels: { cta: '모음과 함께 들어 보기' },
       soundWith: { cta: '모음과 함께 들어 봐요' },
       sayLine: (spoken: string) => `소리 내어 읽어 봐요: ${spoken}`,
       showHowToSay: { cta: '읽는 법 보기' },
@@ -621,6 +622,17 @@ export const learner = {
       hearAgain: { cta: '다시 듣기' },
       missHoya: '다시 들어 봐요',
       empty: '여기에는 할 게임이 없어요',
+    },
+    contrast: {
+      missHoya: '둘 다 들어 봐요.',
+      syllable: (sound: string) => `${sound} 음절`,
+      kind: {
+        plain: '부드럽고, 소리가 낮게 시작해요.',
+        aspirated: '숨이 세게 나오고, 소리가 높게 시작해요.',
+        tense: '목에 힘을 주고, 숨은 거의 안 나와요.',
+        plainS: '부드럽고, 숨이 조금 나와요.',
+        tenseS: '바람 소리가 길고 날카로워요.',
+      },
     },
     realia: {
       lineHint: '줄을 누르면 소리를 들을 수 있어요.',

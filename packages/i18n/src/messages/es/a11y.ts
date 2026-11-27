@@ -53,6 +53,7 @@ export const a11y = {
   leaveQuest: 'Dejar la misión',
   hearItLabel: (label: string) => `Escuchar. ${label}`,
   hearNameLabel: (letter: string) => `Escuchar el nombre. ${letter}`,
+  hearVowelsLabel: (letter: string) => `Escuchar con vocales. ${letter}`,
   hearExample: (spoken: string) => `Escuchar: ${spoken}`,
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Letra coreana ${romanization}` : `Letra coreana ${romanization}. ${soundHint}`,
@@ -203,6 +204,7 @@ export const a11y = {
     round: (n: number, total: number, prompt: string) => `Pregunta ${n} de ${total}. ${prompt}`,
   },
   romanizationOr: 'o',
+  contrastItem: (item: string, kind: string) => `${item}, ${kind}`,
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `Dígito ${digit}`,

@@ -7,12 +7,18 @@ import { AUDIO_PACK as JAMO_WB_PACK } from '../../../content/__generated__/audio
 import { findJamo } from '../../../content/jamo';
 import { lessonQuests } from '../../../content/lessons';
 import { jamoVoice } from '../../audio/jamo-voice';
+import { FADE_READING_FROM_QUEST } from '../../locale/romanization-fade';
+import { romanizationResolver } from '../../locale/romanization-mode';
+import { symbolsMetThrough } from '../curriculum';
 import {
   DISCOVER_AUDIO_SOURCE,
+  SERIES_GAP_MS,
+  actionSpecs,
   autoHearAllowed,
   autoHearId,
   buildDiscover as buildDiscoverWith,
   pageRender as pageRenderWith,
+  playInOrder,
   startDiscover,
   stepDiscover,
   type DiscoverEvent,
@@ -27,7 +33,8 @@ const pageRender = (
   model: Parameters<typeof pageRenderWith>[0],
   state: Parameters<typeof pageRenderWith>[1],
   mode: Parameters<typeof pageRenderWith>[2],
-): ReturnType<typeof pageRenderWith> => pageRenderWith(model, state, mode, COPY);
+  modeOf?: Parameters<typeof pageRenderWith>[4],
+): ReturnType<typeof pageRenderWith> => pageRenderWith(model, state, mode, COPY, modeOf);
 
 const ko = (text: string, romanization: string, en: string, extra: Record<string, unknown> = {}) => ({
   ko: text,
@@ -297,7 +304,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(a.effects).toEqual([]);
     const b = stepDiscover(a.state, { type: 'next' });
     expect(b.state.page).toBe(1);
-    expect(b.effects).toEqual([{ type: 'done', pages: 2, heard: 0 }]);
+    expect(b.effects).toEqual([{ type: 'done', pages: 2, heard: 0, written: 0 }]);
   });
 
   it('Hear it asks to play, counts distinct taps once, and a played result adds the heard mark', () => {
@@ -325,7 +332,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
       { type: 'next' },
       { type: 'next' },
     );
-    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2, written: 0 }]);
   });
 
   it('unavailable or muted audio switches that item to the "say it out loud" text, nothing else', () => {
@@ -439,7 +446,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
 
     it('Continue on the last page still finishes after a Previous, with the same counts', () => {
       const out = run(startDiscover(model), { type: 'next' }, { type: 'prev' }, { type: 'next' }, { type: 'next' });
-      expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 0 }]);
+      expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 0, written: 0 }]);
     });
 
     it('Previous stops a Read along', () => {
@@ -496,12 +503,12 @@ describe('[AU] the first letter sounds by itself on a letter page (AMENDMENTS-AU
     expect(played.state.played).toEqual([first]);
     expect(played.state.tapped).toEqual([]);
     const done = run(played.state, { type: 'next' }, { type: 'next' }, { type: 'next' });
-    expect(done.effects).toEqual([{ type: 'done', pages: 3, heard: 0 }]);
+    expect(done.effects).toEqual([{ type: 'done', pages: 3, heard: 0, written: 0 }]);
   });
 
   it('a tap after it still counts once', () => {
     const out = run(startDiscover(model), { type: 'autoHear', id: first }, { type: 'hear', id: first }, { type: 'next' }, { type: 'next' }, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'done', pages: 3, heard: 1 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 3, heard: 1, written: 0 }]);
   });
 
   it('Continue never waits for it', () => {
@@ -555,11 +562,127 @@ describe('romanization mode "tap" (reading practice)', () => {
     expect(stepDiscover(out.state, { type: 'reveal', key: 'jamo:giyeok' }).state.revealed).toEqual(['jamo:giyeok']);
   });
 
-  it('word items have no example, so nothing to reveal and the word romanization stays', () => {
+  it('word cards fold their own romanization under tap, with the same reveal (RF-1b, DEP-2)', () => {
     const words = buildDiscover([wordsPage]);
-    const item = pageRender(words, startDiscover(words), 'tap').items[0]!;
-    expect(item.showReveal).toBe(false);
-    expect(item.item.romanization).toBe('a·beo·ji');
+    const state = startDiscover(words);
+    const [first, second] = pageRender(words, state, 'tap').items;
+    expect(first).toMatchObject({ romanizationShown: false, exampleRomanizationShown: false, showReveal: true });
+    expect(second).toMatchObject({ romanizationShown: false, showReveal: true });
+    // The data keeps it, the gloss is never folded, and the name while folded is the Korean and the gloss.
+    expect(first!.item.romanization).toBe('a·beo·ji');
+    expect(first!.item.gloss).toBe('father');
+    expect(first!.item.accessibilityLabel).toBe('아버지, abeoji, father');
+    expect(first!.item.foldedAccessibilityLabel).toBe('아버지, father');
+    // A reveal shows it for that card only, and the button goes.
+    const out = stepDiscover(state, { type: 'reveal', key: first!.item.key });
+    const render = pageRender(words, out.state, 'tap');
+    expect(render.items[0]).toMatchObject({ romanizationShown: true, showReveal: false });
+    expect(render.items[1]).toMatchObject({ romanizationShown: false, showReveal: true });
+  });
+
+  it('always: a word card shows its romanization and offers no reveal', () => {
+    const words = buildDiscover([wordsPage]);
+    for (const item of pageRender(words, startDiscover(words), 'always').items) {
+      expect(item).toMatchObject({ romanizationShown: true, showReveal: false });
+    }
+  });
+
+  it("a letter card's own sound value is never folded, in any mode", () => {
+    const model = buildDiscover([pageTwo]);
+    for (const mode of ['always', 'tap'] as const) {
+      const item = pageRender(model, startDiscover(model), mode).items[0]!;
+      expect(item.romanizationShown).toBe(true);
+      expect(item.item.romanization).toBe('g/k');
+    }
+  });
+});
+
+describe('item-level folding with `modeOf` (AMENDMENTS-ROMANIZATION-FADE section 3.6, row RF-1b)', () => {
+  // Phase `reading`: quests 1 to 10 met, so every Stage 1 letter is met; a tense consonant (까) is not.
+  const reading = (met: ReadonlySet<string>) => ({ phase: 'reading' as const, met, screenReader: false });
+  const everyStage1Letter = new Set<string>(symbolsMetThrough(FADE_READING_FROM_QUEST));
+  const resolverOf = (choice: 'auto' | 'always' | 'tap', fade = reading(everyStage1Letter)) =>
+    romanizationResolver(null, { romanizationChoice: choice }, fade);
+
+  const mixed: DiscoverPage = {
+    items: [
+      { type: 'word', word: ko('나무', 'namu', 'tree') },
+      { type: 'word', word: ko('까치', 'kkachi', 'magpie') },
+    ],
+  };
+
+  it('auto in the reading phase folds a decodable word card and keeps a word with an unmet letter shown', () => {
+    const model = buildDiscover([mixed]);
+    const [tree, magpie] = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).items;
+    expect(tree).toMatchObject({ romanizationShown: false, showReveal: true });
+    expect(magpie).toMatchObject({ romanizationShown: true, showReveal: false });
+  });
+
+  it('a reveal reaches the romanization of a folded card, which then stays shown', () => {
+    const model = buildDiscover([mixed]);
+    const state = stepDiscover(startDiscover(model), { type: 'reveal', key: 'word:나무' }).state;
+    expect(pageRender(model, state, 'always', resolverOf('auto').forText).items[0]).toMatchObject({ romanizationShown: true, showReveal: false });
+  });
+
+  it('a letter card folds its example word when it is decodable; its own value stays', () => {
+    const model = buildDiscover([pageTwo]);
+    const [giyeok, nieun] = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).items;
+    expect(giyeok).toMatchObject({ romanizationShown: true, exampleRomanizationShown: false, showReveal: true });
+    expect(nieun).toMatchObject({ romanizationShown: true, exampleRomanizationShown: false, showReveal: true });
+    expect(giyeok!.item.romanization).toBe('g/k');
+  });
+
+  it('an exchange line folds when its text is decodable', () => {
+    const exchangePage: DiscoverPage = {
+      items: [
+        {
+          type: 'exchange',
+          lines: [
+            { speaker: 'a', speakerEn: 'Hoya', line: ko('나무', 'namu', 'tree') },
+            { speaker: 'b', speakerEn: 'You', line: ko('까치', 'kkachi', 'magpie') },
+          ],
+        },
+      ],
+    };
+    const model = buildDiscover([exchangePage]);
+    const lines = pageRender(model, startDiscover(model), 'always', resolverOf('auto').forText).exchange!.lines;
+    expect(lines.map((l) => [l.romanizationShown, l.showReveal])).toEqual([
+      [false, true],
+      [true, false],
+    ]);
+  });
+
+  it('phase letters, an always choice, a screen reader and the Check-free default fold nothing', () => {
+    const model = buildDiscover([mixed, pageTwo]);
+    const state = startDiscover(model);
+    const letters = romanizationResolver(null, { romanizationChoice: 'auto' }, { phase: 'letters', met: everyStage1Letter, screenReader: false });
+    const reader = romanizationResolver(null, { romanizationChoice: 'auto' }, { phase: 'reading', met: everyStage1Letter, screenReader: true });
+    for (const resolver of [letters, reader, resolverOf('always'), romanizationResolver(null, undefined, null)]) {
+      for (let page = 0; page < model.pages.length; page += 1) {
+        const render = pageRender(model, { ...state, page }, 'always', resolver.forText);
+        expect(render.items.every((i) => i.romanizationShown && i.exampleRomanizationShown && !i.showReveal)).toBe(true);
+      }
+    }
+  });
+
+  it('explicit tap folds word cards and example words alike', () => {
+    const model = buildDiscover([mixed]);
+    const render = pageRender(model, startDiscover(model), 'tap', resolverOf('tap').forText);
+    expect(render.items.map((i) => [i.romanizationShown, i.showReveal])).toEqual([
+      [false, true],
+      [false, true],
+    ]);
+  });
+
+  it('with the shipped default choice nothing renders differently: modeOf from a default resolver equals no modeOf, in every phase', () => {
+    const model = buildDiscover([mixed, pageOne, pageTwo, wordsPage]);
+    for (const phase of ['letters', 'reading', 'all'] as const) {
+      const resolver = romanizationResolver(null, undefined, { phase, met: everyStage1Letter, screenReader: false });
+      for (let page = 0; page < model.pages.length; page += 1) {
+        const state = { ...startDiscover(model), page };
+        expect(pageRender(model, state, 'always', resolver.forText)).toEqual(pageRender(model, state, 'always'));
+      }
+    }
   });
 });
 
@@ -572,7 +695,7 @@ describe('an empty Discover step', () => {
     const render = pageRender(model, state, 'always');
     expect(render).toMatchObject({ empty: true, continueEnabled: true, isLast: true, items: [] });
     expect(render.emptyLine).toBe(COPY.empty);
-    expect(stepDiscover(state, { type: 'next' }).effects).toEqual([{ type: 'done', pages: 0, heard: 0 }]);
+    expect(stepDiscover(state, { type: 'next' }).effects).toEqual([{ type: 'done', pages: 0, heard: 0, written: 0 }]);
   });
 
   it('a step whose items are all unresolvable behaves the same', () => {
@@ -759,7 +882,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     expect(out.state.tapped).toEqual([line(0), line(1)]);
     out = stepDiscover(out.state, { type: 'next' });
     out = stepDiscover(out.state, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2, written: 0 }]);
   });
 
   it('Stop stops the audio at once, clears the highlight and ignores the stopped run', () => {
@@ -860,7 +983,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     const k = one.pages[0]!.exchange!.key;
     let out = stepDiscover(startDiscover(one), { type: 'readAlong', item: k });
     out = stepDiscover(out.state, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'done', pages: 1, heard: 1 }]);
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'done', pages: 1, heard: 1, written: 0 }]);
   });
 
   it('tap mode hides a line romanization behind "Show how to say it", per line', () => {
@@ -960,5 +1083,159 @@ describe('[SF] Discover plays the sound first (AMENDMENTS-DISCOVER-SOUND-FIRST r
       }
     }
     expect(missing).toEqual([]);
+  });
+});
+
+describe('[SF-3] the initial ㅇ card: Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12)', () => {
+  const ieungPage: DiscoverPage = {
+    items: [
+      { type: 'jamo', jamoId: 'jamo:mieum', example: ko('나무', 'namu', 'tree') },
+      { type: 'jamo', jamoId: 'jamo:ieung', example: ko('오', 'o', 'five') },
+    ],
+  };
+
+  it('the ㅇ card plays 아, 오, 우 from the vowel clips, under three carrier lines', () => {
+    const item = buildDiscover([ieungPage]).pages[0]!.items[1]!;
+    const button = item.vowelsButton!;
+    expect(button.action.id).toBe('jamo:ieung|vowels');
+    expect(button.action.kind).toBe('sound');
+    expect(button.action.series).toEqual([
+      { text: '아', audioRef: 'audio/jamo/a.mp3' },
+      { text: '오', audioRef: 'audio/jamo/o.mp3' },
+      { text: '우', audioRef: 'audio/jamo/u.mp3' },
+    ]);
+    expect(button.action.spec).toEqual({ text: '아', audioRef: 'audio/jamo/a.mp3' });
+    expect(actionSpecs(button.action)).toEqual(button.action.series);
+    expect(button.lines).toEqual([
+      { ko: '아 = ㅇ + ㅏ', romanization: 'a', accessibilityLabel: '아, a' },
+      { ko: '오 = ㅇ + ㅗ', romanization: 'o', accessibilityLabel: '오, o' },
+      { ko: '우 = ㅇ + ㅜ', romanization: 'u', accessibilityLabel: '우, u' },
+    ]);
+    // Its main Hear it is unchanged: ㅇ by its name, and no Hear the name.
+    expect(item.hear.spec.text).toBe('이응');
+    expect(item.nameButton).toBeUndefined();
+    // Each sound is the very sound (text and clip) of its own vowel card.
+    for (const [i, id] of ['jamo:a', 'jamo:o', 'jamo:u'].entries()) {
+      const vowel = buildDiscover([{ items: [{ type: 'jamo', jamoId: id, example: ko('아', 'a', 'ah') }] }]).pages[0]!.items[0]!;
+      expect(button.action.series![i]).toEqual(vowel.hear.spec);
+    }
+  });
+
+  it('no other card has it: a consonant, a vowel, the final ㅇ, a tense consonant', () => {
+    const items = buildDiscover([
+      {
+        items: [
+          { type: 'jamo', jamoId: 'jamo:giyeok', example: ko('가', 'ga', 'the sound ga') },
+          { type: 'jamo', jamoId: 'jamo:a', example: ko('나', 'na', 'I, me') },
+          { type: 'jamo', jamoId: 'jamo:ieung-batchim', example: ko('강', 'gang', 'river') },
+          { type: 'jamo', jamoId: 'jamo:ssanggiyeok', example: ko('까치', 'kkachi', 'magpie') },
+        ],
+      },
+    ]).pages[0]!.items;
+    expect(items).toHaveLength(4);
+    for (const item of items) expect(item.vowelsButton, item.key).toBeUndefined();
+    // A one-sound action has one spec.
+    expect(actionSpecs(items[0]!.hear)).toEqual([items[0]!.hear.spec]);
+  });
+
+  it("it counts for the card's heard mark, and its own lines are its text fallback", () => {
+    const model = buildDiscover([ieungPage]);
+    let state = startDiscover(model);
+    state = stepDiscover(state, { type: 'hear', id: 'jamo:ieung|vowels' }).state;
+    expect(state.tapped).toEqual(['jamo:ieung|vowels']);
+    state = stepDiscover(state, { type: 'audio', id: 'jamo:ieung|vowels', result: 'played' }).state;
+    const render = pageRender(model, state, 'always');
+    expect(render.items[1]!.heard).toBe(true);
+    expect(render.items[0]!.heard).toBe(false);
+    const muted = stepDiscover(startDiscover(model), { type: 'audio', id: 'jamo:ieung|vowels', result: 'muted' }).state;
+    expect(pageRender(model, muted, 'always').items[1]!.sayLines).toEqual([]);
+  });
+
+  it("quest 2's own ㅇ card has it, ㅏ ㅗ ㅜ are taught on an earlier page, and the three clips are in the start set", () => {
+    const quest = questsAll.find((q) => q.id === 'quest:stage1-letters-q2')!;
+    const step = quest.steps.find((s) => s.kind === 'discover')!;
+    const pages = buildDiscover(step.discover!.pages).pages;
+    const at = pages.findIndex((p) => p.items.some((i) => i.vowelsButton));
+    expect(at).toBeGreaterThan(-1);
+    const card = pages[at]!.items.find((i) => i.vowelsButton)!;
+    expect(card.key).toBe('jamo:ieung');
+    const q1 = questsAll.find((q) => q.id === 'quest:stage1-letters-q1')!;
+    const keysBefore = [...buildDiscover(q1.steps.find((s) => s.kind === 'discover')!.discover!.pages).pages, ...pages.slice(0, at)].flatMap((p) =>
+      p.items.map((i) => i.key),
+    );
+    expect(keysBefore).toEqual(expect.arrayContaining(['jamo:a', 'jamo:o', 'jamo:u']));
+    for (const spec of actionSpecs(card.vowelsButton!.action)) expect(Object.keys(AUDIO_ASSETS)).toContain(spec.audioRef);
+  });
+});
+
+describe('[SF-3] playInOrder: one button, several sounds, in order', () => {
+  type R = 'played' | 'muted' | 'unavailable';
+  const run = (results: R[], liveUntil = Infinity) => {
+    const log: string[] = [];
+    let calls = 0;
+    const promise = playInOrder(
+      ['아', '오', '우'],
+      async (s) => {
+        log.push(`play ${s}`);
+        calls += 1;
+        return results.shift() ?? 'played';
+      },
+      {
+        wait: async (ms) => {
+          log.push(`wait ${ms}`);
+        },
+        live: () => calls < liveUntil,
+      },
+    );
+    return { promise, log };
+  };
+
+  it('plays each in turn with the gap between, none before the first or after the last', async () => {
+    const { promise, log } = run([]);
+    expect(await promise).toBe('played');
+    expect(log).toEqual(['play 아', `wait ${SERIES_GAP_MS}`, 'play 오', `wait ${SERIES_GAP_MS}`, 'play 우']);
+    expect(SERIES_GAP_MS).toBe(150);
+  });
+
+  it('stops at the first sound that does not play and reports it', async () => {
+    const { promise, log } = run(['played', 'unavailable']);
+    expect(await promise).toBe('unavailable');
+    expect(log).toEqual(['play 아', `wait ${SERIES_GAP_MS}`, 'play 오']);
+    const muted = run(['muted']);
+    expect(await muted.promise).toBe('muted');
+    expect(muted.log).toEqual(['play 아']);
+  });
+
+  it('a run that is no longer live after a play stops and reports superseded (a cut-off play resolves as played)', async () => {
+    const { promise, log } = run([], 1);
+    expect(await promise).toBe('superseded');
+    expect(log).toEqual(['play 아']);
+  });
+
+  it('a run ended during the wait plays nothing more', async () => {
+    let live = true;
+    const log: string[] = [];
+    const result = await playInOrder(
+      ['아', '오'],
+      async (s) => {
+        log.push(s);
+        return 'played';
+      },
+      {
+        wait: async () => {
+          live = false;
+        },
+        live: () => live,
+      },
+    );
+    expect(result).toBe('superseded');
+    expect(log).toEqual(['아']);
+  });
+
+  it('a play that throws counts as unavailable', async () => {
+    const result = await playInOrder(['아'], async () => {
+      throw new Error('boom');
+    }, { wait: async () => undefined, live: () => true });
+    expect(result).toBe('unavailable');
   });
 });

@@ -97,6 +97,19 @@ describe('platform/audio-assets-store and the clip pack loader chunk', { timeout
     expect(store.clipRegistry.has(NA)).toBe(true);
   });
 
+  it('waitForClipPacks resolves at once when nothing is loading, when the loads settle, and after the stall time when one does not (MP-2b)', async () => {
+    const { store } = await load();
+    await expect(store.waitForClipPacks(store.clipRegistry, 5)).resolves.toBeUndefined();
+    store.prepareClips({ scopes: ['stage1'], units: [] });
+    await store.waitForClipPacks();
+    expect(store.clipRegistry.has(NA)).toBe(true);
+    const stalled = store.createClipRegistry({ start: {}, startPacks: {}, count: 0, chunkPacks: [] }, 60_000);
+    stalled.track(new Promise(() => undefined));
+    const started = Date.now();
+    await store.waitForClipPacks(stalled, 20);
+    expect(Date.now() - started).toBeLessThan(2_000);
+  });
+
   it('a pack switched off remotely is never loaded (AC-B8)', async () => {
     const { chunk, config, store } = await load();
     config.useRemoteConfigStore.setState({ hydrated: true, cache: copy({ 'audioPack.stage1': { on: false, pct: 100 } }) });

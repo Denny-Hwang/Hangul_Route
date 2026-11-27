@@ -57,6 +57,7 @@ export const a11y = {
   leaveQuest: '퀘스트 나가기',
   hearItLabel: (label: string) => `들어 보기. ${label}`,
   hearNameLabel: (letter: string) => `글자 이름 들어 보기. ${letter}`,
+  hearVowelsLabel: (letter: string) => `모음과 함께 들어 보기. ${letter}`,
   hearExample: (spoken: string) => `들어 보기: ${spoken}`,
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `한글 글자 ${romanization}` : `한글 글자 ${romanization}. ${soundHint}`,
@@ -208,6 +209,7 @@ export const a11y = {
     round: (n: number, total: number, prompt: string) => `${total}문제 중 ${n}번째 문제. ${prompt}`,
   },
   romanizationOr: '또는',
+  contrastItem: (item: string, kind: string) => `${item}, ${kind}`,
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `숫자 ${digit}`,

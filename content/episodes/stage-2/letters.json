@@ -540,6 +540,15 @@
           "durationSeconds": 85
         },
         {
+          "id": "s3p",
+          "kind": "practice",
+          "contrast": true,
+          "titleEn": "Soft, Puff or Tight?",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-q2-pairs",
+          "durationSeconds": 40
+        },
+        {
           "id": "s4",
           "kind": "apply",
           "titleEn": "Match the Meaning",
@@ -753,6 +762,204 @@
                   }
                 }
               ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-q2-pairs",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "lp:pair:dal-tal-ttal",
+              "contrastSet": "dal-tal-ttal",
+              "prompt": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              },
+              "options": [
+                {
+                  "id": "dal",
+                  "text": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "tal",
+                  "text": {
+                    "ko": "탈",
+                    "romanization": "tal",
+                    "en": "mask"
+                  }
+                },
+                {
+                  "id": "ttal",
+                  "text": {
+                    "ko": "딸",
+                    "romanization": "ttal",
+                    "en": "daughter"
+                  }
+                }
+              ],
+              "answerId": "dal"
+            },
+            {
+              "id": "lp:pair:bul-pul-ppul",
+              "contrastSet": "bul-pul-ppul",
+              "prompt": {
+                "ko": "불",
+                "romanization": "bul",
+                "en": "fire"
+              },
+              "options": [
+                {
+                  "id": "bul",
+                  "text": {
+                    "ko": "불",
+                    "romanization": "bul",
+                    "en": "fire"
+                  }
+                },
+                {
+                  "id": "pul",
+                  "text": {
+                    "ko": "풀",
+                    "romanization": "pul",
+                    "en": "grass"
+                  }
+                },
+                {
+                  "id": "ppul",
+                  "text": {
+                    "ko": "뿔",
+                    "romanization": "ppul",
+                    "en": "horn"
+                  }
+                }
+              ],
+              "answerId": "bul"
+            },
+            {
+              "id": "lp:pair:jada-chada-jjada",
+              "contrastSet": "jada-chada-jjada",
+              "prompt": {
+                "ko": "자다",
+                "romanization": "jada",
+                "en": "to sleep"
+              },
+              "options": [
+                {
+                  "id": "jada",
+                  "text": {
+                    "ko": "자다",
+                    "romanization": "jada",
+                    "en": "to sleep"
+                  }
+                },
+                {
+                  "id": "chada",
+                  "text": {
+                    "ko": "차다",
+                    "romanization": "chada",
+                    "en": "to kick"
+                  }
+                },
+                {
+                  "id": "jjada",
+                  "text": {
+                    "ko": "짜다",
+                    "romanization": "jjada",
+                    "en": "salty"
+                  }
+                }
+              ],
+              "answerId": "jada"
+            },
+            {
+              "id": "lp:pair:bang-ppang",
+              "contrastSet": "bang-ppang",
+              "prompt": {
+                "ko": "방",
+                "romanization": "bang",
+                "en": "room"
+              },
+              "options": [
+                {
+                  "id": "bang",
+                  "text": {
+                    "ko": "방",
+                    "romanization": "bang",
+                    "en": "room"
+                  }
+                },
+                {
+                  "id": "ppang",
+                  "text": {
+                    "ko": "빵",
+                    "romanization": "ppang",
+                    "en": "bread"
+                  }
+                }
+              ],
+              "answerId": "bang"
+            },
+            {
+              "id": "lp:pair:sada-ssada",
+              "contrastSet": "sada-ssada",
+              "prompt": {
+                "ko": "사다",
+                "romanization": "sada",
+                "en": "to buy"
+              },
+              "options": [
+                {
+                  "id": "sada",
+                  "text": {
+                    "ko": "사다",
+                    "romanization": "sada",
+                    "en": "to buy"
+                  }
+                },
+                {
+                  "id": "ssada",
+                  "text": {
+                    "ko": "싸다",
+                    "romanization": "ssada",
+                    "en": "cheap"
+                  }
+                }
+              ],
+              "answerId": "sada"
+            },
+            {
+              "id": "lp:pair:gae-kkae",
+              "contrastSet": "gae-kkae",
+              "prompt": {
+                "ko": "개",
+                "romanization": "gae",
+                "en": "dog"
+              },
+              "options": [
+                {
+                  "id": "gae",
+                  "text": {
+                    "ko": "개",
+                    "romanization": "gae",
+                    "en": "dog"
+                  }
+                },
+                {
+                  "id": "kkae",
+                  "text": {
+                    "ko": "깨",
+                    "romanization": "kkae",
+                    "en": "sesame"
+                  }
+                }
+              ],
+              "answerId": "gae"
             }
           ]
         },

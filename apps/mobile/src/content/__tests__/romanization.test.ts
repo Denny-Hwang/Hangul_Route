@@ -18,6 +18,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
 import { HANGUL_CHECK_WORDS, buildHangulCheck } from '../../logic/stage1/hangul-check';
+import decodePool from '../../logic/stage1/decode-items.json';
 import { PAUSE_WORD, SOUND_CHECK_WORD } from '../../logic/lecture/content';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
 import { CHECK as SENTENCE_E2E_CHECK, PRACTICE as SENTENCE_E2E_PRACTICE } from '../../navigation/sentence-builder-e2e-fixtures';
@@ -46,6 +47,7 @@ const F = {
   check: 'apps/mobile/src/logic/stage1/hangul-check.ts',
   sentenceE2e: 'apps/mobile/src/navigation/sentence-builder-e2e-fixtures.ts',
   contrast: 'apps/mobile/src/content/__generated__/contrast-sets.ts',
+  decode: 'apps/mobile/src/logic/stage1/decode-items.json',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -147,6 +149,9 @@ describe('minigame scopes romanization (B1)', () => {
         for (const o of d.options) check(ref, o.ko, o.romanization);
       }
       for (const r of s.listenPick?.rounds ?? []) {
+        // A contrast round is the stub `lp.pair` here (blank placeholders); the members it expands to are the catalogue's,
+        // checked against the same rules by `contrast-sets.test.mjs` (AMENDMENTS-MINIMAL-PAIRS section 3.4, row MP-2b).
+        if (r.contrastSet !== undefined) continue;
         check(ref, r.prompt.ko, r.prompt.romanization);
         for (const o of r.options) {
           if (o.text === undefined) continue;
@@ -396,6 +401,22 @@ describe('contrast sets romanization (B1, AMENDMENTS-MINIMAL-PAIRS section 3.4)'
       }
     }
     expect(CONTRAST_SETS.length).toBeGreaterThan(0);
+    expect(found).toEqual([]);
+  });
+});
+
+describe('Hangul Check decode items romanization (B1, AMENDMENTS-STAGE1-DECODING-CHECK section 3.4)', () => {
+  // A decode syllable is a sound with no meaning, so it has no gloss; every option carries its romanization (R1 to R4).
+  it('every option of every item, shipped or awaiting its clips, carries its romanization', () => {
+    const found: string[] = [];
+    const items = [...decodePool.items, ...decodePool.awaitingClips];
+    for (const item of items) {
+      for (const o of item.options) {
+        note(F.decode, o.ko, o.romanization);
+        found.push(...pair(F.decode, o.ko, o.romanization).map((m) => `${item.id}: ${m}`));
+      }
+    }
+    expect(items.length).toBeGreaterThan(0);
     expect(found).toEqual([]);
   });
 });

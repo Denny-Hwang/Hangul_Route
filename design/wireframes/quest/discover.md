@@ -8,6 +8,8 @@ Code: `apps/mobile/src/screens/quest/DiscoverStep.tsx` (renders), `apps/mobile/s
 
 > **[SF] Amended 2026-11-25 by `docs/specs/AMENDMENTS-DISCOVER-SOUND-FIRST.md`** (owner decision 2026-11-22, OD-R2; row SF-0): a consonant card plays its **sound** first (**Hear it**: 가, with the line "가 = ㄱ + ㅏ · ga") and its **name** second (**Hear the name**: 기역, with "기역 · giyeok"). This reverses the name-first order of `AMENDMENTS-AUDIO-CLIPS.md` JV-A5 (AU-OD-2) and restores this wireframe's original intent. See "[SF] Sound first (consonant card)" below.
 
+> **[SF-3] Amended 2026-11-26 by `docs/specs/AMENDMENTS-DISCOVER-SOUND-FIRST.md` §12** (row SF-3a; WO-12 item 13, owner decision 2026-11-26): the initial ㅇ card gets a second button, **Hear it with vowels**, which plays 아, 오, 우 one after the other from the shipped vowel clips, so the learner hears that ㅇ adds no sound at the start of a block. See "[SF-3] The ㅇ card" below.
+
 > **[TC] Amended 2026-11-25 by `docs/specs/AMENDMENTS-STAGE1-TRACE-COVERAGE.md`** (work order WO-14 of the 2026-11 review; row TC-0): a Discover step that teaches letters gets one more page, **Trace the new letters**, right after its last letter page: each new letter is traced once on a canvas, unscored, with no Done and no miss; Continue stays enabled. See "[TC] Trace the new letters" below. Mock: row TC-0b (`design/screens/discover-trace/`).
 
 > **Promoted 2026-10-12 (F-QUEST-002 PR Q-11).** This file was the single drafted wireframe of the whole spec (screens S1 to S11). It now holds the Discover step only; the other screens live in their own files:
@@ -95,6 +97,7 @@ Final consonant page:                 Words page:
 
 - **Hear it**: plays the symbol's sound or the word via `playPrompt` (never the letter name of a consonant; ㅇ by its name 이응; a final by its closed syllable); a result of `unavailable` / `muted` shows the line "Say it out loud: <spoken romanization>" (`ga` for ㄱ, never `giyeok`), no error. A tiny "heard" mark appears on the item (fill-only, never a gate).
 - **[SF] Hear the name** (consonant cards whose name differs from their sound; optional, second button): plays the letter's name (기역). Not on ㅇ, vowels or finals.
+- **[SF-3] Hear it with vowels** (the initial ㅇ card only; optional, second button): plays 아, 오, 우 in order, each after the one before (+150 ms), with the lines 아 = ㅇ + ㅏ, 오 = ㅇ + ㅗ, 우 = ㅇ + ㅜ under it. Another sound, Continue, Previous or leaving stops it. Never plays by itself.
 - **CONTINUE**: next page; on the last page the step ends (`quest.discover_completed { questId, pages, heard }`). Always enabled.
 - **Previous**: the page before, or the step before on page 1; see "[QB] Previous inside the step" below.
 - **[x leave]**: the quest's leave sheet (run discarded after confirm), as on every step.
@@ -121,13 +124,46 @@ Final consonant page:                 Words page:
 | Card | Hear it | Line under it | Hear the name | Line under it |
 |---|---|---|---|---|
 | Consonant, name differs from sound (ㄱ-ㅎ but ㅇ; ㄲ ㄸ ㅃ ㅆ ㅉ) | sound: 가, 까 | 가 = ㄱ + ㅏ · ga | name: 기역, 쌍기역 | 기역 · giyeok |
-| Initial ㅇ | 이응 | 이응 · ieung (and the silent-letter hint) | none | — |
+| Initial ㅇ | 이응 | 이응 · ieung (and the silent-letter hint) | none; [SF-3] **Hear it with vowels** in its place: 아, 오, 우 | 아 = ㅇ + ㅏ · a, 오 = ㅇ + ㅗ · o, 우 = ㅇ + ㅜ · u (three lines) |
 | Vowel | 아 | 아 · a | none | — |
 | Final | 악 | the final line ("ㄱ at the bottom: 악 · ak") | none | — |
 
 - Screen-reader order is the visual order: glyph (with its hint), "Hear it. Korean letter g/k. ...", the taught line (read as "가, ga", never 기역), "Hear the name. Korean letter g/k", the name line.
 - Largest text / 320 wide: the two buttons stack, each centred at its own width (sizes unchanged), each line under its own button; nothing sits side by side.
 - No sound (no clip and no Korean voice, sound off, a failed play): "Say it out loud: ga" under the card; the two lines are already printed, so nothing else is needed.
+
+## [SF-3] The ㅇ card (AMENDMENTS-DISCOVER-SOUND-FIRST §12)
+
+```
++------------------------------+
+|   (heard)                    |  <- pill, once anything on the card played (only fills)
+|        ~~ ㅇ ~~              |  <- big glyph
+|      (silent/ng)             |  <- romanization (sound value)
+|  (silent at the start ...)   |  <- sound hint, one line
+|   [ (speaker) Hear it ]      |  <- big button (pulses only on a page's first card); plays the NAME 이응
+|   ~~ 이응 ~~ (ieung)          |  <- what Hear it says
+|   [ (speaker) Hear it with   |  <- smaller, quiet button, the place and look of "Hear the name";
+|     vowels ]                 |     one tap: 아 .. 오 .. 우 (each after the one before, +150 ms)
+|   ~~ 아 = ㅇ + ㅏ ~~ (a)      |  <- three carrier lines, content (KoreanText), stacked;
+|   ~~ 오 = ㅇ + ㅗ ~~ (o)      |     the ㅁ card above reads "마 = ㅁ + ㅏ (ma)": the contrast
+|   ~~ 우 = ㅇ + ㅜ ~~ (u)      |     is the lesson; they are also the button's text fallback
+|   (Can't hear it?)           |  <- only if this is the page's first card (CH-1d); on quest 2 it is under ㅁ
+|   (Say it out loud: ieung)   |  <- only when Hear it could not play
+|   (status panel)             |  <- why a sound did not play, with its one action (plays all three again)
+|  - - - - - - - - - - - -     |
+|   (example word) ~~ 오 ~~     |
+|   (romanization) (gloss)     |
+|   [ (speaker) ]              |
++------------------------------+
+```
+
+- Only the initial ㅇ card (quest 2, page 2, after ㅁ). Not the final ㅇ, vowels or other consonants; no card has three letter buttons.
+- The three sounds are the vowel cards' own clips (ㅏ in quest 1, ㅗ ㅜ on quest 2's page 1): no new clip.
+- **Stops** on another sound (Hear it, an example, a line, Read along), Continue, Previous or leaving the step; nothing of the rest plays. Show how to say it, Can't hear it? and help do not stop it. A second tap starts again from 아.
+- **No playing state**: the label stays, no Stop toggle, no announcement, no per-syllable highlight (about 3.5 s, started only by a tap, the syllables are printed). Not the Read along pattern.
+- Screen-reader order is the visual order: "Hear it. Korean letter silent/ng. ...", "이응, ieung", "Hear it with vowels. Korean letter silent/ng", "아, a", "오, o", "우, u" (each carrier line reads its syllable only, never the lone ㅇ as 이응).
+- No sound: the run stops at the sound that could not play; the status panel says why; the lines are already printed. Nothing is scored; Continue never waits.
+- Largest text / 320 wide: as the consonant card (buttons stack, each line under its own button); the card scrolls.
 
 ## [TC] Trace the new letters (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.3, §3.4)
 

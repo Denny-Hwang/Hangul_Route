@@ -38,7 +38,7 @@ import {
   type StartChoice,
   type StrandExample,
 } from '../../logic/placement/report-page';
-import type { ReportRung, ReportStrandStatus } from '../../logic/placement/result-view';
+import type { ReportRung, ReportSkills, ReportStrand, ReportStrandStatus } from '../../logic/placement/result-view';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -265,7 +265,9 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
       <Spacer size="lg" />
       <Card padding="md" testID="placement-report-saw">
         <Heading level="prompt">{m.whatWeSaw}</Heading>
-        {view.strands.map(({ strand, status }) => {
+        <Spacer size="sm" />
+        <SkillsBlock skills={view.skills} m={m} messages={messages} name={name} />
+        {view.strands.map(({ strand, status, forms }) => {
           const rungs = view.rungs.filter((r) => (STRAND_GATES.get(strand) ?? []).includes(r.gate));
           const example = strand === 'sound-letter' || strand === 'syllable-reading' ? page.examples[strand] : undefined;
           return (
@@ -276,7 +278,7 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' }}>
                 <Body weight="semibold">{m.strand[strand]}</Body>
-                <Pill label={statusWord(m, status)} tone={STATUS_TONE[status]} size="sm" />
+                <FormPills strand={strand} status={status} forms={forms} m={m} />
               </View>
               {rungs.map((rung) => (
                 <Caption key={`${rung.gate}:${rung.form}`} tone="secondary">
@@ -338,6 +340,14 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
             {m.saved}
           </Body>
         ) : null}
+        {page.olderSentences ? (
+          <>
+            <Spacer size="sm" />
+            <Body size="sm" tone="secondary" testID="placement-report-older-sentences">
+              {m.olderSentences}
+            </Body>
+          </>
+        ) : null}
         {page.choices.length > 0 ? (
           <>
             <Spacer size="sm" />
@@ -369,6 +379,67 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
       )}
       <Spacer size="lg" />
     </>
+  );
+}
+
+/**
+ * A Words or Sentences row says each form that ran apart ("reading: getting there", "listening: secure"), so a
+ * learner who understands more than they read is seen as they are; every other row, and a strand no form of
+ * which ran, keeps its one status word (AMENDMENTS-PLC-VALIDITY section 3.8). Below 360 pt each form wraps onto its own line.
+ */
+function FormPills({ strand, status, forms, m }: ReportStrand & { m: ReportMessages }): ReactElement {
+  if (forms.length === 0) return <Pill label={statusWord(m, status)} tone={STATUS_TONE[status]} size="sm" />;
+  return (
+    <View testID={`placement-report-forms-${strand}`} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, flexShrink: 1 }}>
+      {forms.map(({ form, status: formStatus }) => (
+        <Pill
+          key={form}
+          label={m.formStatus(m.form[form], statusWord(m, formStatus))}
+          tone={STATUS_TONE[formStatus]}
+          size="sm"
+          testID={`placement-report-form-${strand}-${form}`}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * "Reading and listening" opens "What we saw": the newest check's reading band and what it heard, in words of
+ * what happened in this check. The ahead line appears only when listening is above reading; it never says
+ * "behind" or "only", never a number, and never speaks about the route (section 3.8). Each line is one thing to a screen reader.
+ */
+function SkillsBlock({ skills, m, messages, name }: { skills: ReportSkills; m: ReportMessages; messages: Messages; name: string }): ReactElement {
+  const lines: { key: 'reading' | 'listening'; label: string; value: string }[] = [
+    { key: 'reading', label: m.skills.reading, value: skills.reading === null ? m.skills.notChecked : bandLabel(messages, skills.reading) },
+    { key: 'listening', label: m.skills.listening, value: skills.listening === null ? m.skills.notChecked : m.listening[skills.listening] },
+  ];
+  return (
+    <Card padding="sm" tone="sunken" elevation="flat" testID="placement-report-skills">
+      <Heading level="prompt" testID="placement-report-skills-title">
+        {m.skills.title}
+      </Heading>
+      <Spacer size="xs" />
+      {lines.map(({ key, label, value }) => (
+        <View
+          key={key}
+          accessible
+          accessibilityLabel={`${label}, ${value}`}
+          testID={`placement-report-skills-${key}`}
+          style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.md, paddingVertical: spacing.xs }}
+        >
+          <Body weight="semibold">{label}</Body>
+          <View style={{ flexShrink: 1 }}>
+            <Body>{value}</Body>
+          </View>
+        </View>
+      ))}
+      {skills.ahead ? (
+        <Body size="sm" tone="secondary" testID="placement-report-skills-ahead">
+          {m.skills.ahead(name)}
+        </Body>
+      ) : null}
+    </Card>
   );
 }
 

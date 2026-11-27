@@ -13,7 +13,8 @@ import type { WordArtFamily } from '../types';
  * (W-3..W-6, or W-1c for the generated families and props) adds its families
  * here; until then a family may only grow towards its plan.
  */
-const COMPLETE_FAMILIES: readonly WordArtFamily[] = ['prop', 'food', 'color', 'count', 'animal', 'body', 'family', 'school', 'nature', 'travel', 'sport', 'culture', 'science'];
+// [PV] act: every action picture is reserved, so its plan is 0 and it is complete as it lands (AMENDMENTS-PLC-VALIDITY PV-1a)
+const COMPLETE_FAMILIES: readonly WordArtFamily[] = ['prop', 'food', 'color', 'count', 'animal', 'body', 'family', 'school', 'nature', 'travel', 'sport', 'culture', 'science', 'act'];
 
 /** The six sample glyphs of PR W-1b, one per family that has a hand-drawn sample. */
 const W1B_SAMPLES = ['food-apple', 'animal-cat', 'nature-cloud', 'school-chair', 'travel-bus', 'sport-soccer'];
@@ -46,9 +47,9 @@ const W3_COUNTS = COUNT_VALUES.map((n) => `count-${n}`);
 const OWNER_APPROVED: ReadonlySet<string> = new Set(['nature-cloud', 'food-egg', 'food-tteok']);
 
 describe('key grammar', () => {
-  it('is the spec regex over the thirteen families', () => {
-    expect(WORD_ART_KEY_RE.source).toBe('^(food|animal|family|school|nature|travel|sport|culture|science|color|count|body|prop)-[a-z0-9-]+$');
-    expect(WORD_ART_FAMILIES).toEqual(['food', 'animal', 'family', 'school', 'nature', 'travel', 'sport', 'culture', 'science', 'color', 'count', 'body', 'prop']);
+  it('is the spec regex over the fourteen families ([PV] act added by AMENDMENTS-PLC-VALIDITY PV-1a)', () => {
+    expect(WORD_ART_KEY_RE.source).toBe('^(food|animal|family|school|nature|travel|sport|culture|science|color|count|body|prop|act)-[a-z0-9-]+$');
+    expect(WORD_ART_FAMILIES).toEqual(['food', 'animal', 'family', 'school', 'nature', 'travel', 'sport', 'culture', 'science', 'color', 'count', 'body', 'prop', 'act']);
   });
 
   it('every registered key matches it', () => {
@@ -163,7 +164,8 @@ describe('planned counts (§3.8, §5)', () => {
   it('matches the spec table', () => {
     // AMENDMENTS-PICTURES-2026-11 row PX-1: the 13 words that borrowed a card picture have their own glyph, so every
     // topic family is 12 (food was 9, animal 11, school 11, nature 9, culture 7) and the total is 148 (135 before)
-    expect(WORD_ART_PLAN).toEqual({ food: 12, animal: 12, family: 12, school: 12, nature: 12, travel: 12, sport: 12, culture: 12, science: 12, color: 12, count: 12, body: 12, prop: 4 });
+    // [PV] AMENDMENTS-PLC-VALIDITY PV-1a: act is 0, every action picture is reserved
+    expect(WORD_ART_PLAN).toEqual({ food: 12, animal: 12, family: 12, school: 12, nature: 12, travel: 12, sport: 12, culture: 12, science: 12, color: 12, count: 12, body: 12, prop: 4, act: 0 });
     expect(Object.values(WORD_ART_PLAN).reduce((a, b) => a + b, 0)).toBe(148);
   });
 

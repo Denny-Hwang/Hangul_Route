@@ -7,6 +7,7 @@ import { voiceLine } from '../audio/jamo-lines';
 import { jamoVoice } from '../audio/jamo-voice';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
+import { jamoIdOfKey, writeLetters, writePageIndex } from './discover-write';
 import { decompose, symbolsOf } from './hangul';
 
 /**
@@ -18,7 +19,8 @@ import { decompose, symbolsOf } from './hangul';
  * but the first letter's sound (AU-10);
  * Hear it says the SOUND (ㄴ is na, a vowel its sound, ㅇ its name, a final its closed
  * syllable; AMENDMENTS-DISCOVER-SOUND-FIRST SF-1), and a consonant's second, optional
- * button, Hear the name, says the letter's name (nieun); unavailable or muted audio
+ * button, Hear the name, says the letter's name (nieun); the initial ㅇ's second button, Hear it with vowels, says
+ * a, o, u (the vowel cards' own sounds) one after the other, so its silence can be heard (SF-3); unavailable or muted audio
  * switches that item to a "say it out loud" text line and changes nothing else; Continue is enabled at once and
  * never waits for a Hear it; an item that cannot be resolved is skipped, and
  * a step with nothing left still has a Continue.
@@ -33,11 +35,20 @@ export type DiscoverA11y = Pick<Messages['a11y'], 'discoverLetter' | 'discoverFi
 /** The surface id of Discover for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
 export const DISCOVER_AUDIO_SOURCE = 'discover';
 
-/** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
+/** One thing a button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
+export interface HearSpec {
+  text: string;
+  audioRef?: string;
+}
+
+/** What a Hear it button says. */
 export interface HearAction {
-  /** Stable per button: `<item key>|sound` (the main Hear it), `|name` (Hear the name) or `|example`. */
+  /** Stable per button: `<item key>|sound` (the main Hear it), `|name` (Hear the name), `|vowels` (Hear it with vowels) or `|example`. */
   id: string;
-  spec: { text: string; audioRef?: string };
+  /** What it says; for a button that says several things in a row, the first of `series`. */
+  spec: HearSpec;
+  /** [SF-3] A button that says several things one after the other (ㅇ's a, o, u), in order. */
+  series?: readonly HearSpec[];
   /**
    * The speech rate (F-AUDIO-004 §3.3): `sound` for a symbol and its name, `sentence` for a
    * sentence, a pattern example and an exchange line, `word` for everything else.
@@ -74,6 +85,11 @@ export interface DiscoverItemView {
   romanization: string;
   gloss?: string;
   accessibilityLabel: string;
+  /**
+   * [RF] A word card's name while its romanization is folded (the Korean and its gloss, as the example word's name does,
+   * `example-label.ts`); `accessibilityLabel` is the name once it is shown. The Hear it button keeps the full one.
+   */
+  foldedAccessibilityLabel?: string;
   soundHint?: string;
   /** The main Hear it button: a letter's sound (na), a final's closed syllable (ak), or the word. */
   hear: HearAction;
@@ -94,6 +110,12 @@ export interface DiscoverItemView {
    * its romanization (nieun), drawn as content. Only a consonant whose name differs from its sound has one.
    */
   nameButton?: { action: HearAction; ko: string; romanization: string };
+  /**
+   * [SF-3] The initial ㅇ's second button, Hear it with vowels (AMENDMENTS-DISCOVER-SOUND-FIRST §12): a, o, u in a
+   * row, from the vowel cards' own clips, with a carrier line for each (a = ㅇ + ㅏ, in Hangul), drawn as content. Its
+   * `accessibilityLabel` is the syllable and its romanization only, so a Korean voice never reads the lone ㅇ by its name (ieung).
+   */
+  vowelsButton?: { action: HearAction; lines: Array<{ ko: string; romanization: string; accessibilityLabel: string }> };
   block?: DiscoverBlockView;
   batchimLine?: string;
   example?: DiscoverExampleView;
@@ -124,7 +146,27 @@ export interface DiscoverExchangeView {
   lines: DiscoverExchangeLineView[];
 }
 
+/**
+ * [TC] One letter of the trace page (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.5): its glyph, the romanization its heading shows,
+ * whether it is a final, and the letter card's own Hear it under the id `write|<jamoId>` (Show me plays the same).
+ */
+export interface DiscoverWriteLetter {
+  jamoId: string;
+  glyph: string;
+  romanization: string;
+  final: boolean;
+  hear: HearAction;
+}
+
+/** [TC] The trace page "Trace the new letters": the letters of the step, in page order. Its page has no items. */
+export interface DiscoverWriteView {
+  key: 'write';
+  letters: DiscoverWriteLetter[];
+}
+
 export interface DiscoverPageView {
+  /** [TC] Set only on the trace page (`items` is empty and there is no `exchange`). */
+  write?: DiscoverWriteView;
   title?: string;
   /**
    * The page's exchange, drawn first. A page holds at most one heavy item (D-1 "item weights"), so
@@ -146,8 +188,72 @@ const SYLLABLE_SEPARATOR = '·';
 const teachingRomanization = (text: KoText): string =>
   text.syllables ? text.syllables.join(SYLLABLE_SEPARATOR) : text.romanization;
 
+const specOf = (text: string, audioRef: string | undefined): HearSpec => (audioRef === undefined ? { text } : { text, audioRef });
+
 function hear(id: string, text: string, audioRef: string | undefined, kind: PromptKind): HearAction {
-  return { id, spec: audioRef === undefined ? { text } : { text, audioRef }, kind };
+  return { id, spec: specOf(text, audioRef), kind };
+}
+
+/** Everything a button says, in order: its `series`, or its one `spec`. Warm-up, clip checks and play read all of it. */
+export function actionSpecs(action: HearAction): readonly HearSpec[] {
+  return action.series ?? [action.spec];
+}
+
+/** [SF-3] The vowels the initial ㅇ's Hear it with vowels says, in order (SF-OD-8): all taught before ㅇ (quests 1, 2). */
+const SILENT_IEUNG_VOWELS = ['jamo:a', 'jamo:o', 'jamo:u'] as const;
+
+/** [SF-3] Hear it with vowels on the initial ㅇ: each vowel's own sound (`jamoVoice(v, 'sound')`) and its carrier line. */
+function vowelsButton(key: string, ieung: Jamo): DiscoverItemView['vowelsButton'] {
+  const voices = SILENT_IEUNG_VOWELS.flatMap((id) => {
+    const vowel = findJamo(id);
+    return vowel ? [{ vowel, voice: jamoVoice(vowel, 'sound') }] : [];
+  });
+  const series = voices.map(({ voice }) => specOf(voice.text, voice.audioRef));
+  const first = series[0];
+  if (first === undefined) return undefined;
+  return {
+    action: { id: `${key}|vowels`, spec: first, series, kind: 'sound' },
+    lines: voices.map(({ vowel, voice }) => ({
+      ko: `${voice.shown} = ${ieung.char} + ${vowel.char}`,
+      romanization: voice.romanization,
+      accessibilityLabel: `${voice.shown}, ${voice.romanization}`,
+    })),
+  };
+}
+
+/**
+ * [SF-3] How long Hear it with vowels waits after one sound has finished before the next (§12.3). Each vowel clip
+ * already holds about 0.35 s of silence at each end, so the voices land about 0.85 s apart; the wait keeps a device
+ * voice (no silence of its own) from running them together.
+ */
+export const SERIES_GAP_MS = 150;
+
+/**
+ * [SF-3] Plays `steps` one after the other, waiting `SERIES_GAP_MS` between two. Stops at the first step that does
+ * not play and reports it (a throw counts as `unavailable`). A prompt cut off by a newer one still resolves as
+ * `played` (F-AUDIO-004), so `live()` is asked after every play and every wait: a run that is no longer live plays
+ * nothing more and reports `superseded`, and the screen reports nothing for it.
+ */
+export async function playInOrder<T>(
+  steps: readonly T[],
+  play: (step: T) => Promise<PlayResult>,
+  opts: { wait: (ms: number) => Promise<void>; live: () => boolean },
+): Promise<PlayResult | 'superseded'> {
+  let result: PlayResult = 'played';
+  for (const [i, step] of steps.entries()) {
+    if (i > 0) {
+      await opts.wait(SERIES_GAP_MS);
+      if (!opts.live()) return 'superseded';
+    }
+    try {
+      result = await play(step);
+    } catch {
+      result = 'unavailable';
+    }
+    if (!opts.live()) return 'superseded';
+    if (result !== 'played') return result;
+  }
+  return result;
 }
 
 function wordSpec(key: string, suffix: string, word: KoText, kind: PromptKind = 'word'): HearAction {
@@ -242,10 +348,17 @@ function symbolItem(
     ...(name && nameDiffers
       ? { nameButton: { action: hear(`${key}|name`, name.text, name.audioRef, 'sound'), ko: name.shown, romanization: name.romanization } }
       : {}),
+    // [SF-3] The initial ㅇ (never the final ㅇ, a separate record) has no sound of its own: its second button lets it be heard.
+    ...(jamo.id === 'jamo:ieung' ? withVowels(key, jamo) : {}),
     ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
+}
+
+function withVowels(key: string, ieung: Jamo): Pick<DiscoverItemView, 'vowelsButton'> {
+  const button = vowelsButton(key, ieung);
+  return button ? { vowelsButton: button } : {};
 }
 
 function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, kind: PromptKind = 'word'): DiscoverItemView {
@@ -257,6 +370,7 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, ki
     romanization: teachingRomanization(word),
     gloss: word.en,
     accessibilityLabel: `${word.ko}, ${word.romanization}, ${word.en}`,
+    foldedAccessibilityLabel: `${word.ko}, ${word.en}`,
     hear: wordSpec(key, 'sound', word, kind),
     spokenRomanization: word.romanization,
     ...(item.noteEn ? { note: item.noteEn } : {}),
@@ -297,6 +411,7 @@ export function buildDiscover(
   a11y: DiscoverA11y,
   locale: UiLocale = 'en',
   overlays?: Overlays,
+  options: { writeOnce?: boolean } = {},
 ): DiscoverModel {
   const used = new Map<string, number>();
   const uniqueKey = (base: string): string => {
@@ -337,7 +452,39 @@ export function buildDiscover(
     const title = page.captionEn ?? (allWords ? copy.wordsTitle : undefined);
     built.push({ ...(title === undefined ? {} : { title }), ...(exchange === undefined ? {} : { exchange }), items });
   }
+  if (options.writeOnce === true) {
+    const at = writePageIndex(built);
+    const write = at < 0 ? undefined : writeView(writeLetters(pages), built);
+    if (write !== undefined) built.splice(at, 0, { write, items: [] });
+  }
   return { pages: built };
+}
+
+/**
+ * [TC] The trace page's letters: each content letter that built a card (an unresolved item is skipped), taken from the
+ * first card that shows it. A letter with no card, or none at all, gives no page.
+ */
+function writeView(ids: readonly string[], built: readonly DiscoverPageView[]): DiscoverWriteView | undefined {
+  const cards = new Map<string, DiscoverItemView>();
+  for (const page of built) {
+    for (const item of page.items) {
+      if (item.kind === 'symbol' && !cards.has(jamoIdOfKey(item.key))) cards.set(jamoIdOfKey(item.key), item);
+    }
+  }
+  const letters = ids.flatMap((jamoId): DiscoverWriteLetter[] => {
+    const card = cards.get(jamoId);
+    if (card === undefined) return [];
+    return [
+      {
+        jamoId,
+        glyph: card.glyph,
+        romanization: card.romanization,
+        final: card.finalLine !== undefined,
+        hear: { ...card.hear, id: `write|${jamoId}` },
+      },
+    ];
+  });
+  return letters.length === 0 ? undefined : { key: 'write', letters };
 }
 
 /**
@@ -378,6 +525,11 @@ export interface DiscoverState {
   readAlong: ReadAlongState | null;
   /** Counts Read along runs, so a result of a stopped run never moves the highlight. */
   runs: number;
+  /**
+   * [TC] The trace page (§3.5): the letter shown (`at`), how many letters the page has (`count`, 0 with no trace page: it
+   * caps `at`), and the letters traced on this visit (`traced`, the `written` of `quest.discover_completed`). Never persisted.
+   */
+  write: { at: number; count: number; traced: readonly string[] };
 }
 
 export type DiscoverEvent =
@@ -396,7 +548,14 @@ export type DiscoverEvent =
   | { type: 'readAlongNext'; run: number }
   | { type: 'next' }
   /** [QB] Previous (QB-1): the page before, with every sound stopped. On the first page nothing moves (the step's own Previous is the player's). */
-  | { type: 'prev' };
+  | { type: 'prev' }
+  /** [TC] A letter was traced to the end (the pad's idle gate fired); it is recorded once and never removed. */
+  | { type: 'traced'; jamoId: string }
+  /**
+   * [TC] The next letter of the trace page, from letter `from`: it moves only when `from` is the letter shown, so the advance
+   * timer and a Next letter tap can never skip a letter.
+   */
+  | { type: 'writeNext'; from: number };
 
 export type DiscoverEffect =
   /** Play a button's audio; a line of an exchange item carries its run, which the `audio` result echoes. */
@@ -407,7 +566,7 @@ export type DiscoverEffect =
   | { type: 'pause'; run: number }
   /** Stop the audio that is playing (Stop, Continue, or a line's own speaker during Read along). */
   | { type: 'stopAudio' }
-  | { type: 'done'; pages: number; heard: number };
+  | { type: 'done'; pages: number; heard: number; written: number };
 
 export interface DiscoverStepOut {
   state: DiscoverState;
@@ -453,6 +612,7 @@ export function startDiscover(model: DiscoverModel, start: DiscoverStart = {}): 
     revealed: [],
     readAlong: null,
     runs: 0,
+    write: { at: 0, count: model.pages.find((p) => p.write !== undefined)?.write?.letters.length ?? 0, traced: [] },
   };
 }
 
@@ -543,11 +703,16 @@ export function stepDiscover(
       if (state.page < state.pageCount - 1) {
         return { state: { ...quiet, page: state.page + 1, furthest: Math.max(state.furthest, state.page + 1) }, effects: stopping };
       }
-      return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
+      return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length, written: state.write.traced.length }] };
     }
     case 'prev':
       // [QB] Whatever is sounding stops (a word, a sentence, a Read along); what was heard and revealed stays.
       return { state: { ...state, readAlong: null, page: Math.max(0, state.page - 1) }, effects: [{ type: 'stopAudio' }] };
+    case 'traced':
+      return { state: { ...state, write: { ...state.write, traced: add(state.write.traced, event.jamoId) } }, effects: [] };
+    case 'writeNext':
+      if (event.from !== state.write.at) return { state, effects: [] };
+      return { state: { ...state, write: { ...state.write, at: Math.min(event.from + 1, Math.max(0, state.write.count - 1)) } }, effects: [] };
   }
 }
 
@@ -559,7 +724,12 @@ export interface DiscoverItemRender {
   sayLines: string[];
   /** `false` hides only the example's romanization (reading practice). */
   exampleRomanizationShown: boolean;
-  /** The "Show how to say it" tap is offered. */
+  /**
+   * [RF] Whether a word card's own romanization is drawn (AMENDMENTS-ROMANIZATION-FADE section 3.6). A letter card's own
+   * sound value (`g/k`) is the thing being taught and is always shown, so this is `true` for it in every mode.
+   */
+  romanizationShown: boolean;
+  /** The "Show how to say it" tap is offered: under a folded example or under a folded word card. */
   showReveal: boolean;
   /** The Hear it button pulses once as the page opens (static under reduced motion). */
   pulse: boolean;
@@ -585,7 +755,17 @@ export interface DiscoverExchangeRender {
   liveLine?: string;
 }
 
+/** [TC] What the trace page shows: its letters, the one shown, the letters traced so far, and whether it is the last letter. */
+export interface DiscoverWriteRender {
+  letters: readonly DiscoverWriteLetter[];
+  at: number;
+  traced: readonly string[];
+  last: boolean;
+}
+
 export interface DiscoverPageRender {
+  /** [TC] Set only on the trace page, which has no `items`. */
+  write?: DiscoverWriteRender;
   empty: boolean;
   emptyLine?: string;
   title?: string;
@@ -606,37 +786,56 @@ export interface DiscoverPageRender {
   continueEnabled: true;
 }
 
+/**
+ * What one Korean text shows (AMENDMENTS-ROMANIZATION-FADE section 3.6): the item-level mode of a quest's Discover step
+ * (`RomanizationResolver.forText`). Absent, every text follows the one `mode` as before.
+ */
+export type RomanizationModeOf = (ko: string) => RomanizationMode;
+
 export function pageRender(
   model: DiscoverModel,
   state: DiscoverState,
   mode: RomanizationMode,
   copy: DiscoverCopy,
+  modeOf?: RomanizationModeOf,
 ): DiscoverPageRender {
   const page = model.pages[state.page];
   if (!page) {
     return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, page: 0, hasPrevious: false, isLast: true, continueEnabled: true };
   }
+  const write: DiscoverWriteRender | undefined = page.write && {
+    letters: page.write.letters,
+    at: state.write.at,
+    traced: state.write.traced,
+    last: state.write.at >= page.write.letters.length - 1,
+  };
   const items = page.items.map((item, index): DiscoverItemRender => {
-    const ids = [item.hear.id, item.nameButton?.action.id, item.example?.hear.id];
+    const ids = [item.hear.id, item.nameButton?.action.id, item.vowelsButton?.action.id, item.example?.hear.id];
     const sayLines: string[] = [];
     if (state.text.includes(item.hear.id)) sayLines.push(copy.sayLine(item.spokenRomanization));
     if (item.example && state.text.includes(item.example.hear.id)) {
       sayLines.push(copy.sayLine(item.example.spokenRomanization));
     }
-    const shown = romanizationShown(mode, state.revealed.includes(item.key));
+    // A letter card draws its sound value always and folds its example word; a word card folds its own romanization, with
+    // the same reveal (section 3.6). Each text is asked of `modeOf` (a decodable word folds in the reading phase).
+    const word = item.kind === 'word';
+    const textMode = modeOf === undefined ? mode : modeOf(word ? item.glyph : (item.example?.ko ?? item.glyph));
+    const shown = romanizationShown(textMode, state.revealed.includes(item.key));
     return {
       item,
       heard: ids.some((id) => id !== undefined && state.played.includes(id)),
       sayLines,
       exampleRomanizationShown: shown,
-      showReveal: !shown && item.example !== undefined,
+      romanizationShown: word ? shown : true,
+      showReveal: !shown && (word || item.example !== undefined),
       pulse: index === 0 && page.exchange === undefined,
     };
   });
   return {
     empty: false,
+    ...(write === undefined ? {} : { write }),
     ...(page.title === undefined ? {} : { title: page.title }),
-    ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy) }),
+    ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy, modeOf) }),
     items,
     dots: {
       value: Math.max(state.furthest, state.page) + 1,
@@ -655,11 +854,12 @@ function exchangeRender(
   state: DiscoverState,
   mode: RomanizationMode,
   copy: DiscoverCopy,
+  modeOf?: RomanizationModeOf,
 ): DiscoverExchangeRender {
   const ra = state.readAlong?.item === item.key ? state.readAlong : null;
   const litIndex = ra?.line ?? null;
   const lines = item.lines.map((line, i): DiscoverExchangeLineRender => {
-    const shown = romanizationShown(mode, state.revealed.includes(line.key));
+    const shown = romanizationShown(modeOf === undefined ? mode : modeOf(line.ko), state.revealed.includes(line.key));
     return { line, lit: litIndex === i, romanizationShown: shown, showReveal: !shown };
   });
   const lit = litIndex === null ? undefined : item.lines[litIndex];

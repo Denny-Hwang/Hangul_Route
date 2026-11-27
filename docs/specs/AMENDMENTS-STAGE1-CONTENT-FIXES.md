@@ -32,7 +32,7 @@ None of the cited files changed between `d5ba0217c` and `8676b5de5`: `git diff -
 | 10 | quest 6 (`life-q3`) reads four loanwords: 쿠키, 토마토, 코코아, 토스트 | `quests.ts:236-237` (examples 쿠키, 토마토), `:242-243` (words 코코아, 토스트); `minigame-config.ts:337-342` (Culture Quiz pairs), `:351` (Check `lp.word(W.tomato, [W.kokoa, W.kuki, W.toseuteu])`) | **valid as stated** (all four are loanwords). Loanwords are a sound way to practise decoding, so this is a balance fix, not an error: §10 OD-CF2 keeps the two loanwords that carry the new letters and replaces the other two |
 | 11 | Linking (연음) is explained once, in quest 13 (`quests.ts:535`) | `quests.ts:535` `noteEn: 'Read it smoothly: nol + i sounds like nori.'` is the only `noteEn` in the Stage 1 quests | **valid** (A1 articles 13 and 15) |
 | 12 | `quests.ts:595` "King Sejong made Hangul so everyone could read. Now you can read it too!" overclaims (six finals, no ㅐ ㅔ, tense consonants or compound vowels) | `quests.ts:595`, the same text; es and ko overlays say the same (`es/stage1-quests.json` `quest:stage1-crafts-q3` `steps.s1.hoyaLine`; ko the same key) | **valid**. AU-15 (#1035) lowered the stage-level lines; this quest line was left |
-| 13 | initial ㅇ is only heard as 이응, so its silence cannot be checked by ear; add an "아 · 오 · 우" button on the ㅇ Discover page | `jamo.ts:164` ㅇ `spokenKind: 'name'`; `discover-flow.ts:217-220` gives ㅇ no second button. Quest 2's ㅇ card already carries the example 오 with its own play button (`quests.ts:82`), which says [o] | **valid in part**, and it is a Discover button change, not a content fix. **Moved to WO-13** (§10 OD-CF5): its SF rows rework the same Discover buttons (sound first) and own `discover-flow.ts` and `DiscoverStep.tsx` (README §6 serial-merge table) |
+| 13 | initial ㅇ is only heard as 이응, so its silence cannot be checked by ear; add an "아 · 오 · 우" button on the ㅇ Discover page | `jamo.ts:164` ㅇ `spokenKind: 'name'`; `discover-flow.ts:217-220` gives ㅇ no second button. Quest 2's ㅇ card already carries the example 오 with its own play button (`quests.ts:82`), which says [o] | **valid in part**, and it is a Discover button change, not a content fix. **Moved to WO-13** (§10 OD-CF5): its SF rows rework the same Discover buttons (sound first) and own `discover-flow.ts` and `DiscoverStep.tsx` (README §6 serial-merge table) (**[SF-3]** 2026-11-26: now row SF-3 of `AMENDMENTS-DISCOVER-SOUND-FIRST.md` §12; on `fb4ff3b3c` the second-button rule is `discover-flow.ts:219-223` and `nameButton` `:242-244`) |
 
 **The decodability check the WO asks for already exists**: `apps/mobile/src/content/__tests__/stage1-curriculum.test.ts` T3 (`:658-671`, every scope symbol, word and Check option is taught by this quest or earlier) and T7 (`:762-780`, every Discover reading word). It does not cover the letter records' example words (`jamo.ts` `exampleWordKo`), which no quest page shows; CF-1a adds that test (§6).
 
@@ -200,7 +200,7 @@ Result: never readable in Stage 1, 4 → 0; readable at the letter's own quest, 
 
 - The order letters are taught in (WO "do not"; `phase-2-hangul.md` §"이 Phase 에 넣지 않은 것").
 - New Korean sentences.
-- #13 (moved to WO-13, OD-CF5).
+- #13 (moved to WO-13, OD-CF5; built as row SF-3 of `AMENDMENTS-DISCOVER-SOUND-FIRST.md` §12).
 - New clips for the new words (the clip pipeline's next round).
 - Deleting `jamo.json` (`docs/launch/product-review-2026-11-15.md` EDU-14 suggested it; it still feeds `scripts/import-heritage.mjs`).
 - Korean gloss style under OD-R5 (WO-24).
@@ -235,7 +235,7 @@ Next release, no flag. Order: CF-1a, then CF-1b and CF-2 (either order; CF-2 nee
 ## 8. Dependencies
 
 - F-QUEST-002 (owner of the Stage 1 quests), F-CNT-002 (romanization), F-I18N-001 §3.5, §3.6 and §3.10 (jamo hints, overlays and their MAR), F-CURR-002 §4.2 (review items, freezing and retiring), `AMENDMENTS-AUDIO-CLIPS.md` (clips, M9), `AMENDMENTS-PICTURES-2026-11.md` PX-2 (the kite picture).
-- WO-13 (SF rows) receives #13. WO-11 and WO-15 also edit `minigame-config.ts` and `quests.ts` (README §6): merge in series, rebase mechanically.
+- WO-13 (SF rows) receives #13: row SF-3 of `AMENDMENTS-DISCOVER-SOUND-FIRST.md` (§12, 2026-11-26). WO-11 and WO-15 also edit `minigame-config.ts` and `quests.ts` (README §6): merge in series, rebase mechanically.
 
 ## 9. Rows
 
@@ -256,7 +256,7 @@ Next release, no flag. Order: CF-1a, then CF-1b and CF-2 (either order; CF-2 nee
 | OD-CF2 | Quest 6's word set (#10) | (a) keep 쿠키 and 토마토 (they carry ㅋ and ㅌ on the letter cards), replace 코코아 and 토스트 with 고구마 sweet potato and 도토리 acorn, blurb and intro line say "picnic words". (b) 코 nose and 키 height: native and short, but off the picnic theme. (c) reject #10: loanwords are a sound decoding choice | **(a)**: half native, both readable at quest 6; the Check asks 도토리 among 토마토 쿠키 고구마 (도토리 and 토마토 share ㅌ ㅗ; 고구마 sets ㄱ against the ㅋ of 쿠키, 고/코, 구/쿠). No native food word with ㅋ or ㅌ is readable at quest 6, so an acorn found on the picnic stands in. The title "Picnic Snacks" stays: three of the four reading words, the Culture Quiz's 김밥 and the reward card are snacks, and the title is pinned across the Journey and e2e |
 | OD-CF3 | Which linking words (#11) and where | (a) 얼음 in quest 11, 한국어 in quest 15, one-item third pages. (b) the WO's 음악 and 목요일 as well or instead. (c) replace an existing word instead of adding a page | **(a)**: each fits its quest's theme and is covered by A1 articles 13 / 15 |
 | OD-CF4 | Quest 7's Check word round (#5) | (a) 문 among 문 물 달 산, `W.seol` and `W.nal` deleted. (b) keep 설날 and fix only the gloss of 설 ("Lunar New Year's Day") | **(a)**, as the WO asks |
-| OD-CF5 | #13, the "아 · 오 · 우" button for initial ㅇ | (a) move to WO-13 (SF-0 / SF-1), which reworks the same Discover buttons sound-first and owns `discover-flow.ts` / `DiscoverStep.tsx`; any new clip by the F-AUDIO-004 pipeline. (b) a CF row here with its own wireframe and mock | **(a)** |
+| OD-CF5 | #13, the "아 · 오 · 우" button for initial ㅇ | (a) move to WO-13 (SF-0 / SF-1), which reworks the same Discover buttons sound-first and owns `discover-flow.ts` / `DiscoverStep.tsx`; any new clip by the F-AUDIO-004 pipeline. (b) a CF row here with its own wireframe and mock | **(a)**. **[SF-3] 2026-11-26:** SF-0 had left #13 out of its scope; the owner assigned it to `AMENDMENTS-DISCOVER-SOUND-FIRST.md`, row **SF-3** (§12): **Hear it with vowels** on the initial ㅇ card plays the shipped vowel clips 아, 오, 우 in order; no new clip (SF-OD-7) |
 | OD-CF6 | Quest 15's step title "You Can Read!" | (a) keep: the intro of a reading quest, true in a basic sense, and the overclaim was the line's "read it" (all of Hangul). (b) "Read Words!" | **(a)** |
 | OD-CF7 | The `jamo.json` `en` field and the overlay `gloss` (#1, #2) | (a) all 24 equal `SOUND_HINTS`, and es / ko `gloss` equal their `soundHint`, tested. (b) fix only the wrong rows, keeping the "G — …" format. (c) drop the field | **(a)**: one source, no future drift, as the WO's test asks; (c) would also need the overlay validator and the strict-locale count changed |
 

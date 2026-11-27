@@ -348,8 +348,8 @@ describe('fill rule', () => {
     const m = (b: LectureBlock): number => presetBlockMinutes(b, CATALOG);
     expect(m({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(5);
     expect(m({ kind: 'quest', id: 'quest:nope' })).toBe(0);
-    // Word Builder's nine quests (AMENDMENTS-BATCHIM-COMPLETE BC-1: q7-q9 add 773 s of steps to 1,526 s).
-    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(38);
+    // [BC][MP] Word Builder's nine quests (BC-1: q7-q9 add steps) plus quest 2's contrast step (MP-2b), minutes from the generator (39).
+    expect(m({ kind: 'episode', id: 'episode:stage2-letters' })).toBe(39);
     expect(m({ kind: 'episode', id: 'episode:nope' })).toBe(0);
     expect(m({ kind: 'story', storyId: 'story:pansori-tales', checks: true })).toBe(6);
     expect(m({ kind: 'story', storyId: 'story:nope', checks: true })).toBe(0);

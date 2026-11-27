@@ -51,6 +51,8 @@ export const OVERLAY_FIELDS = Object.freeze({
     "listenPick.rounds.<roundId>.prompt",
     // F-CURR-002 row CM-3A S2: a picture option's label (optional: see OPTIONAL_OVERLAY_FIELDS).
     "listenPick.rounds.<roundId>.options.<option>.label",
+    // AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): the meaning a contrast round's word option shows after the answer (optional: see OPTIONAL_OVERLAY_FIELDS).
+    "listenPick.rounds.<roundId>.options.<option>.text.gloss",
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
     // F-CURR-001 §3.10: a lesson's Pic-Word Match pair, whose gloss the word tile and the picture's
     // text fallback show; a board has no id, so `<board>` is its index.
@@ -145,7 +147,10 @@ export const OVERLAY_FIELDS = Object.freeze({
 });
 
 /** Mirror of OPTIONAL_OVERLAY_FIELDS: applied when given, never counted missing (F-CURR-002 row CM-3A S2). */
-export const OPTIONAL_OVERLAY_FIELDS = Object.freeze(["listenPick.rounds.<roundId>.options.<option>.label"]);
+export const OPTIONAL_OVERLAY_FIELDS = Object.freeze([
+  "listenPick.rounds.<roundId>.options.<option>.label",
+  "listenPick.rounds.<roundId>.options.<option>.text.gloss",
+]);
 
 /** Never overridable, whatever the prefix. */
 export const NEVER_OVERRIDABLE_FIELDS = Object.freeze([
@@ -366,6 +371,8 @@ export function translatableFields(entityId, entity) {
   for (const pattern of patterns) {
     if (OPTIONAL_OVERLAY_FIELDS.includes(pattern)) continue;
     for (const [field, path] of expand(entity, pattern.split("."), [], [])) {
+      // A blank English source has nothing to translate (the contrast round stub `lp.pair`, MP-2b).
+      if (getIn(entity, path) === "") continue;
       const at = path.join("\u0000");
       const first = bySource.get(at);
       if (first !== undefined) {

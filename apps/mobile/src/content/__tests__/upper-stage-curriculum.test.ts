@@ -36,6 +36,7 @@ import { scopeFor } from '../../logic/minigame-config';
 import { findJamo, jamoAll } from '../jamo';
 import { stage1Quests } from '../quests';
 import { VOCAB_ITEMS } from '../__generated__/vocab';
+import { CONTRAST_SETS } from '../__generated__/contrast-sets';
 import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './helpers/distractors';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
@@ -109,8 +110,16 @@ export const ROUND_RANGE: Readonly<Record<string, Partial<Record<QuestStepKind, 
 /** U-1, U-5, U-7, U-9: the problems of one quest, as readable lines (empty = fine). */
 export function questProblems(stage: StageKey, quest: LessonQuest): string[] {
   const out: string[] = [];
-  const kinds = quest.steps.map((s) => s.kind);
+  // One optional contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b: a second practice step right after the first)
+  // is no part of the six-step order; its scope plays contrast rounds only, and it is the only step that does.
+  const kinds = quest.steps.filter((s) => s.contrast !== true).map((s) => s.kind);
   if (kinds.join() !== LESSON_STEP_ORDER.join()) out.push(`U-1 ${quest.id}: steps ${kinds.join(' -> ')}`);
+  const contrastAt = quest.steps.flatMap((s, i) => (s.contrast === true ? [i] : []));
+  if (contrastAt.length > 1) out.push(`U-1 ${quest.id}: ${contrastAt.length} contrast steps, at most 1`);
+  for (const i of contrastAt) {
+    const first = quest.steps.findIndex((s) => s.kind === 'practice');
+    if (i !== first + 1) out.push(`U-1 ${quest.id}: the contrast step is not right after Practice`);
+  }
   for (const step of quest.steps) {
     if (step.discover) {
       if (step.discover.pages.length > 3) out.push(`U-1 ${quest.id}: Discover has ${step.discover.pages.length} pages`);
@@ -124,6 +133,13 @@ export function questProblems(stage: StageKey, quest: LessonQuest): string[] {
     }
     if (scope === undefined) continue;
     const rounds = scopeRoundCount(scope);
+    const contrastRounds = scope.kind === 'listen-pick' ? scope.rounds.filter((r) => r.contrastSet !== undefined).length : 0;
+    if (step.contrast === true) {
+      // The contrast step plays Listen & Pick contrast rounds only, at least two sets (section 3.5); no other step plays one.
+      if (scope.kind !== 'listen-pick' || contrastRounds !== rounds || rounds < 2) out.push(`U-1 ${quest.id}: the contrast step plays ${scope.kind} x ${rounds} (${contrastRounds} contrast rounds)`);
+      continue;
+    }
+    if (contrastRounds > 0) out.push(`U-1 ${quest.id}: step ${step.id} plays a contrast round, which only a contrast step may`);
     if (step.kind === 'check') {
       if (rounds !== CHECK_ROUNDS || !checkKindsFor(stage).includes(scope.kind)) out.push(`U-1 ${quest.id}: Check is ${scope.kind} x ${rounds}`);
     } else {
@@ -421,6 +437,9 @@ function scopeWords(scope: LessonScope): { read: KoText[]; shown: KoText[] } {
     case 'build-letter':
       return { read: [...scope.words], shown: [...scope.words] };
     case 'listen-pick': {
+      // A contrast step's words are heard in pairs and never scored or counted: not read (U-4: their decodability is the
+      // catalogue's rule, `contrast-sets.test.mjs`) and not words shown (U-6, AMENDMENTS-MINIMAL-PAIRS section 3.8).
+      if (scope.rounds.length > 0 && scope.rounds.every((r) => r.contrastSet !== undefined)) return { read: [], shown: [] };
       // A spelling round's look-alike (F-CURR-002 §4.5, row CM-44 S2: 채기 beside 책이) is a spelling, not a word, so it
       // is read but never counted as a word shown (U-6).
       const lookAlike = (r: (typeof scope.rounds)[number], id: string): boolean => r.promptKind === 'spelling' && id !== r.answerId;
@@ -714,6 +733,83 @@ const STAGE1_SYMBOLS: TaughtSymbols = {
   vowels: new Set(jamoAll.filter((j) => j.kind === 'vowel').map((j) => j.char)),
   finals: new Set(jamoAll.filter((j) => j.kind === 'batchim').map((j) => j.char)),
 };
+
+/** [MP] AMENDMENTS-MINIMAL-PAIRS section 3.5 and 3.8 (row MP-2b): the contrast step of Word Builder quest 2. */
+describe('the contrast step of Letters quest 2 (MP-2b)', () => {
+  const quest2 = CELLS.find((c) => c.cell.id === 'episode:stage2-letters')?.cell.quests.find((q) => q.id === 'quest:stage2-letters-q2');
+  const set6 = ['dal-tal-ttal', 'bul-pul-ppul', 'jada-chada-jjada', 'bang-ppang', 'sada-ssada', 'gae-kkae'];
+
+  it('holds the checks of U-1: an unplaced, doubled or plain-round contrast step is reported, a placed one is not', () => {
+    const contrastRound = (set: string) => ({ id: `lp:pair:${set}`, contrastSet: set, prompt: { ko: '달', romanization: 'dal', en: 'moon' }, options: [{ id: 'dal', text: { ko: '달', romanization: 'dal', en: 'moon' } }, { id: 'tal', text: { ko: '탈', romanization: 'tal', en: 'mask' } }], answerId: 'dal' });
+    const build = (steps: Array<Record<string, unknown>>, rounds: unknown[]): LessonQuest => {
+      const base = JSON.parse(JSON.stringify(quest2)) as LessonQuest;
+      const scope = { ref: 'minigame:s2-letters-q2-pairs', kind: 'listen-pick', rounds } as LessonScope;
+      const practice = base.steps.findIndex((s) => s.kind === 'practice');
+      const own = base.steps.filter((s) => s.contrast !== true);
+      own.splice(practice + 1, 0, ...(steps as unknown as LessonQuest['steps']));
+      return { ...base, steps: own, scopes: [...base.scopes.filter((s) => s.ref !== scope.ref), scope] };
+    };
+    const step = { id: 's3p', kind: 'practice', contrast: true, titleEn: 'x', minigameKind: 'listen-pick', minigameRef: 'minigame:s2-letters-q2-pairs', durationSeconds: 40 };
+    const two = [contrastRound('dal-tal-ttal'), contrastRound('bul-pul-ppul')];
+    expect(questProblems('stage2', build([step], two))).toEqual([]);
+    expect(questProblems('stage2', build([step], [two[0], { ...two[1], contrastSet: undefined }])).join('\n')).toContain('the contrast step plays listen-pick x 2 (1 contrast rounds)');
+    expect(questProblems('stage2', build([step], [two[0]])).join('\n')).toContain('x 1 (1 contrast rounds)');
+    const late = build([], two);
+    late.steps.splice(late.steps.findIndex((s) => s.kind === 'apply') + 1, 0, step as unknown as LessonQuest['steps'][number]);
+    expect(questProblems('stage2', late).join('\n')).toContain('the contrast step is not right after Practice');
+    const twice = build([step, { ...step, id: 's3q', minigameRef: 'minigame:s2-letters-q2-more' }], two);
+    expect(questProblems('stage2', twice).join('\n')).toContain('2 contrast steps, at most 1');
+  });
+
+  it('plays the six Stage 2 sets after Picture and Word, 40 s more (256 to 296 s, inside U-5), and stays 4 minutes', () => {
+    expect(quest2).toBeDefined();
+    expect(quest2!.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's3p', 's4', 's5', 's6']);
+    expect(quest2!.steps[3]).toEqual({ id: 's3p', kind: 'practice', contrast: true, titleEn: 'Soft, Puff or Tight?', minigameKind: 'listen-pick', minigameRef: 'minigame:s2-letters-q2-pairs', durationSeconds: 40 });
+    expect(quest2!.steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0)).toBe(296);
+    expect(quest2!.estimatedMinutes).toBe(4);
+    expect(questProblems('stage2', quest2!)).toEqual([]);
+  });
+
+  it('writes each round out as its set of the catalogue: the members as options, their glosses, the first as the placeholder target', () => {
+    const scope = quest2!.scopes.find((s) => s.ref === 'minigame:s2-letters-q2-pairs');
+    expect(scope?.kind).toBe('listen-pick');
+    if (scope?.kind !== 'listen-pick') return;
+    expect(scope.rounds.map((r) => r.contrastSet)).toEqual(set6);
+    const unit = CONTRAST_SETS.filter((s) => s.unit === 'minigame:s2-letters-q2-pairs');
+    expect(unit.map((s) => s.id)).toEqual(set6);
+    for (const round of scope.rounds) {
+      const set = unit.find((s) => s.id === round.contrastSet)!;
+      expect(round.id).toBe(`lp:pair:${set.id}`);
+      expect(round.options.map((o) => ({ id: o.id, ...o.text }))).toEqual(set.members.map((m) => ({ id: m.romanization, ko: m.text, romanization: m.romanization, en: m.en })));
+      expect(round.prompt).toEqual({ ko: set.members[0]!.text, romanization: set.members[0]!.romanization, en: set.members[0]!.en });
+      expect(round.answerId).toBe(set.members[0]!.romanization);
+    }
+  });
+
+  it('has the meaning of every option of every contrast round in es and ko (the overlay field is optional for other rounds, so this is the check)', () => {
+    const all = LESSON_STAGE_MODULES[2].LESSON_SCOPE_OVERLAYS as unknown as { es: Record<string, Record<string, string>>; ko: Record<string, Record<string, string>> };
+    const unit = CONTRAST_SETS.filter((s) => s.unit === 'minigame:s2-letters-q2-pairs');
+    for (const locale of ['es', 'ko'] as const) {
+      const entry = all[locale]['minigame:s2-letters-q2-pairs'] ?? {};
+      for (const set of unit) {
+        expect(entry[`listenPick.rounds.lp-pair-${set.id}.prompt`], `${locale} ${set.id} prompt`).toBeTruthy();
+        for (const m of set.members) expect(entry[`listenPick.rounds.lp-pair-${set.id}.options.${m.romanization}.text.gloss`], `${locale} ${set.id} ${m.text}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('is not counted by U-6 (its words are not shown words) and not by the known words of the lint', () => {
+    const cell = CELLS.find((c) => c.cell.id === 'episode:stage2-letters')!.cell;
+    const withContrast = stage2ReuseProblems(cell, STAGE2_KNOWN_WORDS);
+    const stripped = {
+      ...cell,
+      quests: cell.quests.map((q) => ({ ...q, steps: q.steps.filter((s) => s.contrast !== true), scopes: q.scopes.filter((s) => s.ref !== 'minigame:s2-letters-q2-pairs') })),
+    } as LessonCell;
+    expect(withContrast).toEqual(stage2ReuseProblems(stripped, STAGE2_KNOWN_WORDS));
+    const shown = scopeWords(quest2!.scopes.find((s) => s.ref === 'minigame:s2-letters-q2-pairs')!);
+    expect(shown).toEqual({ read: [], shown: [] });
+  });
+});
 
 describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)', () => {
   const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });

@@ -8,6 +8,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.cardArt': [['Book']],
   'a11y.tabPosition': [['Learning Route', 2, 4]],
   'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
+  // AMENDMENTS-MINIMAL-PAIRS section 3.7: a contrast member's name, by its romanization and its kind line.
+  'a11y.contrastItem': [['ga', 'Soft, starts lower.']],
+  // AMENDMENTS-MINIMAL-PAIRS section 3.7: the meaning under a syllable member.
+  'learner.minigame.contrast.syllable': [['ga']],
   // F-A11Y-001 §3.7: a game's result, said once.
   'a11y.answer.item': [['sagwa', 'apple'], ['sagwa'], ['sagwa', '']],
   'a11y.answer.right': [['sagwa, apple']],
@@ -79,6 +83,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.gating.quest-closed': [['Suni']],
   'a11y.hearItLabel': [['Korean letter g']],
   'a11y.hearNameLabel': [['Korean letter g/k']],
+  'a11y.hearVowelsLabel': [['Korean letter silent/ng']],
   'a11y.hearExample': [['na, na, I']],
   'a11y.discoverLetter': [['g/k'], ['g/k', 'like g in go']],
   'a11y.discoverFinal': [['k']],
@@ -237,6 +242,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.placementReport.takenOn': [['Oct 9', 'English']],
   'caregiver.placementReport.needsStage': [['Sam', 2]],
   'caregiver.placementReport.noStart': [['Sam']],
+  // AMENDMENTS-PLC-VALIDITY section 3.8 (PV-4): the Reading and listening block and a form's status word.
+  'caregiver.placementReport.skills.ahead': [['Sam']],
+  'caregiver.placementReport.formStatus': [['reading', 'secure'], ['listening', 'getting there']],
   'caregiver.placementReport.plan.title': [['Sam']],
   'caregiver.placementReport.plan.basis': [['Stage 1 · Letters and sounds', 2, 10], ['Stage 1 · Letters and sounds', 1, 15]],
   'caregiver.placementReport.plan.warning.notIncluded': [[1], [3]],

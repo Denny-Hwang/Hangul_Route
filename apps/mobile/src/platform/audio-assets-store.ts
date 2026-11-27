@@ -74,6 +74,23 @@ export const clipRegistry = createClipRegistry({
 });
 
 /**
+ * Resolves when the clip pack loads on their way have settled, or after `ms` (the controller's own bound, `PACK_WAIT_MS`),
+ * whichever is first; at once when none is loading. A contrast step reads it before deciding whether its clips can play
+ * (AMENDMENTS-MINIMAL-PAIRS section 3.6, row MP-2b): `hasClip` is false for a lazy pack until its chunk has been added.
+ */
+export function waitForClipPacks(registry: ClipRegistry = clipRegistry, ms: number = PACK_WAIT_MS): Promise<void> {
+  const pending = registry.pending();
+  if (pending === null) return Promise.resolve();
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    void pending.then(() => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+}
+
+/**
  * Loads the clip packs a screen may play and warms its clips, through the lazy loader chunk (counted as pending, so a
  * prompt asked meanwhile waits for it briefly). Nothing happens in a build that holds no pack map chunk. Never throws.
  */

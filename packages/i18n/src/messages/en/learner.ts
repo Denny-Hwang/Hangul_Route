@@ -790,6 +790,8 @@ export const learner = {
       hearIt: { cta: 'Hear it' },
       /** A consonant page's second button: the letter's name (ㄱ said giyeok); the taught line under it is content. */
       hearName: { cta: 'Hear the name' },
+      /** [SF-3] The initial ㅇ card's second button: the syllables a, o, u one after the other, so ㅇ's silence can be heard; the taught lines under it are content. */
+      hearVowels: { cta: 'Hear it with vowels' },
       /** No longer on Discover (SF-1); the presenter's letter slide still uses it (`LetterSlide.tsx`): the letter's sound on a vowel (ㄴ said na). */
       soundWith: { cta: 'Hear it with a vowel' },
       /** Shown for a button whose audio could not play; `spoken` is a romanization. */
@@ -925,6 +927,24 @@ export const learner = {
       hearAgain: { cta: 'Hear it again' },
       missHoya: 'Listen again',
       empty: 'Nothing to play here',
+    },
+    /**
+     * A contrast round of Listen & Pick (AMENDMENTS-MINIMAL-PAIRS section 3.7, row MP-2a): hear two or three sounds that differ
+     * only in their first consonant. `missHoya` is Hoya's line over the compare row; `kind` is the line under each member
+     * once the round is answered. Both cues are named (the air and where the voice starts); the s and ss letters have their
+     * own lines (s starts high, so no "starts lower" for it). No Hangul and no age word in a string.
+     */
+    contrast: {
+      missHoya: 'Listen to both.',
+      /** The meaning shown under a syllable once the round is answered ("the syllable ga"); a word keeps its own meaning. */
+      syllable: (sound: string) => `the syllable ${sound}`,
+      kind: {
+        plain: 'Soft, starts lower.',
+        aspirated: 'Big puff, starts higher.',
+        tense: 'Tight, no puff.',
+        plainS: 'Soft, with a little breath.',
+        tenseS: 'A long, sharp hiss.',
+      },
     },
     /** Realia Read (F-CURR-001 G-2): the line hint under the drawn sheet, the miss bubble, the empty state. */
     realia: {

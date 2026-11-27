@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   bankLookup,
   reportPage,
+  OLDER_SENTENCE_ID,
+  REVISED_SENTENCE_ID,
   symbolText,
   startChoices,
   startingSpotRow,
@@ -10,6 +12,7 @@ import {
   type BankEntry,
   type ReportPageInput,
 } from '../report-page';
+import { PLACEMENT_BANK } from '../../../content/placement.generated';
 import { gate, placementResult } from './fixtures';
 
 const quest = (n: number, stage: StageKey = 'stage1', extra: Partial<RouteQuest> = {}): RouteQuest => ({
@@ -290,6 +293,119 @@ describe('reportPage (section 3.9)', () => {
     const page = reportPage(input({ placements: [deep] }));
     if (page.kind !== 'report') throw new Error('expected a report');
     expect(page.view.spellingTiles).toBe('secure');
+  });
+});
+
+describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC-VALIDITY section 3.8, PV-4)', () => {
+  const decoded = () => [
+    gate('sound-basic', 'decode', 'pass', 3),
+    gate('syl-cv', 'decode', 'pass', 3),
+    gate('sound-rest', 'decode', 'pass', 3),
+    gate('syl-cvc', 'decode', 'pass', 3),
+  ];
+  const asked = (...ids: string[]) => ids.map((id) => response(id, 'correct'));
+  const OLD_IDS = ['pitem:sent-n-read-horangiyeyo', 'pitem:sent-v-read-babeulmeogeoyo', 'pitem:sent-reply-2'];
+  const NEW_IDS = ['pitem:sent-read-run-bear', 'pitem:sent-read-sleep-cat', 'pitem:sent-reply-2'];
+  /** A stage 3 result: the whole reading ladder and the sentence read passed, on the sentence items `ids`. */
+  const sentenceRead = (over: Parameters<typeof placementResult>[0] = {}) =>
+    placementResult({
+      level: { stage: 'stage3', band: 0 },
+      gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('sentence', 'read', 'pass', 3)],
+      responses: asked(...OLD_IDS),
+      ...over,
+    });
+  const olderOf = (placements: Parameters<typeof placementResult>[0][]): boolean | undefined => {
+    const page = reportPage(input({ placements: placements.map((p) => placementResult(p)), isEntitled: () => true }));
+    return page.kind === 'report' ? page.olderSentences : undefined;
+  };
+
+  it('the heritage listener: reading at the beginning, listening at the sentences, per-form rows, route at Stage 1', () => {
+    const result = placementResult({
+      gates: [gate('sound-basic', 'decode', 'fail', 1), gate('vocab', 'oral', 'pass', 3), gate('sentence', 'oral', 'pass', 3)],
+      strands: {
+        'hangul-recognition': 'not-tested',
+        'sound-letter': 'getting-there',
+        'syllable-reading': 'not-tested',
+        vocabulary: 'secure',
+        sentences: 'secure',
+      },
+      level: { stage: 'stage1', band: 0 },
+      oralStage: 'stage3',
+    });
+    const page = reportPage(input({ placements: [result] }));
+    if (page.kind !== 'report') throw new Error('expected a report');
+    expect(page.view.skills).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage3', ahead: true });
+    expect(page.view.strands.find((s) => s.strand === 'vocabulary')?.forms).toEqual([{ form: 'oral', status: 'secure' }]);
+    expect(page.view.strands.find((s) => s.strand === 'sentences')?.forms).toEqual([{ form: 'oral', status: 'secure' }]);
+    expect(page.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(page.olderSentences).toBe(false);
+  });
+
+  it('the block reads the newest result, not the route in force', () => {
+    const older = sentenceRead({ id: 'placement:old', completedAt: '2026-10-01T10:00:00.000Z', responses: asked(...NEW_IDS) });
+    const newer = placementResult({
+      id: 'placement:new',
+      completedAt: '2026-10-05T10:00:00.000Z',
+      gates: [gate('sound-basic', 'decode', 'fail', 1)],
+      strands: { ...placementResult().strands, 'sound-letter': 'getting-there' },
+      level: { stage: 'stage1', band: 0 },
+      oralStage: 'stage2',
+    });
+    const page = reportPage(input({ placements: [older, newer], isEntitled: () => true }));
+    if (page.kind !== 'report') throw new Error('expected a report');
+    expect(page.level.stage).toBe('stage3');
+    expect(page.view.skills).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage2', ahead: true });
+  });
+
+  it('shows the older-sentences line only for a Stage 3 route that the older sentence items placed, whatever the bank version', () => {
+    // The ids decide: a result that was asked a retired picture item, at any version.
+    for (const bankVersion of [1, 2, 3, 4]) expect(olderOf([sentenceRead({ bankVersion })]), `v${bankVersion}`).toBe(true);
+    // The revised predicate pictures (and the replies both banks share) stand for themselves, at any version.
+    for (const bankVersion of [1, 2, 3, 4]) expect(olderOf([sentenceRead({ bankVersion, responses: asked(...NEW_IDS) })]), `v${bankVersion}`).toBe(false);
+    // Replies alone say nothing about the picture items, and a result that stored no sentence id does not show it.
+    expect(olderOf([sentenceRead({ responses: asked('pitem:sent-reply-2') })])).toBe(false);
+    expect(olderOf([sentenceRead({ responses: [] })])).toBe(false);
+    // A route below Stage 3 never shows it, even for an older check.
+    expect(olderOf([placementResult({ bankVersion: 1, level: { stage: 'stage2', band: 0 } })])).toBe(false);
+    // An older result whose sentence read did not pass (Stage 3 came from nowhere else) is not the cause.
+    expect(olderOf([sentenceRead({ bankVersion: 1, gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('sentence', 'read', 'fail', 1)] })])).toBe(false);
+    // Only a sentence read counts, not a sentence heard.
+    expect(olderOf([sentenceRead({ bankVersion: 1, gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('sentence', 'oral', 'pass', 3)] })])).toBe(false);
+  });
+
+  it('a later check on the revised bank that also passed the sentences takes the line away; one that did not leaves it', () => {
+    const old = sentenceRead({ id: 'placement:v1', bankVersion: 1, completedAt: '2026-10-01T10:00:00.000Z' });
+    const revised = sentenceRead({ id: 'placement:v3', bankVersion: 3, completedAt: '2026-11-30T10:00:00.000Z', responses: asked(...NEW_IDS) });
+    const lower = placementResult({ id: 'placement:v3b', bankVersion: 3, completedAt: '2026-11-30T10:00:00.000Z', level: { stage: 'stage2', band: 0 } });
+    const of = (placements: ReturnType<typeof placementResult>[]) => {
+      const page = reportPage(input({ placements, isEntitled: () => true }));
+      return page.kind === 'report' ? page.olderSentences : undefined;
+    };
+    expect(of([old, revised])).toBe(false);
+    // A lower retake never moves the route back, so the old pass still stands behind Stage 3.
+    expect(of([old, lower])).toBe(true);
+  });
+});
+
+describe('the older and revised sentence id patterns follow the bundled bank (PV-4)', () => {
+  // The line keys on the ids a result stores, so a rename in the sentence bank must not drift from the patterns.
+  const sentences = PLACEMENT_BANK.templates.filter((t) => t.gate === 'sentence');
+
+  it('every older-pattern sentence item (N-ieyo, N-eul V) is an older id, and no other sentence item is', () => {
+    expect(sentences.length).toBeGreaterThan(0);
+    for (const t of sentences) {
+      const tags = t.question.tags;
+      const older = tags.includes('pattern:n-ieyo') || tags.includes('pattern:n-eul-v');
+      expect(OLDER_SENTENCE_ID.test(t.id), t.id).toBe(older);
+    }
+  });
+
+  it('every predicate-picture item (N-i V) is a revised id, and no older or reply item is', () => {
+    for (const t of sentences) {
+      const revised = t.question.tags.includes('pattern:n-i-v');
+      expect(REVISED_SENTENCE_ID.test(t.id), t.id).toBe(revised);
+    }
+    expect(REVISED_SENTENCE_ID.test('pitem:sent-reply-1')).toBe(false);
   });
 });
 

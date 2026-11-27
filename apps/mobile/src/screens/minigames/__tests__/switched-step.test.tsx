@@ -74,7 +74,8 @@ const withSpelling = (scope: MinigameScope): MinigameScope => ({
 const shipped = questsAll.flatMap((quest) =>
   quest.steps.flatMap((step, i) => {
     const scope = step.minigameRef ? scopeFor(step.minigameRef) : undefined;
-    return scope && (scope.kind === 'type-hangul' || scope.kind === 'listen-pick') ? [{ at: `${quest.id} step ${i}`, scope }] : [];
+    // A contrast step (AMENDMENTS-MINIMAL-PAIRS, row MP-2b) has no round to mount with no set approved: it is passed by (quest-contrast-pass.test.tsx).
+    return scope && (scope.kind === 'type-hangul' || scope.kind === 'listen-pick') && step.contrast !== true ? [{ at: `${quest.id} step ${i}`, scope }] : [];
   }),
 );
 

@@ -554,6 +554,7 @@ export const learner = {
     discover: {
       hearIt: { cta: 'Escuchar' },
       hearName: { cta: 'Escuchar el nombre' },
+      hearVowels: { cta: 'Escuchar con vocales' },
       soundWith: { cta: 'Escúchala con una vocal' },
       sayLine: (spoken: string) => `Se dice así: ${spoken}`,
       showHowToSay: { cta: 'Ver cómo se dice' },
@@ -646,6 +647,17 @@ export const learner = {
       hearAgain: { cta: 'Escuchar otra vez' },
       missHoya: 'Escucha otra vez',
       empty: 'Aquí no hay nada para jugar',
+    },
+    contrast: {
+      missHoya: 'Escucha los dos.',
+      syllable: (sound: string) => `la sílaba ${sound}`,
+      kind: {
+        plain: 'Suave, empieza más bajo.',
+        aspirated: 'Soplo fuerte, empieza más alto.',
+        tense: 'Tenso, sin soplo.',
+        plainS: 'Suave, con un poco de aire.',
+        tenseS: 'Un siseo largo y agudo.',
+      },
     },
     realia: {
       lineHint: 'Toca una línea para escucharla.',

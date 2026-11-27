@@ -48,6 +48,8 @@ function keep(effect: ListenEffect): ClozeEffect[] {
       return effect.why === 'confirm' ? [{ type: 'say' }] : [];
     case 'cancel-replay':
     case 'schedule-replay':
+    // A contrast round's compare row is Listen & Pick's alone (AMENDMENTS-MINIMAL-PAIRS row MP-2a).
+    case 'compare':
       return [];
     default:
       return [effect];
