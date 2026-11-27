@@ -2,1014 +2,1382 @@
   "strand": "sentences",
   "templates": [
     {
-      "id": "pitem:sent-n-hear-horangiyeyo",
+      "id": "pitem:sent-hear-run-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a tiger. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear runs. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"호랑이예요","romanization":"horangiyeyo","en":"It is a tiger."},
+        "prompt": {"ko":"곰이 뛰어요.","romanization":"gomi ttwieoyo","en":"The bear runs."},
         "options": [
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":true},
-          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":false},
-          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":true},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:horangi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-horangiyeyo",
+      "id": "pitem:sent-read-run-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a tiger. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear runs. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"호랑이예요","romanization":"horangiyeyo","en":"It is a tiger."},
+        "prompt": {"ko":"곰이 뛰어요.","romanization":"gomi ttwieoyo","en":"The bear runs."},
         "options": [
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":true},
-          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":false},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":true},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:horangi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-darieyo",
+      "id": "pitem:sent-hear-swim-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is the moon. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear swims. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"달이에요","romanization":"darieyo","en":"It is the moon."},
+        "prompt": {"ko":"곰이 헤엄쳐요.","romanization":"gomi heeomchyeoyo","en":"The bear swims."},
         "options": [
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":true},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false}
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":true},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:dal"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-darieyo",
+      "id": "pitem:sent-read-swim-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is the moon. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear swims. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"달이에요","romanization":"darieyo","en":"It is the moon."},
+        "prompt": {"ko":"곰이 헤엄쳐요.","romanization":"gomi heeomchyeoyo","en":"The bear swims."},
         "options": [
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":true},
-          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false},
-          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":true},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:dal"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-sanieyo",
+      "id": "pitem:sent-hear-sleep-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a mountain. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"산이에요","romanization":"sanieyo","en":"It is a mountain."},
+        "prompt": {"ko":"곰이 자요.","romanization":"gomi jayo","en":"The bear sleeps."},
         "options": [
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":true},
-          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false}
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":true},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:san"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-sanieyo",
+      "id": "pitem:sent-read-sleep-bear",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a mountain. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bear sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"산이에요","romanization":"sanieyo","en":"It is a mountain."},
+        "prompt": {"ko":"곰이 자요.","romanization":"gomi jayo","en":"The bear sleeps."},
         "options": [
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":true},
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false}
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":true},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:san"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gom"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-badayeyo",
+      "id": "pitem:sent-hear-run-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is the sea. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger runs. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"바다예요","romanization":"badayeyo","en":"It is the sea."},
+        "prompt": {"ko":"호랑이가 뛰어요.","romanization":"horangiga ttwieoyo","en":"The tiger runs."},
         "options": [
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":true},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"family-table","pictureRef":"card:family-table","en":"Family table","isCorrect":false},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":true},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false},
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":false},
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:bada"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-badayeyo",
+      "id": "pitem:sent-read-run-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is the sea. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger runs. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"바다예요","romanization":"badayeyo","en":"It is the sea."},
+        "prompt": {"ko":"호랑이가 뛰어요.","romanization":"horangiga ttwieoyo","en":"The tiger runs."},
         "options": [
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":true},
-          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false}
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":true},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false},
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:bada"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-yeonieyo",
+      "id": "pitem:sent-hear-swim-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a kite. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger swims. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"연이에요","romanization":"yeonieyo","en":"It is a kite."},
+        "prompt": {"ko":"호랑이가 헤엄쳐요.","romanization":"horangiga heeomchyeoyo","en":"The tiger swims."},
         "options": [
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":true},
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":false},
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":false},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yeon"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-yeonieyo",
+      "id": "pitem:sent-read-swim-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a kite. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger swims. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"연이에요","romanization":"yeonieyo","en":"It is a kite."},
+        "prompt": {"ko":"호랑이가 헤엄쳐요.","romanization":"horangiga heeomchyeoyo","en":"The tiger swims."},
         "options": [
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":true},
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":false},
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yeon"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-paengiyeyo",
+      "id": "pitem:sent-hear-sleep-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a spinning top. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"팽이예요","romanization":"paengiyeyo","en":"It is a spinning top."},
+        "prompt": {"ko":"호랑이가 자요.","romanization":"horangiga jayo","en":"The tiger sleeps."},
         "options": [
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":true},
-          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":true},
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":false},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:paengi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-paengiyeyo",
+      "id": "pitem:sent-read-sleep-tiger",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a spinning top. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The tiger sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"팽이예요","romanization":"paengiyeyo","en":"It is a spinning top."},
+        "prompt": {"ko":"호랑이가 자요.","romanization":"horangiga jayo","en":"The tiger sleeps."},
         "options": [
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":true},
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":false},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:paengi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:horangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-kkachiyeyo",
+      "id": "pitem:sent-hear-run-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a magpie. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy runs. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"까치예요","romanization":"kkachiyeyo","en":"It is a magpie."},
+        "prompt": {"ko":"강아지가 뛰어요.","romanization":"gangajiga ttwieoyo","en":"The puppy runs."},
         "options": [
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":true},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":true},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false},
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:kkachi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-kkachiyeyo",
+      "id": "pitem:sent-read-run-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a magpie. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy runs. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"까치예요","romanization":"kkachiyeyo","en":"It is a magpie."},
+        "prompt": {"ko":"강아지가 뛰어요.","romanization":"gangajiga ttwieoyo","en":"The puppy runs."},
         "options": [
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":true},
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false},
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false}
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":true},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false},
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":false},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:kkachi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-hanbogieyo",
+      "id": "pitem:sent-hear-swim-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a hanbok. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy swims. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"한복이에요","romanization":"hanbogieyo","en":"It is a hanbok."},
+        "prompt": {"ko":"강아지가 헤엄쳐요.","romanization":"gangajiga heeomchyeoyo","en":"The puppy swims."},
         "options": [
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
-          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false}
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":true},
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":false},
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:hanbok"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-hanbogieyo",
+      "id": "pitem:sent-read-swim-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a hanbok. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy swims. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"한복이에요","romanization":"hanbogieyo","en":"It is a hanbok."},
+        "prompt": {"ko":"강아지가 헤엄쳐요.","romanization":"gangajiga heeomchyeoyo","en":"The puppy swims."},
         "options": [
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":true},
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":false},
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":false},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:hanbok"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-gimchiyeyo",
+      "id": "pitem:sent-hear-sleep-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is kimchi. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi."},
+        "prompt": {"ko":"강아지가 자요.","romanization":"gangajiga jayo","en":"The puppy sleeps."},
         "options": [
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false}
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":true},
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":false},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:gimchi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-gimchiyeyo",
+      "id": "pitem:sent-read-sleep-puppy",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is kimchi. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The puppy sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi."},
+        "prompt": {"ko":"강아지가 자요.","romanization":"gangajiga jayo","en":"The puppy sleeps."},
         "options": [
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":true},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"mugunghwa","pictureRef":"card:mugunghwa","en":"Rose of Sharon","isCorrect":false},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false}
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":true},
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":false},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:gimchi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:gangaji"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-chaegieyo",
+      "id": "pitem:sent-hear-run-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a book. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit hops. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"책이에요","romanization":"chaegieyo","en":"It is a book."},
+        "prompt": {"ko":"토끼가 뛰어요.","romanization":"tokkiga ttwieoyo","en":"The rabbit hops."},
         "options": [
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":false},
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false}
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":true},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:chaek"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-chaegieyo",
+      "id": "pitem:sent-read-run-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a book. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit hops. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"책이에요","romanization":"chaegieyo","en":"It is a book."},
+        "prompt": {"ko":"토끼가 뛰어요.","romanization":"tokkiga ttwieoyo","en":"The rabbit hops."},
         "options": [
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false}
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":true},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:chaek"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-busieyo",
+      "id": "pitem:sent-hear-eat-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a brush. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit eats. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"붓이에요","romanization":"busieyo","en":"It is a brush."},
+        "prompt": {"ko":"토끼가 먹어요.","romanization":"tokkiga meogeoyo","en":"The rabbit eats."},
         "options": [
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":true},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:but"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-busieyo",
+      "id": "pitem:sent-read-eat-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a brush. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit eats. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"붓이에요","romanization":"busieyo","en":"It is a brush."},
+        "prompt": {"ko":"토끼가 먹어요.","romanization":"tokkiga meogeoyo","en":"The rabbit eats."},
         "options": [
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":true},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false},
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false}
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":true},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:but"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-jegiyeyo",
+      "id": "pitem:sent-hear-sleep-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a jegi. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"제기예요","romanization":"jegiyeyo","en":"It is a jegi."},
+        "prompt": {"ko":"토끼가 자요.","romanization":"tokkiga jayo","en":"The rabbit sleeps."},
         "options": [
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":true},
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false}
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":true},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:jegi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-jegiyeyo",
+      "id": "pitem:sent-read-sleep-rabbit",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is a jegi. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The rabbit sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"제기예요","romanization":"jegiyeyo","en":"It is a jegi."},
+        "prompt": {"ko":"토끼가 자요.","romanization":"tokkiga jayo","en":"The rabbit sleeps."},
         "options": [
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":true},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false},
+          {"id":"eat-rabbit","pictureRef":"word:act-eat-rabbit","en":"The rabbit eats","isCorrect":false},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:jegi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:tokki"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-yuchieyo",
+      "id": "pitem:sent-hear-run-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "These are yut sticks. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat runs. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"These are yut sticks."},
+        "prompt": {"ko":"고양이가 뛰어요.","romanization":"goyangiga ttwieoyo","en":"The cat runs."},
         "options": [
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":true},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":true},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false},
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":false},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yut"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-yuchieyo",
+      "id": "pitem:sent-read-run-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "These are yut sticks. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat runs. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"These are yut sticks."},
+        "prompt": {"ko":"고양이가 뛰어요.","romanization":"goyangiga ttwieoyo","en":"The cat runs."},
         "options": [
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":true},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":true},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false},
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":false},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yut"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-n-hear-hanjiyeyo",
+      "id": "pitem:sent-hear-eat-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is hanji paper. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat eats. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"한지예요","romanization":"hanjiyeyo","en":"It is hanji paper."},
+        "prompt": {"ko":"고양이가 먹어요.","romanization":"goyangiga meogeoyo","en":"The cat eats."},
         "options": [
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":true},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"mugunghwa","pictureRef":"card:mugunghwa","en":"Rose of Sharon","isCorrect":false},
-          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false}
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":true},
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":false},
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":false},
+          {"id":"swim-puppy","pictureRef":"word:act-swim-puppy","en":"The puppy swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:hanji"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-n-read-hanjiyeyo",
+      "id": "pitem:sent-read-eat-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "It is hanji paper. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat eats. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"한지예요","romanization":"hanjiyeyo","en":"It is hanji paper."},
+        "prompt": {"ko":"고양이가 먹어요.","romanization":"goyangiga meogeoyo","en":"The cat eats."},
         "options": [
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":true},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":true},
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":false},
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":false},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:hanji"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-babeulmeogeoyo",
+      "id": "pitem:sent-hear-sleep-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat rice. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"밥을 먹어요","romanization":"babeul meogeoyo","en":"I eat rice."},
+        "prompt": {"ko":"고양이가 자요.","romanization":"goyangiga jayo","en":"The cat sleeps."},
         "options": [
-          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":true},
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":false},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false},
+          {"id":"swim-bear","pictureRef":"word:act-swim-bear","en":"The bear swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:bap"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-babeulmeogeoyo",
+      "id": "pitem:sent-read-sleep-cat",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat rice. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The cat sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"밥을 먹어요","romanization":"babeul meogeoyo","en":"I eat rice."},
+        "prompt": {"ko":"고양이가 자요.","romanization":"goyangiga jayo","en":"The cat sleeps."},
         "options": [
-          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":true},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false}
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":true},
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":false},
+          {"id":"eat-cat","pictureRef":"word:act-eat-cat","en":"The cat eats","isCorrect":false},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:bap"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:goyangi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-gimchireulmeogeoyo",
+      "id": "pitem:sent-hear-run-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat kimchi. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey runs. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"김치를 먹어요","romanization":"gimchireul meogeoyo","en":"I eat kimchi."},
+        "prompt": {"ko":"원숭이가 뛰어요.","romanization":"wonsungiga ttwieoyo","en":"The monkey runs."},
         "options": [
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":true},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":true},
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:gimchi"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-gimchireulmeogeoyo",
+      "id": "pitem:sent-read-run-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat kimchi. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey runs. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"김치를 먹어요","romanization":"gimchireul meogeoyo","en":"I eat kimchi."},
+        "prompt": {"ko":"원숭이가 뛰어요.","romanization":"wonsungiga ttwieoyo","en":"The monkey runs."},
         "options": [
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false}
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":true},
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:gimchi"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-gimbabeulmeogeoyo",
+      "id": "pitem:sent-hear-eat-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat kimbap. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey eats. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"김밥을 먹어요","romanization":"gimbabeul meogeoyo","en":"I eat kimbap."},
+        "prompt": {"ko":"원숭이가 먹어요.","romanization":"wonsungiga meogeoyo","en":"The monkey eats."},
         "options": [
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":true},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:gimbap"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-gimbabeulmeogeoyo",
+      "id": "pitem:sent-read-eat-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat kimbap. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey eats. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"김밥을 먹어요","romanization":"gimbabeul meogeoyo","en":"I eat kimbap."},
+        "prompt": {"ko":"원숭이가 먹어요.","romanization":"wonsungiga meogeoyo","en":"The monkey eats."},
         "options": [
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":true},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false},
+          {"id":"swim-tiger","pictureRef":"word:act-swim-tiger","en":"The tiger swims","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:gimbap"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-tteokgugeulmeogeoyo",
+      "id": "pitem:sent-hear-sleep-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat rice cake soup. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"떡국을 먹어요","romanization":"tteokgugeul meogeoyo","en":"I eat rice cake soup."},
+        "prompt": {"ko":"원숭이가 자요.","romanization":"wonsungiga jayo","en":"The monkey sleeps."},
         "options": [
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":true},
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":true},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false},
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":false},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:tteokguk"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-tteokgugeulmeogeoyo",
+      "id": "pitem:sent-read-sleep-monkey",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat rice cake soup. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The monkey sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"떡국을 먹어요","romanization":"tteokgugeul meogeoyo","en":"I eat rice cake soup."},
+        "prompt": {"ko":"원숭이가 자요.","romanization":"wonsungiga jayo","en":"The monkey sleeps."},
         "options": [
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":true},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false},
+          {"id":"eat-monkey","pictureRef":"word:act-eat-monkey","en":"The monkey eats","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:tteokguk"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:wonsungi"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-songpyeoneulmeogeoyo",
+      "id": "pitem:sent-hear-fly-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat songpyeon. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird flies. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"송편을 먹어요","romanization":"songpyeoneul meogeoyo","en":"I eat songpyeon."},
+        "prompt": {"ko":"새가 날아요.","romanization":"saega narayo","en":"The bird flies."},
         "options": [
-          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":true},
-          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":true},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false},
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":false},
+          {"id":"run-cat","pictureRef":"word:act-run-cat","en":"The cat runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:songpyeon"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-songpyeoneulmeogeoyo",
+      "id": "pitem:sent-read-fly-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I eat songpyeon. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird flies. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"송편을 먹어요","romanization":"songpyeoneul meogeoyo","en":"I eat songpyeon."},
+        "prompt": {"ko":"새가 날아요.","romanization":"saega narayo","en":"The bird flies."},
         "options": [
-          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":true},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false}
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":true},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false},
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":false},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:songpyeon"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-hanbogeulibeoyo",
+      "id": "pitem:sent-hear-eat-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I wear a hanbok. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird eats. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"한복을 입어요","romanization":"hanbogeul ibeoyo","en":"I wear a hanbok."},
+        "prompt": {"ko":"새가 먹어요.","romanization":"saega meogeoyo","en":"The bird eats."},
         "options": [
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":true},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false},
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":false},
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:hanbok"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-hanbogeulibeoyo",
+      "id": "pitem:sent-read-eat-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I wear a hanbok. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird eats. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"한복을 입어요","romanization":"hanbogeul ibeoyo","en":"I wear a hanbok."},
+        "prompt": {"ko":"새가 먹어요.","romanization":"saega meogeoyo","en":"The bird eats."},
         "options": [
-          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":true},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false},
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":false},
+          {"id":"run-tiger","pictureRef":"word:act-run-tiger","en":"The tiger runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:hanbok"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-chaegeulilgeoyo",
+      "id": "pitem:sent-hear-sleep-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I read a book. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird sleeps. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"책을 읽어요","romanization":"chaegeul ilgeoyo","en":"I read a book."},
+        "prompt": {"ko":"새가 자요.","romanization":"saega jayo","en":"The bird sleeps."},
         "options": [
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":true},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":false}
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":true},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:chaek"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-chaegeulilgeoyo",
+      "id": "pitem:sent-read-sleep-bird",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I read a book. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The bird sleeps. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"책을 읽어요","romanization":"chaegeul ilgeoyo","en":"I read a book."},
+        "prompt": {"ko":"새가 자요.","romanization":"saega jayo","en":"The bird sleeps."},
         "options": [
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":true},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"mugunghwa","pictureRef":"card:mugunghwa","en":"Rose of Sharon","isCorrect":false},
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":false}
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":true},
+          {"id":"fly-bird","pictureRef":"word:act-fly-bird","en":"The bird flies","isCorrect":false},
+          {"id":"eat-bird","pictureRef":"word:act-eat-bird","en":"The bird eats","isCorrect":false},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:chaek"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:sae"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:sent-v-hear-yeoneulnallyeoyo",
+      "id": "pitem:sent-hear-swim-duck",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I fly a kite. (hear)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck swims. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"연을 날려요","romanization":"yeoneul nallyeoyo","en":"I fly a kite."},
+        "prompt": {"ko":"오리가 헤엄쳐요.","romanization":"origa heeomchyeoyo","en":"The duck swims."},
         "options": [
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
-          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false},
-          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false}
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":true},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false},
+          {"id":"run-puppy","pictureRef":"word:act-run-puppy","en":"The puppy runs","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:yeon"],
-        "requires": {"audio":true,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":true,"picture":"word"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-yeoneulnallyeoyo",
+      "id": "pitem:sent-read-swim-duck",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "I fly a kite. (read)",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck swims. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"연을 날려요","romanization":"yeoneul nallyeoyo","en":"I fly a kite."},
+        "prompt": {"ko":"오리가 헤엄쳐요.","romanization":"origa heeomchyeoyo","en":"The duck swims."},
         "options": [
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
-          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":false},
-          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
-          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false}
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":true},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:yeon"],
-        "requires": {"audio":false,"picture":"card"},
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-fly-duck",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck flies. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"오리가 날아요.","romanization":"origa narayo","en":"The duck flies."},
+        "options": [
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":true},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false},
+          {"id":"run-rabbit","pictureRef":"word:act-run-rabbit","en":"The rabbit hops","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-fly-duck",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck flies. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"오리가 날아요.","romanization":"origa narayo","en":"The duck flies."},
+        "options": [
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":true},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false},
+          {"id":"run-monkey","pictureRef":"word:act-run-monkey","en":"The monkey runs","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-sleep-duck",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck sleeps. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"오리가 자요.","romanization":"origa jayo","en":"The duck sleeps."},
+        "options": [
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":true},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-sleep-duck",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "The duck sleeps. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"오리가 자요.","romanization":"origa jayo","en":"The duck sleeps."},
+        "options": [
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":true},
+          {"id":"swim-duck","pictureRef":"word:act-swim-duck","en":"The duck swims","isCorrect":false},
+          {"id":"fly-duck","pictureRef":"word:act-fly-duck","en":"The duck flies","isCorrect":false},
+          {"id":"run-bear","pictureRef":"word:act-run-bear","en":"The bear runs","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:ori"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-run-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister runs. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"동생이 뛰어요.","romanization":"dongsaengi ttwieoyo","en":"My younger brother or sister runs."},
+        "options": [
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":true},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false},
+          {"id":"sleep-puppy","pictureRef":"word:act-sleep-puppy","en":"The puppy sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-run-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister runs. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"동생이 뛰어요.","romanization":"dongsaengi ttwieoyo","en":"My younger brother or sister runs."},
+        "options": [
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":true},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false},
+          {"id":"sleep-cat","pictureRef":"word:act-sleep-cat","en":"The cat sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-swim-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister swims. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"동생이 헤엄쳐요.","romanization":"dongsaengi heeomchyeoyo","en":"My younger brother or sister swims."},
+        "options": [
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":true},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false},
+          {"id":"sleep-bird","pictureRef":"word:act-sleep-bird","en":"The bird sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-swim-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister swims. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"동생이 헤엄쳐요.","romanization":"dongsaengi heeomchyeoyo","en":"My younger brother or sister swims."},
+        "options": [
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":true},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false},
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-eat-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister eats. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"동생이 먹어요.","romanization":"dongsaengi meogeoyo","en":"My younger brother or sister eats."},
+        "options": [
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":true},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false},
+          {"id":"sleep-tiger","pictureRef":"word:act-sleep-tiger","en":"The tiger sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-eat-sibling",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My younger brother or sister eats. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"동생이 먹어요.","romanization":"dongsaengi meogeoyo","en":"My younger brother or sister eats."},
+        "options": [
+          {"id":"eat-sibling","pictureRef":"word:act-eat-sibling","en":"My younger brother or sister eats","isCorrect":true},
+          {"id":"run-sibling","pictureRef":"word:act-run-sibling","en":"My younger brother or sister runs","isCorrect":false},
+          {"id":"swim-sibling","pictureRef":"word:act-swim-sibling","en":"My younger brother or sister swims","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:dongsaeng"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-run-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend runs. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"친구가 뛰어요.","romanization":"chinguga ttwieoyo","en":"My friend runs."},
+        "options": [
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":true},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-run-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend runs. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"친구가 뛰어요.","romanization":"chinguga ttwieoyo","en":"My friend runs."},
+        "options": [
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":true},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-swim-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend swims. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"친구가 헤엄쳐요.","romanization":"chinguga heeomchyeoyo","en":"My friend swims."},
+        "options": [
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":true},
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false},
+          {"id":"sleep-bear","pictureRef":"word:act-sleep-bear","en":"The bear sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-swim-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend swims. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"친구가 헤엄쳐요.","romanization":"chinguga heeomchyeoyo","en":"My friend swims."},
+        "options": [
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":true},
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":false},
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":false},
+          {"id":"sleep-rabbit","pictureRef":"word:act-sleep-rabbit","en":"The rabbit sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":false,"picture":"word"},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sent-hear-eat-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "oral",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend eats. (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"친구가 먹어요.","romanization":"chinguga meogeoyo","en":"My friend eats."},
+        "options": [
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":true},
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":false},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false},
+          {"id":"sleep-monkey","pictureRef":"word:act-sleep-monkey","en":"The monkey sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":true,"picture":"word"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:sent-read-eat-friend",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "My friend eats. (read)",
+      "question": {
+        "format": "read-pick-picture",
+        "prompt": {"ko":"친구가 먹어요.","romanization":"chinguga meogeoyo","en":"My friend eats."},
+        "options": [
+          {"id":"eat-friend","pictureRef":"word:act-eat-friend","en":"My friend eats","isCorrect":true},
+          {"id":"run-friend","pictureRef":"word:act-run-friend","en":"My friend runs","isCorrect":false},
+          {"id":"swim-friend","pictureRef":"word:act-swim-friend","en":"My friend swims","isCorrect":false},
+          {"id":"sleep-duck","pictureRef":"word:act-sleep-duck","en":"The duck sleeps","isCorrect":false}
+        ],
+        "tags": ["pattern:n-i-v","word:chingu"],
+        "requires": {"audio":false,"picture":"word"},
         "leaks": true
       }
     },
@@ -1020,21 +1388,21 @@
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Hello!",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"안녕하세요!","romanization":"annyeonghaseyo","en":"Hello!"},
         "options": [
           {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":true},
-          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
-          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
+          {"id":"reply-11","ko":"김치예요.","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
-      "incompatibleWith": ["pitem:sent-reply-3"]
+      "incompatibleWith": []
     },
     {
       "id": "pitem:sent-reply-2",
@@ -1043,14 +1411,14 @@
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: What is your name?",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"이름이 뭐예요?","romanization":"ireumi mwoyeyo","en":"What is your name?"},
         "options": [
           {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
+          {"id":"reply-12","ko":"네, 여기 있어요.","romanization":"ne yeogi isseoyo","en":"Yes, here it is.","isCorrect":false},
           {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
@@ -1060,44 +1428,21 @@
       "incompatibleWith": []
     },
     {
-      "id": "pitem:sent-reply-3",
-      "strand": "sentences",
-      "gate": "sentence",
-      "form": "read",
-      "status": "ready",
-      "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "Reply to: Nice to meet you!",
-      "question": {
-        "format": "reply-pick",
-        "prompt": {"ko":"만나서 반가워요!","romanization":"mannaseo bangawoyo","en":"Nice to meet you!"},
-        "options": [
-          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":true},
-          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
-        ],
-        "tags": ["pattern:reply"],
-        "requires": {"audio":true,"picture":null},
-        "leaks": true
-      },
-      "incompatibleWith": ["pitem:sent-reply-1"]
-    },
-    {
       "id": "pitem:sent-reply-4",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Thank you.",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"감사합니다.","romanization":"gamsahamnida","en":"Thank you."},
         "options": [
-          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":true},
+          {"id":"reply-4","ko":"아니에요.","romanization":"anieyo","en":"Not at all.","isCorrect":true},
           {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1112,15 +1457,15 @@
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Goodbye (to the one leaving).",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"안녕히 가세요.","romanization":"annyeonghi gaseyo","en":"Goodbye (to the one leaving)."},
         "options": [
           {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":true},
-          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false},
-          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":false}
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1135,38 +1480,15 @@
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Have you been well?",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"잘 지냈어요?","romanization":"jal jinaesseoyo","en":"Have you been well?"},
         "options": [
           {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":true},
-          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false},
+          {"id":"reply-13","ko":"잘 먹겠습니다.","romanization":"jal meokgetseumnida","en":"Thank you for the food.","isCorrect":false},
           {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
-        ],
-        "tags": ["pattern:reply"],
-        "requires": {"audio":true,"picture":null},
-        "leaks": true
-      },
-      "incompatibleWith": ["pitem:sent-reply-8"]
-    },
-    {
-      "id": "pitem:sent-reply-7",
-      "strand": "sentences",
-      "gate": "sentence",
-      "form": "read",
-      "status": "ready",
-      "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "Reply to: Is this kimchi?",
-      "question": {
-        "format": "reply-pick",
-        "prompt": {"ko":"이거 김치예요?","romanization":"igeo gimchiyeyo","en":"Is this kimchi?"},
-        "options": [
-          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":true},
-          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
-          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1175,36 +1497,13 @@
       "incompatibleWith": []
     },
     {
-      "id": "pitem:sent-reply-8",
-      "strand": "sentences",
-      "gate": "sentence",
-      "form": "read",
-      "status": "ready",
-      "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
-      "glossEn": "Reply to: Have you eaten?",
-      "question": {
-        "format": "reply-pick",
-        "prompt": {"ko":"밥 먹었어요?","romanization":"bap meogeosseoyo","en":"Have you eaten?"},
-        "options": [
-          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":true},
-          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false}
-        ],
-        "tags": ["pattern:reply"],
-        "requires": {"audio":true,"picture":null},
-        "leaks": true
-      },
-      "incompatibleWith": ["pitem:sent-reply-6"]
-    },
-    {
       "id": "pitem:sent-reply-9",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Thanks.",
       "question": {
         "format": "reply-pick",
@@ -1227,21 +1526,90 @@
       "form": "read",
       "status": "ready",
       "reviewedBy": "ai-3-lens",
-      "reviewedAt": "2026-10-11",
+      "reviewedAt": "2026-11-26",
       "glossEn": "Reply to: Sorry.",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"미안해요.","romanization":"mianhaeyo","en":"Sorry."},
         "options": [
           {"id":"reply-10","ko":"괜찮아요.","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
-          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false}
+          {"id":"reply-11","ko":"김치예요.","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false},
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "incompatibleWith": ["pitem:sent-reply-4","pitem:sent-reply-9"]
+    },
+    {
+      "id": "pitem:sent-reply-11",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "Reply to: What is this?",
+      "question": {
+        "format": "reply-pick",
+        "prompt": {"ko":"이게 뭐예요?","romanization":"ige mwoyeyo","en":"What is this?"},
+        "options": [
+          {"id":"reply-11","ko":"김치예요.","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-4","ko":"아니에요.","romanization":"anieyo","en":"Not at all.","isCorrect":false}
+        ],
+        "tags": ["pattern:reply"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      },
+      "incompatibleWith": []
+    },
+    {
+      "id": "pitem:sent-reply-12",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "Reply to: Water, please.",
+      "question": {
+        "format": "reply-pick",
+        "prompt": {"ko":"물 주세요.","romanization":"mul juseyo","en":"Water, please."},
+        "options": [
+          {"id":"reply-12","ko":"네, 여기 있어요.","romanization":"ne yeogi isseoyo","en":"Yes, here it is.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-11","ko":"김치예요.","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false}
+        ],
+        "tags": ["pattern:reply"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      },
+      "incompatibleWith": []
+    },
+    {
+      "id": "pitem:sent-reply-13",
+      "strand": "sentences",
+      "gate": "sentence",
+      "form": "read",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-11-26",
+      "glossEn": "Reply to: Enjoy your meal.",
+      "question": {
+        "format": "reply-pick",
+        "prompt": {"ko":"맛있게 드세요.","romanization":"masitge deuseyo","en":"Enjoy your meal."},
+        "options": [
+          {"id":"reply-13","ko":"잘 먹겠습니다.","romanization":"jal meokgetseumnida","en":"Thank you for the food.","isCorrect":true},
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+        ],
+        "tags": ["pattern:reply"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      },
+      "incompatibleWith": []
     }
   ]
 }

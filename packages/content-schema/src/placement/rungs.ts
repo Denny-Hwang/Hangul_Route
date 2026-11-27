@@ -72,7 +72,7 @@ export const QUESTIONS_PER_RUNG = 3;
  * it asked before; PV-1c turns it to 4 (pass at 3 of 4) in the same change that lands
  * the sentence bank. Everything below that depends on it is derived from it.
  */
-export const SENTENCE_QUESTIONS: number = 3;
+export const SENTENCE_QUESTIONS: number = 4;
 
 /**
  * Questions in a rung of `gate`. `sentenceQuestions` is the switch and defaults to it;

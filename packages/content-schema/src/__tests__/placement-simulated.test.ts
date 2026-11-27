@@ -123,10 +123,10 @@ const bandOneOrLower = (o: Outcome): boolean => o.result.level.stage === 'stage1
 
 // Synchronous and CPU-bound: an explicit budget, so a slow runner or a later vitest that times out sync tests does not flake.
 describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_000 }, () => {
-  it('a learner with no Korean who taps "I am not sure" is asked exactly 12 questions and starts at the first quest', () => {
+  it('a learner with no Korean who taps "I am not sure" is asked exactly 13 questions and starts at the first quest', () => {
     const runs = many(LEARNERS.zero as Learner, 'standard', 50);
     for (const { asked, result } of runs) {
-      expect(asked).toBe(12);
+      expect(asked).toBe(13);
       expect(result.level).toEqual({ stage: 'stage1', band: 0 });
       expect(result.placedOutQuestIds).toEqual([]);
       expect(result.startQuestId).toBe('quest:stage1-letters-q1');
@@ -141,8 +141,8 @@ describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_
     expect(share(runs, bandOneOrLower)).toBeGreaterThanOrEqual(0.95);
     expect(share(runs, (o) => o.result.level.band === 0 && o.result.level.stage === 'stage1')).toBeGreaterThan(0.9);
     for (const { asked } of runs) {
-      expect(asked).toBeGreaterThanOrEqual(12);
-      expect(asked).toBeLessThanOrEqual(24);
+      expect(asked).toBeGreaterThanOrEqual(13);
+      expect(asked).toBeLessThanOrEqual(25);
     }
   });
 
@@ -165,7 +165,7 @@ describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_
     const runs = many(LEARNERS.decoder as Learner);
     const high = share(runs, (o) => (o.result.level.stage === 'stage1' && o.result.level.band === 3) || o.result.level.stage !== 'stage1');
     expect(high).toBeGreaterThan(0.85);
-    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(24);
+    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(25);
   });
 
   it('a heritage listener who understands but cannot read starts at the beginning, with the listening level reported apart', () => {
@@ -179,7 +179,7 @@ describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_
     const runs = many(LEARNERS.advanced as Learner);
     expect(share(runs, (o) => o.result.level.stage === 'stage3')).toBeGreaterThanOrEqual(0.95);
     for (const { result, asked } of runs.filter((o) => o.result.level.stage === 'stage3')) {
-      expect(asked).toBe(24);
+      expect(asked).toBe(25);
       expect(result.placedOutQuestIds).toHaveLength(15);
       expect(result.startQuestId).toBeNull();
     }
@@ -216,11 +216,11 @@ describe('simulated learners, Short and Deep (1,000 seeded runs each)', { timeou
     expect(share(many(LEARNERS.advanced as Learner, 'short'), (o) => o.result.level.band === 1)).toBeGreaterThan(0.85);
   });
 
-  it('Deep: any guesser lands above band 1 in at most 0.5 percent of runs; at most 42 questions', () => {
+  it('Deep: any guesser lands above band 1 in at most 0.5 percent of runs; at most 45 questions', () => {
     for (const learner of [LEARNERS.guesser, LEARNERS.neverFirst, LEARNERS.slotOne] as Learner[]) {
       const runs = many(learner, 'deep');
       expect(share(runs, (o) => aboveBand(o, 1))).toBeLessThanOrEqual(0.005);
-      for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(42);
+      for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(45);
     }
   });
 
@@ -228,7 +228,7 @@ describe('simulated learners, Short and Deep (1,000 seeded runs each)', { timeou
     const runs = many(LEARNERS.advanced as Learner, 'deep');
     expect(share(runs, (o) => o.result.level.stage === 'stage3')).toBeGreaterThanOrEqual(0.9);
     expect(share(runs, (o) => o.result.oralStage !== null)).toBe(1);
-    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(42);
+    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(45);
   });
 
   it('"not sure" on every item is band 0 in every mode', () => {

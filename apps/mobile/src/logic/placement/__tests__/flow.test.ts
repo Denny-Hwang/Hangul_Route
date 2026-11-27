@@ -6,7 +6,6 @@ import {
   finishRun,
   hashSeed,
   startRun,
-  type AssessmentQuestion,
   type PlacementRunState,
 } from '@hangul-route/content-schema';
 import { PLACEMENT_BANK } from '../../../content/placement.generated';
@@ -644,7 +643,7 @@ describe('resumableRun (section 3.1 step 8)', () => {
 });
 
 describe('resumableRun inside a four-question sentence rung (AMENDMENTS-PLC-VALIDITY section 3.6, PV-1b)', () => {
-  /** A Standard run on the real bank, answered right up to the sentence read rung, whose rung holds four questions (as PV-1c will build it). */
+  /** A Standard run on the real bank, answered right up to the sentence read rung, whose rung holds four questions (PV-1c builds it so). */
   const insideFourQuestionRung = (): PlacementRunState => {
     let state = startRun(
       PLACEMENT_BANK,
@@ -659,9 +658,7 @@ describe('resumableRun inside a four-question sentence rung (AMENDMENTS-PLC-VALI
       if (state.pause !== null) state = apply(state, { type: 'keepGoing' }, t);
     }
     expect(state.current?.gate).toBe('sentence');
-    const open = state.current as NonNullable<PlacementRunState['current']>;
-    const extra = { ...(open.questions[0] as AssessmentQuestion), id: 'pitem:sent-extra' };
-    state = { ...state, current: { ...open, questions: [...open.questions, extra] } };
+    expect(state.current?.questions).toHaveLength(4);
     t += 2_000;
     return apply(state, { type: 'answer', optionId: correct(state) }, t);
   };
