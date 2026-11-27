@@ -219,7 +219,7 @@ describe('optionViews', () => {
     expect(hidden.map((o) => [o.kind, o.ko, o.romanization, o.label])).toEqual([
       ['korean', 'ㅏ', '', 'ㅏ'],
       ['korean', 'ㅓ', '', 'ㅓ'],
-      ['korean', 'ㅑ', '', 'ㅑ'],
+      ['korean', 'ㅜ', '', 'ㅜ'],
       ['korean', 'ㅣ', '', 'ㅣ'],
     ]);
     const shown = optionViews(HEAR_LETTER, { ...base, revealed: true });

@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = resolve(HERE, "..");
 const {
+  EAR_RULED_OUT,
   PLACEMENT_BASELINE_FILE,
   PLACEMENT_RULES,
   applyPlacementBaseline,
@@ -285,8 +286,8 @@ const readWord = (id, tags, refs = ["card:rice", "card:book", "card:tiger", "car
   base(id, "vocab", "read", "read-pick-picture", { prompt: { ko: "밥", romanization: "bap", en: "rice" }, options: refs.map((ref, i) => pic(`o${i}`, ref, i === 0)), tags });
 const syllable = (id, gate, format, target, others) =>
   base(id, gate, "decode", format, {
-    ...(format === "hear-pick-written" ? { spoken: { ko: target, romanization: "x", en: "x" } } : { prompt: { ko: target, romanization: "x", en: "x" } }),
-    options: [target, ...others].map((x, i) => (format === "hear-pick-written" ? { id: `o${i}`, ko: x, isCorrect: i === 0 } : { id: `o${i}`, sound: x, isCorrect: i === 0 })),
+    ...(format !== "see-pick-sound" ? { spoken: { ko: target, romanization: "x", en: "x" } } : { prompt: { ko: target, romanization: "x", en: "x" } }),
+    options: [target, ...others].map((x, i) => (format !== "see-pick-sound" ? { id: `o${i}`, ko: x, isCorrect: i === 0 } : { id: `o${i}`, sound: x, isCorrect: i === 0 })),
   });
 const letter = (id, gate, target, others) =>
   base(id, gate, "decode", "hear-pick-written", { spoken: { ko: "가", romanization: "ga", en: "ga" }, options: [target, ...others].map((x, i) => ({ id: `o${i}`, ko: x, isCorrect: i === 0 })) });
@@ -596,9 +597,11 @@ describe("placement lint: placement-decode-balanced (D1) and placement-decode-ea
     assert.deepEqual(balanced(syllable("pitem:syl-cv-hear-lone", "syl-cv", "hear-pick-written", "가", ["나", "거", "x"])), ["pitem:syl-cv-hear-lone"]);
   });
 
-  test("the build-syllable and the other strands are not balanced items", () => {
-    const build = syllable("pitem:syl-cv-build-ga", "syl-cv", "build-syllable", "가", ["가"]);
-    assert.deepEqual(balanced(build), []);
+  test("a build-syllable item is four heard blocks too (PV-6): balanced and ear-safe; the letter strands are not balanced items", () => {
+    assert.deepEqual(balanced(syllable("pitem:syl-cv-build-ga", "syl-cv", "build-syllable", "가", ["나", "거", "너"])), []);
+    assert.deepEqual(balanced(syllable("pitem:syl-cv-build-bad", "syl-cv", "build-syllable", "가", ["거", "나", "라"])), ["pitem:syl-cv-build-bad"]);
+    assert.deepEqual(ear(syllable("pitem:syl-cvc-build-gom", "syl-cvc", "build-syllable", "곰", ["곤", "공", "감"])), ["pitem:syl-cvc-build-gom"]);
+    assert.deepEqual(ear(syllable("pitem:syl-cvc-build-ok", "syl-cvc", "build-syllable", "곰", ["밤", "복", "각"])), []);
     assert.deepEqual(balanced(letter("pitem:sound-basic-hear-giyeok", "sound-basic", "ㄱ", ["ㅅ", "ㄴ", "ㄷ"])), []);
   });
 
@@ -638,6 +641,25 @@ describe("placement lint: placement-decode-balanced (D1) and placement-decode-ea
     assert.deepEqual(s("주", ["저", "라", "마"]), []);
     assert.deepEqual(s("저", ["져", "라", "마"]), ["pitem:syl-cv-hear-x"], "져 sounds as 저");
     assert.deepEqual(s("쇼", ["죠", "라", "마"]), ["pitem:syl-cv-hear-x"]);
+  });
+
+  test("DC-2b's stricter rules (PV-6): ㄴ-ㄹ and ㄷ-ㄹ wait for the listening pass, ㅅ meets no y-vowel, and after ㅎ a y-vowel is not set against its plain vowel", () => {
+    const s = (target, others) => ear(syllable("pitem:syl-cv-hear-x", "syl-cv", "hear-pick-written", target, others));
+    assert.deepEqual(s("라", ["나", "마", "고"]), ["pitem:syl-cv-hear-x"], "a lone ㄹ is a flap: heard as ㄴ");
+    assert.deepEqual(s("다", ["라", "마", "고"]), ["pitem:syl-cv-hear-x"], "and as a quick ㄷ");
+    assert.deepEqual(s("라", ["마", "아", "리"]), []);
+    assert.deepEqual(s("서", ["셔", "너", "머"]), ["pitem:syl-cv-hear-x"], "셔 is heard as 서");
+    assert.deepEqual(s("하", ["햐", "나", "고"]), ["pitem:syl-cv-hear-x"], "the glide after h is only the h");
+    assert.deepEqual(s("가", ["갸", "나", "고"]), [], "after another initial the glide is heard");
+    assert.deepEqual(s("하", ["갸", "나", "고"]), ["pitem:syl-cv-hear-x"], "either syllable starting with ㅎ is enough");
+    assert.deepEqual(s("하", ["허", "나", "고"]), [], "ㅏ and ㅓ are not a glide pair");
+  });
+
+  test("EAR_RULED_OUT names every pair once, in its own list", () => {
+    const pairs = [...EAR_RULED_OUT.plainAspirated, ...EAR_RULED_OUT.weakH, ...EAR_RULED_OUT.heldForListening, ...EAR_RULED_OUT.sibilants, ...EAR_RULED_OUT.vowels, ...EAR_RULED_OUT.glideAfterH];
+    assert.equal(new Set(pairs).size, pairs.length);
+    for (const p of pairs) assert.equal([...p].length, 2, p);
+    assert.ok(Object.isFrozen(EAR_RULED_OUT));
   });
 
   test("an item whose target is not a letter or a syllable, or an option that is not, is left to the structure rules", () => {

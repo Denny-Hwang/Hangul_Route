@@ -7,6 +7,7 @@ import {
   finishRun,
   hashSeed,
   isFinished,
+  passAtFor,
   startRun,
   type AssessmentQuestion,
   type PlacementBank,
@@ -155,5 +156,126 @@ describe('the modes on today’s bank', () => {
         expect(runOnce(mode, seed, 0.9).tags.filter((tag) => WARMUP_TAGS.includes(tag))).toEqual([]);
       }
     }
+  });
+});
+
+/**
+ * AMENDMENTS-PLC-VALIDITY row PV-6 (sections 3.6 and 3.9): responders that do not read, on the decoding gates' draws
+ * of the shipped bank. A draw is what `startRun` deals for a rung (`state.draws`), for Short, Standard (also listen
+ * first) and Deep, 200 seeds each.
+ *  - middle-picking: picks the option closest to the other three (by initial, vowel and final). Exact per draw.
+ *  - elimination: never gives an answer it already gave earlier in the check (AMENDMENTS-STAGE1-DECODING-CHECK
+ *    section 3.9, strategy 3).
+ *  - novelty: picks among the options the questions before showed least often (a comparison across items).
+ * The last two play each run with seeded picks; their bound is chance plus 0.03, as DC section 3.9 sets it.
+ */
+describe('responders that do not read, on the decoding gates (PV-6)', () => {
+  const DECODE_KEYS = ['sound-basic:decode', 'syl-cv:decode', 'sound-rest:decode', 'syl-cvc:decode', 'syl-cv:decode:2', 'syl-cvc:decode:2'];
+  const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  const MEDIALS = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ';
+  const FINALS = [...' ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'];
+  const CHIP = /^(kk|tt|pp|ss|jj|ch|g|n|d|r|m|b|s|j|k|t|p|h)?(yeo|ya|yo|yu|eo|eu|a|o|u|i)(ng|k|n|t|l|m|p)?$/;
+  type Option = AssessmentQuestion['options'][number];
+  /** What the responder sees of an option: a block, a letter or a Latin chip. */
+  const textOf = (o: Option): string => (o.ko ?? o.sound) as string;
+  /** A block's or a chip's initial, vowel and final. */
+  const partsOf = (o: Option): string[] => {
+    if (o.ko !== undefined) {
+      const n = o.ko.charCodeAt(0) - 0xac00;
+      return [INITIALS[Math.floor(n / 588)] as string, MEDIALS[Math.floor((n % 588) / 28)] as string, (FINALS[n % 28] as string).trim()];
+    }
+    const m = CHIP.exec(o.sound as string) as RegExpExecArray;
+    return [m[1] ?? '', m[2] as string, m[3] ?? ''];
+  };
+  const MODES: Array<[PlacementMode, Partial<PlacementConfig>]> = [
+    ['short', {}],
+    ['standard', {}],
+    ['standard', { listenFirst: true }],
+    ['deep', {}],
+  ];
+  const drawsOf = (mode: PlacementMode, seed: number, over: Partial<PlacementConfig>): Array<[string, AssessmentQuestion[]]> => {
+    const state = startRun(bank, config(mode, seed, over), 0);
+    return DECODE_KEYS.flatMap((key) => {
+      const draw = state.draws[key];
+      return draw === undefined ? [] : [[key, draw] as [string, AssessmentQuestion[]]];
+    });
+  };
+  /** P(at least `need` of the items right), the items independent. */
+  const passChance = (p: readonly number[], need: number): number => {
+    let dist = [1];
+    for (const x of p) dist = [...dist, 0].map((v, k) => v * (1 - x) + (k > 0 ? (dist[k - 1] as number) * x : 0));
+    return dist.slice(need).reduce((a, b) => a + b, 0);
+  };
+  const middleChance = (q: AssessmentQuestion): number => {
+    const parts = q.options.map(partsOf);
+    const total = parts.map((p) => parts.reduce((sum, r) => sum + p.filter((x, i) => x !== r[i]).length, 0));
+    const nearest = q.options.filter((_, i) => total[i] === Math.min(...total));
+    return nearest.filter((o) => o.isCorrect).length / nearest.length;
+  };
+
+  it('the middle-picking responder is at chance on every syllable item, and passes a syllable gate exactly as often as a guesser', () => {
+    let items = 0;
+    for (const [mode, over] of MODES) {
+      for (let seed = 1; seed <= RUNS; seed += 1) {
+        for (const [key, draw] of drawsOf(mode, seed, over)) {
+          if (!key.startsWith('syl-')) continue;
+          // every item of the draw counts, the tile item included (it is four heard blocks)
+          const scored = draw;
+          for (const q of scored) expect(middleChance(q), `${mode} ${seed} ${q.id}`).toBe(0.25);
+          items += scored.length;
+          const need = passAtFor(mode, key.startsWith('syl-cvc') ? 'syl-cvc' : 'syl-cv');
+          expect(passChance(scored.map(middleChance), need)).toBeCloseTo(passChance(scored.map(() => 0.25), need), 12);
+        }
+      }
+    }
+    expect(items).toBeGreaterThan(2000);
+    expect(passChance([0.25, 0.25, 0.25], 2)).toBeCloseTo(0.15625, 12);
+  });
+
+  const PLAYS = 20;
+  /** First-try accuracy per gate of a responder, every mode and seed, `PLAYS` seeded plays of each run's draws. */
+  const accuracy = (choose: (q: AssessmentQuestion, before: AssessmentQuestion[], given: string[], rng: () => number) => Option): Map<string, number> => {
+    const right = new Map<string, number>();
+    const asked = new Map<string, number>();
+    for (const [mode, over] of MODES) {
+      for (let seed = 1; seed <= RUNS; seed += 1) {
+        const draws = drawsOf(mode, seed, over);
+        for (let play = 0; play < PLAYS; play += 1) {
+          const rng = createRng(hashSeed(['pv6-bot', mode, String(over.listenFirst === true), String(seed), String(play)]));
+          const before: AssessmentQuestion[] = [];
+          const given: string[] = [];
+          for (const [key, draw] of draws) {
+            const gate = key.split(':')[0] as string;
+            for (const q of draw) {
+              const pick = choose(q, before, given, rng);
+              asked.set(gate, (asked.get(gate) ?? 0) + 1);
+              if (pick.isCorrect) right.set(gate, (right.get(gate) ?? 0) + 1);
+              before.push(q);
+              given.push(textOf(pick));
+            }
+          }
+        }
+      }
+    }
+    return new Map([...asked].map(([gate, n]) => [gate, (right.get(gate) ?? 0) / n]));
+  };
+  const pickAmong = (options: readonly Option[], rng: () => number): Option => options[Math.floor(rng() * options.length)] as Option;
+
+  it('the elimination responder (never gives an answer twice) stays within chance + 0.03 on every decoding gate', () => {
+    const acc = accuracy((q, _before, given, rng) => {
+      const fresh = q.options.filter((o) => !given.includes(textOf(o)));
+      return pickAmong(fresh.length > 0 ? fresh : q.options, rng);
+    });
+    expect([...acc.keys()].sort()).toEqual(['sound-basic', 'sound-rest', 'syl-cv', 'syl-cvc']);
+    for (const [gate, a] of acc) expect(a, gate).toBeLessThanOrEqual(0.28);
+  });
+
+  it('the novelty responder (picks what the questions before showed least) stays within chance + 0.03 on every decoding gate', () => {
+    const acc = accuracy((q, before, _given, rng) => {
+      const shown = (o: Option): number => before.filter((b) => b.options.some((x) => textOf(x) === textOf(o))).length;
+      const least = Math.min(...q.options.map(shown));
+      return pickAmong(q.options.filter((o) => shown(o) === least), rng);
+    });
+    for (const [gate, a] of acc) expect(a, gate).toBeLessThanOrEqual(0.28);
   });
 });

@@ -37,6 +37,7 @@ import {
   type PlacementStrand,
   type PlacementTemplate,
 } from '../index';
+import { EAR_RULED_OUT as EAR_RULED_OUT_SCHEMA } from '../hangul/ear-contrasts';
 import { REPO_ROOT } from './helpers/romanization-registry';
 
 /**
@@ -267,11 +268,6 @@ describe('content/placement: recognition (A.1)', () => {
 });
 
 describe('content/placement: sound-letter (A.2)', () => {
-  const CONFUSABLE: Record<string, string> = {
-    ㄱ: 'ㅋㄴㄷ', ㄴ: 'ㄱㄷㄹ', ㄷ: 'ㅌㄹㄴ', ㄹ: 'ㄷㄴㅁ', ㅁ: 'ㅂㅇㄴ', ㅂ: 'ㅍㅁㅅ', ㅅ: 'ㅈㅊㅇ', ㅇ: 'ㅎㅁㅅ', ㅈ: 'ㅊㅅㄱ', ㅊ: 'ㅈㅅㅎ', ㅋ: 'ㄱㅌㅍ',
-    ㅌ: 'ㄷㅋㅍ', ㅍ: 'ㅂㅋㅌ', ㅎ: 'ㅇㅊㅅ', ㅏ: 'ㅓㅑㅣ', ㅑ: 'ㅏㅕㅛ', ㅓ: 'ㅏㅕㅗ', ㅕ: 'ㅓㅑㅠ', ㅗ: 'ㅜㅓㅛ', ㅛ: 'ㅗㅠㅑ', ㅜ: 'ㅗㅡㅠ', ㅠ: 'ㅜㅛㅕ',
-    ㅡ: 'ㅜㅣㅓ', ㅣ: 'ㅡㅏㅓ',
-  };
   const sound = all.filter((t) => t.gate === 'sound-basic' || t.gate === 'sound-rest');
 
   it('tests 11 basic and 12 rest symbols, twice each (ㅇ is tested inside syllables)', () => {
@@ -279,17 +275,36 @@ describe('content/placement: sound-letter (A.2)', () => {
     expect(sound.filter((t) => t.gate === 'sound-rest').map((t) => symTags(t)[0]).sort()).toEqual([...RUNG_SYMBOLS.rest, ...RUNG_SYMBOLS.rest].sort());
   });
 
-  it('offers the symbol and its three confusables of the same kind (F-QUEST-002 section 3.9)', () => {
-    for (const t of sound) {
+  it('a seen item offers the symbol and three different letters (its look-alikes, plain against aspirated included)', () => {
+    for (const t of sound.filter((x) => x.question.format === 'see-pick-sound')) expect(new Set(t.question.options.map((o) => o.id)).size, t.id).toBe(4);
+  });
+
+  /**
+   * AMENDMENTS-PLC-VALIDITY row PV-6 (D2): a heard item offers one of these letter sets, the same set for every
+   * target it holds, so two heard items of a rung show the same four letters or none in common (nothing to compare
+   * across items), and no letter of a set is ruled out by ear against another (the lint checks the target).
+   */
+  const HEARD_LETTER_SETS = ['ㄱㄴㅁㅇ', 'ㄷㅅㅈㅎ', 'ㄹㅂㅊㅋ', 'ㅈㅂㅋㅌ', 'ㅊㅅㅍㅎ', 'ㅏㅓㅜㅣ', 'ㅗㅡㅑㅛ', 'ㅕㅠㅓㅜ'];
+
+  it('a heard item offers the letter set that holds its symbol, all of one kind (consonants or vowels)', () => {
+    const heard = sound.filter((t) => t.question.format === 'hear-pick-written');
+    expect(heard).toHaveLength(23);
+    for (const t of heard) {
       const s = symTags(t)[0] as string;
-      const expected = [s, ...(CONFUSABLE[s] as string)];
-      const letters = t.question.format === 'hear-pick-written' ? t.question.options.map((o) => o.ko as string) : t.question.options.map((o) => o.id);
-      if (t.question.format === 'hear-pick-written') {
-        expect(letters.slice().sort(), t.id).toEqual(expected.slice().sort());
-        const isVowel = VOWELS.includes(s);
-        for (const l of letters) expect(isVowel ? VOWELS.includes(l) : CONSONANTS.includes(l) || l === 'ㅇ', t.id).toBe(true);
-      } else {
-        expect(new Set(letters).size, t.id).toBe(4);
+      const letters = t.question.options.map((o) => o.ko as string);
+      const set = HEARD_LETTER_SETS.filter((x) => x.includes(s));
+      expect(set.some((x) => [...x].sort().join('') === letters.slice().sort().join('')), `${t.id} ${letters.join('')}`).toBe(true);
+      const isVowel = VOWELS.includes(s);
+      for (const l of letters) expect(isVowel ? VOWELS.includes(l) : CONSONANTS.includes(l) || l === 'ㅇ', t.id).toBe(true);
+    }
+  });
+
+  it('two heard items of one gate offer the same four letters or share none', () => {
+    for (const gate of ['sound-basic', 'sound-rest'] as const) {
+      const sets = sound.filter((t) => t.gate === gate && t.question.format === 'hear-pick-written').map((t) => new Set(t.question.options.map((o) => o.ko as string)));
+      for (const a of sets) for (const b of sets) {
+        const shared = [...a].filter((x) => b.has(x)).length;
+        expect(shared === 0 || shared === 4, `${[...a].join('')} / ${[...b].join('')}`).toBe(true);
       }
     }
   });
@@ -343,23 +358,71 @@ describe('content/placement: syllable-reading (A.3)', () => {
     }
   });
 
-  it('every distractor differs from the target in exactly one jamo', () => {
-    for (const t of syl.filter((x) => x.question.format !== 'see-pick-sound')) {
-      const target = part(targetOf(t));
-      for (const o of t.question.options.filter((x) => !x.isCorrect)) {
-        const p = part(o.ko as string);
-        const diff = [p.initial !== target.initial, p.medial !== target.medial, p.final !== target.final].filter(Boolean).length;
-        expect(diff, `${t.id} ${o.ko}`).toBe(1);
-      }
-    }
-  });
-
-  it('see-pick-sound chips are the romanizations of syllables that differ in one sound, all different', () => {
+  it('see-pick-sound chips are four different romanizations, the right one the converter output of the prompt', () => {
     for (const t of syl.filter((x) => x.question.format === 'see-pick-sound')) {
       const chips = t.question.options.map((o) => o.sound as string);
       expect(new Set(chips).size, t.id).toBe(4);
       expect(correctOf(t).sound, t.id).toBe(romanizeReviewed(targetOf(t)).text);
     }
+  });
+
+  /** An option as its three parts: a written block, or a Latin chip read by the lint's `chipParts`. */
+  const optionParts = (t: PlacementTemplate, o: PlacementTemplate['question']['options'][number]): string => {
+    if (o.ko !== undefined) {
+      const p = part(o.ko);
+      return `${p.initial}|${p.medial}|${p.final}`;
+    }
+    const c = chipParts(o.sound) as { initial: string; medial: string; final: string };
+    return `${c.initial}|${c.medial}|${c.final}`;
+  };
+  /** Every syllable item: a tile item (`build-syllable`) is drawn as four written blocks under the heard prompt, so it is one too. */
+  const decodeItems = syl;
+
+  it('PV-6: a responder who picks the "middle" option (the one closest to the other three) is at chance on every item', () => {
+    expect(decodeItems).toHaveLength(72);
+    for (const t of decodeItems) {
+      const parts = t.question.options.map((o) => optionParts(t, o).split('|'));
+      const total = parts.map((p) => parts.reduce((sum, q) => sum + p.filter((x, i) => x !== q[i]).length, 0));
+      const nearest = total.map((d, i) => (d === Math.min(...total) ? i : -1)).filter((i) => i >= 0);
+      // every option ties: the middle-picker chooses among all four, so it is right one time in four
+      expect(nearest, `${t.id} ${total.join(' ')}`).toHaveLength(4);
+      // and each position takes two values, each in two options: knowing one letter halves the set, no more
+      for (let i = 0; i < 3; i += 1) {
+        const values = parts.map((p) => p[i]);
+        const counts = [...new Set(values)].map((v) => values.filter((x) => x === v).length);
+        if (t.gate === 'syl-cv' && i === 2) expect(counts, t.id).toEqual([4]);
+        else expect(counts.sort(), `${t.id} position ${i}`).toEqual([2, 2]);
+      }
+    }
+  });
+
+  it('PV-6: two decode items of one gate offer the same four options or share none (written blocks, heard or tiles, and Latin chips apart)', () => {
+    for (const gate of ['syl-cv', 'syl-cvc'] as const) {
+      for (const chips of [false, true]) {
+        const sets = decodeItems.filter((t) => t.gate === gate && (t.question.format === 'see-pick-sound') === chips).map((t) => new Set(t.question.options.map((o) => optionParts(t, o))));
+        for (const a of sets) for (const b of sets) {
+          const shared = [...a].filter((x) => b.has(x)).length;
+          expect(shared === 0 || shared === 4, `${gate} ${chips ? 'chips' : 'blocks'}: ${[...a].join(' ')} / ${[...b].join(' ')}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('PV-6: every chip of a closed seen item is an everyday word of the NIKL list (grade A or B), so knowing words by ear picks none out', () => {
+    const words = new Set<string>();
+    for (const row of (JSON.parse(readFileSync(join(REPO_ROOT, 'scripts/nikl-vocab-2003.json'), 'utf8')) as { entries: unknown[][] }).entries) {
+      const m = /^([가-힣])\d*$/.exec(String(row[1]));
+      if (m !== null && (row[5] === 'A' || row[5] === 'B')) words.add(m[1] as string);
+    }
+    /** The closed seen sets as blocks (the chips are their converter romanizations). */
+    const SETS = ['한삼신힘', '밥간겁번', '문산말술', '별날년반', '공봄감방', '강달글등', '집잠탑팀', '물막발북', '곰국속숨'];
+    const seen = syl.filter((t) => t.gate === 'syl-cvc' && t.question.format === 'see-pick-sound');
+    expect(seen).toHaveLength(12);
+    for (const t of seen) {
+      const set = SETS.find((x) => x.includes(t.question.promptKo as string)) as string;
+      expect(t.question.options.map((o) => o.sound).sort(), t.id).toEqual([...set].map((b) => romanizeReviewed(b).text).sort());
+    }
+    for (const set of SETS) for (const b of set) expect(words.has(b), `${set} ${b}`).toBe(true);
   });
 
   it('the build-syllable templates reuse the syllables the appendix lists', () => {
@@ -744,8 +807,6 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
     const counts: Record<string, number> = {};
     for (const f of findings) counts[f.rule] = (counts[f.rule] ?? 0) + 1;
     expect(counts).toEqual({
-      'placement-decode-balanced': 60,
-      'placement-decode-ear': 29,
       'placement-pools': 2,
       'placement-reply-echo': 5,
       'placement-sentence-family': 1,
@@ -787,10 +848,18 @@ describe('the placement lint (AMENDMENTS-PLC-VALIDITY section 3.4, row PV-3)', (
   });
 
   it('the ear lists use Stage 1 symbols only, and finals only the six taught ones', () => {
-    const ruled = EAR_RULED_OUT as { initials: string[]; vowels: string[]; finalClasses: string[]; sibilants: string[] };
-    for (const pair of [...ruled.initials, ...ruled.sibilants]) for (const ch of pair) expect(CONSONANTS, pair).toContain(ch);
-    for (const pair of ruled.vowels) for (const ch of pair) expect(VOWELS, pair).toContain(ch);
+    const ruled = EAR_RULED_OUT_SCHEMA;
+    const consonantPairs = [...ruled.plainAspirated, ...ruled.weakH, ...ruled.heldForListening, ...ruled.sibilants];
+    for (const pair of consonantPairs) for (const ch of pair) expect([...CONSONANTS, 'ㅇ'], pair).toContain(ch);
+    for (const pair of [...ruled.vowels, ...ruled.glideAfterH]) for (const ch of pair) expect(VOWELS, pair).toContain(ch);
+    for (const ch of `${ruled.sibilantVowels}${ruled.yVowels}`) expect(VOWELS).toContain(ch);
+    for (const ch of ruled.noYVowel) expect(CONSONANTS).toContain(ch);
     for (const cls of ruled.finalClasses) for (const ch of cls) expect(TAUGHT_FINALS, cls).toContain(ch);
+    for (const pair of [...consonantPairs, ...ruled.vowels, ...ruled.glideAfterH]) expect([...pair], pair).toHaveLength(2);
+  });
+
+  it('placement-rules.mjs mirrors EAR_RULED_OUT of packages/content-schema (one list, AMENDMENTS-PLC-VALIDITY D2)', () => {
+    expect(JSON.parse(JSON.stringify(EAR_RULED_OUT))).toEqual(JSON.parse(JSON.stringify(EAR_RULED_OUT_SCHEMA)));
   });
 
   it('a Latin chip reads as the parts of the syllable the converter romanized: one jamo, one token, in every syllable', () => {
