@@ -309,9 +309,18 @@ export interface RealiaViewContext {
    * not show its romanization. Absent: nothing held.
    */
   held?: boolean;
+  /**
+   * The question is answered (`answeredNow`): the title and the key word show their romanization whatever the mode, so a
+   * folded one is always reachable (AMENDMENTS-ROMANIZATION-FADE section 3.8 (c), row RF-1c). The lines have their tap (a);
+   * the options show the touched ones. Absent: not answered.
+   */
+  answered?: boolean;
   /** The UI locale's word read between romanization alternatives (`a11y.romanizationOr`, OD-SO10). */
   romanizationOr: string;
 }
+
+/** Whether the question is answered: the round resolved, or the step is done. */
+export const answeredNow = (state: RealiaReadState): boolean => state.status === 'resolved' || state.status === 'done';
 
 /** Whether a quest Check's question is open (a missed option does not end it): the lines are held. */
 export const realiaHeld = (hold: boolean, state: RealiaReadState): boolean => hold && state.status === 'asking';
@@ -356,16 +365,17 @@ export function lineViews(
   });
 }
 
-/** The realia's title with its romanization (hidden in `tap` mode) and its name. */
+/** The realia's title with its romanization (hidden in `tap` mode until the question is answered) and its name. */
 export function titleView(realia: Realia, context: RealiaViewContext): (RealiaTextView & { label: string }) | undefined {
   const { title } = realia;
   if (!title) return undefined;
-  return { ...textView(title, context.romanizationMode === 'always', context.held === true), label: spoken(title, context.romanizationOr).join(', ') };
+  const shown = context.romanizationMode === 'always' || context.answered === true;
+  return { ...textView(title, shown, context.held === true), label: spoken(title, context.romanizationOr).join(', ') };
 }
 
-/** The question's key word: its romanization line as the mode shows it, held while a Check's question is open. */
-export function keyView(key: KoText, context: Pick<RealiaViewContext, 'romanizationMode' | 'held'>): { shown: boolean; reserved: boolean } {
-  const modeShows = context.romanizationMode === 'always';
+/** The question's key word: its romanization line as the mode shows it (and the answer, section 3.8 (c)), held while a Check's question is open. */
+export function keyView(key: KoText, context: Pick<RealiaViewContext, 'romanizationMode' | 'held' | 'answered'>): { shown: boolean; reserved: boolean } {
+  const modeShows = context.romanizationMode === 'always' || context.answered === true;
   const held = context.held === true;
   return { shown: modeShows && !held, reserved: modeShows && held && key.romanization.trim() !== '' };
 }

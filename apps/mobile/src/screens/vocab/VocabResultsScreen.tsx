@@ -14,14 +14,12 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
 import { localizedGloss, vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
 import { resultsView } from '../../logic/vocab/speed-round';
 import type { RootStackParamList } from '../../navigation/types';
@@ -48,7 +46,6 @@ export function VocabResultsScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const copy = messages.learner.vocab.speed;
   const locale = useLocale();
-  const romanizationShown = showRomanization(useRomanizationMode(), false);
   // `summary` is typed as required, but a restored or hand-built route may lack it: redirect, never throw.
   const view = summary ? resultsView(summary, newBest, copy) : null;
   const toTopic = (): void => navigation.navigate('VocabTopic', { topicKey });
@@ -127,7 +124,8 @@ export function VocabResultsScreen({ route, navigation }: Props): ReactElement {
                 }}
               >
                 <PictureArt pictureRef={item.visual} gloss={gloss} size={touchTarget.min} decorative />
-                <KoreanText ko={item.ko} romanization={item.romanization} romanizationShown={romanizationShown} gloss={gloss} size="sm" />
+                {/* The round is over: the words to see again show their romanization in every mode (AMENDMENTS-ROMANIZATION-FADE section 3.8 (c), RF-1c). */}
+                <KoreanText ko={item.ko} romanization={item.romanization} gloss={gloss} size="sm" />
               </View>
             ))}
           </ScrollView>

@@ -537,7 +537,8 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           <View testID="hh-end" style={{ gap: spacing.sm }}>
             {endView(round).map((e) => (
               <View key={e.id} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
-                <KoreanText ko={e.word.ko} romanization={e.word.romanization} size="sm" romanizationShown={romanizationMode === 'always'} />
+                {/* The scene is done: every found word shows its romanization (AMENDMENTS-ROMANIZATION-FADE section 3.8 (c), RF-1c). */}
+                <KoreanText ko={e.word.ko} romanization={e.word.romanization} size="sm" />
                 {e.meaning !== null ? <Body>{e.meaning}</Body> : null}
               </View>
             ))}

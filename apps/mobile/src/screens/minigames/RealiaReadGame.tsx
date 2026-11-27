@@ -36,6 +36,7 @@ import {
   playableRealia,
   realiaArrangement,
   realiaHeaderView,
+  answeredNow,
   realiaHeld,
   realiaKeyLabel,
   realiaOptionColumns,
@@ -305,7 +306,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
 
   // A quest Check holds the sheet's, the key word's and the options' romanization while the question is open; a line tap says the
   // line and shows nothing (AMENDMENTS-STAGE1-DECODING-CHECK DC-1c).
-  const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr, held: realiaHeld(holdsRomanization(hostSurface(host.mode)), state) };
+  const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr, held: realiaHeld(holdsRomanization(hostSurface(host.mode)), state), answered: answeredNow(state) };
   const key = round.key ? keyView(round.key, context) : undefined;
   const header = realiaHeaderView(host.mode, state, copy);
   const title = titleView(play.realia, context);
