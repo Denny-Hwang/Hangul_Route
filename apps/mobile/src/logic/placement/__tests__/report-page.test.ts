@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   bankLookup,
   reportPage,
-  SENTENCES_REVISED_BANK_VERSION,
+  OLDER_SENTENCE_ID,
+  REVISED_SENTENCE_ID,
   symbolText,
   startChoices,
   startingSpotRow,
@@ -11,6 +12,7 @@ import {
   type BankEntry,
   type ReportPageInput,
 } from '../report-page';
+import { PLACEMENT_BANK } from '../../../content/placement.generated';
 import { gate, placementResult } from './fixtures';
 
 const quest = (n: number, stage: StageKey = 'stage1', extra: Partial<RouteQuest> = {}): RouteQuest => ({
@@ -301,11 +303,15 @@ describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC
     gate('sound-rest', 'decode', 'pass', 3),
     gate('syl-cvc', 'decode', 'pass', 3),
   ];
-  /** A stage 3 result: the whole reading ladder and the sentence read passed. */
+  const asked = (...ids: string[]) => ids.map((id) => response(id, 'correct'));
+  const OLD_IDS = ['pitem:sent-n-read-horangiyeyo', 'pitem:sent-v-read-babeulmeogeoyo', 'pitem:sent-reply-2'];
+  const NEW_IDS = ['pitem:sent-read-run-bear', 'pitem:sent-read-sleep-cat', 'pitem:sent-reply-2'];
+  /** A stage 3 result: the whole reading ladder and the sentence read passed, on the sentence items `ids`. */
   const sentenceRead = (over: Parameters<typeof placementResult>[0] = {}) =>
     placementResult({
       level: { stage: 'stage3', band: 0 },
       gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('sentence', 'read', 'pass', 3)],
+      responses: asked(...OLD_IDS),
       ...over,
     });
   const olderOf = (placements: Parameters<typeof placementResult>[0][]): boolean | undefined => {
@@ -336,7 +342,7 @@ describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC
   });
 
   it('the block reads the newest result, not the route in force', () => {
-    const older = sentenceRead({ id: 'placement:old', completedAt: '2026-10-01T10:00:00.000Z', bankVersion: 3 });
+    const older = sentenceRead({ id: 'placement:old', completedAt: '2026-10-01T10:00:00.000Z', responses: asked(...NEW_IDS) });
     const newer = placementResult({
       id: 'placement:new',
       completedAt: '2026-10-05T10:00:00.000Z',
@@ -351,13 +357,14 @@ describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC
     expect(page.view.skills).toEqual({ reading: { stage: 'stage1', band: 0 }, listening: 'stage2', ahead: true });
   });
 
-  it('shows the older-sentences line only for a Stage 3 route that an older sentence bank placed', () => {
-    expect(SENTENCES_REVISED_BANK_VERSION).toBe(3);
-    // Banks 1 and 2 asked the easy sentence items (the version only moved for words at 2).
-    expect(olderOf([sentenceRead({ bankVersion: 1 })])).toBe(true);
-    expect(olderOf([sentenceRead({ bankVersion: 2 })])).toBe(true);
-    // The revised sentence bank stands for itself.
-    expect(olderOf([sentenceRead({ bankVersion: 3 })])).toBe(false);
+  it('shows the older-sentences line only for a Stage 3 route that the older sentence items placed, whatever the bank version', () => {
+    // The ids decide: a result that was asked a retired picture item, at any version.
+    for (const bankVersion of [1, 2, 3, 4]) expect(olderOf([sentenceRead({ bankVersion })]), `v${bankVersion}`).toBe(true);
+    // The revised predicate pictures (and the replies both banks share) stand for themselves, at any version.
+    for (const bankVersion of [1, 2, 3, 4]) expect(olderOf([sentenceRead({ bankVersion, responses: asked(...NEW_IDS) })]), `v${bankVersion}`).toBe(false);
+    // Replies alone say nothing about the picture items, and a result that stored no sentence id does not show it.
+    expect(olderOf([sentenceRead({ responses: asked('pitem:sent-reply-2') })])).toBe(false);
+    expect(olderOf([sentenceRead({ responses: [] })])).toBe(false);
     // A route below Stage 3 never shows it, even for an older check.
     expect(olderOf([placementResult({ bankVersion: 1, level: { stage: 'stage2', band: 0 } })])).toBe(false);
     // An older result whose sentence read did not pass (Stage 3 came from nowhere else) is not the cause.
@@ -368,7 +375,7 @@ describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC
 
   it('a later check on the revised bank that also passed the sentences takes the line away; one that did not leaves it', () => {
     const old = sentenceRead({ id: 'placement:v1', bankVersion: 1, completedAt: '2026-10-01T10:00:00.000Z' });
-    const revised = sentenceRead({ id: 'placement:v3', bankVersion: 3, completedAt: '2026-11-30T10:00:00.000Z' });
+    const revised = sentenceRead({ id: 'placement:v3', bankVersion: 3, completedAt: '2026-11-30T10:00:00.000Z', responses: asked(...NEW_IDS) });
     const lower = placementResult({ id: 'placement:v3b', bankVersion: 3, completedAt: '2026-11-30T10:00:00.000Z', level: { stage: 'stage2', band: 0 } });
     const of = (placements: ReturnType<typeof placementResult>[]) => {
       const page = reportPage(input({ placements, isEntitled: () => true }));
@@ -377,6 +384,28 @@ describe('reportPage: the block and the older sentence questions (AMENDMENTS-PLC
     expect(of([old, revised])).toBe(false);
     // A lower retake never moves the route back, so the old pass still stands behind Stage 3.
     expect(of([old, lower])).toBe(true);
+  });
+});
+
+describe('the older and revised sentence id patterns follow the bundled bank (PV-4)', () => {
+  // The line keys on the ids a result stores, so a rename in the sentence bank must not drift from the patterns.
+  const sentences = PLACEMENT_BANK.templates.filter((t) => t.gate === 'sentence');
+
+  it('every older-pattern sentence item (N-ieyo, N-eul V) is an older id, and no other sentence item is', () => {
+    expect(sentences.length).toBeGreaterThan(0);
+    for (const t of sentences) {
+      const tags = t.question.tags;
+      const older = tags.includes('pattern:n-ieyo') || tags.includes('pattern:n-eul-v');
+      expect(OLDER_SENTENCE_ID.test(t.id), t.id).toBe(older);
+    }
+  });
+
+  it('every predicate-picture item (N-i V) is a revised id, and no older or reply item is', () => {
+    for (const t of sentences) {
+      const revised = t.question.tags.includes('pattern:n-i-v');
+      expect(REVISED_SENTENCE_ID.test(t.id), t.id).toBe(revised);
+    }
+    expect(REVISED_SENTENCE_ID.test('pitem:sent-reply-1')).toBe(false);
   });
 });
 

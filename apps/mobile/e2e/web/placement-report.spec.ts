@@ -378,7 +378,8 @@ test.describe('placement report (fixture bundle)', () => {
       page,
       id,
       storedResult({
-        bankVersion: 2,
+        // The older picture sentence items, told by their ids (retired by PV-1c), not by the bank version.
+        responses: [response('pitem:sent-n-read-horangiyeyo', 'correct'), response('pitem:sent-reply-2', 'correct')],
         gates: [
           row('sound-basic', 'decode', 'pass', 3),
           row('syl-cv', 'decode', 'pass', 3),

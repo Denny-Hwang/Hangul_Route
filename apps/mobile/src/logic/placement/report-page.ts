@@ -170,14 +170,28 @@ export function startingSpotRow(placements: readonly StoredResult[] | undefined)
 }
 
 /**
- * The first bank version whose sentence items need the verb (AMENDMENTS-PLC-VALIDITY PV-1c). Versions 1 and 2
- * asked the older, easier sentence questions: PV-2 raised the version to 2 for the word items alone. A route at
- * Stage 3 that such a check placed gets one plain line next to Choose a different start (section 3.7, PV-OD-3).
+ * The older sentence questions, told by the item ids a result stores (not by the bank version, which every content
+ * row moves: PV-2 and PV-6 bump it without touching the sentences). The older picture items were `N-ieyo` and `N-eul V`
+ * sentences, ids `pitem:sent-n-...` and `pitem:sent-v-...` (retired by PV-1c); the revised ones are `pitem:sent-read-...`
+ * and `pitem:sent-hear-...` (predicate pictures); the reply items `pitem:sent-reply-N` are in both. A bank test pins
+ * both patterns against the bundled bank's own `pattern:` tags, so a rename cannot drift from this.
  */
-export const SENTENCES_REVISED_BANK_VERSION = 3;
+export const OLDER_SENTENCE_ID = /^pitem:sent-[nv]-/;
+export const REVISED_SENTENCE_ID = /^pitem:sent-(read|hear)-/;
 
-/** The sentence part of this result was read and passed (`stepPassed`: every step before it passed too). */
-const passedSentenceRead = (result: StoredResult): boolean => stepPassed(result.gates, 'sentence', 'read');
+type SentenceKind = 'older' | 'revised' | 'unknown';
+
+/**
+ * What this result's sentence read passed on: `older` when it was asked a retired picture item, `revised` when it was
+ * asked only the predicate pictures (and replies), `unknown` when it did not pass the sentence read (`stepPassed`:
+ * every step before it passed too) or stored no sentence picture id.
+ */
+function sentencePass(result: StoredResult): SentenceKind {
+  if (!stepPassed(result.gates, 'sentence', 'read')) return 'unknown';
+  const ids = result.responses.map((r) => r.questionId);
+  if (ids.some((id) => OLDER_SENTENCE_ID.test(id))) return 'older';
+  return ids.some((id) => REVISED_SENTENCE_ID.test(id)) ? 'revised' : 'unknown';
+}
 
 export interface ReportPageInput {
   /** `snapshot.placements` (a missing key is `[]`). */
@@ -244,8 +258,8 @@ export function reportPage(input: ReportPageInput): ReportPage {
   const mode = modeOf(newest);
   const olderSentences =
     placementStageNumber(seed.level.stage) >= placementStageNumber('stage3') &&
-    sorted.some((r) => r.bankVersion < SENTENCES_REVISED_BANK_VERSION && passedSentenceRead(r)) &&
-    !sorted.some((r) => r.bankVersion >= SENTENCES_REVISED_BANK_VERSION && passedSentenceRead(r));
+    sorted.some((r) => sentencePass(r) === 'older') &&
+    !sorted.some((r) => sentencePass(r) === 'revised');
   return {
     kind: 'report',
     resultId: newest.id,

@@ -112,11 +112,11 @@ What we saw
  Sentences             listening: secure  a strand where no form was asked keeps its one pill; the rung captions stay
 Where the route starts
  quest title
- An earlier version of the check asked easier sentence questions. …   only for a Stage 3 route that a check on a bank older than version 3 placed
+ An earlier version of the check asked easier sentence questions. …   only for a Stage 3 route that the older sentence items placed (told by item ids)
  [ Choose a different start ]
 ```
 
 - Each form's word is `rungStatus` with `stepPassed` (E-1), so a Deep row asked before an earlier confirmation failed shows "getting there", not "secure". The merged strand status is still the stored one; only the row's display splits it.
 - Reading is the newest result's own `level`, not the route in force (an older, higher check may set the route). "Ahead" is by stage, never a number or a route word.
-- The older-sentences line reads the bank version: `SENTENCES_REVISED_BANK_VERSION = 3` in `report-page.ts`. The spec said "bank version 1"; PV-2 raised the version to 2 for words alone, and versions 1 and 2 both asked the older sentence questions, so the line shows below 3 and goes away when a check on the revised bank also passed the sentences. If PV-1c's bank takes another number, change the constant with it.
+- The older-sentences line reads the item ids a result stores, not the bank version (every content row moves the version: PV-2 took it to 2 for words, PV-6 will bump it too). A result that passed the sentence read (`stepPassed`) and was asked a retired picture item (`pitem:sent-n-...`, `pitem:sent-v-...`, `OLDER_SENTENCE_ID` in `report-page.ts`) is "older"; one asked the predicate pictures (`pitem:sent-read-...`, `pitem:sent-hear-...`) is "revised"; the replies (`pitem:sent-reply-N`) are in both and decide nothing. The line shows for a Stage 3 route when some result is older and none is revised. The spec said "bank version 1"; no constant needs to follow PV-1c's version number. `report-page.test.ts` pins both patterns against the bundled bank's own `pattern:` tags (`n-ieyo`, `n-eul-v` older; `n-i-v` revised), so a rename in the sentence bank fails it.
 - Below 360 pt the form pills wrap onto their own lines and the values wrap under their labels (`placement-report.spec.ts`, 320 x 568: no horizontal scroll).

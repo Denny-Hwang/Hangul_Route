@@ -139,19 +139,21 @@ describe('the report block "Reading and listening" (PV-4)', () => {
     await unmount(r);
   });
 
-  it('a Stage 3 route placed by the older sentence questions says so next to Choose a different start; the revised bank does not', async () => {
-    const stage3 = (bankVersion: number) =>
+  it('a Stage 3 route placed by the older sentence items says so next to Choose a different start; the revised items do not, at the same bank version', async () => {
+    const response = (questionId: string) => ({ questionId, outcome: 'correct' as const, chosenOptionId: 'a', assisted: false, ms: 1000 });
+    const stage3 = (bankVersion: number, ids: string[]) =>
       placementResult({
         bankVersion,
+        responses: ids.map(response),
         level: { stage: 'stage3', band: 0 },
         gates: [...decoded(), gate('vocab', 'read', 'pass', 3), gate('sentence', 'read', 'pass', 3)],
         strands: { ...NONE, 'sound-letter': 'secure', 'syllable-reading': 'secure', vocabulary: 'secure', sentences: 'secure' },
         oralStage: null,
       });
-    const old = await open(stage3(1));
+    const old = await open(stage3(3, ['pitem:sent-n-read-horangiyeyo', 'pitem:sent-reply-2']));
     expect(textOf(byTestId(old.root, 'placement-report-older-sentences')[0]!)).toBe(m.olderSentences);
     await unmount(old);
-    const revised = await open(stage3(3));
+    const revised = await open(stage3(3, ['pitem:sent-read-run-bear', 'pitem:sent-reply-2']));
     expect(byTestId(revised.root, 'placement-report-older-sentences')).toHaveLength(0);
     await unmount(revised);
   });
