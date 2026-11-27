@@ -482,11 +482,11 @@ describe('the contrast-set catalogue as a manifest source (AMENDMENTS-MINIMAL-PA
     for (const text of ['탈', '풀', '짜다', '불', '달', '빵', '개']) expect(committedRow(text).sources, text).toContain('minigame:s2-letters-q2-pairs');
   });
 
-  it('the 8 new rows (MP-1b generates them): syllables sent with a full stop, words as they are', () => {
+  it('the 8 new rows (MP-1b generates them): syllables sent with a full stop, words as they are; the Stage 2 cell names them too since MP-2b', () => {
     const fresh = { 딸: ['syllable', '딸.'], 뿔: ['syllable', '뿔.'], 방: ['syllable', '방.'], 깨: ['syllable', '깨.'], 자다: ['word', '자다'], 차다: ['word', '차다'], 사다: ['word', '사다'], 싸다: ['word', '싸다'] };
     for (const [text, [kind, say]] of Object.entries(fresh)) {
       const row = committedRow(text);
-      expect(row, text).toMatchObject({ kind, say, pack: 'stage2', sources: ['minigame:s2-letters-q2-pairs'], rate: kind === 'word' ? 0.9 : 0.85 });
+      expect(row, text).toMatchObject({ kind, say, pack: 'stage2', sources: ['content/episodes/stage-2/letters.json', 'minigame:s2-letters-q2-pairs'], rate: kind === 'word' ? 0.9 : 0.85 });
       expect(row.ref).toBe(sayRef(text));
     }
     // 디 and 티 are NOT new: their clips were already shipped (spec section 3.1 said they had none).

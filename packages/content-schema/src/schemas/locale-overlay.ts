@@ -66,6 +66,8 @@ export const OVERLAY_FIELDS = {
     'listenPick.rounds.<roundId>.prompt',
     // F-CURR-002 row CM-3A S2: a picture option's label (optional: see OPTIONAL_OVERLAY_FIELDS).
     'listenPick.rounds.<roundId>.options.<option>.label',
+    // AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): the meaning a contrast round's word option shows after the answer (optional: see OPTIONAL_OVERLAY_FIELDS).
+    'listenPick.rounds.<roundId>.options.<option>.text.gloss',
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
     // F-CURR-001 §3.10: a lesson's Pic-Word Match pair, whose gloss the word tile and the picture's
     // text fallback show; a board has no id, so `<board>` is its index.
@@ -166,8 +168,14 @@ export type OverlayPrefix = keyof typeof OVERLAY_FIELDS;
  * Fields an overlay may give that are never counted missing (F-CURR-002 row CM-3A S2): a Listen & Pick picture option's
  * label. A Read Pick Meaning round's options are the meanings it asks, so its es and ko labels are required by
  * `read-pick-labels.test.ts`; a heard round's labels are a later row's, so the coverage counters skip the field.
+ * And the meaning a Listen & Pick word option shows (`options.<option>.text.gloss`, AMENDMENTS-MINIMAL-PAIRS row MP-2b): only a
+ * contrast round shows it (after the answer), so the other rounds' options are not counted missing; `upper-stage-curriculum.test.ts`
+ * requires it of every contrast round in es and ko.
  */
-export const OPTIONAL_OVERLAY_FIELDS: readonly string[] = ['listenPick.rounds.<roundId>.options.<option>.label'];
+export const OPTIONAL_OVERLAY_FIELDS: readonly string[] = [
+  'listenPick.rounds.<roundId>.options.<option>.label',
+  'listenPick.rounds.<roundId>.options.<option>.text.gloss',
+];
 
 /** Never overridable, whatever the prefix (taught Korean, its romanization, audio, ids, order, pictures). */
 export const NEVER_OVERRIDABLE_FIELDS = [

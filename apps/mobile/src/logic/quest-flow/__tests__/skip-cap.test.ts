@@ -36,6 +36,30 @@ describe('skippableGameSteps', () => {
   });
 });
 
+describe('a contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.8, row MP-2b)', () => {
+  const withContrast = [
+    { kind: 'intro' },
+    { kind: 'discover' },
+    { kind: 'practice', minigameKind: 'match-sound', minigameRef: 'minigame:a' },
+    { kind: 'practice', minigameKind: 'listen-pick', minigameRef: 'minigame:pairs', contrast: true },
+    { kind: 'apply', minigameKind: 'culture-quiz', minigameRef: 'minigame:b' },
+    { kind: 'check', minigameKind: 'listen-pick', minigameRef: 'minigame:c' },
+    { kind: 'reward' },
+  ] as const;
+
+  it('is not a skippable game step: only the practice and the apply game are', () => {
+    expect(skippableGameSteps(withContrast)).toEqual([2, 4]);
+  });
+
+  it('skipping it never caps the stars; skipping both scored games caps at 1, one of them at 2', () => {
+    expect(skipStarCap(withContrast, [3])).toBe(3);
+    expect(skipStarCap(withContrast, [2])).toBe(2);
+    expect(skipStarCap(withContrast, [2, 3])).toBe(2);
+    expect(skipStarCap(withContrast, [2, 3, 4])).toBe(1);
+    expect(skipStarCap(withContrast, [2, 4])).toBe(1);
+  });
+});
+
 describe('skipStarCap', () => {
   it('no skip: no cap', () => {
     expect(skipStarCap(steps, [])).toBe(3);

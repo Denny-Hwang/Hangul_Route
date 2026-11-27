@@ -384,7 +384,11 @@ jobs:
             # Word and the word cards never fail silently, through the fixture bundle's stories and hooks;
             # the spec's Discover, Listen & Pick and presenter groups run on the release build.
             list learner-audio -g "fixture bundle"
-          } > "$RUNNER_TEMP/all-tests.txt"
+            # AMENDMENTS-MINIMAL-PAIRS MP-2b: quest 6's contrast step plays on the fixture approvals
+            # (apps/mobile/e2e/fixtures/audio/contrast-sets.json); the release group (no set approved,
+            # the step is passed by) runs on the release build.
+            list contrast-step -g "fixture sets approved"
+          } >"$RUNNER_TEMP/all-tests.txt"
           node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
           # The list must select exactly one test per line (none lost, none doubled).
           lines=$(grep -c . "$RUNNER_TEMP/shard-tests.txt")

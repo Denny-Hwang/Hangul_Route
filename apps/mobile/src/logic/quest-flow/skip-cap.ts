@@ -25,11 +25,18 @@ interface StepLike {
   kind: QuestStepKind;
   minigameKind?: unknown;
   minigameRef?: unknown;
+  /** A contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.8): never a scored game, so never counted here. */
+  contrast?: boolean | undefined;
 }
 
-/** The indexes of the quest's game steps: every step with a game but the Check and the story reader. */
+/**
+ * The indexes of the quest's game steps: every step with a game but the Check, the story reader and a contrast step
+ * (an unscored step, not a game the stars depend on: skipping it, or having it passed by, never caps them).
+ */
 export function skippableGameSteps(steps: readonly StepLike[]): number[] {
-  return steps.flatMap((step, i) => (step.kind !== 'check' && step.minigameKind && step.minigameKind !== 'story-read' && step.minigameRef ? [i] : []));
+  return steps.flatMap((step, i) =>
+    step.kind !== 'check' && step.contrast !== true && step.minigameKind && step.minigameKind !== 'story-read' && step.minigameRef ? [i] : [],
+  );
 }
 
 /**

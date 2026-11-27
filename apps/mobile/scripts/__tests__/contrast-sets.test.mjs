@@ -21,11 +21,13 @@ import {
   readContrastSets,
 } from '../audio/content-sources.mjs';
 import {
+  APPROVED_MODULE_FILE,
   CONTRAST_MODULE_FILE,
   E2E_CONTRAST_FIXTURE_FILE,
   approvedOf,
   buildContrastModule,
   lockShaOf,
+  renderApprovedModule,
   renderContrastModule,
   runContrastSets,
   staleApprovalsOf,
@@ -299,6 +301,35 @@ describe('the generated module', () => {
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/^audio:map up to date \(\d+ clips\)$/m);
+  });
+});
+
+describe('the approved set ids of the start bundle (row MP-2b)', () => {
+  const approvedIds = (source) => [...source.matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
+
+  it('is a few bytes, empty while no set is approved, and exactly what the generator writes (audio:map --check covers it)', () => {
+    const built = buildContrastModule({ root: REPO_ROOT });
+    expect(built.approvedFile).toBe(APPROVED_MODULE_FILE);
+    const committed = readFileSync(join(APP_ROOT, APPROVED_MODULE_FILE), 'utf8');
+    expect(committed).toBe(built.approvedSource);
+    expect(committed).toContain('export const CONTRAST_APPROVED_SET_IDS: readonly string[] = [];');
+    expect(committed.length).toBeLessThan(600);
+    expect(runContrastSets({ check: true })).toMatchObject({ ok: true });
+  });
+
+  it('lists the ids of the approved sets, in the catalogue order, and no other', () => {
+    const full = { id: 'ga-ka', members: [{ ref: 'a' }, { ref: 'b' }], approval: { mp3Sha256: { a: sha('a'), b: sha('b') } } };
+    const stale = { id: 'da-ta', members: [{ ref: 'c' }], approval: { mp3Sha256: { c: sha('x') } } };
+    const none = { id: 'go-ko', members: [{ ref: 'd' }] };
+    const shaOf = (ref) => ({ a: sha('a'), b: sha('b'), c: sha('c'), d: sha('d') })[ref];
+    expect(approvedIds(renderApprovedModule([full, stale, none], shaOf))).toEqual(['ga-ka']);
+    expect(approvedIds(renderApprovedModule([none, stale], shaOf))).toEqual([]);
+    expect(renderApprovedModule([full], shaOf)).toContain('CONTRAST_APPROVED_SET_IDS: readonly string[] = ["ga-ka"];');
+  });
+
+  it('follows the fixture approvals in the fixture build (ga-ka and da-ta), never the real ones, and the plain build reads no fixture', () => {
+    expect(approvedIds(buildContrastModule({ root: REPO_ROOT, withFixtures: true }).approvedSource)).toEqual(['ga-ka', 'da-ta']);
+    expect(readFileSync(join(APP_ROOT, APPROVED_MODULE_FILE), 'utf8')).not.toContain('ga-ka');
   });
 });
 

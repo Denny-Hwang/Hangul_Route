@@ -225,7 +225,7 @@ describe('extraction coverage over the three sources (F-CURR-002 §4.2)', () => 
   it("gives every scored round's answer of every shipped lesson an item (the lesson lint's own reading of answers)", () => {
     for (const { file, body, cellId } of lessons) {
       for (const quest of arr((body as Rec).quests).filter(isRec)) {
-        const scored = new Set(arr(quest.steps).filter(isRec).filter((s) => ['practice', 'apply', 'check'].includes(String(s.kind))).map((s) => s.minigameRef));
+        const scored = new Set(arr(quest.steps).filter(isRec).filter((s) => ['practice', 'apply', 'check'].includes(String(s.kind)) && s.contrast !== true).map((s) => s.minigameRef));
         // A free-entry name round's sound table is the keyboard of that round, not taught Korean.
         const scopes = JSON.parse(JSON.stringify(arr(quest.scopes).filter(isRec).filter((s) => scored.has(s.ref)), (k, v: unknown) => (k === 'soundTable' ? undefined : v)));
         for (const ko of askedKo(scopes).filter((k) => HANGUL.test(k))) {

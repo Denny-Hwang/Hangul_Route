@@ -124,6 +124,9 @@ describe('every quest with the switches off (section 14)', () => {
       }
       for (const round of off.listenPick?.rounds ?? []) {
         expect(isSpellingRound(round), at).toBe(false);
+        // A contrast round in a scope is the stub `lp.pair` (blank placeholder options): the contrast chunk expands it into
+        // the set's own round, which the catalogue test parses (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b).
+        if (round.contrastSet !== undefined) continue;
         expect(RoundSchema.safeParse({ kind: 'listen-pick', data: round }).success, at).toBe(true);
       }
     }

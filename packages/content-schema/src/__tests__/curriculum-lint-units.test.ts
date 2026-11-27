@@ -19,9 +19,11 @@ import {
   normalizeKo,
   parseGradeAList,
   practiceCheckItems,
+  questKnownAfter,
   pronunciationKey,
   questUnits,
   reviewScoreProblems,
+  scopeOfStep,
   severityOf,
   stepGameKind,
   storyCoverage,
@@ -228,6 +230,27 @@ describe('taught items and pronunciation', () => {
       { kind: 'card-match', pairs: [kt('해'), { ko: '' }], options: [kt('별')] },
     ];
     expect(askedKo(scopes)).toEqual(['달', '달', '안녕', '네', '비가 와요', '김밥', '해', '별']);
+  });
+
+  it('leaves a contrast step out of the known words and the Practice items (AMENDMENTS-MINIMAL-PAIRS section 3.8, row MP-2b)', () => {
+    const round = (set: string, ko: string) => ({ id: `lp:pair:${set}`, contrastSet: set, prompt: kt(ko), options: [{ id: 'a', text: kt(ko) }, { id: 'b', text: kt('탈') }], answerId: 'a' });
+    const quest = q(
+      'quest:x',
+      [
+        discover({ type: 'word', word: kt('빵') }),
+        step('practice', { minigameKind: 'card-match', minigameRef: 'r:play' }),
+        step('practice', { contrast: true, minigameKind: 'listen-pick', minigameRef: 'r:pairs' }),
+        step('check', { minigameKind: 'listen-pick', minigameRef: 'r:check' }),
+      ],
+      [
+        { ref: 'r:play', kind: 'card-match', pairs: [kt('쌀')] },
+        { ref: 'r:pairs', kind: 'listen-pick', rounds: [round('dal-tal-ttal', '달')] },
+        { ref: 'r:check', kind: 'listen-pick', rounds: [{ id: 'c1', prompt: kt('밥'), options: [{ id: 'a', text: kt('밥') }, { id: 'b', text: kt('쌀') }], answerId: 'a' }] },
+      ],
+    ) as unknown as LessonBodyQuest;
+    expect(questKnownAfter(quest)).toEqual(['빵', '빵', '쌀', '밥', '밥']);
+    expect(scopeOfStep(quest, 'practice')?.ref).toBe('r:play');
+    expect(practiceCheckItems(quest)).toEqual(['쌀', '밥']);
   });
 
   it('reads a Role Play scene as its partner lines and natural replies, never its title, partner or less natural replies (row CM-3A S4)', () => {
@@ -621,6 +644,19 @@ describe('lintCurriculum edge cases', () => {
     expect(rows(lintCurriculum(new Map(Object.entries(files)), { shippedStoryIds: new Set(['story:old']) }), 'story-topic-unique')).toEqual([
       'story-topic-unique error content/stories/new-one.json facts',
     ]);
+  });
+
+  it('leaves a contrast round out of the heard-round rule: it is told apart by clip, never spelled (AMENDMENTS-MINIMAL-PAIRS, row MP-2b)', () => {
+    // 개 and 게 sound alike, so a heard round that asks 개 beside 깨 would be flagged; a contrast round is not a spelling pick.
+    const teach = q('quest:t', [discover({ type: 'word', word: kt('게') })]);
+    const round = { id: 'lp:pair:gae-kkae', prompt: kt('개'), options: [{ id: 'gae', text: kt('개') }, { id: 'kkae', text: kt('깨') }], answerId: 'gae' };
+    const lintWith = (rounds: Json[]) =>
+      rows(
+        lint({ 'content/episodes/stage-2/nature.v2.json': body('episode:stage2-nature-v2', 2, [teach, q('quest:p', [step('intro')], [{ ref: 'm:p', kind: 'listen-pick', rounds }])], { volume: 2 }) }),
+        'dictation-unambiguous',
+      );
+    expect(lintWith([round])).toEqual(['dictation-unambiguous error content/episodes/stage-2/nature.v2.json quests[1].scopes[0].rounds[0]']);
+    expect(lintWith([{ ...round, contrastSet: 'gae-kkae' }])).toEqual([]);
   });
 
   it('judges a heard round against the items taught by that quest, not a later stage or another pack', () => {
