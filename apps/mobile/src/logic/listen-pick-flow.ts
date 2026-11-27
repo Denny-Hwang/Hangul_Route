@@ -348,6 +348,12 @@ export interface OptionViewContext {
   mode: HostMode;
   romanizationMode: RomanizationMode;
   /**
+   * [RF] The mode of one option's Korean (AMENDMENTS-ROMANIZATION-FADE section 3.6, `RomanizationResolver.forText`): on the
+   * `quest` host only, a decodable word folds in the reading phase while a theme word with an unmet letter stays shown. Every
+   * other host (`check`, `review`, `vocab`, `preview`) ignores it and uses `romanizationMode`. Absent: the one mode.
+   */
+  romanizationModeOf?: (ko: string) => RomanizationMode;
+  /**
    * The spelling round (F-CURR-002 section 4.5, row CM-31): a text option's screen-reader name, spelled block by block
    * with the letter names, because its options may sound the same. Default: the Korean and its shown romanization.
    */
@@ -418,8 +424,12 @@ export function optionView(
     base = gloss;
   } else {
     const text = option.text!;
-    // What the learner's mode shows (`tap`, the stricter one: only a touched option), and what the name says.
-    const romanization = context.romanizationMode === 'always' || touched ? text.romanization : '';
+    // What the learner's mode shows (`tap`, the stricter one: only a touched option), and what the name says. Once the round
+    // resolves, a host that is no Check shows every option's (section 3.8 (c)): a folded romanization is always reachable.
+    const mode = context.mode === 'quest' && context.romanizationModeOf ? context.romanizationModeOf(text.ko) : context.romanizationMode;
+    const resolved = state.status === 'resolved' || state.status === 'done';
+    const revealedAtAnswer = resolved && context.mode !== 'check' && context.mode !== 'review';
+    const romanization = mode === 'always' || touched || revealedAtAnswer ? text.romanization : '';
     // AU-8: an open Check question shows none of it, a missed option's included; it all comes with the answer.
     const held = context.holdRomanization === true && state.status === 'asking';
     view = {

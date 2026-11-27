@@ -1,6 +1,9 @@
 import type { PicWordRound } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { FADE_READING_FROM_QUEST } from '../locale/romanization-fade';
+import { romanizationResolver } from '../locale/romanization-mode';
+import { symbolsMetThrough } from '../stage1/curriculum';
 import {
   PIC_WORD_TIMING,
   announcement as announcementWith,
@@ -646,5 +649,63 @@ describe('tileItem (F-A11Y-001 §3.2: what a result line calls a tile)', () => {
     expect(tileItem(bap, 'word', messages.a11y, false)).toBe('bap');
     expect(tileItem(bap, 'word', messages.a11y, true)).toBe('bap, rice');
     expect(tileItem(bap, 'picture', messages.a11y, true)).toBe('rice');
+  });
+});
+
+describe('item-level folding on the quest host (AMENDMENTS-ROMANIZATION-FADE section 3.6, row RF-1b)', () => {
+  const [bap, , san] = board.pairs as [PicWordRound['pairs'][number], PicWordRound['pairs'][number], PicWordRound['pairs'][number]];
+  const magpie: PicWordRound['pairs'][number] = { id: 'kkachi', word: ko('까치', 'kkachi', 'magpie') };
+  const met = new Set<string>(symbolsMetThrough(FADE_READING_FROM_QUEST));
+  const fade = { phase: 'reading' as const, met, screenReader: false };
+  const auto = romanizationResolver(null, { romanizationChoice: 'auto' }, fade);
+  const quest = { romanizationMode: 'always' as const, mode: 'quest' as const, romanizationModeOf: auto.forText };
+
+  it('a decodable word folds until it is touched; a theme word with an unmet letter stays shown', () => {
+    expect(wordTileView(bap, fresh(), quest)).toMatchObject({ romanization: '', accessibilityLabel: '밥' });
+    expect(wordTileView(magpie, fresh(), quest)).toMatchObject({ romanization: 'kkachi', accessibilityLabel: '까치, kkachi' });
+  });
+
+  it('a selected tile shows its romanization, and a matched one keeps it with the meaning', () => {
+    const selected = run(fresh(), [word('bap')]).state;
+    expect(wordTileView(bap, selected, quest)).toMatchObject({ selected: true, romanization: 'bap' });
+    const matched = run(fresh(), [pic('bap'), word('bap')]).state;
+    expect(wordTileView(bap, matched, quest)).toMatchObject({ cardState: 'correct', romanization: 'bap', gloss: 'rice' });
+    // Every tile ends matched, so every folded romanization is reached by the end of the board.
+    const missed = run(fresh(), [pic('bap'), word('san')]).state;
+    expect(wordTileView(san, missed, quest)).toMatchObject({ cardState: 'wrong', romanization: 'san' });
+  });
+
+  it('is ignored on the Stage 2 Check, Words, Hidden Heritage and a context with no host: the one mode is used', () => {
+    for (const mode of ['check', 'vocab', 'review', 'preview', undefined] as const) {
+      const context = { romanizationMode: 'always' as const, romanizationModeOf: auto.forText, ...(mode === undefined ? {} : { mode }) };
+      expect(wordTileView(bap, fresh(), context).romanization).toBe('bap');
+      const tapContext = { ...context, romanizationMode: 'tap' as const };
+      expect(wordTileView(bap, fresh(), tapContext).romanization).toBe('');
+    }
+    // A Check still holds what it holds.
+    expect(wordTileView(bap, fresh(), { ...quest, mode: 'check', hold: true })).toMatchObject({ romanization: '', heldRomanization: 'bap' });
+  });
+
+  it('with the shipped default choice, or no resolver, every tile is exactly what it was, in every phase and every state', () => {
+    const states = [fresh(), run(fresh(), [word('bap')]).state, run(fresh(), [pic('bap'), word('bap')]).state, run(fresh(), [pic('bap'), word('san')]).state];
+    for (const phase of ['letters', 'reading', 'all'] as const) {
+      const resolver = romanizationResolver(null, undefined, { phase, met, screenReader: false });
+      for (const state of states) {
+        for (const pair of [...board.pairs, magpie]) {
+          expect(wordTileView(pair, state, { romanizationMode: 'always', mode: 'quest', romanizationModeOf: resolver.forText })).toEqual(
+            wordTileView(pair, state, { romanizationMode: 'always' }),
+          );
+        }
+      }
+    }
+  });
+
+  it('phase letters, a screen reader and an explicit always keep every tile shown; an explicit tap folds a theme word too', () => {
+    const shown = (resolver: ReturnType<typeof romanizationResolver>) =>
+      [bap, magpie].map((p) => wordTileView(p, fresh(), { romanizationMode: 'always', mode: 'quest', romanizationModeOf: resolver.forText }).romanization);
+    expect(shown(romanizationResolver(null, { romanizationChoice: 'auto' }, { ...fade, phase: 'letters' }))).toEqual(['bap', 'kkachi']);
+    expect(shown(romanizationResolver(null, { romanizationChoice: 'auto' }, { ...fade, screenReader: true }))).toEqual(['bap', 'kkachi']);
+    expect(shown(romanizationResolver(null, { romanizationChoice: 'always' }, fade))).toEqual(['bap', 'kkachi']);
+    expect(shown(romanizationResolver(null, { romanizationChoice: 'tap' }, fade))).toEqual(['', '']);
   });
 });

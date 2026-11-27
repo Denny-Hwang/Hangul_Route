@@ -36,7 +36,7 @@ import { soundCapMs } from '../../logic/audio/sound-pacing';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
-import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { useRomanizationMode, useRomanizationResolver } from '../../i18n/use-romanization-mode';
 import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '../../logic/answer-feedback';
 import type { ContrastEnv } from '../../logic/audio/contrast-sets';
 import type { ContrastMemberKind } from '../../logic/listen-pick-contrast';
@@ -228,6 +228,11 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
   const m = useMessages();
   const copy = m.learner.minigame;
   const romanizationMode = useRomanizationMode();
+  // [RF] Taken once per mount (AMENDMENTS-ROMANIZATION-FADE section 3.3), so a change of phase applies from the next game;
+  // read per option on the `quest` host only (the option view ignores it on every other host, section 3.6).
+  const liveResolver = useRomanizationResolver();
+  const resolverRef = useRef(liveResolver);
+  const romanizationModeOf = resolverRef.current.forText;
   const reducedMotion = useReducedMotion();
   // F-LAYOUT-001 §3.6, §3.12: the sound and the answers side by side on a landscape window; the speaker
   // and the pictures grow with the window.
@@ -685,6 +690,7 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
   const optionContext = {
     mode: host.mode,
     romanizationMode,
+    romanizationModeOf,
     // AU-8, DC-1a: a Check (the quest Check, the Hangul Check; a text prompt round too) shows no romanization on its options
     // until the answer, whatever the learner's mode.
     holdRomanization: holdsOpen,

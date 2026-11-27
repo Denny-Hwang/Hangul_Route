@@ -62,6 +62,17 @@ const CALL_SITES = [
   'screens/story/CultureNotesScreen.tsx',
 ];
 
+/**
+ * The three item-level surfaces (AMENDMENTS-ROMANIZATION-FADE section 3.6, row RF-1b): they read the per-text mode of the
+ * resolver, taken once per mount, besides the surface mode the hook gives. Discover is a quest step; the two games pass it
+ * on and their flows use it on the `quest` host only.
+ */
+const RESOLVER_SITES = [
+  'screens/quest/DiscoverStep.tsx',
+  'screens/minigames/ListenPickGame.tsx',
+  'screens/minigames/PicWordMatchGame.tsx',
+];
+
 describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
   it('scans the screens and components', () => {
     expect(files.length).toBeGreaterThan(50);
@@ -110,6 +121,31 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
     const file = files.find((f) => f.rel === rel);
     expect(file, rel).toBeDefined();
     expect(file!.source).toContain('useRomanizationMode(');
+  });
+
+  it.each(RESOLVER_SITES)('%s takes the resolver once per mount and reads the per-text mode from it', (rel) => {
+    const file = files.find((f) => f.rel === rel);
+    expect(file, rel).toBeDefined();
+    expect(file!.source).toContain('useRomanizationResolver(');
+    // Kept for the whole mount: a ref seeded with the first resolver, never the live hook value read per draw.
+    expect(file!.source).toMatch(/useRef\(liveResolver\)/);
+    expect(file!.source).toContain('resolverRef.current.forText');
+  });
+
+  it('the resolver is read by the three item-level surfaces and by no other screen or component', () => {
+    expect(
+      files
+        .filter((f) => f.source.includes('useRomanizationResolver('))
+        .map((f) => f.rel)
+        .sort(),
+    ).toEqual([...RESOLVER_SITES].sort());
+  });
+
+  it('no Check host reads the per-text mode: the games hand it to flows that use it on the quest host only', () => {
+    const listen = readFileSync(join(SRC, 'logic', 'listen-pick-flow.ts'), 'utf8');
+    const pic = readFileSync(join(SRC, 'logic', 'pic-word-flow.ts'), 'utf8');
+    expect(listen).toContain("context.mode === 'quest' && context.romanizationModeOf");
+    expect(pic).toContain("context.mode === 'quest' && context.romanizationModeOf");
   });
 
   it('the editor shows the stored setting, never the override', () => {

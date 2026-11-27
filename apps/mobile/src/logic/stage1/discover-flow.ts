@@ -85,6 +85,11 @@ export interface DiscoverItemView {
   romanization: string;
   gloss?: string;
   accessibilityLabel: string;
+  /**
+   * [RF] A word card's name while its romanization is folded (the Korean and its gloss, as the example word's name does,
+   * `example-label.ts`); `accessibilityLabel` is the name once it is shown. The Hear it button keeps the full one.
+   */
+  foldedAccessibilityLabel?: string;
   soundHint?: string;
   /** The main Hear it button: a letter's sound (na), a final's closed syllable (ak), or the word. */
   hear: HearAction;
@@ -365,6 +370,7 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, ki
     romanization: teachingRomanization(word),
     gloss: word.en,
     accessibilityLabel: `${word.ko}, ${word.romanization}, ${word.en}`,
+    foldedAccessibilityLabel: `${word.ko}, ${word.en}`,
     hear: wordSpec(key, 'sound', word, kind),
     spokenRomanization: word.romanization,
     ...(item.noteEn ? { note: item.noteEn } : {}),
@@ -718,7 +724,12 @@ export interface DiscoverItemRender {
   sayLines: string[];
   /** `false` hides only the example's romanization (reading practice). */
   exampleRomanizationShown: boolean;
-  /** The "Show how to say it" tap is offered. */
+  /**
+   * [RF] Whether a word card's own romanization is drawn (AMENDMENTS-ROMANIZATION-FADE section 3.6). A letter card's own
+   * sound value (`g/k`) is the thing being taught and is always shown, so this is `true` for it in every mode.
+   */
+  romanizationShown: boolean;
+  /** The "Show how to say it" tap is offered: under a folded example or under a folded word card. */
   showReveal: boolean;
   /** The Hear it button pulses once as the page opens (static under reduced motion). */
   pulse: boolean;
@@ -775,11 +786,18 @@ export interface DiscoverPageRender {
   continueEnabled: true;
 }
 
+/**
+ * What one Korean text shows (AMENDMENTS-ROMANIZATION-FADE section 3.6): the item-level mode of a quest's Discover step
+ * (`RomanizationResolver.forText`). Absent, every text follows the one `mode` as before.
+ */
+export type RomanizationModeOf = (ko: string) => RomanizationMode;
+
 export function pageRender(
   model: DiscoverModel,
   state: DiscoverState,
   mode: RomanizationMode,
   copy: DiscoverCopy,
+  modeOf?: RomanizationModeOf,
 ): DiscoverPageRender {
   const page = model.pages[state.page];
   if (!page) {
@@ -798,13 +816,18 @@ export function pageRender(
     if (item.example && state.text.includes(item.example.hear.id)) {
       sayLines.push(copy.sayLine(item.example.spokenRomanization));
     }
-    const shown = romanizationShown(mode, state.revealed.includes(item.key));
+    // A letter card draws its sound value always and folds its example word; a word card folds its own romanization, with
+    // the same reveal (section 3.6). Each text is asked of `modeOf` (a decodable word folds in the reading phase).
+    const word = item.kind === 'word';
+    const textMode = modeOf === undefined ? mode : modeOf(word ? item.glyph : (item.example?.ko ?? item.glyph));
+    const shown = romanizationShown(textMode, state.revealed.includes(item.key));
     return {
       item,
       heard: ids.some((id) => id !== undefined && state.played.includes(id)),
       sayLines,
       exampleRomanizationShown: shown,
-      showReveal: !shown && item.example !== undefined,
+      romanizationShown: word ? shown : true,
+      showReveal: !shown && (word || item.example !== undefined),
       pulse: index === 0 && page.exchange === undefined,
     };
   });
@@ -812,7 +835,7 @@ export function pageRender(
     empty: false,
     ...(write === undefined ? {} : { write }),
     ...(page.title === undefined ? {} : { title: page.title }),
-    ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy) }),
+    ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy, modeOf) }),
     items,
     dots: {
       value: Math.max(state.furthest, state.page) + 1,
@@ -831,11 +854,12 @@ function exchangeRender(
   state: DiscoverState,
   mode: RomanizationMode,
   copy: DiscoverCopy,
+  modeOf?: RomanizationModeOf,
 ): DiscoverExchangeRender {
   const ra = state.readAlong?.item === item.key ? state.readAlong : null;
   const litIndex = ra?.line ?? null;
   const lines = item.lines.map((line, i): DiscoverExchangeLineRender => {
-    const shown = romanizationShown(mode, state.revealed.includes(line.key));
+    const shown = romanizationShown(modeOf === undefined ? mode : modeOf(line.ko), state.revealed.includes(line.key));
     return { line, lit: litIndex === i, romanizationShown: shown, showReveal: !shown };
   });
   const lit = litIndex === null ? undefined : item.lines[litIndex];
