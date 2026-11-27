@@ -9,15 +9,21 @@ export const AUDIO_PACK_CHUNK = 'audio-pack:cards';
 export const AUDIO_PACK: AudioPackChunk = {
   pack: 'cards',
   clips: {
+    'audio/say/2df5909c5a5f6a93.mp3': require('../../../../assets/audio/say/2df5909c5a5f6a93.mp3'),
     'audio/say/3ee1ff52e0e8a051.mp3': require('../../../../assets/audio/say/3ee1ff52e0e8a051.mp3'),
     'audio/say/3f663e28cb8bea91.mp3': require('../../../../assets/audio/say/3f663e28cb8bea91.mp3'),
     'audio/say/4b3907d101586266.mp3': require('../../../../assets/audio/say/4b3907d101586266.mp3'),
+    'audio/say/983a59aa2a8dbb32.mp3': require('../../../../assets/audio/say/983a59aa2a8dbb32.mp3'),
     'audio/say/ae353e9482abc103.mp3': require('../../../../assets/audio/say/ae353e9482abc103.mp3'),
+    'audio/say/b75e970989954336.mp3': require('../../../../assets/audio/say/b75e970989954336.mp3'),
   },
   units: {
-    'card:family-table': [2],
-    'card:gamsa': [1],
-    'card:insa': [3],
-    'card:set-hangul-printing': [0],
+    'card:family-table': [3],
+    'card:gamsa': [2],
+    'card:ink': [4],
+    'card:insa': [5],
+    'card:lantern': [6],
+    'card:mugunghwa': [0],
+    'card:set-hangul-printing': [1],
   },
 };
