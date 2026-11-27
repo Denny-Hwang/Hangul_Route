@@ -300,7 +300,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(a.effects).toEqual([]);
     const b = stepDiscover(a.state, { type: 'next' });
     expect(b.state.page).toBe(1);
-    expect(b.effects).toEqual([{ type: 'done', pages: 2, heard: 0 }]);
+    expect(b.effects).toEqual([{ type: 'done', pages: 2, heard: 0, written: 0 }]);
   });
 
   it('Hear it asks to play, counts distinct taps once, and a played result adds the heard mark', () => {
@@ -328,7 +328,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
       { type: 'next' },
       { type: 'next' },
     );
-    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2, written: 0 }]);
   });
 
   it('unavailable or muted audio switches that item to the "say it out loud" text, nothing else', () => {
@@ -442,7 +442,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
 
     it('Continue on the last page still finishes after a Previous, with the same counts', () => {
       const out = run(startDiscover(model), { type: 'next' }, { type: 'prev' }, { type: 'next' }, { type: 'next' });
-      expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 0 }]);
+      expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 0, written: 0 }]);
     });
 
     it('Previous stops a Read along', () => {
@@ -499,12 +499,12 @@ describe('[AU] the first letter sounds by itself on a letter page (AMENDMENTS-AU
     expect(played.state.played).toEqual([first]);
     expect(played.state.tapped).toEqual([]);
     const done = run(played.state, { type: 'next' }, { type: 'next' }, { type: 'next' });
-    expect(done.effects).toEqual([{ type: 'done', pages: 3, heard: 0 }]);
+    expect(done.effects).toEqual([{ type: 'done', pages: 3, heard: 0, written: 0 }]);
   });
 
   it('a tap after it still counts once', () => {
     const out = run(startDiscover(model), { type: 'autoHear', id: first }, { type: 'hear', id: first }, { type: 'next' }, { type: 'next' }, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'done', pages: 3, heard: 1 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 3, heard: 1, written: 0 }]);
   });
 
   it('Continue never waits for it', () => {
@@ -575,7 +575,7 @@ describe('an empty Discover step', () => {
     const render = pageRender(model, state, 'always');
     expect(render).toMatchObject({ empty: true, continueEnabled: true, isLast: true, items: [] });
     expect(render.emptyLine).toBe(COPY.empty);
-    expect(stepDiscover(state, { type: 'next' }).effects).toEqual([{ type: 'done', pages: 0, heard: 0 }]);
+    expect(stepDiscover(state, { type: 'next' }).effects).toEqual([{ type: 'done', pages: 0, heard: 0, written: 0 }]);
   });
 
   it('a step whose items are all unresolvable behaves the same', () => {
@@ -762,7 +762,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     expect(out.state.tapped).toEqual([line(0), line(1)]);
     out = stepDiscover(out.state, { type: 'next' });
     out = stepDiscover(out.state, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2 }]);
+    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2, written: 0 }]);
   });
 
   it('Stop stops the audio at once, clears the highlight and ignores the stopped run', () => {
@@ -863,7 +863,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     const k = one.pages[0]!.exchange!.key;
     let out = stepDiscover(startDiscover(one), { type: 'readAlong', item: k });
     out = stepDiscover(out.state, { type: 'next' });
-    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'done', pages: 1, heard: 1 }]);
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'done', pages: 1, heard: 1, written: 0 }]);
   });
 
   it('tap mode hides a line romanization behind "Show how to say it", per line', () => {
