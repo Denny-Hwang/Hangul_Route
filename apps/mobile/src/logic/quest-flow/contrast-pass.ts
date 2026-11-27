@@ -40,6 +40,16 @@ export async function contrastStepVerdict(rounds: readonly ListenPickRound[], de
   }
 }
 
+/**
+ * Whether the step is passed by at once, before any wait or chunk (row MP-2b): none of its sets is approved
+ * (`CONTRAST_APPROVED_SET_IDS`, a few bytes of the start bundle), so no clip can make it playable. Until the owner approves
+ * a set every learner takes this way, with no blank frame between the steps; the pack wait and the chunk are for a step
+ * that has an approved set and may still lack a clip, a pack, or sound.
+ */
+export function passesAtOnce(rounds: readonly ListenPickRound[], approvedSetIds: readonly string[]): boolean {
+  return !rounds.some((r) => r.contrastSet !== undefined && approvedSetIds.includes(r.contrastSet));
+}
+
 /** Which way a passed-by step moves on: the way the learner was going (`cameBack` is true after Previous). */
 export function passByDirection(cameBack: boolean): 'next' | 'prev' {
   return cameBack ? 'prev' : 'next';

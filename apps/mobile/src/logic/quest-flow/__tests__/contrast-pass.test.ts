@@ -1,7 +1,7 @@
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import type { ContrastEnv } from '../../audio/contrast-sets';
-import { contrastStepVerdict, passByDirection, type ContrastPassDeps } from '../contrast-pass';
+import { contrastStepVerdict, passByDirection, passesAtOnce, type ContrastPassDeps } from '../contrast-pass';
 
 /** [MP] AMENDMENTS-MINIMAL-PAIRS section 3.6, row MP-2b: a contrast step with nothing to play is passed by. */
 const round = (set: string): ListenPickRound => ({
@@ -69,5 +69,18 @@ describe('passByDirection', () => {
   it('goes on as the learner was going: forward after Next or a resume, back after Previous', () => {
     expect(passByDirection(false)).toBe('next');
     expect(passByDirection(true)).toBe('prev');
+  });
+});
+
+describe('passesAtOnce (the start bundle knows which sets are approved)', () => {
+  it('passes a step by at once when none of its sets is approved: no pack wait, no chunk', () => {
+    expect(passesAtOnce([round('ga-ka'), round('da-ta')], [])).toBe(true);
+    expect(passesAtOnce([round('ga-ka'), round('da-ta')], ['go-ko'])).toBe(true);
+    expect(passesAtOnce([], ['ga-ka'])).toBe(true);
+  });
+
+  it('leaves the decision to the clip wait and the chunk once one of its sets is approved', () => {
+    expect(passesAtOnce([round('ga-ka'), round('da-ta')], ['da-ta'])).toBe(false);
+    expect(passesAtOnce([round('ga-ka'), round('da-ta')], ['ga-ka', 'da-ta', 'go-ko'])).toBe(false);
   });
 });

@@ -49,6 +49,25 @@ vi.mock('../../../platform/audio-assets-store', async (importOriginal) => {
   };
 });
 
+/** Which sets the start bundle says are approved (`contrast-approved.ts`, empty today), and how many blank waiting frames were drawn. */
+const start = vi.hoisted(() => ({ ids: [] as string[], waiting: 0 }));
+vi.mock('../../../content/__generated__/contrast-approved', () => ({
+  get CONTRAST_APPROVED_SET_IDS() {
+    return start.ids;
+  },
+}));
+vi.mock('../../lesson-content', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lesson-content')>();
+  const { createElement } = await import('react');
+  return {
+    ...actual,
+    LessonWaiting: () => {
+      start.waiting += 1;
+      return createElement(actual.LessonWaiting);
+    },
+  };
+});
+
 const QUEST = questById('quest:stage1-life-q3')!;
 const at = (id: string): number => QUEST.steps.findIndex((s) => s.id === id);
 const PRACTICE = at('s3');
@@ -90,6 +109,8 @@ async function playGame(right: number, rounds: number): Promise<void> {
 }
 
 beforeEach(() => {
+  start.ids = ['ga-ka', 'da-ta'];
+  start.waiting = 0;
   kit.playable = false;
   kit.failLoad = false;
   kit.calls = 0;
@@ -103,7 +124,51 @@ afterEach(async () => {
   run().reset();
 });
 
-describe('[MP] a contrast step with nothing to play is passed by (row MP-2b)', () => {
+describe('[MP] a contrast step with none of its sets approved is passed by at once (row MP-2b)', () => {
+  beforeEach(() => {
+    start.ids = [];
+  });
+
+  it('goes from Match Sound to the apply step with no clip wait, no chunk and no waiting frame', async () => {
+    const { r } = await playerAt(PRACTICE);
+    start.waiting = 0;
+    await playGame(6, 6);
+    expect(run().stepIndex).toBe(APPLY);
+    expect(run().skippedSteps).toEqual([]);
+    expect(run().furthestStep).toBe(APPLY);
+    expect(screenTexts(r.root).join(' | ')).toContain(QUEST.steps[APPLY]!.titleEn);
+    expect(kit.order).toEqual([]);
+    expect(kit.calls).toBe(0);
+    expect(start.waiting).toBe(0);
+  });
+
+  it('is passed by at once on Previous and on a resumed run too', async () => {
+    const back = await playerAt(APPLY);
+    start.waiting = 0;
+    await tap(back.r, 'Previous');
+    expect(run().stepIndex).toBe(PRACTICE);
+    await tap(back.r, 'Continue');
+    expect(run().stepIndex).toBe(APPLY);
+    await unmount(mounted.pop()!);
+    run().reset();
+    const resumed = await playerAt(CONTRAST);
+    expect(run().stepIndex).toBe(APPLY);
+    expect(screenTexts(resumed.r.root).join(' | ')).toContain(QUEST.steps[APPLY]!.titleEn);
+    expect(kit.order).toEqual([]);
+    expect(start.waiting).toBe(0);
+  });
+
+  it('a set that is approved (the fixture build) takes the wait and the chunk, as before', async () => {
+    start.ids = ['da-ta'];
+    kit.playable = true;
+    await playerAt(PRACTICE);
+    await playGame(6, 6);
+    expect(run().stepIndex).toBe(CONTRAST);
+    expect(kit.order).toEqual(['wait', 'kit']);
+  });
+});
+
+describe('[MP] a contrast step with an approved set but nothing to play is passed by after the wait (row MP-2b)', () => {
   it('the quest under test: Match Sound, the contrast step, What Does It Mean?, the Check', () => {
     expect([PRACTICE, CONTRAST, APPLY, CHECK]).toEqual([2, 3, 4, 5]);
     expect(QUEST.steps[CONTRAST]).toMatchObject({ contrast: true, titleEn: 'Hear the Puff' });

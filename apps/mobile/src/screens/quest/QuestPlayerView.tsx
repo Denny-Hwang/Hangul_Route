@@ -39,7 +39,8 @@ import {
   type QuestPlayerPorts,
 } from '../../logic/quest-flow/quest-player-ports';
 import { questStepLabel } from '../../logic/quest-steps';
-import { contrastStepVerdict, passByDirection, type ContrastVerdict } from '../../logic/quest-flow/contrast-pass';
+import { CONTRAST_APPROVED_SET_IDS } from '../../content/__generated__/contrast-approved';
+import { contrastStepVerdict, passByDirection, passesAtOnce, type ContrastVerdict } from '../../logic/quest-flow/contrast-pass';
 import { hasClipFor, stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -239,13 +240,24 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   const step = quest?.steps[stepIndex];
 
   // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.6 (row MP-2b): a contrast step decides, each time it is entered, whether it has rounds
-  // to play (the clip packs first, then the contrast chunk and the device as it is now). With nothing to play it is passed by:
-  // the player moves on the way the learner was going, as if the step were done (no screen, no `minigame.finished`, not in
+  // to play. With none of its sets approved (`CONTRAST_APPROVED_SET_IDS`, a few bytes of the start bundle; empty until the owner
+  // approves a set) it is passed by at once, before paint, with no clip wait and no chunk: no frame of it is ever drawn. With an
+  // approved set it waits for the clip packs, loads the contrast chunk and asks it with the device as it is now. Passed by, the
+  // player moves on the way the learner was going, as if the step were done (no screen, no `minigame.finished`, not in
   // `skippedSteps`; its dot fills as the run passes it). The verdict resets on leaving the step, so a step entered again decides again.
   const contrastRef = step?.contrast === true ? (step.minigameRef ?? '') : undefined;
+  const contrastAtOnce = contrastRef !== undefined && passesAtOnce(scopeFor(contrastRef)?.listenPick?.rounds ?? [], CONTRAST_APPROVED_SET_IDS);
   const [contrastVerdict, setContrastVerdict] = useState<ContrastVerdict | null>(null);
+  const passBy = (): void => {
+    const run = useQuestRunStore.getState();
+    if (passByDirection(run.cameBack) === 'prev') run.goPrevStep();
+    else run.goNextStep();
+  };
+  useLayoutEffect(() => {
+    if (contrastAtOnce) passBy();
+  }, [stepIndex, contrastAtOnce]);
   useEffect(() => {
-    if (contrastRef === undefined) return undefined;
+    if (contrastRef === undefined || contrastAtOnce) return undefined;
     let live = true;
     const rounds = scopeFor(contrastRef)?.listenPick?.rounds ?? [];
     void contrastStepVerdict(rounds, {
@@ -260,19 +272,14 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       }),
     }).then((verdict) => {
       if (!live) return;
-      if (verdict === 'play') {
-        setContrastVerdict('play');
-        return;
-      }
-      const run = useQuestRunStore.getState();
-      if (passByDirection(run.cameBack) === 'prev') run.goPrevStep();
-      else run.goNextStep();
+      if (verdict === 'play') setContrastVerdict('play');
+      else passBy();
     });
     return () => {
       live = false;
       setContrastVerdict(null);
     };
-  }, [stepIndex, contrastRef]);
+  }, [stepIndex, contrastRef, contrastAtOnce]);
 
   // Past Practice, once: the chunk notes a strong round for the cell and, after a hard one, gives the scaffold round,
   // played before Apply outside the steps and the score. Before paint, so Apply's card never flashes under it. The
@@ -445,7 +452,8 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   }
 
   // [MP] A contrast step shows nothing until it has decided to play (a moment: the packs, the chunk); one with nothing to play never shows.
-  if (step.contrast === true && contrastVerdict !== 'play') return <LessonWaiting />;
+  // A step passed by at once draws nothing (its layout effect has already moved the run on, before paint).
+  if (step.contrast === true && contrastVerdict !== 'play') return contrastAtOnce ? <Screen tone="canvas">{null}</Screen> : <LessonWaiting />;
 
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
