@@ -450,6 +450,20 @@ export const caregiver = {
       sentence: '문장',
     },
     form: { decode: '읽기', read: '읽기', oral: '듣기' },
+    skills: {
+      title: '읽기와 듣기',
+      reading: '읽기',
+      listening: '듣기',
+      notChecked: '확인 안 함',
+      ahead: (name: string) => `${name}의 이번 확인에서는 읽은 것보다 귀로 이해한 한국어가 더 많았어요. 흔한 일이에요.`,
+    },
+    listening: {
+      stage1: '자주 쓰는 낱말: 아직 새로워요',
+      stage2: '자주 쓰는 낱말을 들려줬을 때 대부분 알아들었어요',
+      stage3: '들려준 짧은 문장을 이해했어요',
+    },
+    formStatus: (form: string, status: string) => `${form}: ${status}`,
+    olderSentences: '예전 확인 방식에서는 문장 질문이 더 쉬웠어요. 3단계가 어렵게 느껴지면 \'다른 시작 위치 고르기\'를 눌러 보세요.',
     count: (correct: number, asked: number) => `${asked}개 중 ${correct}개`,
     notTestedReason: {
       noSound: '듣기는 확인하지 않았어요: 이 기기에서 소리가 나지 않아요.',

@@ -71,6 +71,7 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
       ['minigame:m', 'listenPick.rounds.lp-sym-jamo-eo.prompt'],
       ['minigame:m', 'rounds.r1.prompt'],
       ['minigame:m', 'realiaRead.rounds.q4.options.bread.label'],
+      ['minigame:m', 'listenPick.rounds.lp-pair-dal-tal-ttal.options.tal.text.gloss'],
       ['minigame:m', 'realiaRead.rounds.q1.question'],
       ['minigame:m', 'realiaRead.realia.entries.ramyeon.value.gloss'],
       ['minigame:m', 'realiaRead.rounds.q1.key.gloss'],

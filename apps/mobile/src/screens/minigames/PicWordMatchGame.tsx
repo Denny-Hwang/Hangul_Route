@@ -31,7 +31,7 @@ import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { afterMiss, afterRightAnswer, lookHereLine, type AnswerResult } from '../../logic/answer-feedback';
 import { koSpeech } from '../../logic/audio/ko-speech';
-import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { useRomanizationMode, useRomanizationResolver } from '../../i18n/use-romanization-mode';
 import {
   announcement,
   canSkip,
@@ -132,6 +132,11 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   const m = useMessages();
   const copy = m.learner.minigame;
   const romanizationMode = useRomanizationMode();
+  // [RF] Taken once per mount (AMENDMENTS-ROMANIZATION-FADE section 3.3), so a change of phase applies from the next game;
+  // read per word on the `quest` host only (the tile view ignores it on every other host, section 3.6).
+  const liveResolver = useRomanizationResolver();
+  const resolverRef = useRef(liveResolver);
+  const romanizationModeOf = resolverRef.current.forText;
   // F-LAYOUT-001 §3.6, §3.12: the window from the layout class; the picture grows with its media scale.
   const { windowWidth, windowHeight } = useLayoutClass();
   const side = useMediaSize(touchTarget[pictureSide(windowWidth, windowHeight)]);
@@ -382,7 +387,7 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
               {order.wordOrder.map((pairId) => {
                 const pair = pairById.get(pairId);
                 if (!pair) return null;
-                const view = wordTileView(pair, state, { romanizationMode, hold }, m.a11y.minigame);
+                const view = wordTileView(pair, state, { romanizationMode, mode: host.mode, romanizationModeOf, hold }, m.a11y.minigame);
                 return (
                   <TileFrame key={pairId} badge={view.badge} badgeCorner="start">
                     <ChoiceCard

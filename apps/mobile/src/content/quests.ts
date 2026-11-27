@@ -248,6 +248,8 @@ export const stage1Quests: Quest[] = [
         durationSeconds: 40,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q3-play', durationSeconds: 75 },
+      // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): one optional contrast step, unscored, passed by when no set can play.
+      { id: 's3p', kind: 'practice', contrast: true, titleEn: 'Hear the Puff', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-life-q3-pairs', durationSeconds: 40 },
       { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s1-life-q3-apply', durationSeconds: 60 },
       { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-life-q3-check', durationSeconds: 35 },
       { id: 's6', kind: 'reward', titleEn: 'Kimbap Card!', hoyaLineEn: 'Kimbap, the picnic favorite, joins your library!', durationSeconds: 8 },

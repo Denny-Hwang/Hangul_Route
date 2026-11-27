@@ -2,6 +2,9 @@ import type { ListenPickRound } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { describe, expect, it } from 'vitest';
+import { FADE_READING_FROM_QUEST } from '../locale/romanization-fade';
+import { romanizationResolver } from '../locale/romanization-mode';
+import { symbolsMetThrough } from '../stage1/curriculum';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
   LISTEN_PICK_TIMING,
@@ -713,5 +716,92 @@ describe('the asked text in a Check (AMENDMENTS-AUDIO-CANT-HEAR CH-1e, section 3
   it('the flag changes nothing when no text shows, and once the round resolved the answer is known so the Korean shows', () => {
     expect(promptView(textRound, asking, 'check', false, true)).toEqual({ showText: false, content: undefined });
     expect(promptView(textRound, resolved, 'check', true, true).content).toEqual({ ko: '가', romanization: 'ga', gloss: 'the letter giyeok' });
+  });
+});
+
+describe('item-level folding and the answer showing every option (AMENDMENTS-ROMANIZATION-FADE sections 3.6 and 3.8, row RF-1b)', () => {
+  const wordRound: ListenPickRound = {
+    id: 'lp:word:san',
+    prompt: text('산', 'san', 'mountain'),
+    options: [
+      { id: 'a', text: text('산', 'san', 'mountain') },
+      { id: 'b', text: text('바다', 'bada', 'sea') },
+      { id: 'c', text: text('까치', 'kkachi', 'magpie') },
+      { id: 'd', text: text('떡국', 'tteokguk', 'rice cake soup') },
+    ],
+    answerId: 'a',
+  };
+  const met = new Set<string>(symbolsMetThrough(FADE_READING_FROM_QUEST));
+  const auto = romanizationResolver(null, { romanizationChoice: 'auto' }, { phase: 'reading', met, screenReader: false });
+  const asking = startFlow(2);
+  const resolved = run(asking, [tap('b', 100), tap('a', 900)]).state;
+  const shown = (state: ListenPickFlowState, context: Parameters<typeof optionView>[3]): string[] =>
+    wordRound.options.map((o) => optionView(wordRound, o, state, context).romanization);
+  const quest = { mode: 'quest', romanizationMode: 'always', romanizationModeOf: auto.forText } as const;
+
+  it('on the quest host a decodable option folds while the question is open; a theme word with an unmet letter stays shown', () => {
+    expect(shown(asking, quest)).toEqual(['', '', 'kkachi', 'tteokguk']);
+    // The accessible name follows what is drawn, as tap's does today.
+    expect(optionView(wordRound, wordRound.options[0]!, asking, quest).accessibilityLabel).toBe('산');
+    expect(optionView(wordRound, wordRound.options[2]!, asking, quest).accessibilityLabel).toBe('까치, kkachi');
+  });
+
+  it('a touched option shows it; when the round resolves every option does', () => {
+    const missed = run(asking, [tap('b', 100)]).state;
+    expect(shown(missed, quest)).toEqual(['', 'bada', 'kkachi', 'tteokguk']);
+    expect(shown(resolved, quest)).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+    expect(shown({ ...resolved, status: 'done' }, quest)).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+  });
+
+  it('every non-Check host shows every option once resolved, for an explicit tap too, and keeps its fold while asking', () => {
+    for (const mode of ['quest', 'vocab', 'preview'] as const) {
+      const tapContext = { mode, romanizationMode: 'tap' } as const;
+      expect(shown(asking, tapContext)).toEqual(['', '', '', '']);
+      expect(shown(resolved, tapContext)).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+    }
+  });
+
+  it('is ignored on vocab, preview, check and review: the one mode decides', () => {
+    for (const mode of ['vocab', 'preview', 'check', 'review'] as const) {
+      expect(shown(asking, { mode, romanizationMode: 'always', romanizationModeOf: auto.forText })).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+      expect(shown(asking, { mode, romanizationMode: 'tap', romanizationModeOf: () => 'always' })).toEqual(['', '', '', '']);
+    }
+  });
+
+  it('check and review are unchanged: tap shows only the touched options at the answer (AU-8), a hold still holds', () => {
+    for (const mode of ['check', 'review'] as const) {
+      const context = { mode, romanizationMode: 'tap', holdRomanization: checkHoldsRomanization(mode) } as const;
+      expect(shown(resolved, context)).toEqual(['san', 'bada', '', '']);
+      expect(shown(asking, { ...context, romanizationMode: 'always' })).toEqual(['', '', '', '']);
+      expect(wordRound.options.map((o) => optionView(wordRound, o, asking, { ...context, romanizationMode: 'always' }).heldRomanization)).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+    }
+  });
+
+  it('with the shipped default choice every option is exactly what it was, in every phase, host and state', () => {
+    const states = [asking, run(asking, [tap('b', 100)]).state, resolved, { ...resolved, status: 'done' as const }];
+    for (const phase of ['letters', 'reading', 'all'] as const) {
+      const resolver = romanizationResolver(null, undefined, { phase, met, screenReader: false });
+      for (const mode of ['quest', 'check', 'review', 'vocab', 'preview'] as const) {
+        const hold = checkHoldsRomanization(mode);
+        for (const state of states) {
+          for (const option of wordRound.options) {
+            expect(optionView(wordRound, option, state, { mode, romanizationMode: 'always', romanizationModeOf: resolver.forText, holdRomanization: hold })).toEqual(
+              optionView(wordRound, option, state, { mode, romanizationMode: 'always', holdRomanization: hold }),
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it('phase letters and a screen reader keep every option shown on the quest host', () => {
+    const fadeOf = (phase: 'letters' | 'reading' | 'all', screenReader: boolean) =>
+      romanizationResolver(null, { romanizationChoice: 'auto' }, { phase, met, screenReader });
+    expect(shown(asking, { ...quest, romanizationModeOf: fadeOf('letters', false).forText })).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+    expect(shown(asking, { ...quest, romanizationModeOf: fadeOf('reading', true).forText })).toEqual(['san', 'bada', 'kkachi', 'tteokguk']);
+  });
+
+  it('a picture option has no romanization to fold or show', () => {
+    expect(optionView(pictureRound, pictureRound.options[0]!, startFlow(1), quest)).toMatchObject({ romanization: '', label: 'rice' });
   });
 });

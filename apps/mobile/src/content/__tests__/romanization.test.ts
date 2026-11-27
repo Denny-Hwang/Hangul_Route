@@ -149,6 +149,9 @@ describe('minigame scopes romanization (B1)', () => {
         for (const o of d.options) check(ref, o.ko, o.romanization);
       }
       for (const r of s.listenPick?.rounds ?? []) {
+        // A contrast round is the stub `lp.pair` here (blank placeholders); the members it expands to are the catalogue's,
+        // checked against the same rules by `contrast-sets.test.mjs` (AMENDMENTS-MINIMAL-PAIRS section 3.4, row MP-2b).
+        if (r.contrastSet !== undefined) continue;
         check(ref, r.prompt.ko, r.prompt.romanization);
         for (const o of r.options) {
           if (o.text === undefined) continue;

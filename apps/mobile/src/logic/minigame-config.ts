@@ -332,6 +332,14 @@ export const minigameScopes: Record<string, MinigameScope> = {
     focusJamoIds: F3,
     rounds: 6,
   },
+  // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.1 and 3.5 (row MP-2b): the twelve plain / aspirated pairs of the contrast step, named
+  // by their sets (`lp.pair` is a stub; the contrast chunk expands it). The step draws six when it starts, on approved clips only.
+  'minigame:s1-life-q3-pairs': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: ['ga-ka', 'go-ko', 'gu-ku', 'gi-ki', 'da-ta', 'do-to', 'du-tu', 'di-ti', 'ja-cha', 'jo-cho', 'ju-chu', 'ji-chi'].map((set) => lp.pair(set)),
+    },
+  },
   'minigame:s1-life-q3-apply': {
     kind: 'culture-quiz',
     cardPairs: [

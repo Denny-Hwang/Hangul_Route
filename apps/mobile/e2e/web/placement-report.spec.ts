@@ -319,6 +319,97 @@ test.describe('placement report (fixture bundle)', () => {
     await shot(page, 'placement-report-not-tested-child');
   });
 
+  test('a heritage listener: Reading and Listening apart, listening-only rows for Words and Sentences (PV-4)', async ({ page }) => {
+    // 320 wide: 640 px at 200 % browser zoom (React Native Web draws text in px).
+    await page.setViewportSize({ width: 320, height: 568 });
+    const id = await onboardSelf(page);
+    await seedResult(
+      page,
+      id,
+      storedResult({
+        responses: [response('pitem:sound-basic-hear-a', 'wrong'), response('pitem:vocab-hear-bap', 'correct')],
+        gates: [row('sound-basic', 'decode', 'fail', 1), row('vocab', 'oral', 'pass', 3), row('sentence', 'oral', 'pass', 3)],
+        strands: {
+          'hangul-recognition': 'not-tested',
+          'sound-letter': 'getting-there',
+          'syllable-reading': 'not-tested',
+          vocabulary: 'secure',
+          sentences: 'secure',
+        },
+        level: { stage: 'stage1', band: 0 },
+        oralStage: 'stage3',
+      }),
+    );
+    await openReport(page, id);
+    const skills = page.getByTestId('placement-report-skills');
+    await expect(skills.getByText('Reading and listening', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('placement-report-skills-reading')).toHaveText(/Reading\s*At the beginning/);
+    await expect(page.getByTestId('placement-report-skills-listening')).toHaveText(/Listening\s*Understood the short sentences we said/);
+    await expect(page.getByTestId('placement-report-skills-reading')).toHaveAttribute('aria-label', 'Reading, At the beginning');
+    await expect(page.getByTestId('placement-report-skills-listening')).toHaveAttribute(
+      'aria-label',
+      'Listening, Understood the short sentences we said',
+    );
+    await expect(page.getByTestId('placement-report-skills-ahead')).toHaveText(
+      'In this check, Sam understood more Korean than Sam could read. That is common.',
+    );
+    // Words and Sentences: one word per form that ran, so only listening; reading is not shown yet.
+    await expect(page.getByTestId('placement-report-form-vocabulary-oral')).toHaveText('listening: secure');
+    await expect(page.getByTestId('placement-report-form-sentences-oral')).toHaveText('listening: secure');
+    await expect(page.getByTestId('placement-report-form-vocabulary-read')).toHaveCount(0);
+    await expect(page.getByTestId('placement-report-form-sentences-read')).toHaveCount(0);
+    // The route stays at the start of Stage 1, and no older-sentences line (it needs a Stage 3 route).
+    await expect(page.getByTestId('placement-report-level')).toHaveText('Hangul · At the beginning');
+    await expect(page.getByTestId('placement-report-older-sentences')).toHaveCount(0);
+    // Nothing runs out of the window at this width.
+    const wide = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(wide).toBe(false);
+    const block = await skills.innerText();
+    expect(block).not.toMatch(FORBIDDEN);
+    expect(block).not.toMatch(/\bonly\b|can't|fail|\bbehind\b/i);
+    expect(block).not.toMatch(EMOJI);
+    await skills.scrollIntoViewIfNeeded();
+    await shot(page, 'placement-report-heritage-listener-320');
+    await page.getByTestId('placement-report-strand-sentences').scrollIntoViewIfNeeded();
+    await shot(page, 'placement-report-form-rows-320');
+
+    // A Stage 3 route that the older sentence questions placed: the plain line next to Choose a different start.
+    await seedResult(
+      page,
+      id,
+      storedResult({
+        // The older picture sentence items, told by their ids (retired by PV-1c), not by the bank version.
+        responses: [response('pitem:sent-n-read-horangiyeyo', 'correct'), response('pitem:sent-reply-2', 'correct')],
+        gates: [
+          row('sound-basic', 'decode', 'pass', 3),
+          row('syl-cv', 'decode', 'pass', 3),
+          row('sound-rest', 'decode', 'pass', 3),
+          row('syl-cvc', 'decode', 'pass', 3),
+          row('vocab', 'read', 'pass', 3),
+          row('sentence', 'read', 'pass', 3),
+        ],
+        strands: {
+          'hangul-recognition': 'not-tested',
+          'sound-letter': 'secure',
+          'syllable-reading': 'secure',
+          vocabulary: 'secure',
+          sentences: 'secure',
+        },
+        level: { stage: 'stage3', band: 0 },
+        oralStage: null,
+      }),
+    );
+    await openReport(page, id);
+    await expect(page.getByTestId('placement-report-older-sentences')).toHaveText(
+      'An earlier version of the check asked easier sentence questions. If Stage 3 feels hard, choose a different start.',
+    );
+    await expect(page.getByTestId('placement-report-form-vocabulary-read')).toHaveText('reading: secure');
+    await expect(page.getByTestId('placement-report-form-sentences-read')).toHaveText('reading: secure');
+    await expect(page.getByTestId('placement-report-skills-ahead')).toHaveCount(0);
+    await page.getByTestId('placement-report-older-sentences').scrollIntoViewIfNeeded();
+    await shot(page, 'placement-report-older-sentences-320');
+  });
+
   test('no check yet: the empty state and the take-it button', async ({ page }) => {
     const id = await onboardSelf(page);
     await openReport(page, id);

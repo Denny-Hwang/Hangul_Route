@@ -464,6 +464,21 @@ export const caregiver = {
       sentence: 'Oraciones',
     },
     form: { decode: 'lectura', read: 'lectura', oral: 'escucha' },
+    skills: {
+      title: 'Lectura y escucha',
+      reading: 'Lectura',
+      listening: 'Escucha',
+      notChecked: 'sin revisar',
+      ahead: (name: string) => `En esta prueba, ${name} entendió más coreano al oírlo que al leerlo. Es algo común.`,
+    },
+    listening: {
+      stage1: 'Palabras cotidianas: nuevas por ahora',
+      stage2: 'Reconoció la mayoría de las palabras cotidianas que oyó',
+      stage3: 'Entendió las oraciones cortas que oyó',
+    },
+    formStatus: (form: string, status: string) => `${form}: ${status}`,
+    olderSentences:
+      'Una versión anterior de la prueba tenía preguntas más fáciles sobre oraciones. Si la Etapa 3 resulta difícil, puedes elegir otro inicio.',
     count: (correct: number, asked: number) => `${correct} de ${asked}`,
     notTestedReason: {
       noSound: 'No se revisó la escucha: este dispositivo no tiene sonido.',

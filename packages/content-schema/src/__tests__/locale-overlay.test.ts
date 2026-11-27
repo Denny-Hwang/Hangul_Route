@@ -351,6 +351,39 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
     expect(es.rounds).toBe(3);
   });
 
+  it('lists no field whose English source is blank (the contrast round stub lp.pair, MP-2b), and every other field as before', () => {
+    const scope = (en: string) => ({ kind: 'listen-pick', listenPick: { rounds: [{ id: 'lp:pair:ga-ka', contrastSet: 'ga-ka', prompt: { ko: '', romanization: 'ga-ka', en }, options: [] }] } });
+    expect(translatableFields('minigame:s1-life-q3-pairs', scope('')).map((f) => f.field)).toEqual([]);
+    expect(translatableFields('minigame:s1-life-q3-pairs', scope('the syllable ga')).map((f) => f.field)).toEqual(['listenPick.rounds.lp-pair-ga-ka.prompt']);
+  });
+
+  it('localizes the meaning of a contrast round option (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b): a round named lp:pair:<set>, an option text gloss', () => {
+    const scope = {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'lp:pair:dal-tal-ttal',
+            contrastSet: 'dal-tal-ttal',
+            prompt: { ko: '달', romanization: 'dal', en: 'moon' },
+            options: [
+              { id: 'dal', text: { ko: '달', romanization: 'dal', en: 'moon' } },
+              { id: 'tal', text: { ko: '탈', romanization: 'tal', en: 'mask' } },
+            ],
+            answerId: 'dal',
+          },
+        ],
+      },
+    };
+    const id = 'minigame:s2-letters-q2-pairs';
+    const field = 'listenPick.rounds.lp-pair-dal-tal-ttal.options.tal.text.gloss';
+    expect(isOverlayFieldAllowed(id, field)).toBe(true);
+    const es = localize(scope, id, 'es', { es: { [id]: { [field]: 'máscara' } }, ko: {} });
+    expect(es.listenPick.rounds[0]?.options.map((o) => o.text?.en)).toEqual(['moon', 'máscara']);
+    expect(es.listenPick.rounds[0]?.prompt.en).toBe('moon');
+    expect(scope.listenPick.rounds[0]?.options[1]?.text.en).toBe('mask');
+  });
+
   it('localizes the Discover pages and the teaser of a quest; the taught Korean and its romanization stay', () => {
     const quest = {
       id: 'quest:discover-demo',

@@ -150,6 +150,71 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     ]);
   });
 
+  describe('the contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.5, row MP-2b)', () => {
+    /** A quest with a contrast step right after Practice: its own listen-pick scope whose rounds all name a set. */
+    function withContrast(over: { rounds?: Json[]; at?: number; second?: boolean } = {}): Json {
+      const cell = lessonCell() as Json;
+      const quest = cell.quests[0];
+      const ref = 'minigame:s3-letters-q1-pairs';
+      const round = (set: string): Json => ({
+        id: `lp:pair:${set}`,
+        contrastSet: set,
+        prompt: kt('달', 'dal', 'moon'),
+        options: [
+          { id: 'dal', text: kt('달', 'dal', 'moon') },
+          { id: 'tal', text: kt('탈', 'tal', 'mask') },
+        ],
+        answerId: 'dal',
+      });
+      const step = { id: 's3p', kind: 'practice', contrast: true, titleEn: 'Hear the Puff', durationSeconds: 40, minigameKind: 'listen-pick', minigameRef: ref };
+      quest.steps.splice(over.at ?? 3, 0, step);
+      quest.scopes.push({ ref, kind: 'listen-pick', rounds: over.rounds ?? [round('dal-tal-ttal'), round('bul-pul-ppul')] });
+      if (over.second) {
+        quest.steps.splice(4, 0, { ...step, id: 's3q', minigameRef: 'minigame:s3-letters-q1-more' });
+        quest.scopes.push({ ref: 'minigame:s3-letters-q1-more', kind: 'listen-pick', rounds: [round('dal-tal-ttal')] });
+      }
+      return cell;
+    }
+
+    it('takes one practice step with contrast: true right after Practice, whose rounds all name a contrast set', () => {
+      expect(messages(withContrast())).toEqual([]);
+      expect(LessonCellSchema.parse(withContrast()).quests[0]!.steps[3]!.contrast).toBe(true);
+    });
+
+    it('still needs the six steps in order around it', () => {
+      const noPractice = withContrast();
+      noPractice.quests[0].steps.splice(2, 1);
+      expect(messages(noPractice).some((m) => m.includes('has the six steps'))).toBe(true);
+    });
+
+    it('rejects a contrast step anywhere but right after Practice, and a second one', () => {
+      expect(messages(withContrast({ at: 4 }))).toEqual(['quests.0.steps.4.contrast: the contrast step comes right after Practice']);
+      expect(messages(withContrast({ at: 2 })).some((m) => m.includes('right after Practice') || m.includes('has the six steps'))).toBe(true);
+      expect(messages(withContrast({ second: true }))).toEqual(expect.arrayContaining([expect.stringContaining('one contrast step at most')]));
+    });
+
+    it('rejects a contrast step whose scope holds a plain round, and a contrast round in any other step', () => {
+      const plain = withContrast();
+      delete plain.quests[0].scopes[3].rounds[1].contrastSet;
+      expect(messages(plain)).toEqual(['quests.0.steps.3.minigameRef: every round of a contrast step names its contrast set']);
+      const elsewhere = withContrast();
+      elsewhere.quests[0].scopes[1].rounds[0].contrastSet = 'dal-tal-ttal';
+      expect(messages(elsewhere)).toEqual(['quests.0.steps.4.minigameRef: only a contrast step plays contrast rounds']);
+      const inCheck = withContrast();
+      inCheck.quests[0].scopes[2].rounds[0].contrastSet = 'dal-tal-ttal';
+      expect(messages(inCheck)).toEqual(['quests.0.steps.5.minigameRef: only a contrast step plays contrast rounds']);
+    });
+
+    it('rejects a contrast step that is not a listen-pick practice step with a game', () => {
+      const notLp = withContrast();
+      notLp.quests[0].steps[3].minigameKind = 'order-it';
+      expect(messages(notLp).some((m) => m.includes('contrast step plays Listen & Pick'))).toBe(true);
+      const onApply = lessonCell() as Json;
+      onApply.quests[0].steps[3].contrast = true;
+      expect(messages(onApply).some((m) => m.includes('contrast: true is for a practice step'))).toBe(true);
+    });
+  });
+
   it('keeps the quest rules of QuestSchema (discover before games)', () => {
     const cell = lessonCell() as Json;
     const steps = cell.quests[0].steps;

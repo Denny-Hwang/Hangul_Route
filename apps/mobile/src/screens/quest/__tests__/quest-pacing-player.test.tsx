@@ -262,3 +262,36 @@ describe('a hard Practice: one scaffold round before Apply', () => {
     expect(screenTexts(preview.r.root)).not.toContain(EN.learner.quest.adapt.scaffoldHint);
   });
 });
+
+/** [MP] AMENDMENTS-MINIMAL-PAIRS section 3.8 (row MP-2b): the scaffold round plays before Apply, not on the step after Practice. */
+describe('a contrast step between Practice and Apply', () => {
+  const L2 = questById('quest:stage2-letters-q2')!;
+  const CELL2 = 'episode:stage2-letters';
+  const practice = L2.steps.findIndex((s) => s.kind === 'practice' && s.contrast !== true);
+  const contrast = L2.steps.findIndex((s) => s.contrast === true);
+  const apply = L2.steps.findIndex((s) => s.kind === 'apply');
+
+  it('the quest under test: Practice, the contrast step, Apply', () => {
+    expect([practice, contrast, apply]).toEqual([2, 3, 4]);
+  });
+
+  it('with no set approved the step is passed by and a hard Practice plays its scaffold round before Apply, not on the contrast step', async () => {
+    const ports = { start: () => practice, end: vi.fn(), finish: vi.fn(), leave: vi.fn(), track: vi.fn() };
+    const r = await render(<QuestPlayerView questId={L2.id} episodeId={CELL2} ports={ports} onOpenGame={() => undefined} onBack={() => undefined} reviewsFor={PROFILE} />);
+    await act(async () => {
+      await questPacingChunk();
+    });
+    await settle();
+    const scope = scopeFor(L2.steps[practice]!.minigameRef!)!;
+    const ids = (scope.picWord?.boards ?? []).flatMap((b) => b.pairs.map((p) => p.id));
+    await act(async () => {
+      ids.forEach((id, i) => useQuestRunStore.getState().answerRound(`pair:${i}`, i >= 2, { scope, itemId: id }));
+      useQuestRunStore.getState().goNextStep();
+    });
+    await until(() => screenTexts(r.root).includes(EN.learner.quest.adapt.scaffoldHint));
+    // The run went through the contrast step to Apply: not skipped, not played.
+    expect(useQuestRunStore.getState().stepIndex).toBe(apply);
+    expect(useQuestRunStore.getState().skippedSteps).toEqual([]);
+    expect(adaptEvents(ports.track)).toEqual([{ name: 'quest.adapt', payload: { questId: L2.id, dir: 'scaffold' } }]);
+  });
+});

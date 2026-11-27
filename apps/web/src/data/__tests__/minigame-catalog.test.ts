@@ -37,7 +37,8 @@ describe('minigameCatalog (the /learners games fold, F-SITE-002 §3.4)', () => {
   it('reads the Stage 1 scopes of the learner app', () => {
     expect(all.get('match-shape')).toBe(2);
     expect(Object.fromEntries(app)).toEqual({
-      'listen-pick': 23,
+      // [MP] AMENDMENTS-MINIMAL-PAIRS MP-2b: quest 6's contrast step `s3p` ("Hear the Puff") is a Listen & Pick scope.
+      'listen-pick': 24,
       'match-sound': 7,
       'build-letter': 7,
       'pic-word-match': 4,

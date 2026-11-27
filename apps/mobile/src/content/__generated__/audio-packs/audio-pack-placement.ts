@@ -124,7 +124,7 @@ export const AUDIO_PACK: AudioPackChunk = {
     'card:sagwa': [28],
     'card:tteok': [100],
     'episode:stage2-crafts': [5],
-    'episode:stage2-letters': [6, 14, 19, 27, 28, 40, 42, 60, 68, 80, 83, 94, 96, 98, 100],
+    'episode:stage2-letters': [1, 6, 14, 19, 27, 28, 40, 42, 60, 68, 80, 83, 94, 96, 98, 100],
     'episode:stage2-letters-v2': [6, 28, 80, 94, 99, 100],
     'episode:stage2-life': [28, 40, 54, 96],
     'episode:stage2-life-v2': [28, 54, 100],

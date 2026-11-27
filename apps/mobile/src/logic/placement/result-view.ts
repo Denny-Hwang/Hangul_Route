@@ -5,7 +5,9 @@ import {
   inRouteOrder,
   isRouteStartQuest,
   modeOf,
-  rowsPassed,
+  placementStageNumber,
+  stepPassed,
+  strandOfGate,
   type ASSESSMENT_FORMATS,
   type GateResult,
   type PlacementForm,
@@ -236,8 +238,42 @@ export interface ReportRung {
   note: 'checkedTwice' | 'notFinished' | null;
 }
 
+/** The two forms the Words and Sentences rows tell apart (AMENDMENTS-PLC-VALIDITY section 3.8). */
+export type ReportForm = 'read' | 'oral';
+
+/** One form of a strand that ran: its own status word, read from its rows by `stepPassed`. */
+export interface ReportFormStatus {
+  form: ReportForm;
+  status: StrandStatus;
+}
+
+export interface ReportStrand {
+  strand: PlacementStrand;
+  /** The merged strand status (stored and synced); the screen shows `forms` instead when there are any. */
+  status: ReportStrandStatus;
+  /** Words and Sentences only: one entry per form that was asked, reading before listening; else empty. */
+  forms: ReportFormStatus[];
+}
+
+/** What a check heard: the sentences are the highest stage that is measured (`oralStageOf`). */
+export type ListeningStage = 'stage1' | 'stage2' | 'stage3';
+
+/**
+ * The "Reading and listening" block (AMENDMENTS-PLC-VALIDITY section 3.8): what the newest check saw by ear
+ * and in reading, said apart. Never a score, a count or a comparison with other learners.
+ */
+export interface ReportSkills {
+  /** The newest result's level; null when no sound-letter or syllable rung ran ("not checked"). */
+  reading: PlacementLevel | null;
+  /** From the newest result's `oralStage`; null when no oral rung ran ("not checked"). */
+  listening: ListeningStage | null;
+  /** Listening is above reading in this check ("understood more than could read"): never when either is not checked. */
+  ahead: boolean;
+}
+
 export interface ReportView {
-  strands: { strand: PlacementStrand; status: ReportStrandStatus }[];
+  strands: ReportStrand[];
+  skills: ReportSkills;
   notTested: NotTestedReason[];
   /** "Shapes of letters and sentences are not part of the short check." */
   shortNotTested: boolean;
@@ -247,11 +283,40 @@ export interface ReportView {
   shortHint: boolean;
 }
 
+/** Letters of the highest stage that is measured by ear: the sentences, and nothing above them. */
+const listeningStage = (stage: StageKey): ListeningStage => {
+  const n = placementStageNumber(stage);
+  return n <= 1 ? 'stage1' : n === 2 ? 'stage2' : 'stage3';
+};
+
+/**
+ * The "Reading and listening" block of the newest result (section 3.8). Reading is the result's own level (the
+ * route's level may come from an older, higher check); it is "not checked" when neither the sound-letter nor the
+ * syllable strand ran, as when the sound guide was always shown or the check ended first. Listening is the
+ * result's `oralStage`. "Ahead" needs both and never speaks about the route.
+ */
+export function reportSkills(result: StoredResult): ReportSkills {
+  const readingRan = result.strands['sound-letter'] !== 'not-tested' || result.strands['syllable-reading'] !== 'not-tested';
+  const reading = readingRan ? result.level : null;
+  const listening = result.oralStage === null ? null : listeningStage(result.oralStage);
+  return {
+    reading,
+    listening,
+    ahead: reading !== null && listening !== null && placementStageNumber(listening) > placementStageNumber(reading.stage),
+  };
+}
+
 const STRANDS: readonly PlacementStrand[] = ['hangul-recognition', 'sound-letter', 'syllable-reading', 'vocabulary', 'sentences'];
+/** The strands whose rungs have a reading and a listening form. */
+const FORM_STRANDS: readonly PlacementStrand[] = ['vocabulary', 'sentences'];
 const SHORT_NOT_ASKED: readonly PlacementStrand[] = ['hangul-recognition', 'sentences'];
 
-function rungStatus(rows: readonly GateResult[]): StrandStatus {
-  if (rowsPassed(rows)) return 'secure';
+/**
+ * One rung's word. `passed` is `stepPassed` (E-1): a Deep row asked before an earlier confirmation failed
+ * is stored as answered but does not read as secure.
+ */
+function rungStatus(rows: readonly GateResult[], passed: boolean): StrandStatus {
+  if (passed) return 'secure';
   if (rows.every((r) => r.asked === 0)) return 'not-tested';
   return rows.some((r) => r.correct > 0) ? 'getting-there' : 'not-yet';
 }
@@ -264,6 +329,16 @@ function deepNote(rows: readonly GateResult[]): ReportRung['note'] {
 const stoppedNote = (rows: readonly GateResult[]): ReportRung['note'] =>
   rows.some((r) => r.reason === 'stopped') ? 'notFinished' : null;
 
+/** One entry per form of `strand` that was asked, in rung order (reading, then listening). */
+function strandForms(strand: PlacementStrand, rungs: readonly ReportRung[]): ReportFormStatus[] {
+  if (!FORM_STRANDS.includes(strand)) return [];
+  return rungs.flatMap((rung) =>
+    strandOfGate(rung.gate) === strand && rung.status !== 'not-tested' && (rung.form === 'read' || rung.form === 'oral')
+      ? [{ form: rung.form, status: rung.status }]
+      : [],
+  );
+}
+
 /** Rows grouped by gate/form in rung order; a Deep result without `mode` renders like Standard. */
 function reportRungs(result: StoredResult): ReportRung[] {
   const deep = modeOf(result) === 'deep';
@@ -271,7 +346,7 @@ function reportRungs(result: StoredResult): ReportRung[] {
     spec.forms.flatMap((form): ReportRung[] => {
       const rows = result.gates.filter((g) => g.gate === spec.gate && g.form === form);
       if (rows.length === 0) return [];
-      const status = rungStatus(rows);
+      const status = rungStatus(rows, stepPassed(result.gates, spec.gate, form));
       return [
         {
           gate: spec.gate,
@@ -330,14 +405,20 @@ function spellingTiles(result: StoredResult, formatOf: (questionId: string) => A
  */
 export function reportView(result: StoredResult, formatOf: (questionId: string) => AssessmentFormat | undefined): ReportView {
   const short = modeOf(result) === 'short';
+  const rungs = reportRungs(result);
   return {
     strands: STRANDS.map((strand) => {
       const status = result.strands[strand];
-      return { strand, status: short && status === 'not-tested' && SHORT_NOT_ASKED.includes(strand) ? 'not-tested-short' : status };
+      return {
+        strand,
+        status: short && status === 'not-tested' && SHORT_NOT_ASKED.includes(strand) ? 'not-tested-short' : status,
+        forms: strandForms(strand, rungs),
+      };
     }),
+    skills: reportSkills(result),
     notTested: notTestedReasons(result),
     shortNotTested: short,
-    rungs: reportRungs(result),
+    rungs,
     spellingTiles: spellingTiles(result, formatOf),
     shortHint: shortHintFires(result),
   };

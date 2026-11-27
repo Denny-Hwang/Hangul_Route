@@ -47,7 +47,8 @@ describe('Stage 1 review items (F-CURR-002 §4.2, row CM-10)', () => {
   it('every scored Stage 1 game step gives items, each in its own Stage 1 cell', () => {
     for (const quest of stage1Quests) {
       const theme = /^quest:stage1-([a-z]+)-q\d+$/.exec(quest.id)?.[1];
-      for (const step of quest.steps.filter((s) => ['practice', 'apply', 'check'].includes(s.kind))) {
+      // A contrast step (AMENDMENTS-MINIMAL-PAIRS section 3.8, row MP-2b) gives no review item: it is never scored.
+      for (const step of quest.steps.filter((s) => ['practice', 'apply', 'check'].includes(s.kind) && s.contrast !== true)) {
         const items = frozen.occurrences.filter((o) => o.at.startsWith(`${quest.id} `) && o.at.includes(` ${step.minigameRef}`));
         expect(items.length, `${quest.id} ${step.id}`).toBeGreaterThan(0);
         expect(new Set(items.map((o) => o.cell))).toEqual(new Set([`episode:stage1-${theme}`]));
