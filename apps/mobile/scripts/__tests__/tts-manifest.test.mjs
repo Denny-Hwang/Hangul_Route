@@ -477,9 +477,9 @@ describe('the contrast-set catalogue as a manifest source (AMENDMENTS-MINIMAL-PA
     }
   });
 
-  it('the committed manifest has the Stage 2 sets in stage2 (탈 from stories, 풀 and 짜다 from review); 불 stays in placement, 달 in stage1', () => {
-    for (const text of ['탈', '풀', '짜다', '빵', '개']) expect(committedRow(text).pack, text).toBe('stage2');
-    expect(committedRow('불').pack).toBe('placement');
+  it('the committed manifest has the Stage 2 sets in stage2 (탈 from stories, 풀 and 짜다 from review); 불 and 빵 (a heard word of the level check since AMENDMENTS-PLC-VALIDITY PV-2) stay in placement, 달 in stage1', () => {
+    for (const text of ['탈', '풀', '짜다', '개']) expect(committedRow(text).pack, text).toBe('stage2');
+    for (const text of ['불', '빵']) expect(committedRow(text).pack, text).toBe('placement');
     expect(committedRow('달').pack).toBe('stage1');
     for (const text of ['탈', '풀', '짜다', '불', '달', '빵', '개']) expect(committedRow(text).sources, text).toContain('minigame:s2-letters-q2-pairs');
   });

@@ -241,7 +241,7 @@ describe('optionViews', () => {
   });
 
   it('a picture reads its meaning in the test language, never in Korean', () => {
-    expect(optionViews(READ_WORD, base).map((o) => [o.kind, o.pictureRef, o.label])[0]).toEqual(['picture', 'card:kimchi', 'Kimchi']);
+    expect(optionViews(READ_WORD, base).map((o) => [o.kind, o.pictureRef, o.label])[0]).toEqual(['picture', 'word:food-kimchi', 'Kimchi']);
     const overlays: Overlays = { es: { [READ_WORD.id]: { 'options.kimchi.gloss': 'Kimchi (es)' } }, ko: {} };
     const es = optionViews(READ_WORD, { ...base, testLocale: 'es', m: getMessages('es'), overlays });
     expect(es[0]?.label).toBe('Kimchi (es)');
