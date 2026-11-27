@@ -182,7 +182,10 @@ if (isMain) {
     const { CATALOGUE_TITLES } = await import(pathToFileURL(join(data, 'catalogue-titles.generated.ts')).href);
     const { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } = await import(pathToFileURL(join(data, 'lecture-catalogue.generated.ts')).href);
     const { OVERLAYS } = await import(pathToFileURL(join(repo, 'packages', 'content-schema', 'src', 'overlay-tables.ts')).href);
-    const content = contentTexts(VOCAB_CATALOG, CATALOGUE_TITLES, LECTURE_STORIES, LECTURE_VOCAB_TOPICS, OVERLAYS);
+    // Clerk's own es and ko localizations are bundled with the console too (`lib/console/clerk-localization.ts`): a phrase a UI
+    // message shares with them ("espera un momento") is not a probe for our dictionary.
+    const { esMX, koKR } = await import('@clerk/localizations');
+    const content = contentTexts(VOCAB_CATALOG, CATALOGUE_TITLES, LECTURE_STORIES, LECTURE_VOCAB_TOPICS, OVERLAYS, esMX, koKR);
     const report = checkConsoleLocales(process.argv[2] ?? 'out', isGrownUpPath, { es: localeProbes(es, en, PROBES_PER_LOCALE, content), ko: localeProbes(ko, en, PROBES_PER_LOCALE, content) });
     const failure = verdict(report);
     if (failure !== null) throw new Error(failure);

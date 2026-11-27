@@ -860,7 +860,7 @@ test.describe('bundled clips (A-6)', () => {
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     await page.getByTestId('home-next-lesson-start').click();
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
     const examples = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]');
     await expect(examples).toHaveCount(2);
     // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
@@ -1113,7 +1113,7 @@ test.describe('bundled clips (A-6)', () => {
       .poll(() => page.evaluate(async (k) => (await (await caches.open('hr-audio-say-v1')).keys()).some((r) => r.url.includes(`/audio/say/${k}.`)), SAY_NA), { timeout: 15_000 })
       .toBe(true);
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
     // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
     // so the clip starts counted below are the taps' own.
     await page.waitForTimeout(1_000);

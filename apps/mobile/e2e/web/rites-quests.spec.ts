@@ -55,12 +55,16 @@ test('quest 7: the Seollal greeting in Korean, finals n and l at the bottom of t
 
   // Discover: final ㄴ with 문 and final ㄹ with 달, then the pictured festival words 설날 and 떡국.
   await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-  await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
   await expect(page.getByText('문').first()).toBeVisible();
   await expect(page.getByText('달').first()).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('rites-q1-discover-finals.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Page 2 of 2', { exact: true })).toBeVisible();
+  // [TC] Page 2 is the trace page of the two finals (AMENDMENTS-STAGE1-TRACE-COVERAGE); the theme page is page 3 of 3.
+  await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', /^Trace the final /);
+  await expect(page.locator('#trace-canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
   await expect(page.getByTestId('discover-item-word:설날').locator('svg')).toHaveCount(2);
   await expect(page.getByTestId('discover-item-word:떡국').locator('svg')).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath('rites-q1-discover-theme.png'), fullPage: true });
@@ -84,7 +88,7 @@ test('quest 7: the Seollal greeting in Korean, finals n and l at the bottom of t
   expect(errors).toEqual([]);
 });
 
-test('quest 8: Rice Cakes of Chuseok pages through ya, yeo, p and final ng to the pictured 추석 and 송편, then the Check', async ({ page }) => {
+test('quest 8: Rice Cakes of Chuseok pages through ya, yeo, p and final ng (with the pictured 송편), the trace page and the pictured 추석, then the Check', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await openRitesEpisode(page);
@@ -92,19 +96,26 @@ test('quest 8: Rice Cakes of Chuseok pages through ya, yeo, p and final ng to th
   await startQuest(page, 1);
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('야구').first()).toBeVisible();
   await expect(page.getByText('여우').first()).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Page 2 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 2 of 4', { exact: true })).toBeVisible();
   await expect(page.getByText('포도').first()).toBeVisible();
   // Final ㅇ: its block diagram with the final at the bottom, and the example 송편.
   await expect(page.getByTestId('discover-block-jamo:ieung-batchim')).toBeVisible();
   await expect(page.getByTestId('discover-item-jamo:ieung-batchim')).toContainText('송편');
+  // [TC] The rice cake of the quest's title is pictured on this card (`picture: 'card:songpyeon'`, the first letter card with one;
+  // `discover-trace-pad.test.tsx` checks the picture ref the card draws); the theme page below keeps 추석 alone.
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  // [TC] Page 3 is the trace page: ㅑ ㅕ ㅍ and the final ㅇ.
+  await expect(page.getByText('Page 3 of 4', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', 'Trace the letter ya');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  // The theme page keeps 추석 alone (송편 moved to the final ㅇ card).
+  await expect(page.getByText('Page 4 of 4', { exact: true })).toBeVisible();
   await expect(page.getByTestId('discover-item-word:추석').locator('svg')).toHaveCount(2);
-  await expect(page.getByTestId('discover-item-word:송편').locator('svg')).toHaveCount(2);
+  await expect(page.getByTestId('discover-item-word:송편')).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath('rites-q2-discover-theme.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
 
@@ -131,6 +142,10 @@ test('quest 9: Hanbok and the Bow teaches yo, yu, h and final k before its Check
   await expect(page.getByText('한복').first()).toBeVisible();
   await expect(page.getByText('한국').first()).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('rites-q3-discover.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  // [TC] The trace page of the four new symbols (ㅛ ㅠ ㅎ and the final ㄱ), the last page of this step.
+  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('discover-write-heading')).toHaveAttribute('aria-label', 'Trace the letter yo');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
 

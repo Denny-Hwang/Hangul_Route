@@ -1,12 +1,15 @@
 import { touchTarget } from '@hangul-route/design-system';
+import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { questById } from '../../../content';
+import { buildDiscover } from '../../../logic/stage1/discover-flow';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useQuestRunStore } from '../../../store/quest-run-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { QuestPlayerView } from '../QuestPlayerView';
+import { discoverTraceDoor } from '../discover-trace-entry';
 
 /**
  * [QB] AMENDMENTS-QUEST-SOUND-BACK rows QB-2 and QB-3 on the quest player: Previous between steps, the launcher of a
@@ -22,6 +25,8 @@ vi.mock('@react-navigation/native', async () => {
     useNavigation: () => ({ goBack: () => undefined, navigate: () => undefined }),
   };
 });
+// The trace page's Show me is not under test here (its own tests mock it the same way).
+vi.mock('../../../components/StrokeHint', () => ({ StrokeHint: () => null }));
 const audio = vi.hoisted(() => ({ stops: 0 }));
 vi.mock('../../../platform/audio', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../platform/audio')>();
@@ -42,7 +47,9 @@ const PRACTICE = at('practice');
 const APPLY = at('apply');
 const CHECK = at('check');
 const REWARD = at('reward');
-const PAGES = QUEST.steps[DISCOVER]!.discover!.pages.length;
+// [TC] The player shows the trace page after the letter pages (AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b): the page count is the built one.
+const EN = getMessages('en');
+const PAGES = buildDiscover(QUEST.steps[DISCOVER]!.discover!.pages, EN.learner.quest.discover, EN.a11y, 'en', undefined, { writeOnce: true }).pages.length;
 const mounted: ReactTestRenderer[] = [];
 
 async function settle(): Promise<void> {
@@ -81,6 +88,10 @@ async function playGame(right: number, rounds: number): Promise<void> {
   await settle();
 }
 
+beforeAll(async () => {
+  // The trace page's chunk (its page row and canvas) is in before a test reaches the page.
+  await discoverTraceDoor.load();
+});
 beforeEach(() => {
   audio.stops = 0;
   useProfileStore.setState({ profiles: [], activeId: null });
@@ -350,7 +361,7 @@ describe('[QB] going back changes no score (row QB-3)', () => {
     await tap(r, 'Continue');
     for (let i = 0; i < PAGES; i += 1) await tap(r, 'Continue');
     expect(run().stepIndex).toBe(PRACTICE);
-    expect(sent(ports, 'quest.discover_completed')).toEqual([{ questId: QUEST.id, pages: PAGES, heard: 0 }]);
+    expect(sent(ports, 'quest.discover_completed')).toEqual([{ questId: QUEST.id, pages: PAGES, heard: 0, written: 0, writeSeconds: 0 }]);
   });
 
   it('quest.check_completed is sent once, with the first play\'s counts, also after the Check is played again', async () => {

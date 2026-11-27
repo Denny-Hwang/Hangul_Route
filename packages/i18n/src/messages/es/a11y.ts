@@ -58,6 +58,7 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Letra coreana ${romanization}` : `Letra coreana ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Consonante final coreana ${romanization}`,
+  discoverWriteProgress: (traced: number, total: number) => `${traced} de ${plural('es', total, { one: '1 letra trazada', other: `${total} letras trazadas` })}`,
   practiceLetter: (romanization: string) => `Practicar otra vez la letra ${romanization}`,
   practiceFinal: (romanization: string) => `Practicar otra vez la consonante final ${romanization}`,
   lockedCard: 'Tarjeta bloqueada',

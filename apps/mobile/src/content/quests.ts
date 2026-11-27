@@ -14,6 +14,10 @@ import { questsInCursorOrder } from '../logic/lessons/lesson-lookup';
  * Words, Greeting Dialogues) moved to their lesson cell files in F-CURR-001 T-1 and
  * T-2, so every quest here is a Stage 1 quest.
  * Each Stage 1 episode owns 3 quests.
+ *
+ * [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE §3.2: a Discover step of quests 1-10 also shows a trace page ("Trace the new letters"),
+ * which counts 10 s per letter on top of its content pages (40 s for two pages of two items, 60 s for three); every quest keeps
+ * its minutes and its steps add up to 300 s or less (test T13).
  */
 
 export const stage1Quests: Quest[] = [
@@ -46,7 +50,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 80,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q1-play', durationSeconds: 90 },
       { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-q1-apply', durationSeconds: 75 },
@@ -84,7 +88,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 80,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q2-play', durationSeconds: 90 },
       { id: 's4', kind: 'apply', titleEn: 'Trace Each Letter', minigameKind: 'trace-stroke', minigameRef: 'minigame:s1-letters-q2-apply', durationSeconds: 75 },
@@ -122,7 +126,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 80,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q3-play', durationSeconds: 90 },
       { id: 's4', kind: 'apply', titleEn: 'Find the Odd One', minigameKind: 'odd-one-out', minigameRef: 'minigame:s1-letters-q3-apply', durationSeconds: 75 },
@@ -161,7 +165,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 60,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q1-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-life-q1-apply', durationSeconds: 60 },
@@ -207,7 +211,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 60,
+        durationSeconds: 80,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q2-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-life-q2-apply', durationSeconds: 60 },
@@ -221,7 +225,7 @@ export const stage1Quests: Quest[] = [
     id: 'quest:stage1-life-q3',
     titleEn: 'Picnic Snacks',
     blurbEn: 'Two puff-of-air letters, k and t, and picnic words to read.',
-    estimatedMinutes: 4,
+    estimatedMinutes: 5, // [TC][MP] 224 s + 20 s trace page + 40 s optional contrast step = 284 s: labelled 5 min (owner decision 2026-11-26)
     steps: [
       { id: 's1', kind: 'intro', titleEn: 'Picnic Time!', hoyaLineEn: 'Picnic time! Let\'s read picnic words!', durationSeconds: 6 },
       {
@@ -245,7 +249,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 60,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q3-play', durationSeconds: 75 },
       // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.5 (row MP-2b): one optional contrast step, unscored, passed by when no set can play.
@@ -288,7 +292,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 60,
       },
       { id: 's3', kind: 'practice', titleEn: 'Hear the Final', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q1-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-rites-q1-apply', durationSeconds: 60 },
@@ -321,22 +325,24 @@ export const stage1Quests: Quest[] = [
             {
               items: [
                 { type: 'jamo', jamoId: 'jamo:pieup', example: { ko: '포도', romanization: 'podo', en: 'grape', syllables: ['po', 'do'] } },
-                { type: 'jamo', jamoId: 'jamo:ieung-batchim', example: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] } },
+                // [TC] The rice cake of the quest's title is pictured here, on the card whose example it is (OD-TC-3).
+                { type: 'jamo', jamoId: 'jamo:ieung-batchim', example: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] }, picture: 'card:songpyeon' },
               ],
             },
             {
               captionEn: 'Words of Chuseok',
               items: [
                 { type: 'word', word: { ko: '추석', romanization: 'chuseok', en: 'harvest festival', syllables: ['chu', 'seok'] }, picture: 'card:chuseok' },
-                { type: 'word', word: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] }, picture: 'card:songpyeon' },
               ],
             },
           ],
         },
-        durationSeconds: 60,
+        durationSeconds: 90,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-rites-q2-play', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-rites-q2-apply', durationSeconds: 75 },
+      // [TC] 75 -> 60 s (OD-TC-3): the value of the other Stage 1 Build a Letter steps with four blocks (quests 5 and 7). A re-estimate:
+      // the learner builds the same four blocks.
+      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-rites-q2-apply', durationSeconds: 60 },
       { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q2-check', durationSeconds: 35 },
       { id: 's6', kind: 'reward', titleEn: 'Chuseok Card!', hoyaLineEn: 'A harvest festival card joins your library!', durationSeconds: 8 },
     ],
@@ -371,9 +377,10 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 40,
+        durationSeconds: 80,
       },
-      { id: 's3', kind: 'practice', titleEn: 'Listen and Pick', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-play', durationSeconds: 90 },
+      // [TC] 90 -> 75 s (OD-TC-4): the value of every other six-round Listen & Pick practice of Stage 1. A re-estimate: the same six rounds.
+      { id: 's3', kind: 'practice', titleEn: 'Listen and Pick', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-play', durationSeconds: 75 },
       // 90 s, above the 60-75 s apply range in F-QUEST-002 §3.6: Story Order (4 cards plus
       // replay) needs it, and it keeps the spec's 5-minute value for this 2-page quest
       // (at 75 s the quest rounds to 4). The range/minutes conflict goes to the Q-11 docs pass.
@@ -421,7 +428,7 @@ export const stage1Quests: Quest[] = [
             },
           ],
         },
-        durationSeconds: 60,
+        durationSeconds: 80,
       },
       { id: 's3', kind: 'practice', titleEn: 'Hear the Final', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q1-play', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-nature-q1-apply', durationSeconds: 60 },

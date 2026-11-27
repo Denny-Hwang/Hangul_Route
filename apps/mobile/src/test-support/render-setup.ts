@@ -52,6 +52,13 @@ vi.mock('react-native-svg', () => {
   return { default: shape('Svg'), Svg: shape('Svg'), ...Object.fromEntries(names.map((n) => [n, shape(n)])) };
 });
 
+// The trace canvas's gesture (Discover's trace page, [TC] TC-1b): a still stand-in so the chunk loads in Node; a test that draws
+// replaces it with its own (`vi.mock` in the test file, as the Trace Stroke tests do).
+vi.mock('react-native-gesture-handler', () => {
+  const builder: Record<string, unknown> = new Proxy({}, { get: () => () => builder });
+  return { Gesture: { Pan: () => builder }, GestureDetector: ({ children }: { children?: ReactNode }) => children };
+});
+
 vi.mock('expo-localization', () => ({
   getLocales: () => [{ languageTag: 'en-US', languageCode: 'en', regionCode: 'US' }],
 }));

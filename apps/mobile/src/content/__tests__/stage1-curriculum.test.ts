@@ -21,6 +21,7 @@ import {
   buildTraceStrokeRounds,
 } from '../../logic/round-builder';
 import { STAGE1_QUESTS, questTeaches } from '../../logic/stage1/curriculum';
+import { writeLetters } from '../../logic/stage1/discover-write';
 import { symbolsOf } from '../../logic/stage1/hangul';
 import { cardById } from '../heritage-cards';
 import { episodesAll } from '../episodes';
@@ -326,18 +327,19 @@ describe('the rebuilt Stage 1 quests', () => {
       ['설날', 'card:seollal'],
       ['떡국', 'card:tteokguk'],
     ]);
-    expect(themeWords(REBUILT[7]!)).toEqual([
-      ['추석', 'card:chuseok'],
-      ['송편', 'card:songpyeon'],
-    ]);
+    // [TC] TC-1b (OD-TC-3): the theme page keeps 추석 alone; the songpyeon picture moved onto the final ㅇ card, whose example it is.
+    expect(themeWords(REBUILT[7]!)).toEqual([['추석', 'card:chuseok']]);
+    const finalNg = REBUILT[7]!.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).find((i) => i.type === 'jamo' && i.jamoId === 'jamo:ieung-batchim');
+    expect(finalNg).toMatchObject({ type: 'jamo', example: { ko: '송편' }, picture: 'card:songpyeon' });
   });
 
-  it('keeps the life titles and reward cards of section 3.6, 4 minutes each', () => {
+  it('keeps the life titles and reward cards of section 3.6, 4 minutes each (quest 6: 5, [TC][MP])', () => {
     const life = REBUILT.slice(3, 6);
     expect(life.map((q) => [q.titleEn, q.estimatedMinutes, q.rewardCardId])).toEqual([
       ['Hello Kimchi & Rice', 4, 'card:kimchi'],
       ['Family at the Table', 4, 'card:family-table'],
-      ['Picnic Snacks', 4, 'card:kimbap'],
+      // [TC][MP] Quest 6 is labelled 5 min once MP-2b's optional contrast step (40 s) and the trace page (20 s) are both counted: 284 s (owner decision 2026-11-26).
+      ['Picnic Snacks', 5, 'card:kimbap'],
     ]);
   });
 
@@ -411,7 +413,8 @@ describe('the rebuilt Stage 1 quests', () => {
     const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
     expect(letters?.estimatedMinutes).toBe(15);
     expect(letters?.subtitleEn).toBe('Twelve letters, and your first real words.');
-    expect(episodesAll.find((e) => e.id === 'episode:stage1-life')?.estimatedMinutes).toBe(12);
+    // [TC][MP] 4 + 4 + 5: quest 6 is labelled 5 min (owner decision 2026-11-26).
+    expect(episodesAll.find((e) => e.id === 'episode:stage1-life')?.estimatedMinutes).toBe(13);
     expect(episodesAll.find((e) => e.id === 'episode:stage1-rites')?.estimatedMinutes).toBe(14);
     expect(episodesAll.find((e) => e.id === 'episode:stage1-nature')?.estimatedMinutes).toBe(12);
     // F-CURR-002 row CM-33: 12, and 4 for the letter-shapes quest.
@@ -422,7 +425,8 @@ describe('the rebuilt Stage 1 quests', () => {
     const stage1 = episodesAll.filter((e) => e.stage === 'stage1' && (e.placement ?? 'grid') === 'grid');
     expect(stage1.map((e) => e.questIds.filter((id) => !STAGE1_ADDITIONS.has(id)).length)).toEqual([3, 3, 3, 3, 3]);
     expect(stage1[4]!.questIds.slice(3)).toEqual([...STAGE1_ADDITIONS]);
-    expect(REBUILT.reduce((n, q) => n + q.estimatedMinutes, 0)).toBe(65);
+    // [TC][MP] 66: quest 6 is labelled 5 min (owner decision 2026-11-26).
+    expect(REBUILT.reduce((n, q) => n + q.estimatedMinutes, 0)).toBe(66);
   });
 });
 
@@ -910,6 +914,41 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
     const found = englishFieldsOf(quest).filter((f) => HANGUL.test(f.text));
     expect(found).toEqual([]);
   });
+
+  it('T12 every new symbol of quests 1-10 is on its quest\'s trace page, in order; quests 11-15 have none (AMENDMENTS-STAGE1-TRACE-COVERAGE §6)', () => {
+    const pages = quest.steps.find((s) => s.kind === 'discover')?.discover?.pages ?? [];
+    const first10 = REBUILT.indexOf(quest) < 10;
+    expect(writeLetters(pages)).toEqual(first10 ? questTeaches(quest) : []);
+  });
+
+  it('T13 its step seconds add up to 300 or less, every quest of Stage 1 (OD-TC-2; T10 still holds)', () => {
+    const seconds = quest.steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
+    expect(seconds).toBeLessThanOrEqual(300);
+  });
+});
+
+describe('T12 across quests 1-10 (AMENDMENTS-STAGE1-TRACE-COVERAGE)', () => {
+  it('traces all 30 symbols once between them: 24 letters and the 6 finals', () => {
+    const traced = REBUILT.slice(0, 10).flatMap((q) => writeLetters(q.steps.find((s) => s.kind === 'discover')?.discover?.pages ?? []));
+    expect(traced).toHaveLength(30);
+    expect(new Set(traced).size).toBe(30);
+    expect(traced.filter((id) => id.endsWith('-batchim'))).toHaveLength(6);
+  });
+
+  it('keeps each quest\'s estimated seconds as the spec table has them (§3.2)', () => {
+    const total = (q: Quest): number => q.steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
+    // Quest 6: 224 + 20 (trace page) + 40 (MP-2b's optional contrast step) = 284 s.
+    expect(REBUILT.slice(0, 10).map(total)).toEqual([296, 294, 296, 246, 264, 284, 246, 291, 296, 266]);
+    expect(REBUILT.slice(0, 10).map((q) => q.estimatedMinutes)).toEqual([5, 5, 5, 4, 4, 5, 4, 5, 5, 4]);
+  });
+
+  it('quest 8\'s Build a Letter is 60 s and quest 9\'s Listen & Pick practice 75 s, as the other Stage 1 steps of their kind', () => {
+    const seconds = (q: Quest, kind: QuestStepKind): number | undefined => q.steps.find((s) => s.kind === kind)?.durationSeconds;
+    expect(seconds(REBUILT[7]!, 'apply')).toBe(60);
+    expect(seconds(REBUILT[8]!, 'practice')).toBe(75);
+    // Story Order keeps its 90 s and the reason it gives.
+    expect(seconds(REBUILT[8]!, 'apply')).toBe(90);
+  });
 });
 
 /** [MP] AMENDMENTS-MINIMAL-PAIRS section 3.5 and 3.8 (row MP-2b): the one Stage 1 contrast step. */
@@ -941,11 +980,14 @@ describe('the contrast step of quest 6 (MP-2b)', () => {
     expect(unit).toEqual(rounds.map((r) => r.contrastSet));
   });
 
-  it('takes the quest from 224 s to 264 s, which stays 4 minutes (T10)', () => {
+  it('takes the quest from 224 s to 264 s with the contrast step, and to 284 s with the trace page: labelled 5 minutes ([TC][MP], T10)', () => {
     const seconds = (steps: readonly { durationSeconds?: number | undefined }[]) => steps.reduce((n, s) => n + (s.durationSeconds ?? 0), 0);
-    expect(seconds(quest6.steps)).toBe(264);
-    expect(seconds(quest6.steps.filter((s) => s.contrast !== true))).toBe(224);
-    expect(quest6.estimatedMinutes).toBe(4);
+    // [TC] The trace page of its two letters counts 20 s on top of the Discover step's own 40 s (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.2).
+    expect(seconds(quest6.steps)).toBe(284);
+    expect(seconds(quest6.steps.filter((s) => s.contrast !== true))).toBe(244);
+    expect(seconds(quest6.steps.filter((s) => s.contrast === true))).toBe(40);
+    // 284 s rounds to 5 minutes: owner decision 2026-11-26, the contrast step's seconds are counted, not hidden.
+    expect(quest6.estimatedMinutes).toBe(5);
   });
 
   it('has no contrast round in a Check, an Apply or any scope another step plays, and none in a scope the quests do not play', () => {

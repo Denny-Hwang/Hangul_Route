@@ -92,6 +92,8 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Korean letter ${romanization}` : `Korean letter ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Korean final consonant ${romanization}`,
+  /** [TC] The trace page's letter row, said once (the chips themselves are hidden from screen readers): `total` letters on the page. */
+  discoverWriteProgress: (traced: number, total: number) => `${traced} of ${plural('en', total, { one: '1 letter', other: `${total} letters` })} traced`,
   /** A Hangul Check tip letter (F-QUEST-002 §3.9): opens the quest that teaches it. */
   practiceLetter: (romanization: string) => `Practice the letter ${romanization} again`,
   /** A Hangul Check tip that is a final consonant (F-QUEST-002 §3.9, §3.14): named as a final, never "the letter". */

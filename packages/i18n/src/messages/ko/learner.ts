@@ -547,6 +547,13 @@ export const learner = {
         lineLabel: (line: number, total: number, speaker: string) => `${total}줄 중 ${line}번째 줄, ${speaker}`,
       },
       compactLine: '카드 한 장에 두 개가 있어요. 하나씩 들어 보기를 눌러요.',
+      write: {
+        title: '새 글자 따라 쓰기',
+        idle: '한 획씩 천천히 따라 써 봐요.',
+        keepGoing: '계속 써 봐요. 다음 글자를 눌러도 돼요.',
+        keepGoingLast: '더 써 봐요. 계속을 눌러도 돼요.',
+        next: { cta: '다음 글자' },
+      },
     },
     adapt: {
       scaffoldHint: '힌트를 보며 하나 더 해요. 듣고 강조된 카드를 눌러요.',

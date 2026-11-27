@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./tokens": "./src/tokens.ts",
+    "./src/tokens": "./src/tokens.ts",
     "./layout": "./src/layout.ts",
     "./text-size": "./src/text-size.ts",
     "./tap-model": "./src/tap-model.ts",

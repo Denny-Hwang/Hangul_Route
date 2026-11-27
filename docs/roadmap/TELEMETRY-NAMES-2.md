@@ -19,7 +19,7 @@ Rules that apply to every row:
 
 ## B. In an open PR (6): F-QUEST-002 Q-1, PR #103
 
-`quest.discover_completed` `{ questId, pages, heard }` · `quest.check_completed` `{ questId, firstTryCorrect, retries }` · `quest.teaser_tapped` `{ fromQuestId, toQuestId }` · `stage.complete` `{ stageKey, cardsAwarded }` · `review.start` `{ kind, stageKey }` (the Hangul Check and the Stage Check stopped sending `hideRomanization` with their switch, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a and DC-1b) · `review.complete` `{ kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` (internal).
+`quest.discover_completed` `{ questId, pages, heard, written, writeSeconds }` (AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b: `pages` counts the trace page of quests 1–10; `heard` counts every Hear it tap, a `write|<jamoId>` tap of the trace page and a Show me included, each distinct id once; `written` = letters traced to the end on this visit (0 without a trace page or when none was); `writeSeconds` = whole seconds the trace page was shown in this mount (0 without one)) · `quest.check_completed` `{ questId, firstTryCorrect, retries }` · `quest.teaser_tapped` `{ fromQuestId, toQuestId }` · `stage.complete` `{ stageKey, cardsAwarded }` · `review.start` `{ kind, stageKey }` (the Hangul Check and the Stage Check stopped sending `hideRomanization` with their switch, AMENDMENTS-STAGE1-DECODING-CHECK DC-1a and DC-1b) · `review.complete` `{ kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` (internal).
 
 ## C. New names of the F-STORY chain (21)
 

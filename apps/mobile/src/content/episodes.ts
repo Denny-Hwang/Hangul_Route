@@ -48,7 +48,7 @@ const stage1Episodes: Episode[] = [
     hoyaIntroEn: 'Lunchtime! Let me show you what I eat.',
     questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3'],
     rewardCardIds: ['card:kimchi', 'card:rice', 'card:chopsticks', 'card:hanbok', 'card:kimbap', 'card:family-table'],
-    estimatedMinutes: 12,
+    estimatedMinutes: 13,
     pillarTags: ['B5'],
     status: 'shipped',
   },

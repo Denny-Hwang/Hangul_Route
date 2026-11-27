@@ -26,21 +26,27 @@ export interface StepActionsProps {
   previousLabel: string;
   /** Absent: no Previous (the first page of the first step). */
   onPrevious?: () => void;
+  /**
+   * [TC] The size of both buttons of the row (with Previous): `lg` (80 high) as every step draws them, `md` (64 high,
+   * `touchTarget.min`) on the trace page's short arrangements only (AMENDMENTS-STAGE1-TRACE-COVERAGE §3.4, owner
+   * decision 2026-11-26). A lone main button keeps `main.size`.
+   */
+  rowSize?: 'lg' | 'md';
 }
 
 export const PREVIOUS_TEST_ID = 'quest-previous';
 
-export function StepActions({ main, previousLabel, onPrevious }: StepActionsProps): ReactElement {
+export function StepActions({ main, previousLabel, onPrevious, rowSize = 'lg' }: StepActionsProps): ReactElement {
   if (onPrevious === undefined) {
     return <Button label={main.label} tone="primary" size={main.size} fullWidth disabled={main.disabled} onPress={main.onPress} testID={main.testID} />;
   }
   return (
     <View testID="quest-step-actions" style={{ flexDirection: 'row', flexWrap: 'wrap-reverse', gap: spacing.sm }}>
       <View style={{ flexGrow: 1, flexShrink: 1, maxWidth: '100%' }}>
-        <Button label={previousLabel} tone="secondary" size="lg" fullWidth onPress={onPrevious} testID={PREVIOUS_TEST_ID} />
+        <Button label={previousLabel} tone="secondary" size={rowSize} fullWidth onPress={onPrevious} testID={PREVIOUS_TEST_ID} />
       </View>
       <View style={{ flexGrow: 2, flexShrink: 1, maxWidth: '100%' }}>
-        <Button label={main.label} tone="primary" size="lg" fullWidth disabled={main.disabled} onPress={main.onPress} testID={main.testID} />
+        <Button label={main.label} tone="primary" size={rowSize} fullWidth disabled={main.disabled} onPress={main.onPress} testID={main.testID} />
       </View>
     </View>
   );
