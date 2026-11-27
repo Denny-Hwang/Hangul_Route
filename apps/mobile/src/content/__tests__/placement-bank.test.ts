@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LISTEN_FIRST_FORMATS, PlacementBankSchema, PlacementTemplateSchema } from '@hangul-route/content-schema';
+import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { loadModel, renderBank } from '../../../../../scripts/build-placement-bank.mjs';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../placement.generated';
 
 /**
  * F-PLC-001 section 5: the generated bank equals content/placement/*.json, and every
- * `card:` picture of a drawable (ready) template resolves in the design system's art.
+ * `card:` or `word:` picture of a drawable (ready) template resolves in the design system's art.
  */
 
 const REPO_ROOT = join(__dirname, '../../../../..');
@@ -42,15 +43,18 @@ describe('placement.generated.ts (F-PLC-001 P-4)', () => {
   it('parses with PlacementBankSchema, and the warm-up with PlacementTemplateSchema', () => {
     expect(() => PlacementBankSchema.parse(PLACEMENT_BANK)).not.toThrow();
     expect(() => PlacementTemplateSchema.parse(PLACEMENT_WARMUP)).not.toThrow();
-    expect(PLACEMENT_BANK.templates).toHaveLength(260);
+    expect(PLACEMENT_BANK.templates).toHaveLength(258);
   });
 
-  it('every template is ready, and every picture of a template and of the warm-up resolves in supportedCardIds', () => {
+  it('every template is ready, and every picture of a template and of the warm-up resolves in supportedCardIds or WORD_ART_KEYS', () => {
     const art = supportedCardIds();
     expect(art).toHaveLength(30);
     expect(PLACEMENT_BANK.templates.filter((t) => t.status !== 'ready').map((t) => t.id)).toEqual([]);
     for (const t of [...PLACEMENT_BANK.templates, PLACEMENT_WARMUP]) {
-      for (const ref of pictures(t.question.options)) expect(art, `${t.id} ${ref}`).toContain(ref);
+      for (const ref of pictures(t.question.options)) {
+        if (ref.startsWith('word:')) expect(WORD_ART_KEYS, `${t.id} ${ref}`).toContain(ref.slice('word:'.length));
+        else expect(art, `${t.id} ${ref}`).toContain(ref);
+      }
     }
   });
 });
