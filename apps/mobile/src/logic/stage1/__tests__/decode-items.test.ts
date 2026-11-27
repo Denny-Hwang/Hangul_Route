@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { blockParts, romanizeReviewed, sayRef, type AudioPack, type BlockParts } from '@hangul-route/content-schema';
+import { EAR_RULED_OUT } from '@hangul-route/content-schema/ear-contrasts';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { CONTRAST_SETS } from '../../../content/__generated__/contrast-sets';
@@ -46,7 +47,7 @@ const ALL: readonly DecodeItem[] = [...ITEMS, ...AWAITING];
 const CONSONANTS = [...'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ'];
 const VOWELS = [...'ㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ'];
 const FINALS = [...'ㄱㄴㄹㅁㅂㅇ'];
-const Y_VOWELS = new Set([...'ㅑㅕㅛㅠ']);
+const Y_VOWELS = new Set([...EAR_RULED_OUT.yVowels]);
 const partsOf = (ko: string): BlockParts => {
   const p = blockParts(ko);
   if (p === null) throw new Error(`${ko} is not one block`);
@@ -91,22 +92,26 @@ const PROBE = new Set(PROBE_BLOCKS);
 const DRILL = new Set(DRILL_BLOCKS);
 
 // ---- the contrasts (section 3.4, OD-DC6) ------------------------------------------------------------------------------
+// One list with the level check's heard items (AMENDMENTS-PLC-VALIDITY D2): `EAR_RULED_OUT` of packages/content-schema,
+// where row PV-6 moved DC-2b's lists; this test reads them from there.
 type Pair = readonly [string, string];
 const has = (pairs: readonly Pair[], a: string, b: string): boolean => pairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+const pairsOf = (list: readonly string[]): Pair[] => list.map((p) => [p[0] as string, p[1] as string] as const);
 /** Plain against aspirated: WO-16's (AMENDMENTS-MINIMAL-PAIRS); only an approved contrast set may admit one (`contrastApproved`). */
-const PLAIN_ASPIRATED: readonly Pair[] = [['ㄱ', 'ㅋ'], ['ㄷ', 'ㅌ'], ['ㅂ', 'ㅍ'], ['ㅈ', 'ㅊ']];
+const PLAIN_ASPIRATED = pairsOf(EAR_RULED_OUT.plainAspirated);
 /** A weak [h] in a lone clip. */
-const NEVER_INITIAL: readonly Pair[] = [['ㅇ', 'ㅎ']];
+const NEVER_INITIAL = pairsOf(EAR_RULED_OUT.weakH);
 /**
  * Used only once the owner's listening pass of DC-2c clears them for these clips: ㄴ-ㄷ and ㅁ-ㅂ (section 3.4: a
  * word-initial nasal can lose its nasal sound) and, added by DC-2b, ㄴ-ㄹ and ㄷ-ㄹ (a lone initial ㄹ is a flap: the
  * AC-5 pilot heard the letter clip 라 as 나, and an English ear hears a flap as a quick d).
  */
-const PENDING_LISTEN: readonly Pair[] = [['ㄴ', 'ㄷ'], ['ㅁ', 'ㅂ'], ['ㄴ', 'ㄹ'], ['ㄷ', 'ㄹ']];
-const CLOSE_VOWELS: readonly Pair[] = [['ㅓ', 'ㅗ'], ['ㅡ', 'ㅜ'], ['ㅕ', 'ㅛ']];
+const PENDING_LISTEN = pairsOf(EAR_RULED_OUT.heldForListening);
+const CLOSE_VOWELS = pairsOf(EAR_RULED_OUT.vowels);
 /** A y-vowel against its plain vowel is heard only in the glide; after ㅎ the glide is the [ç] of the h (DC-2b). */
-const Y_AND_PLAIN: readonly Pair[] = [['ㅑ', 'ㅏ'], ['ㅕ', 'ㅓ'], ['ㅛ', 'ㅗ'], ['ㅠ', 'ㅜ']];
-const finalClass = (f: string): string => ('ㄱㅂ'.includes(f) ? 'stop' : 'ㄴㅁㅇ'.includes(f) ? 'nasal' : 'liquid');
+const Y_AND_PLAIN = pairsOf(EAR_RULED_OUT.glideAfterH);
+const SIBILANTS = pairsOf(EAR_RULED_OUT.sibilants);
+const finalClass = (f: string): string => EAR_RULED_OUT.finalClasses.find((c) => c.includes(f)) ?? f;
 
 /** MP-1a's gate (AMENDMENTS-MINIMAL-PAIRS section 3.4): one approved set holds both blocks. */
 const contrastApproved = (a: string, b: string): boolean => CONTRAST_SETS.some((s) => s.approved && s.members.some((m) => m.text === a) && s.members.some((m) => m.text === b));
@@ -121,7 +126,7 @@ function contrastProblem(a: string, b: string): string | null {
     if (has(PLAIN_ASPIRATED, p.first, q.first) && !(onlyInitial && contrastApproved(a, b))) return `${p.first}-${q.first} is plain against aspirated`;
     if (has(NEVER_INITIAL, p.first, q.first)) return `${p.first}-${q.first}: a weak h`;
     if (has(PENDING_LISTEN, p.first, q.first)) return `${p.first}-${q.first} waits for the owner's listening pass`;
-    if (has([['ㅅ', 'ㅈ'], ['ㅅ', 'ㅊ']], p.first, q.first) && vowels.some((v) => v === 'ㅣ' || Y_VOWELS.has(v))) return `${p.first}-${q.first} before i or a y-vowel`;
+    if (has(SIBILANTS, p.first, q.first) && vowels.some((v) => EAR_RULED_OUT.sibilantVowels.includes(v))) return `${p.first}-${q.first} before i or a y-vowel`;
   }
   if (p.vowel !== q.vowel) {
     if (has(CLOSE_VOWELS, p.vowel, q.vowel)) return `${p.vowel}-${q.vowel} sound close`;
@@ -215,7 +220,7 @@ describe('the decode item pool (AMENDMENTS-STAGE1-DECODING-CHECK section 3.4, DC
     for (const item of ALL) {
       for (const o of item.options) {
         const p = partsOf(o.ko);
-        expect('ㅈㅊㅅ'.includes(p.first) && Y_VOWELS.has(p.vowel), `${item.id}: ${o.ko}`).toBe(false);
+        expect(EAR_RULED_OUT.noYVowel.includes(p.first) && Y_VOWELS.has(p.vowel), `${item.id}: ${o.ko}`).toBe(false);
       }
     }
   });

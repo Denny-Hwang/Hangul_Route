@@ -120,12 +120,6 @@
       "engine": "polly",
       "voice": "Seoyeon"
     },
-    "슨": {
-      "say": "슨!",
-      "reason": "2026-11-09 QA: 슨. heard 층; 2026-11-10 owner listen: bad. An exclamation for a stronger onset and a full vowel 2026-11-11 owner listen (round 2): all three takes (슨! 슨 [sɯn] 슨,) were bad; held for a later round",
-      "engine": "polly",
-      "voice": "Seoyeon"
-    },
     "낮": {
       "say": "낮!",
       "reason": "2026-11-09 QA: 낮. heard 나앗 (the vowel drawn out and the final released); 2026-11-10 owner listen: bad. Sent as the isolated pronunciation [낟] (a final ㅈ is said ㄷ), which the QA accepts with the same-sounding 낫 2026-11-11 owner listen (round 2): picked 낮! over 낟. and [nat]; the QA accepts the same-sounding 낫",

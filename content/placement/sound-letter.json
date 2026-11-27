@@ -14,7 +14,7 @@
         "options": [
           {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":true},
           {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
-          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
           {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false}
         ],
         "tags": ["sym:ㅏ","group:basic"],
@@ -56,8 +56,8 @@
         "options": [
           {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":true},
           {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
-          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
-          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false}
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false}
         ],
         "tags": ["sym:ㅓ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -97,9 +97,9 @@
         "spoken": {"ko":"가","romanization":"ga","en":"the sound ga"},
         "options": [
           {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
-          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
+          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -140,8 +140,8 @@
         "options": [
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
           {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false}
+          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -181,8 +181,8 @@
         "spoken": {"ko":"오","romanization":"o","en":"the sound o"},
         "options": [
           {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":true},
-          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
-          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
           {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
         ],
         "tags": ["sym:ㅗ","group:basic"],
@@ -223,9 +223,9 @@
         "spoken": {"ko":"우","romanization":"u","en":"the sound u"},
         "options": [
           {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":true},
-          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
-          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
-          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false}
         ],
         "tags": ["sym:ㅜ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -265,9 +265,9 @@
         "spoken": {"ko":"마","romanization":"ma","en":"the sound ma"},
         "options": [
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
-          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -307,9 +307,9 @@
         "spoken": {"ko":"으","romanization":"eu","en":"the sound eu"},
         "options": [
           {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":true},
-          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
-          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false},
-          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
         ],
         "tags": ["sym:ㅡ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -349,9 +349,9 @@
         "spoken": {"ko":"이","romanization":"i","en":"the sound i"},
         "options": [
           {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":true},
-          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
           {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
-          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false}
         ],
         "tags": ["sym:ㅣ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -391,9 +391,9 @@
         "spoken": {"ko":"다","romanization":"da","en":"the sound da"},
         "options": [
           {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
-          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
-          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -433,9 +433,9 @@
         "spoken": {"ko":"라","romanization":"ra","en":"the sound ra"},
         "options": [
           {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
-          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false}
         ],
         "tags": ["sym:ㄹ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -475,9 +475,9 @@
         "spoken": {"ko":"자","romanization":"ja","en":"the sound ja"},
         "options": [
           {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
-          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
-          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
         "tags": ["sym:ㅈ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -517,8 +517,8 @@
         "spoken": {"ko":"차","romanization":"cha","en":"the sound cha"},
         "options": [
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":true},
-          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
           {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㅊ","group:rest"],
@@ -559,9 +559,9 @@
         "spoken": {"ko":"바","romanization":"ba","en":"the sound ba"},
         "options": [
           {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":true},
-          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
-          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
-          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
         "tags": ["sym:ㅂ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -601,9 +601,9 @@
         "spoken": {"ko":"사","romanization":"sa","en":"the sound sa"},
         "options": [
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
-          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
+          {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㅅ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -643,9 +643,9 @@
         "spoken": {"ko":"카","romanization":"ka","en":"the sound ka"},
         "options": [
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
-          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
         "tags": ["sym:ㅋ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -685,9 +685,9 @@
         "spoken": {"ko":"타","romanization":"ta","en":"the sound ta"},
         "options": [
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
-          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
-          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false}
         ],
         "tags": ["sym:ㅌ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -727,9 +727,9 @@
         "spoken": {"ko":"파","romanization":"pa","en":"the sound pa"},
         "options": [
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
-          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
-          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㅍ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -769,9 +769,9 @@
         "spoken": {"ko":"하","romanization":"ha","en":"the sound ha"},
         "options": [
           {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
-          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
-          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
         ],
         "tags": ["sym:ㅎ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -811,8 +811,8 @@
         "spoken": {"ko":"야","romanization":"ya","en":"the sound ya"},
         "options": [
           {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":true},
-          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
-          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
           {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
         ],
         "tags": ["sym:ㅑ","group:rest"],
@@ -853,9 +853,9 @@
         "spoken": {"ko":"여","romanization":"yeo","en":"the sound yeo"},
         "options": [
           {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":true},
+          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
           {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
-          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
-          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false}
         ],
         "tags": ["sym:ㅕ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -896,7 +896,7 @@
         "options": [
           {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":true},
           {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
-          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
           {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false}
         ],
         "tags": ["sym:ㅛ","group:rest"],
@@ -937,9 +937,9 @@
         "spoken": {"ko":"유","romanization":"yu","en":"the sound yu"},
         "options": [
           {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":true},
-          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
-          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
-          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false}
+          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false}
         ],
         "tags": ["sym:ㅠ","group:rest"],
         "requires": {"audio":true,"picture":null},

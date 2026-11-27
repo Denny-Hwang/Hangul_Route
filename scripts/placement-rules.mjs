@@ -195,19 +195,26 @@ export const PERSON_PICTURES = Object.freeze([
 /** Pictures that show letters: a read item never offers one (W4). */
 export const TEXT_PICTURES = Object.freeze(["card:hangul-day", "word:culture-hangul"]);
 /**
- * Pairs a learner cannot tell apart by ear in a lone clip (AMENDMENTS-STAGE1-DECODING-CHECK §3.4, AMENDMENTS-PLC-VALIDITY
- * D2). One list: the first of PV-6 and DC-2b to land adds it to packages/content-schema, and a test compares the two.
+ * Pairs a learner cannot tell apart by ear in a lone clip (AMENDMENTS-STAGE1-DECODING-CHECK §3.4 with DC-2b's stricter
+ * rules, AMENDMENTS-PLC-VALIDITY D2). The list is `EAR_RULED_OUT` of packages/content-schema/src/hangul/ear-contrasts.ts
+ * (row PV-6), mirrored here for the plain-Node lint; a content-schema test compares the two.
  */
 export const EAR_RULED_OUT = Object.freeze({
-  /** Initials: plain against aspirated, ㅇ-ㅎ, and the two pairs held back until the owner's listening pass. */
-  initials: Object.freeze(["ㄱㅋ", "ㄷㅌ", "ㅂㅍ", "ㅈㅊ", "ㅇㅎ", "ㄴㄷ", "ㅁㅂ"]),
+  /** Initials, plain against aspirated (WO-16): never by ear in the level check; they stay in its seen items. */
+  plainAspirated: Object.freeze(["ㄱㅋ", "ㄷㅌ", "ㅂㅍ", "ㅈㅊ"]),
+  /** Initials: a weak [h] in a lone clip. */
+  weakH: Object.freeze(["ㅇㅎ"]),
+  /** Initials held back until the owner's listening pass: ㄴ-ㄷ, ㅁ-ㅂ, and DC-2b's ㄴ-ㄹ and ㄷ-ㄹ (a lone ㄹ is a flap). */
+  heldForListening: Object.freeze(["ㄴㄷ", "ㅁㅂ", "ㄴㄹ", "ㄷㄹ"]),
   /** ㅅ against ㅈ or ㅊ is ruled out when either syllable's vowel is in `sibilantVowels` (ㅅ is [ɕ] there). */
   sibilants: Object.freeze(["ㅅㅈ", "ㅅㅊ"]),
-  sibilantVowels: "ㅣㅑㅕㅛㅠㅒㅖ",
-  /** ㅈ and ㅊ never meet ㅑ ㅕ ㅛ ㅠ (져 sounds as 저), as target or option. */
-  noYVowel: "ㅈㅊ",
+  sibilantVowels: "ㅣㅑㅕㅛㅠ",
+  /** ㅅ, ㅈ and ㅊ never meet ㅑ ㅕ ㅛ ㅠ (져 sounds as 저, 셔 as 서), as target or option. */
+  noYVowel: "ㅅㅈㅊ",
   yVowels: "ㅑㅕㅛㅠ",
   vowels: Object.freeze(["ㅓㅗ", "ㅡㅜ", "ㅕㅛ"]),
+  /** A y-vowel against its plain vowel when either syllable starts with ㅎ (the glide is only the [ç] of the h). */
+  glideAfterH: Object.freeze(["ㅏㅑ", "ㅓㅕ", "ㅗㅛ", "ㅜㅠ"]),
   /** Finals of one sound class are never offered together: stops, nasals, the liquid. */
   finalClasses: Object.freeze(["ㄱㅂ", "ㄴㅁㅇ", "ㄹ"]),
 });
@@ -345,13 +352,16 @@ export function repeatsLine(line, reply) {
   return wordsOfSentence(reply).some((w) => lineWords.some((l) => wordsMatch(w, l)));
 }
 
-// D1 and D2: decoding options, compared by position.
+// D1 and D2: decoding options, compared by position. A `build-syllable` item is a heard item too: the level check
+// draws it as four written blocks under the heard prompt ("Tap the block you hear"), so it follows both rules (PV-6).
+const DECODE_BALANCED_FORMATS = ["hear-pick-written", "see-pick-sound", "build-syllable"];
+const HEARD_WRITTEN_FORMATS = ["hear-pick-written", "build-syllable"];
 const POSITIONS = ["initial", "medial", "final"];
 const distance = (a, b) => POSITIONS.filter((p) => a[p] !== b[p]).length;
 
 function decodeBalancedProblem(t) {
   const options = optionsOf(t);
-  const parts = options.map((o) => (t.question.format === "hear-pick-written" ? partsOfKo(o.ko) : chipParts(o.sound)));
+  const parts = options.map((o) => (t.question.format === "see-pick-sound" ? chipParts(o.sound) : partsOfKo(o.ko)));
   if (options.length !== 4 || parts.some((p) => p === null)) return "needs four options that read as one syllable each";
   if (new Set(parts.map((p) => POSITIONS.map((k) => p[k]).join("|"))).size !== 4) return "the four options must be different syllables";
   if (t.gate === "syl-cv") {
@@ -372,12 +382,18 @@ const inPairs = (pairs, a, b) => pairs.some((p) => p.includes(a) && p.includes(b
 
 function earProblem(target, option) {
   if (target.initial !== option.initial) {
-    if (inPairs(EAR_RULED_OUT.initials, target.initial, option.initial)) return `${target.initial} and ${option.initial} are not told apart by ear`;
+    const initialPairs = [...EAR_RULED_OUT.plainAspirated, ...EAR_RULED_OUT.weakH, ...EAR_RULED_OUT.heldForListening];
+    if (inPairs(initialPairs, target.initial, option.initial)) return `${target.initial} and ${option.initial} are not told apart by ear`;
     if (inPairs(EAR_RULED_OUT.sibilants, target.initial, option.initial) && [target.medial, option.medial].some((v) => EAR_RULED_OUT.sibilantVowels.includes(v))) {
       return `${target.initial} and ${option.initial} before ㅣ or a y-vowel sound alike`;
     }
   }
-  if (target.medial !== option.medial && inPairs(EAR_RULED_OUT.vowels, target.medial, option.medial)) return `${target.medial} and ${option.medial} are not told apart by ear`;
+  if (target.medial !== option.medial) {
+    if (inPairs(EAR_RULED_OUT.vowels, target.medial, option.medial)) return `${target.medial} and ${option.medial} are not told apart by ear`;
+    if ((target.initial === "ㅎ" || option.initial === "ㅎ") && inPairs(EAR_RULED_OUT.glideAfterH, target.medial, option.medial)) {
+      return `${target.medial} and ${option.medial} after ㅎ are told apart only by the h`;
+    }
+  }
   if (target.final !== "" && option.final !== "" && target.final !== option.final && EAR_RULED_OUT.finalClasses.some((c) => c.includes(target.final) && c.includes(option.final))) {
     return `the finals ${target.final} and ${option.final} are of one sound class`;
   }
@@ -572,11 +588,11 @@ export function lintPlacementTree(tree, ctx = {}) {
   // placement-decode-balanced (D1) and placement-decode-ear (D2)
   for (const item of all) {
     const { t } = item;
-    if ((t.gate === "syl-cv" || t.gate === "syl-cvc") && (t.question.format === "hear-pick-written" || t.question.format === "see-pick-sound")) {
+    if ((t.gate === "syl-cv" || t.gate === "syl-cvc") && DECODE_BALANCED_FORMATS.includes(t.question.format)) {
       const problem = decodeBalancedProblem(t);
       if (problem !== undefined) addT("placement-decode-balanced", item, problem);
     }
-    if (t.question.format === "hear-pick-written") {
+    if (HEARD_WRITTEN_FORMATS.includes(t.question.format)) {
       const problem = decodeEarProblem(t);
       if (problem !== undefined) addT("placement-decode-ear", item, problem);
     }
