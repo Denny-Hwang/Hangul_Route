@@ -41,6 +41,7 @@ import {
   startRealiaRead,
   stepRealiaRead,
   titleView,
+  answeredNow,
   type RealiaReadEvent,
   type RealiaReadState,
 } from '../realia-read-flow';
@@ -371,6 +372,20 @@ describe('the sheet', () => {
     expect(titleView(menu.realia, always)).toEqual({ ko: '메뉴', romanization: 'menyu', label: '메뉴, menyu' });
     expect(titleView(menu.realia, tapMode)).toEqual({ ko: '메뉴', romanization: '', label: '메뉴, menyu' });
     expect(titleView(REALIA_FIXTURES.priceCards.realiaRead.realia, always)).toBeUndefined();
+  });
+
+  it('the answer shows the title and the key word in tap mode (AMENDMENTS-ROMANIZATION-FADE section 3.8 (c), row RF-1c)', () => {
+    const key = { ko: '라면', romanization: 'ramyeon', en: 'instant noodles' };
+    expect(answeredNow(startRealiaRead(3))).toBe(false);
+    const resolved = run(startRealiaRead(3), [tap(q1.answerId, 100)]).state;
+    expect(answeredNow(resolved)).toBe(true);
+    expect(answeredNow({ ...resolved, status: 'done' })).toBe(true);
+    const answered = { ...tapMode, answered: true };
+    expect(titleView(menu.realia, answered)).toEqual({ ko: '메뉴', romanization: 'menyu', label: '메뉴, menyu' });
+    expect(keyView(key, answered)).toEqual({ shown: true, reserved: false });
+    // Not answered: folded, as before. A Check's open question holds the line even so (the answer ends the hold).
+    expect(keyView(key, { ...tapMode, answered: false })).toEqual({ shown: false, reserved: false });
+    expect(keyView(key, { ...answered, held: true })).toEqual({ shown: false, reserved: true });
   });
 
   it('a line tap speaks the line, then its value; a voiced word uses its spoken form and clip', () => {

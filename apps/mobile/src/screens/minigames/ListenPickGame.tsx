@@ -127,8 +127,10 @@ export interface ListenPickTextPrompt {
   /**
    * The prompt as text; it receives focus from round 2 on. `held`: a Check's question is open, so the prompt's romanization
    * keeps its room and draws nothing until the answer (AMENDMENTS-STAGE1-DECODING-CHECK section 3.3, row DC-1a).
+   * `answered`: the round resolved, so a prompt the learner's mode folds shows its romanization now (AMENDMENTS-ROMANIZATION-FADE
+   * section 3.8 (c), row RF-1c).
    */
-  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void, held: boolean) => ReactNode;
+  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void, held: boolean, answered: boolean) => ReactNode;
 }
 
 /**
@@ -293,9 +295,9 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
       ? {
           heading: copy.cultureQuiz.heading,
           missLine: copy.picWord.missHoya,
-          prompt: (r, focusRef, held) => {
-            // What the learner's mode shows of the prompt; a Check's open question holds it, in the room it will take.
-            const modeShows = romanizationShown(romanizationMode, false);
+          prompt: (r, focusRef, held, answered) => {
+            // What the learner's mode shows of the prompt (the answer shows it too); a Check's open question holds it, in the room it will take.
+            const modeShows = romanizationShown(romanizationMode, answered);
             return (
               <View ref={focusRef} style={{ alignItems: 'center' }} testID="listen-pick-text-prompt">
                 <KoreanText
@@ -680,6 +682,7 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
           speakerRef.current = node as Focusable | null;
         },
         textPromptView(round, state, holdsOpen).held,
+        resolved,
       )}
       {resolved ? (
         <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} onHelp={() => setHelpOpen(true)} testID="listen-pick-prompt" />
