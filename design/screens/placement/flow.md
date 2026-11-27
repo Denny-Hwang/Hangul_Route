@@ -92,3 +92,31 @@ Report (override)            after Choose a different start: <name>'s plan can f
 - **Keep my plan** and the report's **Not now** on an update answer that change (`route-ui.keptFor`): both surfaces stay quiet until the next result or override.
 - Dismissals are per surface: **Just start** and the proposal screen's **Not now** hide the Home prompt and the result strip (AM-6); the report card's **Not now** hides only the report card (`route-ui.reportDismissedAt`), so the grown-up still finds the proposal first on the report (AM-1). Both for 14 days or until the next result.
 - The report card's warnings never name a price, a plan or a product; a stage the account does not include reads "not included with this account yet".
+
+## The report says reading and listening apart as built (AMENDMENTS-PLC-VALIDITY PV-4)
+
+Wireframe `design/wireframes/placement/report.md` section "[PV] Reading and listening". Code: `screens/parent/PlacementReportScreen.tsx` (`SkillsBlock`, `FormPills`); logic in `logic/placement/result-view.ts` (`reportSkills`, `reportView`) and `report-page.ts` (`olderSentences`), 100 % covered; strings `caregiver.placementReport.{skills,listening,formStatus,olderSentences}` in en, es and ko. The learner's result screen is unchanged. Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test placement-report` writes `placement-report-heritage-listener-320.png` and `placement-report-older-sentences-320.png` to `apps/mobile/e2e/web/__shots__/` (git-ignored).
+
+```
+What we saw
+┌ Reading and listening ─────────────┐   sunken card, no shadow; two lines, each one element to a screen reader
+│ Reading    At the beginning        │   the newest result's band label, or "not checked" (no sound-letter or syllable strand ran)
+│ Listening  Understood the short    │   from the newest result's oralStage: stage1 | stage2 | stage3 words, or "not checked"
+│            sentences we said       │
+│ In this check, Sam understood more │   only when listening is at a higher stage than reading, and both were checked
+│ Korean than Sam could read. That…  │
+└────────────────────────────────────┘
+ Letters (shapes)      not tested
+ Sounds of letters     getting there      the strands without two forms keep one pill
+ Words                 listening: secure  Words and Sentences: one pill per form that was asked (reading first), "form: status";
+ Sentences             listening: secure  a strand where no form was asked keeps its one pill; the rung captions stay
+Where the route starts
+ quest title
+ An earlier version of the check asked easier sentence questions. …   only for a Stage 3 route that the older sentence items placed (told by item ids)
+ [ Choose a different start ]
+```
+
+- Each form's word is `rungStatus` with `stepPassed` (E-1), so a Deep row asked before an earlier confirmation failed shows "getting there", not "secure". The merged strand status is still the stored one; only the row's display splits it.
+- Reading is the newest result's own `level`, not the route in force (an older, higher check may set the route). "Ahead" is by stage, never a number or a route word.
+- The older-sentences line reads the item ids a result stores, not the bank version (every content row moves the version: PV-2 took it to 2 for words, PV-6 will bump it too). A result that passed the sentence read (`stepPassed`) and was asked a retired picture item (`pitem:sent-n-...`, `pitem:sent-v-...`, `OLDER_SENTENCE_ID` in `report-page.ts`) is "older"; one asked the predicate pictures (`pitem:sent-read-...`, `pitem:sent-hear-...`) is "revised"; the replies (`pitem:sent-reply-N`) are in both and decide nothing. The line shows for a Stage 3 route when some result is older and none is revised. The spec said "bank version 1"; no constant needs to follow PV-1c's version number. `report-page.test.ts` pins both patterns against the bundled bank's own `pattern:` tags (`n-ieyo`, `n-eul-v` older; `n-i-v` revised), so a rename in the sentence bank fails it.
+- Below 360 pt the form pills wrap onto their own lines and the values wrap under their labels (`placement-report.spec.ts`, 320 x 568: no horizontal scroll).

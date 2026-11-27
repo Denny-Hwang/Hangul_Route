@@ -4,6 +4,7 @@ import {
   isRouteStartQuest,
   modeOf,
   placementStageNumber,
+  stepPassed,
   type PlacementGate,
   type PlacementLevel,
   type Jamo,
@@ -168,6 +169,30 @@ export function startingSpotRow(placements: readonly StoredResult[] | undefined)
   };
 }
 
+/**
+ * The older sentence questions, told by the item ids a result stores (not by the bank version, which every content
+ * row moves: PV-2 and PV-6 bump it without touching the sentences). The older picture items were `N-ieyo` and `N-eul V`
+ * sentences, ids `pitem:sent-n-...` and `pitem:sent-v-...` (retired by PV-1c); the revised ones are `pitem:sent-read-...`
+ * and `pitem:sent-hear-...` (predicate pictures); the reply items `pitem:sent-reply-N` are in both. A bank test pins
+ * both patterns against the bundled bank's own `pattern:` tags, so a rename cannot drift from this.
+ */
+export const OLDER_SENTENCE_ID = /^pitem:sent-[nv]-/;
+export const REVISED_SENTENCE_ID = /^pitem:sent-(read|hear)-/;
+
+type SentenceKind = 'older' | 'revised' | 'unknown';
+
+/**
+ * What this result's sentence read passed on: `older` when it was asked a retired picture item, `revised` when it was
+ * asked only the predicate pictures (and replies), `unknown` when it did not pass the sentence read (`stepPassed`:
+ * every step before it passed too) or stored no sentence picture id.
+ */
+function sentencePass(result: StoredResult): SentenceKind {
+  if (!stepPassed(result.gates, 'sentence', 'read')) return 'unknown';
+  const ids = result.responses.map((r) => r.questionId);
+  if (ids.some((id) => OLDER_SENTENCE_ID.test(id))) return 'older';
+  return ids.some((id) => REVISED_SENTENCE_ID.test(id)) ? 'revised' : 'unknown';
+}
+
 export interface ReportPageInput {
   /** `snapshot.placements` (a missing key is `[]`). */
   placements: readonly StoredResult[];
@@ -200,6 +225,11 @@ export interface ReportPageView {
    * (section 3.1 step 7, AM-23); a self profile has it on the result.
    */
   retakeHidden: { mode: 'standard' | 'deep' } | null;
+  /**
+   * The route is at Stage 3 because of a sentence pass on the older sentence questions, and no check on the
+   * revised ones passed them: "An earlier version of the check asked easier sentence questions."
+   */
+  olderSentences: boolean;
   /** "The short check looks at the first letters only..." with Try the standard check (any profile). */
   shortHint: boolean;
   choices: StartChoice[];
@@ -226,6 +256,10 @@ export function reportPage(input: ReportPageInput): ReportPage {
   const seed = effectiveRoute(sorted as readonly PlacementResult[], input.catalog, opts) as RouteSeed;
   const view = reportView(newest, (id) => input.lookup(id)?.format);
   const mode = modeOf(newest);
+  const olderSentences =
+    placementStageNumber(seed.level.stage) >= placementStageNumber('stage3') &&
+    sorted.some((r) => sentencePass(r) === 'older') &&
+    !sorted.some((r) => sentencePass(r) === 'revised');
   return {
     kind: 'report',
     resultId: newest.id,
@@ -240,6 +274,7 @@ export function reportPage(input: ReportPageInput): ReportPage {
     overridden: input.placements.some((r) => r.override !== undefined),
     retakeHidden:
       input.profileType === 'child' && decodingNotTested(newest) && mode !== 'short' ? { mode } : null,
+    olderSentences,
     shortHint: view.shortHint,
     choices: startChoices(seed, input.catalog, input.completedQuestIds, input.isEntitled),
   };
