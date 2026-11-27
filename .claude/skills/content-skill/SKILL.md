@@ -70,12 +70,14 @@ fixture 작성 기준·공공누리 자료 라이선스 처리까지 커버한�
 > | Beat | Step kind | What the code does | Stage 1 timing |
 > |---|---|---|---|
 > | Hook | `intro` | Hoya line (English, or `hoyaLineKo` with romanization and gloss) | 6-8 s |
-> | Discover | `discover` | `discover.pages` (1-3 pages, 1-2 items each: a symbol with its sound, hint and example word, or a word with its picture); unscored, Continue always enabled, never skipped | 40-60 s |
+> | Discover | `discover` | `discover.pages` (1-3 pages, 1-2 items each: a symbol with its sound, hint and example word, or a word with its picture); unscored, Continue always enabled, never skipped | 40-90 s (60-90 s in quests 1-10, which have the trace page, below) |
 > | Play | `practice` + `apply` | two games from the catalog, 6 + 4 scored rounds | 75-90 s + 60-75 s |
 > | Check | `check` | a Listen & Pick scope of exactly 2 rounds (a symbol or picture, then a reading word), scored first try, launcher "Two quick ones" with no Skip | about 35 s |
 > | Celebrate | `reward` | stars, the quest card at 2+ stars, the next-quest teaser | about 8 s |
 >
 > So a Stage 1 quest is 6 steps and 4-5 minutes (the extra minute is the Discover step and the two check rounds); the 3-7 step and 3-15 minute schema limits are unchanged. The schema's `superRefine` enforces the order (Discover before Play, Check after Play and before the reward; at most one of each). A quest with a Check step shows no separate Feedback Review (F-RVW-001 §3.3, amended). Stage 2 / Stage 4 taste quests keep their five steps and `present` until they adopt Discover / Check (data only, no code change). Every new symbol is taught in exactly one quest's Discover step and asked many times after (F-QUEST-002 rules R1-R6).
+>
+> **[TC] Amended 2026-11-26 (`AMENDMENTS-STAGE1-TRACE-COVERAGE.md`, merged #1171): the trace page.** A Discover step whose letter cards have stroke data (quests 1-10) gets one extra page, "Trace the new letters", after its last letter page; it is derived from the content (each `jamo` item's `jamoId` with stroke forms, once), never authored, so a content file adds no page and no field for it. It counts **10 s per letter** in the step's `durationSeconds`: Discover is **40-90 s**: **60-90 s** in quests 1-10 (10 s per content item plus 10 s per traced letter: quest 1 is 40 + 40 = 80 s, quest 8 is 50 + 40 = 90 s) and 40-60 s in quests 11-15. The "1-3 pages, 1-2 items" cap counts **content** pages only; the trace page is extra (quests 5, 8 and 10 show four pages). Two rules follow for a content author: the quest's step seconds add up to **300 s or less** (test T13, with T10: `estimatedMinutes` within one minute of the sum), and every new letter of quests 1-10 is on its quest's trace page (test T12). A quest that would pass 300 s gets a real cut or a re-estimate of a step to the value its kind has elsewhere in Stage 1 (quest 8's Build a Letter 60 s, quest 9's Listen & Pick practice 75 s), never a longer label by default; the one label that grew is quest 6's 5 minutes, an owner decision (2026-11-26) that counts the trace page and the optional contrast step.
 
 ### 3.2 Episode 계층
 

@@ -10,7 +10,7 @@ Code: `apps/mobile/src/screens/quest/DiscoverStep.tsx` (renders), `apps/mobile/s
 
 > **[SF-3] Amended 2026-11-26 by `docs/specs/AMENDMENTS-DISCOVER-SOUND-FIRST.md` §12** (row SF-3a; WO-12 item 13, owner decision 2026-11-26): the initial ㅇ card gets a second button, **Hear it with vowels**, which plays 아, 오, 우 one after the other from the shipped vowel clips, so the learner hears that ㅇ adds no sound at the start of a block. See "[SF-3] The ㅇ card" below.
 
-> **[TC] Amended 2026-11-25 by `docs/specs/AMENDMENTS-STAGE1-TRACE-COVERAGE.md`** (work order WO-14 of the 2026-11 review; row TC-0): a Discover step that teaches letters gets one more page, **Trace the new letters**, right after its last letter page: each new letter is traced once on a canvas, unscored, with no Done and no miss; Continue stays enabled. See "[TC] Trace the new letters" below. Mock: row TC-0b (`design/screens/discover-trace/`).
+> **[TC] Amended 2026-11-25 by `docs/specs/AMENDMENTS-STAGE1-TRACE-COVERAGE.md`** (work order WO-14 of the 2026-11 review; row TC-0): a Discover step that teaches letters gets one more page, **Trace the new letters**, right after its last letter page: each new letter is traced once on a canvas, unscored, with no Done and no miss; Continue stays enabled. See "[TC] Trace the new letters" below. Mock: row TC-0b (`design/screens/discover-trace/`, merged #1154). **Built 2026-11-26** (TC-1a #1164, TC-1b #1171); the "As built" notes under "[TC] Trace the new letters" say where the build departs from the sketch.
 
 > **Promoted 2026-10-12 (F-QUEST-002 PR Q-11).** This file was the single drafted wireframe of the whole spec (screens S1 to S11). It now holds the Discover step only; the other screens live in their own files:
 >
@@ -201,6 +201,14 @@ Shown once per Discover step, right after the **last page that holds a letter ca
 - **Reduced motion**: Show me's still (unnumbered while untaught); no chip animation.
 - **Coming back** with Previous inside the step: the current letter and the filled chips stay. A new visit of the step starts plain. Reached by Previous from the practice step, the step opens on this page (its last page) in quests 1–3 and 9.
 
+**As built (row TC-2, 2026-11-26; `AMENDMENTS-STAGE1-TRACE-COVERAGE.md` §12).**
+
+- **The sketch above is the `full` arrangement.** The page takes the first step of a ladder whose canvas slot reaches 160 (`logic/stage1/trace-pad-layout.ts`, chosen once per page from the Screen content box, the text scale and the page): portrait `full` → `beside` (Hear it and Show me in a column beside the canvas) → `compact` (no title slot: the heading leads) → `short` (the step dots in the header between Close and Aa, no page row, Previous and Continue 64 high) → `short-b` (no chips); landscape `side` → `side-short` → `side-short-b`. Measured on the release build (Chromium): 320 × 568 short or short-b (canvas 160–166), 375 × 553 short-b (163), 375 × 667 compact or short (174–221), 844 × 390 side-short, or side-short-b when the page has a final (266), 390 × 844 full (190), 768 × 1024 full (384), 1180 × 820 side (380), Largest text on 390 × 844 beside (160 or more, all six controls on screen). At 844 × 390 quests 7 and 8 (a final adds a line) take `side-short-b`, where the mock had quest 7 on `side-short`.
+- **Short arrangements**: the title "Trace the new letters" is not drawn in `compact` and below (owner decision 2026-11-26); the page label and the letter row's summary stay for screen readers through the visually-hidden `srOnly` style (never `opacity: 0`, which VoiceOver skips).
+- **The pad loads lazily** (`discover-trace-chunk`, 13.7 KB, asked for as a Discover step with letters opens); until it is in, the page shows Previous and Continue alone. The All lessons preview draws the page too, inside its strip: the strip's height is taken off the window through `ScreenReserveContext`.
+- **Telemetry** `quest.discover_completed { questId, pages, heard, written, writeSeconds }`: `pages` counts the trace page; `heard` counts a Hear it or Show me tap on it as `write|<jamoId>`, each id once.
+- **Not yet checked**: sizes outside the acceptance set, WebKit (Chromium only was run) and every on-device check of the spec's §3.8, which are the owner's.
+
 ## [QB] Previous inside the step (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2)
 
 ```
@@ -237,7 +245,7 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail`
 
 - reads: `questById(id).steps[]` (`discover.pages`) · `jamoAll` (glyph, romanization, `soundHint`, `spokenKo`, `nameKo`) · `romanizationMode` (F-I18N-001) · `HeritageCardArt` / `WordArt` for pictures
 - writes: nothing (unscored)
-- telemetry: `quest.discover_completed { questId, pages, heard }` ([TC] TC-1b adds `written`, the letters traced to the end on the trace page, and `writeSeconds`)
+- telemetry: `quest.discover_completed { questId, pages, heard }` ([TC] TC-1b added `written`, the letters traced to the end on the trace page, and `writeSeconds`, 0 for a step with no trace page)
 
 ## Open questions
 
