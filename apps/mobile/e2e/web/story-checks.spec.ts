@@ -291,10 +291,16 @@ test.describe('story check step (fixture bundle)', () => {
     await expect(page.getByTestId('story-check-prompt').locator('[lang="ko"]')).toHaveText('한글날');
     await expect(page.getByTestId('story-check-position-group')).toHaveAccessibleName('Question 2 of 3');
 
-    // Close: back to the quest step without finishing it (wireframe check.md A).
+    // Close: back to the quest step without finishing it (wireframe check.md A). An item is answered, so the Close asks
+    // first ([LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-1, section 3.1: Story Check before its recap has the game's guard);
+    // Leave goes back to the step.
     const close = headerClose(page);
     await expect(close).toHaveAccessibleName('Close');
     await close.click();
+    const sheet = page.getByRole('alertdialog');
+    await expect(sheet).toContainText('Keep playing?');
+    await sheet.getByRole('button', { name: 'Leave', exact: true }).click();
+    await expect(sheet).toHaveCount(0);
     await expect(stepHeading(page, 'A few questions')).toBeVisible();
     const events = await storyEvents(page);
     expect(events.filter((e) => e.name === 'story.check.finished')).toEqual([]);
