@@ -91,13 +91,20 @@ test('quest 11: Hoya says the reading line once, the readable words fold with Sh
   await expect(page.getByText('san', { exact: true })).not.toHaveAttribute('aria-hidden', 'true');
   await expect(kept).toHaveCount(1);
 
-  // Leave and open the quest again (a saved run may resume it on a later step): no line shows a second time, and the stored time stays.
+  // Leave, finish quest 11 (seeded), and open quest 12 on the same profile: its Hello step has no line (once per profile),
+  // and the stored time stays.
   await headerClose(page).click();
+  const stored = (await readStored<{ romanizationNoticeAt?: string }>(page, `settings:${profileId}`))?.romanizationNoticeAt;
+  expect(stored).toBeTruthy();
+  const elevenDone = tenDone(profileId);
+  elevenDone.quests.push({ questId: 'quest:stage1-nature-q2', episodeId: 'episode:stage1-nature', startedAt: AT, completedAt: AT, stars: 1, attempts: 1, accuracy: 0.5 });
+  await seedStored(page, `progress:${profileId}`, elevenDone);
   await page.goto('/');
-  await startQuestEleven(page);
-  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await startNatureQuest(page, 2, 'Moon, Stars and Night');
+  await expect(page.getByText('Night Sky', { exact: true })).toBeVisible();
   await expect(page.getByTestId('quest-reading-notice')).toHaveCount(0);
-  expect((await readStored<{ romanizationNoticeAt?: string }>(page, `settings:${profileId}`))?.romanizationNoticeAt).toBeTruthy();
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  expect((await readStored<{ romanizationNoticeAt?: string }>(page, `settings:${profileId}`))?.romanizationNoticeAt).toBe(stored);
   expect(errors).toEqual([]);
 });
 

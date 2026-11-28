@@ -126,16 +126,17 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
   it.each(RESOLVER_SITES)('%s takes the resolver once per mount and reads the per-text mode from it', (rel) => {
     const file = files.find((f) => f.rel === rel);
     expect(file, rel).toBeDefined();
-    expect(file!.source).toContain('useRomanizationResolver(');
-    // Kept for the whole mount: a ref seeded with the first resolver, never the live hook value read per draw.
-    expect(file!.source).toMatch(/useRef\(liveResolver\)/);
-    expect(file!.source).toContain('resolverRef.current.forText');
+    // `useMountResolver` holds the first resolver for the whole mount (taken again once the native screen-reader answer is
+    // in), so a surface never reads the live hook value per draw.
+    expect(file!.source).toContain('useMountResolver(');
+    expect(file!.source).not.toContain('useRomanizationResolver(');
+    expect(file!.source).toContain('resolver.forText');
   });
 
   it('the resolver is read by the three item-level surfaces and by no other screen or component', () => {
     expect(
       files
-        .filter((f) => f.source.includes('useRomanizationResolver('))
+        .filter((f) => f.source.includes('useMountResolver('))
         .map((f) => f.rel)
         .sort(),
     ).toEqual([...RESOLVER_SITES].sort());
@@ -168,6 +169,7 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
     const hook = readFileSync(join(SRC, 'i18n', 'use-romanization-mode.tsx'), 'utf8');
     expect(hook).toContain('export function RomanizationCheckScope(');
     expect(hook).toContain('export function useRomanizationResolver(');
+    expect(hook).toContain('export function useMountResolver(');
     const host = readFileSync(join(SRC, 'screens', 'minigames', 'MinigameScreen.tsx'), 'utf8');
     expect(host).toContain('<RomanizationCheckScope active={step?.kind === \'check\'}>');
     // set by the two Check hosts that mount a game reading the hook, and nowhere else
