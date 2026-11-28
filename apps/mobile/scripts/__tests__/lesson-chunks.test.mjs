@@ -784,7 +784,9 @@ describe('precacheReport and its budget lines', () => {
     // [PV] AMENDMENTS-PLC-VALIDITY PV-6 on main with MP-2b and PV-4 measures 4,585,548 B (release build, CI=1): 4,591,600 B.
     // [TC] TC-1b (the trace page's door, chooser and chrome; the pad is `discover-trace-chunk`) on top of main with RF-1b (line 4,585,300 B) measures 4,589,675 B (release build, CI=1): 4,595,700 B.
     // [RF] AMENDMENTS-ROMANIZATION-FADE RF-2 (the Reading practice card, the line, `useReadingNotice`, `HoyaBubble`'s `figure`, the en strings) on top of main (line 4,595,700 B) measures 4,599,310 B (release build, CI=1): 4,605,310 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_605_310);
+    // [SB] Row SB-4f: 4,571,400 B, the SB-4a to SB-4e measurement (4,567,371 B on main c93fae8e9) plus 4,029 B; the closest old size, 4,751,444 B, is
+    // 180,044 B above it, so the gap to every size before FN-7 is 180 KB (was 140 KB).
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_571_400);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown
     // about 30 KB since FN-7 (4,574,000 to 4,604,100 B), so it now stays at least 140 KB (was 150 KB) under each of them.
@@ -804,24 +806,40 @@ describe('precacheReport and its budget lines', () => {
     // [TC] Row TC-1a: 4,585,300 B; the closest old size, 4,751,444 B, is 166,144 B above it (the gap holds).
     // [TC] Row TC-1b: 4,595,700 B; the closest old size, 4,751,444 B, is 155,744 B above it (the gap holds).
     // [RF] Row RF-2: 4,605,310 B; the closest old size, 4,751,444 B, is 146,134 B above it, so the gap is 140 KB (was 150 KB).
-    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(140_000);
-    // SB took about 100 KB out: the line is under every measurement from FN-7 to SB, the closest (FN-7's own, 4,570,041 B)
+    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(180_000);
+    // SB took about 100 KB out: the line was under every measurement from FN-7 to SB, the closest (FN-7's own, 4,570,041 B)
     // 32,041 B above it. [LR] Row LR-3a: 4,544,600 B, so the closest is 25,441 B above it and the gap is 25 KB (was 30 KB). [SF] Row SF-1:
     // 4,550,200 B, so the closest is 19,841 B above it and the gap is 15 KB (was 25 KB). [RF] Row RF-1a: 4,557,800 B, the gap 10 KB.
-    // [RG] Row RG-2b: 4,565,800 B, so the closest is 4,241 B above it and the gap is 4 KB (was 15 KB): the start bundle is back within 4 KB of FN-7's own size.
-    // [DC] Row DC-1c: 4,569,900 B, so the closest (FN-7's own, 4,570,041 B) is 141 B above it: the gap would be 4 KB at 4,566,000 B, so it is lowered to
-    // "the line is still under FN-7's own size" (> 0, was > 4,000). The start bundle shrink row SB-4 (planned after phase 2) brings the gap back.
-    // [MP] Row MP-2a: 4,577,600 B, so the line is now above FN-7's own size (4,570,041 B) and the closer measurements after it: the start bundle is
-    // above FN-7's own size, so "the line is under every measurement from FN-7 to SB" no longer holds and is not asserted. The start bundle shrink
-    // row (SB-4, planned after phase 2) brings it back; the 150 KB gap under every measurement before FN-7 (above) still holds.
-    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_573_615, 4_579_228, 4_585_548, 4_589_675, 4_599_310]) {
+    // [RG] Row RG-2b: 4,565,800 B, so the closest is 4,241 B above it and the gap is 4 KB (was 15 KB).
+    // [DC] Row DC-1c: 4,569,900 B, so the closest is 141 B above it: the gap is "the line is still under FN-7's own size" (> 0, was > 4,000).
+    // [MP] Row MP-2a: 4,577,600 B, above FN-7's own size, so "the line is under every measurement from FN-7 to SB" was not asserted.
+    // [SB] Row SB-4f brings the assertion back, with a different gap. The five cuts (SB-4a to SB-4e) saved 32,200 B as planned, but RF-2 (+4,369 B)
+    // landed after the SB-4 plan was measured, so the release build measures 4,567,371 B, not the planned 4,559,000 to 4,562,400 B. The line
+    // (measurement plus 4,029 B, decision D5) is 1,359 B above FN-7's own size (4,570,041 B), so it cannot be 4,000 B under it. Owner decision
+    // 2026-11-28 (approved as recommended): the line stays within 2,000 B of FN-7's own size (at most 4,572,041 B, above it by 1 B or more), and it is
+    // under the other seventeen measurements from FN-7 to SB (the next, 4,575,345 B, is 3,945 B above it). The games chunk (D6) is the next lever if a later row needs
+    // room under FN-7's size. The eighteen measurements are the ones MP-2a removed.
+    const fn7ToSb = [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387, 4_617_949, 4_625_094, 4_629_855, 4_630_569, 4_633_012, 4_634_508, 4_636_329];
+    expect(fn7ToSb).toHaveLength(18);
+    expect(PRECACHE_BUDGET.startBundleRaw - fn7ToSb[0]).toBeLessThanOrEqual(2_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - fn7ToSb[0]).toBeGreaterThan(0);
+    for (const measured of fn7ToSb.slice(1)) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(0);
+    // The phase-2 measurements above the new line (RF-2's, 4,599,310 B, the last): the line stays under each of them.
+    for (const measured of [4_573_615, 4_579_228, 4_585_548, 4_589_675, 4_594_941, 4_599_310]) {
+      expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(0);
+    }
+    // The measurements at or under the line must fit, SB-4's among them (SB-4f: 4,567,371 B).
+    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_567_371]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    // [RF] Row RF-2: the latest is 4,599,310 B.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_599_310).toBeLessThan(10_000);
+    // [SB] Row SB-4f: the latest is 4,567,371 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_567_371).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
+    // [SB] Row SB-4f: the learner precache with the whole `jamo-s1` pack, 11,261,892 B on the SB-4a to SB-4e tree (main c93fae8e9), is at least
+    // 25,000 B under its line (25,437 B; the row asked for 30,000 B, owner decision 2026-11-28: lowered, `learnerPrecacheRaw` does not move).
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw - 11_261_892).toBeGreaterThanOrEqual(25_000);
   });
 
   it('the budget only warns on the deploy build (Cloudflare Workers Builds or Pages), and fails everywhere else', () => {

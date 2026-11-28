@@ -373,7 +373,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // six en strings; the es and ko values are in the locale chunks, which stay far under their ceilings): on top of main (line
   // 4,595,700 B) the release `build:web` (CI=1) measures 4,599,310 B raw / 1,266,376 B gzip, 3,610 B over the line. The line is that
   // measurement plus a 6,000 B margin (one measured raise, as TC-1a and TC-1b did), until the start bundle shrink row SB-4.
-  startBundleRaw: 4_605_310,
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-4f (the line follows the shrink down): SB-4a to SB-4e took 32,200 B raw out of the start bundle
+  // (SB-4a -15,966 romanization lint code off the app graph, SB-4b -1,237 Listen & Pick's contrast branches into the contrast kit, SB-4c
+  // -2,762 the Starting spot row without the report page, SB-4d -9,423 the level check's plan parts as a chunk both doors wait for, SB-4e
+  // -2,812 the lecture sources as a root chunk). On main c93fae8e9, with all five and with RF-2 (+4,369 B, which landed after the SB-4 plan was
+  // measured), the release `build:web` (CI=1) measures 4,567,371 B raw / 1,256,200 B gzip (learner precache 158 files, 11,137,652 B; 11,261,892 B
+  // with the whole `jamo-s1` pack, 25,437 B under `learnerPrecacheRaw`). The line is that measurement plus a 4,029 B margin (decision D5), which
+  // puts it 1,359 B above FN-7's own 4,570,041 B (owner decision 2026-11-28: approved as recommended). From here rows again raise it one measured step each.
+  startBundleRaw: 4_571_400,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
