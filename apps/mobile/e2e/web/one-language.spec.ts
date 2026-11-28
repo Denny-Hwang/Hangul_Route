@@ -82,13 +82,19 @@ async function openProfileDisplay(page: Page): Promise<void> {
   await expect(page.getByTestId('display-sheet')).toBeVisible();
 }
 
-/** A learner on Home with the device's text size at Largest (the record, as the Display sheet writes it). */
+/**
+ * A learner on Home with the device's text size at Largest (the record, as the Display sheet writes it). The install
+ * guide may come up later than the first look (once the app is cached), over the tabs or Profile: the handler closes it
+ * whenever it shows.
+ */
 async function learnerAtLargest(page: Page): Promise<void> {
   await onboardSelf(page, { name: 'Dani', startJourney: false });
   await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
   await page.goto('/');
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
   await closeInstallGuide(page);
+  // Registered after the direct close above, so the two never race for the same Not now.
+  await closeInstallGuideWhenShown(page);
 }
 
 test.describe('one UI language per device (owner items 6 and 7)', () => {
