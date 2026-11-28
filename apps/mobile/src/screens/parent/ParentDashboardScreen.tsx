@@ -35,7 +35,7 @@ import { BiometricShortcutCard } from './BiometricShortcutCard';
 import { OfflineLessonsCard } from './OfflineLessonsCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
-import { startingSpotRow } from '../../logic/placement/report-page';
+import { startingSpotRow } from '../../logic/placement/starting-spot';
 import { practiceTotals } from '../../logic/sessions/session-log';
 import { changePinMode } from '../../logic/profiles/pin-reset';
 import { isParentSessionValid } from '../../logic/profiles/session';

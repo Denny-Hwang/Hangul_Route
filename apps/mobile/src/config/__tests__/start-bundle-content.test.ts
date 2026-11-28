@@ -159,6 +159,16 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     expect(graph.files.has('apps/mobile/src/screens/minigames/ListenPickGame.tsx')).toBe(true);
   });
 
+  it('[SB] SB-4c: the grown-up home reads the Starting spot row without the report page', () => {
+    expect(reached('apps/mobile/src/logic/placement/report-page.ts')).toBeUndefined();
+    expect(graph.files.has('apps/mobile/src/logic/placement/starting-spot.ts')).toBe(true);
+    // Both readers of the row, the dashboard and the route row it draws, take it from its own module.
+    for (const file of ['apps/mobile/src/screens/parent/ParentDashboardScreen.tsx', 'apps/mobile/src/screens/parent/LearningRouteRow.tsx']) {
+      expect(graph.files.has(file), file).toBe(true);
+      expect(codeOf(join(REPO, file)), file).not.toContain('placement/report-page');
+    }
+  });
+
   it('console.ts is not in the start bundle; the twin\'s console-app.ts is', () => {
     expect(reached('packages/i18n/src/messages/en/console.ts')).toBeUndefined();
     expect(graph.files.has('packages/i18n/src/messages/en/console-app.ts')).toBe(true);
