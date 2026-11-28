@@ -4,13 +4,13 @@ import {
   QuestSchema,
   ROMANIZATION_EXCEPTIONS,
   SHAPE_LOOK_ALIKES,
-  checkRomanization,
   routeCatalogOf,
   discoverItemTexts,
   requiredQuestIds,
   type MatchShapeRound,
   type Quest,
 } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { SHAPE_ORIGIN_REGISTRY } from '@hangul-route/design-system/src/scene-art/shape-origin-registry';
 import { allowlistedInstitution } from '@hangul-route/content-schema/lint';
 import { MatchShapeRoundSchema } from '@hangul-route/content-schema/match-shape';

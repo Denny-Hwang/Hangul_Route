@@ -6,7 +6,7 @@
  * matches a finding fails the suite (the list empties itself); a NEW finding is never
  * covered by it. Fixing an entry means removing it here in the same PR.
  */
-import type { RomanizationRule } from '../../index';
+import type { RomanizationRule } from '../../romanization/lint';
 
 export interface KnownFinding {
   file: string;

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { HiddenHeritageRoundSchema, checkRomanization, isOverlayFieldAllowed } from '@hangul-route/content-schema';
+import { HiddenHeritageRoundSchema, isOverlayFieldAllowed } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { findBannedWord } from '@hangul-route/i18n';

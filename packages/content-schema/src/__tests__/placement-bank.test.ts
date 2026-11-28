@@ -23,8 +23,6 @@ import {
   PlacementTemplateSchema,
   RUNG_SYMBOLS,
   RUNG_TABLE,
-  checkJamoRomanization,
-  checkRomanization,
   composeSyllable,
   decomposeSyllable,
   romanizeReviewed,
@@ -37,6 +35,7 @@ import {
   type PlacementStrand,
   type PlacementTemplate,
 } from '../index';
+import { checkJamoRomanization, checkRomanization } from '../romanization/lint';
 import { EAR_RULED_OUT as EAR_RULED_OUT_SCHEMA } from '../hangul/ear-contrasts';
 import { REPO_ROOT } from './helpers/romanization-registry';
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { HADA_BLOCKS } from '../index';
 import {
   COPULA_FORMS,
   COPULA_STEMS,
   GAP_ARTICLES,
   GRAMMATICAL_TAILS,
-  HADA_BLOCKS,
   JUNCTURE_HEADS,
   JUNCTURE_PREFIXES,
   N_INSERTION_HEADS,
@@ -12,7 +12,7 @@ import {
   ROMANIZATION_GAPS,
   detectGaps,
   type RomanizationGap,
-} from '../index';
+} from '../romanization/lint';
 
 /** AMENDMENTS-ROMANIZER-GAPS §3.6 and §3.8: the detector vectors are the spec's. */
 

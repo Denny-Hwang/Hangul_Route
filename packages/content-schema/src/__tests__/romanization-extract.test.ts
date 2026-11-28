@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractKoreanPairs, extractProsePairs } from '../index';
+import { extractKoreanPairs, extractProsePairs } from '../romanization/lint';
 
 const pairs = (src: string) => extractKoreanPairs(src, 'x.ts').map((p) => [p.line, p.kind, p.ko, p.romanization]);
 

@@ -22,13 +22,11 @@ export * from './schemas/learner-level';
 export * from './schemas/onboarding-telemetry';
 export * from './romanization/hangul';
 export * from './romanization/rr';
-export * from './romanization/compare';
-export * from './romanization/extract';
 export * from './romanization/exceptions';
-export * from './romanization/gaps';
+// [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-4a: the romanization lint (compare, extract, gaps, report, the entries' notes) is the
+// `./romanization-lint` subpath, off the barrel the learner app's start bundle carries whole; `HADA_BLOCKS` is in `rr.ts`.
 export * from './romanization/reviewed';
 export * from './romanization/a11y';
-export * from './romanization/report';
 export * from './schemas/ko-text';
 export * from './schemas/scene-art';
 export * from './schemas/story-check';

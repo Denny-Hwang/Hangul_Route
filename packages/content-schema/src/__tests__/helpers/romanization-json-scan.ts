@@ -16,8 +16,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { KNOWN_STORY_FINDINGS, type KnownFinding } from './romanization-baseline';
+import { ROMANIZATION_EXCEPTIONS } from '../../index';
 import {
-  ROMANIZATION_EXCEPTIONS,
   checkConsistency,
   checkFrameRomanization,
   checkJamoRomanization,
@@ -25,9 +25,9 @@ import {
   checkRomanization,
   formatRomanizationFinding,
   type RomanizationEntry,
-  type RomanizationException,
   type RomanizationIssue,
-} from '../../index';
+  type ExceptionEntry,
+} from '../../romanization/lint';
 
 const HANGUL_SYLLABLE = /[가-힣]/;
 const JAMO_ID = /^jamo:/;
@@ -70,7 +70,7 @@ function lineAfter(source: string, token: string, cursor: { at: number }): numbe
 export function scanContentFiles(
   root: string,
   files: readonly string[],
-  exceptions: readonly RomanizationException[] = ROMANIZATION_EXCEPTIONS,
+  exceptions: readonly ExceptionEntry[] = ROMANIZATION_EXCEPTIONS,
   baseline: readonly KnownFinding[] = KNOWN_STORY_FINDINGS,
 ): ScanResult {
   const found: Located[] = [];

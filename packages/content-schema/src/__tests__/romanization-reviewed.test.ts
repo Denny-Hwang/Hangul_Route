@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   ROMANIZATION_EXCEPTIONS,
-  normalizeRomanization,
   romanize,
   romanizeReviewed,
-  type RomanizationException,
+  type ReviewedEntry,
 } from '../index';
+import { normalizeRomanization } from '../romanization/lint';
 
 /** AMENDMENTS-ROMANIZER-GAPS §3.3: one reviewed romanization for every value that is composed. */
 
-const entry = (ko: string, allowed: string[]): RomanizationException => ({ ko, allowed, reason: 'test entry', gap: 'other' });
+const entry = (ko: string, allowed: string[]): ReviewedEntry => ({ ko, allowed });
 
 describe('romanizeReviewed: a whole-string entry', () => {
   it('gives the entry value for the exact string, in the shape romanize() returns', () => {

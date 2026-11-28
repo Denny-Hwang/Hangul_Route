@@ -1,4 +1,5 @@
-import { ClozePickRoundSchema, ListenPickRoundSchema, RealiaSchema, checkRomanization, fillClozeGap } from '@hangul-route/content-schema';
+import { ClozePickRoundSchema, ListenPickRoundSchema, RealiaSchema, fillClozeGap } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { validRounds } from '../../listen-pick';
 import { CLOZE_FIXTURE_REALIA, CLOZE_FIXTURE_ROUNDS, clozeFixtureScope } from '../e2e-rounds';

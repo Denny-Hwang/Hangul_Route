@@ -95,6 +95,18 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     const readers = files.filter((file) => /\.landing\b|\[['"]landing['"]\]/.test(codeOf(file))).map((file) => relative(APP, file));
     expect(readers).toEqual([]);
   });
+
+  it('[SB] SB-4a: the romanization lint is not in it (the `romanization-lint` subpath); the converter and the reviewed values are', () => {
+    for (const file of ['compare', 'extract', 'gaps', 'report', 'exception-notes', 'lint']) {
+      expect(reached(`packages/content-schema/src/romanization/${file}.ts`), file).toBeUndefined();
+    }
+    for (const file of ['rr', 'reviewed', 'exceptions']) {
+      expect(graph.files.has(`packages/content-schema/src/romanization/${file}.ts`), file).toBe(true);
+    }
+    // Metro does not read `exports`, so the subpath would not resolve on the web build: no app source imports it.
+    const readers = webSources().filter((file) => /romanization-lint/.test(codeOf(file))).map((file) => relative(APP, file));
+    expect(readers).toEqual([]);
+  });
 });
 
 /** `console.log` and its siblings: the global, not the dictionary namespace. */
