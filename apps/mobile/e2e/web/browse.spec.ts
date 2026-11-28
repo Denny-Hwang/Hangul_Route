@@ -828,7 +828,11 @@ test('keep switch: on keeps the pass for a new tab, also offline; off removes it
   await expect(home(other)).toBeVisible();
   await expect(other.getByTestId('browse-pointer')).toHaveCount(0);
   await expect(other.getByRole('switch', { name: 'Keep lessons on this device for 7 days, also offline' })).toHaveAttribute('aria-checked', 'true');
-  // Offline, a reload still opens (the service worker serves the app; the kept pass lets it in).
+  // Offline, a reload still opens (the service worker serves the app; the kept pass lets it in). The worker installs
+  // after the first load (it precaches the app), so the network goes off only once it is active and controls this tab.
+  await expect
+    .poll(() => other.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.active && !!navigator.serviceWorker.controller), { timeout: 30_000 })
+    .toBe(true);
   await context.setOffline(true);
   await other.reload();
   await expect(home(other)).toBeVisible();
