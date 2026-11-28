@@ -87,6 +87,12 @@ export const combinedChunkState = (a: ChunkState, b: ChunkState): ChunkState =>
 export interface LazyRoot<P extends object> {
   name: string;
   load: () => Promise<{ default: ComponentType<P> }>;
+  /**
+   * Other chunks `load` waits for with the root's code (the lecture sources both grown-up roots share, row SB-4e):
+   * their bundle names, given up beside the root's when the load times out, and `drop`, which forgets the pending
+   * request so Try again asks for each again.
+   */
+  alongside?: { bundles: readonly string[]; drop: () => void };
 }
 
 /**
@@ -247,6 +253,8 @@ export function lessonContentBindings({
       const timer = setTimeout(() => {
         reject(new RootChunkTimeout(root.name, rootTimeoutMs));
         abandon?.(root.name);
+        for (const bundle of root.alongside?.bundles ?? []) abandon?.(bundle);
+        root.alongside?.drop();
       }, rootTimeoutMs);
       root.load().then(
         (mod) => {

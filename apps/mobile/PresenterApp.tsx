@@ -22,9 +22,8 @@ import { Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { canPlayKorean, type AudioCapability } from './src/logic/audio/capability';
-import { lectureBundle, soundCheckSpec } from './src/logic/lecture/content';
 import { presenterListsEpisode } from './src/logic/lecture/manifest-listing';
-import { lectureStories } from './src/logic/lecture/sources/story';
+import { useLectureSources } from './src/screens/lecture-sources-entry';
 import { readToMePlan } from './src/logic/lecture/story-slides';
 import { createAudioRunner, type RunnerResult } from './src/logic/story/audio-runner';
 import { atLessonEnd, finishesOnLeave, initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
@@ -507,6 +506,7 @@ function Presenter(): ReactElement {
   const reviewContent = useDeckContent(reviewBlocks, slidesIn);
   // The slide content speaks the slide language (the deck's explicit one, else the device's); built again with what
   // each load brought in, so nothing read before a chunk arrived (a story's placeholder) stays in it.
+  const { lectureBundle, lectureStories, soundCheckSpec } = useLectureSources();
   const bundle = useMemo(() => lectureBundle(slidesIn), [slidesIn, deckContent.version, reviewContent.version, packs]);
   // Story scenes for the story slides: art, theme, accessible name and Read-to-me's voice (PR 11).
   const stories = useMemo(() => lectureStories(slidesIn), [slidesIn, deckContent.version, packs]);

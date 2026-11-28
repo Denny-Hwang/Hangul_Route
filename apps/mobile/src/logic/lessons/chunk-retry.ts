@@ -3,12 +3,13 @@
  * network or a service worker still waking usually answers a moment later, so a failed load is asked again after a short
  * backoff (`CHUNK_RETRY_DELAYS_MS`: twice, 0.4 s then 1.5 s). Two failures are never asked again: a chunk of another
  * build (a retry reads the same wrong file; the page reload for a newer build handles it) and a hung request (it already
- * waited the whole timeout, and the screen's own Try again asks again). Offline, the crash screen comes about two
+ * waited the whole timeout, and the screen's own Try again asks again; a chunk door's load that the door dropped after
+ * such a timeout is the same case, `ChunkDoorDropped`, row SB-4e). Offline, the crash screen comes about two
  * seconds later than before, still behind the calm waiting header.
  */
 export const CHUNK_RETRY_DELAYS_MS: readonly number[] = [400, 1500];
 
-const NEVER_RETRIED = new Set(['LessonChunkMismatch', 'LessonChunkTimeout', 'RootChunkTimeout']);
+const NEVER_RETRIED = new Set(['LessonChunkMismatch', 'LessonChunkTimeout', 'RootChunkTimeout', 'ChunkDoorDropped']);
 
 /** True for a failure another try can mend: not a chunk of a newer build, not a timeout. */
 export function isRetryableChunkError(error: unknown): boolean {

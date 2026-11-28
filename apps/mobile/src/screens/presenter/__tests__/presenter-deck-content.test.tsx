@@ -1,6 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import { act } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { lessonContent } from '../../../content/lessons';
 import { storyContent } from '../../../content/stories';
 import { buttonsNamed, byTestId, press, render } from '../../../test-support/render';
@@ -41,6 +41,12 @@ vi.mock('react-native-gesture-handler', async () => {
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 
 import PresenterApp from '../../../../PresenterApp';
+import { lectureSourcesDoor } from '../../lecture-sources-entry';
+
+/** The grown-up roots' loader puts the lecture sources in before a root draws (SB-4e); a test that draws a root's parts does the same. */
+beforeAll(async () => {
+  await lectureSourcesDoor.load();
+});
 
 type Ensure = (ids: readonly string[]) => Promise<void>;
 let cells: MockInstance<Ensure>;

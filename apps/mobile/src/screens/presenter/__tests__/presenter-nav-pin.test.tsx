@@ -73,6 +73,12 @@ vi.mock('react-native-gesture-handler', async () => {
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 
 import PresenterApp from '../../../../PresenterApp';
+import { lectureSourcesDoor } from '../../lecture-sources-entry';
+
+/** The grown-up roots' loader puts the lecture sources in before a root draws (SB-4e); a test that draws a root's parts does the same. */
+beforeAll(async () => {
+  await lectureSourcesDoor.load();
+});
 
 const before = { window: Dimensions.get('window'), screen: Dimensions.get('screen') };
 beforeAll(() => {

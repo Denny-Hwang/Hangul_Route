@@ -243,6 +243,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(ROOT_CHUNKS).toEqual([
       { name: 'PresenterApp', marker: 'root-chunk:presenter' },
       { name: 'BrowseApp', marker: 'root-chunk:browse' },
+      // [SB] row SB-4e: the lecture sources both roots share.
+      { name: 'lecture-sources-chunk', marker: 'root-chunk:lecture-sources' },
     ]);
     // [GU] Row GU-3: the guest's first quest stack.
     // [GU] Row GU-5: the grown-up side of an unsaved first quest.
@@ -305,6 +307,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
     expect(read('PresenterApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[0].marker}';`);
     expect(read('BrowseApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[1].marker}';`);
+    // [SB] row SB-4e: reached only through the literal import() of the door the grown-up roots' loader waits for.
+    expect(read('src/logic/lecture/lecture-sources-chunk.ts')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[2].marker}';`);
+    expect(read('src/screens/lecture-sources-entry.ts')).toContain("import('../logic/lecture/lecture-sources-chunk')");
     expect(read('src/content/locale-chunks/locale-es.ts')).toContain(`= '${LOCALE_CHUNKS[0].marker}';`);
     expect(read('src/content/locale-chunks/locale-ko.ts')).toContain(`= '${LOCALE_CHUNKS[1].marker}';`);
     expect(read('src/navigation/guest-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[0].marker}';`);
@@ -530,6 +535,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(markedChunkProblems({ bundles: [start, es, ko], precached: all([start, es, ko]) })).toEqual([
       'PresenterApp has no web bundle: the chunk is missing from the build',
       'BrowseApp has no web bundle: the chunk is missing from the build',
+      'lecture-sources-chunk has no web bundle: the chunk is missing from the build',
       'guest-chunk has no web bundle: the chunk is missing from the build',
       'guest-keep-chunk has no web bundle: the chunk is missing from the build',
       'cell-check-chunk has no web bundle: the chunk is missing from the build',

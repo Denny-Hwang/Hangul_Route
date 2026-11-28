@@ -11,7 +11,7 @@ import {
 } from '@hangul-route/content-schema';
 import { episodeById, jamoConsonants, jamoVowels, questById } from '../../content';
 import { localizeEpisode, localizeQuest, localizeTitle } from '../content-locale';
-import { lectureBundle } from './content';
+import { lectureSourcesNow } from '../../screens/lecture-sources-entry';
 import { expandDeck, type LectureBundle } from './deck-builder';
 
 /**
@@ -118,7 +118,7 @@ export function blockTitleIn(locale: UiLocale, catalog: Catalog = CATALOG): (blo
 /** The presenter's chooser groups in `locale`: Stage 1 to 7, Stories, Word topics (letter sets inside Stage 1). */
 export function presenterChooserGroups(locale: UiLocale, labels: ChooserLabels, input: PresenterChooserInput = {}): ChooserGroup[] {
   const catalog = input.catalog ?? CATALOG;
-  const bundle = input.bundle ?? lectureBundle(locale);
+  const bundle = input.bundle ?? lectureSourcesNow().lectureBundle(locale);
   const shows = (story: string): boolean => {
     const found = bundle.story?.(story);
     return found !== undefined && found !== 'not-ready';

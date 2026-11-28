@@ -15,6 +15,7 @@ import { PresenterHomeScreen, type PresenterHomeProps } from '../HomeScreen';
 import { presetColumns } from '../PresetCards';
 import { PresenterViewProvider } from '../presenter-context';
 import { StartScreen, type StartScreenProps } from '../StartScreen';
+import { lectureSourcesDoor } from '../../lecture-sources-entry';
 
 /**
  * The presenter home of AMENDMENTS-LECTURE-V2 row LV-3 (sections 4, 7 item 3, 10 and 18; design
@@ -22,6 +23,9 @@ import { StartScreen, type StartScreenProps } from '../StartScreen';
  * Recent beside or below, Customize folded with the grouped chooser (tabs, tri-state episodes,
  * Show more, Your lesson, the sticky footer), the one Back, and the preview on the start screen.
  */
+
+/** The grown-up roots' loader puts the lecture sources in before a root draws (SB-4e); this file calls the chooser at its top level. */
+await lectureSourcesDoor.load();
 
 const en = getMessages('en');
 const p = en.learner.presenter;
