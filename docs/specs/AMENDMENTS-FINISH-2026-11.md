@@ -54,6 +54,8 @@ In order, each its own commit with a bundle-content test: the placement bank beh
 *Done when:* each step's bundle test passes, the offline e2e passes against a local release build, and the start bundle before and after is recorded.
 > **Amended by AMENDMENTS-START-BUNDLE-2026-11 (SB-1 to SB-3, 2026-11-24).** The learner web English twin no longer keeps all of `console`: `index.web.ts` takes the six subtrees a web source reads from `en/console-app.ts` (same paths and values; `en/console.ts` and the ledger unchanged), the e2e hooks and screens reach `root.tsx` only through a generated registry that is null in a release build, and `startBundleRaw` comes down from 4,638,500 B to 4,538,000 B (measured 4,533,869 B).
 
+> **Amended again by AMENDMENTS-START-BUNDLE-2026-11 (SB-4, 2026-11-28).** The phase-2 growth was cut back (SB-4a to SB-4e, -32,200 B raw) and `startBundleRaw` comes down from 4,605,310 B to 4,571,400 B (measured 4,567,371 B; 1,359 B above FN-7's own 4,570,041 B, because RF-2 landed after SB-4 was measured).
+
 **FN-8 The active tab has a mark that is not only colour.**
 The selected tab in the learner tab bar shows a shape mark (for example a bar or a filled pill behind the icon) as well as its colour, in every theme and at every text size. Design pass first (wireframe, mock).
 *Done when:* a component test shows the mark on the selected tab only; contrast is checked; screenshots before and after.
