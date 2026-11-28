@@ -7,14 +7,13 @@ import { View } from 'react-native';
 import { routeEnabledFor } from '../../config/flags';
 import { useLocale } from '../../i18n/use-messages';
 import { bandLabel } from '../../logic/placement/copy';
-import { draftOfOffer, grownUpWarningText, grownUpWarnings, type PlanOffer } from '../../logic/placement/plan-offer';
+import type { PlanOffer } from '../../logic/placement/plan-offer';
 import { PACE_IDS, proposalSkippedEvent, proposedEvent } from '../../logic/route/proposal-flow';
 import { track } from '../../platform/telemetry';
-import { acceptPlanOffer, applyPlanUpdate, keepPlan, loadPlanOffer } from '../../store/plan-offer-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { useAccessTier } from '../../store/tier-store';
-import { PaceChips } from '../placement/PlanParts';
+import { usePlanParts } from '../placement/plan-parts-entry';
 import { RadioTile } from '../placement/parts';
 
 /**
@@ -45,6 +44,8 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
   const [offer, setOffer] = useState<PlanOffer | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(null);
   const enabled = routeEnabledFor(useLocale());
+  // The plan parts are a chunk the report's door waited for (SB-4d).
+  const { loadPlanOffer } = usePlanParts();
 
   // Read again when the results, the plan or the tier change (a saved start, a plan made elsewhere).
   useEffect(() => {
@@ -56,7 +57,7 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
     return () => {
       live = false;
     };
-  }, [profileId, snapshot, tier, enabled]);
+  }, [profileId, snapshot, tier, enabled, loadPlanOffer]);
 
   if (!enabled) return null;
   const m = messages.caregiver.placementReport.plan;
@@ -107,6 +108,7 @@ function NewPlanCard({
 }): ReactElement | null {
   const m = messages.caregiver.placementReport.plan;
   const t = messages.learner.weeklyPlan.proposal;
+  const { acceptPlanOffer, draftOfOffer, grownUpWarnings, grownUpWarningText, PaceChips } = usePlanParts();
   const [pace, setPace] = useState<PaceId>(offer.pace);
   const [picked, setPicked] = useState<DurationId | null>(null);
   // A fresh offer (a tier or result change) may lack the chip picked: fall back to its own default.
@@ -123,7 +125,7 @@ function NewPlanCard({
   const proposal = offer.byPace[pace];
   // Until the grown-up picks a length, the suggested one follows the pace.
   const length = picked ?? proposal?.defaultId ?? '4-week';
-  const draft = useMemo(() => (proposal === undefined ? null : draftOfOffer(proposal, length)), [proposal, length]);
+  const draft = useMemo(() => (proposal === undefined ? null : draftOfOffer(proposal, length)), [proposal, length, draftOfOffer]);
   if (proposal === undefined) return null;
   const level = proposal.params.level;
   const warnings = grownUpWarnings(draft);
@@ -236,6 +238,7 @@ function UpdateCard({
   onDone: (outcome: Outcome) => void;
 }): ReactElement {
   const m = messages.caregiver.placementReport.plan;
+  const { applyPlanUpdate, keepPlan } = usePlanParts();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const acting = useRef(false);

@@ -4,13 +4,16 @@ import type { RootStackParamList } from '../../navigation/types';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
 import { retryLoad } from '../../logic/lessons/chunk-retry';
+import { withPlanParts } from '../placement/plan-parts-entry';
 
 /*
  * The start bundle's door to the grown-up reports (F-CURR-002 section 10): the learner report (`LearnerReport`, behind
  * `flags.reportsEnabled`) and the level-check report (`PlacementReport`) are a chunk of their own
  * (`./reports-chunk.tsx`, marker `screen-chunk:reports`), reached only through the literal `import()` below and
  * precached like every chunk, so they open offline. The route waits on the lesson waiting screen until the chunk is in
- * and offers the crash screen's Try again when it cannot load.
+ * and offers the crash screen's Try again when it cannot load. The chunk loads together with the plan parts it shares with
+ * the level check (`../placement/plan-parts-entry.ts`, SB-4d) under one retry level; the learner report waits for them
+ * too, though it never draws them (both are precached, so there is no new frame).
  */
 
 type Chunk = typeof import('./reports-chunk');
@@ -18,7 +21,7 @@ let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= retryLoad(() => import('./reports-chunk')).then(
+  loading ??= retryLoad(withPlanParts(() => import('./reports-chunk'))).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

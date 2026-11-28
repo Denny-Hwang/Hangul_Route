@@ -1,6 +1,6 @@
 import type { PlacementResult, Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../../content/placement.generated';
 import { gate, placementResult } from '../../../logic/placement/__tests__/fixtures';
 import { useProfileStore } from '../../../store/profile-store';
@@ -20,6 +20,11 @@ vi.mock('../../placement/use-placement-bank', () => ({
 vi.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: vi.fn() }), useFocusEffect: () => undefined }));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => true) }));
 const { PlacementReportScreen } = await import('../PlacementReportScreen');
+const { planPartsDoor } = await import('../../placement/plan-parts-entry');
+// The report's door waits for the plan parts before the screen draws (SB-4d); the bank hook is still this file's mock.
+beforeAll(async () => {
+  await planPartsDoor.load();
+});
 
 const m = getMessages('en').caregiver.placementReport;
 const ID = 'profile:sam';

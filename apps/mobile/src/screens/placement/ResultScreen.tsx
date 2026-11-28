@@ -24,16 +24,14 @@ import { stages, themes } from '../../content/stages';
 import { localizeQuest, localizeStage } from '../../logic/content-locale';
 import { cellLook, startCell } from '../../logic/placement/cell-look';
 import { bandLabel } from '../../logic/placement/copy';
-import { stripLineOf } from '../../logic/placement/plan-offer';
 import { stripSkipped, withPlanKept, withPlanMade, type ResultLink, type ResultPrimary } from '../../logic/placement/result-view';
 import { PACE_IDS } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
-import { keepPlan } from '../../store/plan-offer-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { usePlacement, type FinishedCheck, type ResultAction } from './context';
 import { LinkButton } from '../../components/LinkButton';
-import { PlanStrip, PlanUpdateCard } from './PlanParts';
+import { usePlanParts } from './plan-parts-entry';
 
 /**
  * Result (F-PLC-001 section 3.1 step 7, wireframe placement G): Hoya
@@ -72,6 +70,8 @@ const LINK_ACTION: Readonly<Record<ResultLink, ResultAction>> = {
 function ResultView({ check }: { check: FinishedCheck }): ReactElement {
   const { m, flow, say, screenReader, onResultAction, acceptPlan, updatePlan, profileId } = usePlacement();
   const copy = m.learner.placement.result;
+  // The plan parts are a chunk the level check's door waited for (SB-4d).
+  const { keepPlan, stripLineOf, PlanStrip, PlanUpdateCard } = usePlanParts();
   // A plan made meanwhile (Change, then the proposal screen), or the proposal screen's Not now
   // after this result, replaces the strip with Start.
   const planMade = useProgressStore((s) => activeSelfRoute(s.byProfile[profileId]) !== null);

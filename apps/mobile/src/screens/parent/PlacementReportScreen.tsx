@@ -26,7 +26,6 @@ import { episodesWithVolumes, jamoAll, questsAll, stages } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeStage } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
-import { placementRouteCatalog } from '../../logic/placement/catalog';
 import { bandLabel } from '../../logic/placement/copy';
 import { overrideAppliedEvent } from '../../logic/placement/events';
 import {
@@ -47,7 +46,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { LinkButton } from '../../components/LinkButton';
 import { RadioTile } from '../placement/parts';
-import { usePlacementBank } from '../placement/use-placement-bank';
+import { usePlanParts } from '../placement/plan-parts-entry';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
 import { SuggestedPlanCard } from './SuggestedPlanCard';
@@ -73,8 +72,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PlacementReport'>;
 type ReportMessages = Messages['caregiver']['placementReport'];
 type PillTone = NonNullable<ComponentProps<typeof Pill>['tone']>;
 
-// The cells' later volumes too (F-CURR-002 row CM-40): a level below a Volume 2's stage places it out like Volume 1.
-const CATALOG = placementRouteCatalog(questsAll, episodesWithVolumes);
 const STRAND_GATES = new Map<PlacementStrand, readonly ReportRung['gate'][]>();
 for (const spec of RUNG_TABLE) STRAND_GATES.set(spec.strand, [...(STRAND_GATES.get(spec.strand) ?? []), spec.gate]);
 
@@ -117,7 +114,7 @@ function rungLine(m: ReportMessages, rung: ReportRung): string {
  * it cannot load.
  */
 export function PlacementReportScreen(props: Props): ReactElement {
-  const { bank, failed, retry } = usePlacementBank();
+  const { bank, failed, retry } = usePlanParts().usePlacementBank();
   const lookup = useMemo(() => (bank === null ? null : bankLookup(bank.bank)), [bank]);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (lookup === null) return <LessonWaiting />;
@@ -140,17 +137,21 @@ function PlacementReport({ route, navigation, lookup }: Props & { lookup: BankLo
     void useProgressStore.getState().hydrate(profileId);
   }, [profileId]);
 
+  // The cells' later volumes too (F-CURR-002 row CM-40): a level below a Volume 2's stage places it out like Volume 1.
+  // The catalog is a plan part (a chunk the report's door waits for, SB-4d), so it is built here, not at module load.
+  const { placementRouteCatalog } = usePlanParts();
+  const catalog = useMemo(() => placementRouteCatalog(questsAll, episodesWithVolumes), [placementRouteCatalog]);
   const page = useMemo(() => {
     const completed = new Set((snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId));
     return reportPage({
       placements: snapshot?.placements ?? [],
-      catalog: CATALOG,
+      catalog,
       completedQuestIds: completed,
       isEntitled: (stage) => isStageEntitled(stage, tier),
       profileType: profile === null ? 'child' : effectiveLearnerType(profile),
       lookup,
     });
-  }, [snapshot, profile, tier, lookup]);
+  }, [snapshot, profile, tier, lookup, catalog]);
 
   const questTitle = (id: string): string => {
     const quest = questsAll.find((q) => q.id === id);

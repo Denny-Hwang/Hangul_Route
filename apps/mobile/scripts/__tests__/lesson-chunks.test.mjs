@@ -283,6 +283,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'contrast-chunk', marker: 'screen-chunk:contrast' },
       // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE row TC-1b: the trace page of Discover.
       { name: 'discover-trace-chunk', marker: 'screen-chunk:discover-trace' },
+      // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-4d: the level check's plan parts, shared by the level check and the reports.
+      { name: 'plan-parts-chunk', marker: 'screen-chunk:plan-parts' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -369,6 +371,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       ['src/screens/minigames/realia-read-chunk.tsx', 'REALIA_READ_CHUNK', 'src/screens/minigames/realia-read-entry.tsx'],
       ['src/screens/minigames/contrast-chunk.tsx', 'CONTRAST_CHUNK', 'src/screens/minigames/contrast-entry.ts'],
       ['src/screens/quest/discover-trace-chunk.tsx', 'DISCOVER_TRACE_CHUNK', 'src/screens/quest/discover-trace-entry.tsx'],
+      // [SB] SB-4d: the plan parts, reached only through the literal import() of the door both screen doors call.
+      ['src/screens/placement/plan-parts-chunk.tsx', 'PLAN_PARTS_CHUNK', 'src/screens/placement/plan-parts-entry.ts'],
     ];
     doors.forEach(([chunk, name, entry], i) => {
       const { marker } = SCREEN_CHUNKS[18 + i];
@@ -548,7 +552,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
       'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
-      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement', 'realia-read', 'contrast', 'discover-trace'].map(
+      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement', 'realia-read', 'contrast', 'discover-trace', 'plan-parts'].map(
         (name) => `${name}-chunk has no web bundle: the chunk is missing from the build`,
       ),
     ]);

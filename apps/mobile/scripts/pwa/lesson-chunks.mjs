@@ -677,6 +677,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // its canvas pulls the gesture handler and the stroke tables, so the start bundle carries none of it; the step asks for the
   // chunk as it opens and, until it is in, draws its pinned buttons alone.
   Object.freeze({ name: 'discover-trace-chunk', marker: 'screen-chunk:discover-trace' }),
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 SB-4d: the level check's plan parts (`src/screens/placement/plan-parts-chunk.tsx`: the
+  // plan offer and its store, the plan strip and cards, the bank hook, the route catalog), shared by `placement-chunk` and
+  // `reports-chunk` and reached only through the literal `import()` of `src/screens/placement/plan-parts-entry.ts`; both
+  // doors load it together with their own chunk under one retry level, so no screen draws a frame of its own for it.
+  Object.freeze({ name: 'plan-parts-chunk', marker: 'screen-chunk:plan-parts' }),
 ]);
 
 /**

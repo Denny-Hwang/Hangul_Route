@@ -24,6 +24,8 @@ vi.mock('../reports-chunk', async () => {
     },
   };
 });
+// The plan parts the door waits for with the chunk (SB-4d) are a stand-in too; `plan-parts-doors.test.tsx` covers the wait.
+vi.mock('../../placement/plan-parts-chunk', () => ({}));
 const { LearnerReportRoute, PlacementReportRoute } = await import('../reports-entry');
 
 const mounted: ReactTestRenderer[] = [];
