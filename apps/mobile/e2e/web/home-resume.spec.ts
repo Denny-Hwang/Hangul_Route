@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardSelf, passDiscover } from './helpers';
+import { onboardSelf, passDiscover, waitForSavedRunStep } from './helpers';
 import { closeInstallGuide } from './text-fit';
 
 /**
@@ -46,6 +46,9 @@ test.describe('Home says that a lesson goes on, and keeps a way to start it agai
     await page.getByRole('button', { name: en.learner.quest.continue.cta, exact: true }).click();
     await passDiscover(page);
     await expect(playGame(page)).toBeVisible();
+    // The run is kept on the device at each step change by an async write (AU-12): the reload waits until step 3 (index
+    // 2) is stored, as a learner who leaves after a moment would, instead of racing the write.
+    await waitForSavedRunStep(page, 'quest:stage1-letters-q1', 2);
 
     await openHome(page);
     await expect(start(page)).toContainText(next.continue.cta);
