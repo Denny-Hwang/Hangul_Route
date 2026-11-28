@@ -4,11 +4,11 @@ import {
   a11yRomanization,
   RealiaReadRoundSchema,
   RealiaSchema,
-  checkRomanization,
   realiaReadIssues,
   type KoText,
   type RealiaReadRound,
 } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { layout } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';

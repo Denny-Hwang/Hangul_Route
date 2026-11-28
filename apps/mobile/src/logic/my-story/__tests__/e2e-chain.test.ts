@@ -1,4 +1,5 @@
-import { MyStoryFramesSchema, checkRomanization, fillFrame, romanize } from '@hangul-route/content-schema';
+import { MyStoryFramesSchema, fillFrame, romanize } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { FIXTURE_CHAIN, FIXTURE_CHAIN_LONG } from '../e2e-chain';
 

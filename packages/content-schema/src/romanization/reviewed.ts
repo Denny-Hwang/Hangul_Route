@@ -8,7 +8,7 @@
  * entry whose `ko` has no whitespace) gives that entry's first allowed value; every other token
  * is read by the converter. With no matching entry the result is `romanize(text)`.
  */
-import { ROMANIZATION_EXCEPTIONS, type RomanizationException } from './exceptions';
+import { ROMANIZATION_EXCEPTIONS, type ReviewedEntry } from './exceptions';
 import { romanizeWord } from './rr';
 
 /** The characters `romanize()` removes from a token before it is read (kept equal to rr.ts; a test pins it). */
@@ -41,10 +41,10 @@ interface EntryIndex {
   word: ReadonlyMap<string, string>;
 }
 
-const INDEXES = new WeakMap<readonly RomanizationException[], EntryIndex>();
+const INDEXES = new WeakMap<readonly ReviewedEntry[], EntryIndex>();
 
 /** The first entry for a key wins; an entry with no allowed value is ignored. */
-function indexOf(exceptions: readonly RomanizationException[]): EntryIndex {
+function indexOf(exceptions: readonly ReviewedEntry[]): EntryIndex {
   const cached = INDEXES.get(exceptions);
   if (cached !== undefined) return cached;
   const whole = new Map<string, string>();
@@ -70,7 +70,7 @@ function indexOf(exceptions: readonly RomanizationException[]): EntryIndex {
  */
 export function romanizeReviewed(
   text: string,
-  exceptions: readonly RomanizationException[] = ROMANIZATION_EXCEPTIONS,
+  exceptions: readonly ReviewedEntry[] = ROMANIZATION_EXCEPTIONS,
 ): { text: string; unknown: string[] } {
   const index = indexOf(exceptions);
   const whole = index.whole.get(wholeEntryKey(text));

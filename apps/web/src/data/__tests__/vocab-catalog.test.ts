@@ -1,4 +1,4 @@
-import { checkRomanization } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { consoleGloss, consoleWord } from '../../lib/console/vocab-words';
 import { VOCAB_CATALOG } from '../vocab-catalog';

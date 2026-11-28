@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
-  JAMO_NAME_VALUES,
   JAMO_SOUND_VALUES,
   ROMANIZATION_EXCEPTIONS,
   a11yRomanization,
+  romanizeWord,
+  type RomanizationException,
+} from '../index';
+import {
+  JAMO_NAME_VALUES,
   checkConsistency,
   checkExceptions,
   checkFrameRomanization,
   checkJamoRomanization,
   checkProse,
   checkRomanization,
+  entryWithNote,
   normalizeRomanization,
-  romanizeWord,
-  type RomanizationException,
+  type ExceptionEntry,
   type RomanizationGap,
-} from '../index';
+} from '../romanization/lint';
 
-const rules = (ko: string, given: string, exceptions?: readonly RomanizationException[]): string[] =>
+const rules = (ko: string, given: string, exceptions?: readonly ExceptionEntry[]): string[] =>
   checkRomanization(ko, given, exceptions ? { exceptions } : undefined).map((i) => i.rule);
 
 describe('normalizeRomanization', () => {
@@ -140,7 +144,7 @@ describe('checkRomanization', () => {
 
   it('every shipped entry fails without the list (a confirmation only for the detector) and passes with it', () => {
     expect(ROMANIZATION_EXCEPTIONS.length).toBeGreaterThan(0);
-    for (const e of ROMANIZATION_EXCEPTIONS) {
+    for (const e of ROMANIZATION_EXCEPTIONS.map(entryWithNote)) {
       expect(e.reason.trim(), e.ko).not.toBe('');
       const without = rules(e.ko, e.allowed[0] ?? '', []);
       if (e.reason.includes('the entry only confirms')) {
@@ -210,7 +214,7 @@ describe('R9 romanization-gap (AMENDMENTS-ROMANIZER-GAPS §3.5, §3.8)', () => {
     const [found] = checkRomanization('그건 못해요.', 'geugeon mothaeyo', none);
     expect(found).toMatchObject({ rule: 'romanization-gap', severity: 'error', ko: '그건 못해요.', given: 'geugeon mothaeyo' });
     expect(found?.message).toBe(
-      "못해요: predicate-h (로마자 표기법 제3장 제1항 4, 표준 발음법 제12항 붙임 2); the converter cannot tell. Check 표준국어대사전 and add { ko: '못해요', allowed: ['…'], gap: 'predicate-h', reason: '…' } to ROMANIZATION_EXCEPTIONS",
+      "못해요: predicate-h (로마자 표기법 제3장 제1항 4, 표준 발음법 제12항 붙임 2); the converter cannot tell. Check 표준국어대사전 and add { ko: '못해요', allowed: ['…'] } to ROMANIZATION_EXCEPTIONS (exceptions.ts) and { gap: 'predicate-h', reason: '…' } under '못해요' to ROMANIZATION_EXCEPTION_NOTES (exception-notes.ts)",
     );
   });
 

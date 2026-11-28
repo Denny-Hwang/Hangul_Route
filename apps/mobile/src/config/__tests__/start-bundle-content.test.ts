@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { REPO, startGraph } from '../../test-support/start-graph';
+import { REPO, startGraph, staticSpecifiers } from '../../test-support/start-graph';
 
 /**
  * AMENDMENTS-FINISH-2026-11 FN-7 (finding F4): what the web start bundle carries, read from the sources the way the
@@ -95,6 +95,18 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     const readers = files.filter((file) => /\.landing\b|\[['"]landing['"]\]/.test(codeOf(file))).map((file) => relative(APP, file));
     expect(readers).toEqual([]);
   });
+
+  it('[SB] SB-4a: the romanization lint is not in it (the `romanization-lint` subpath); the converter and the reviewed values are', () => {
+    for (const file of ['compare', 'extract', 'gaps', 'report', 'exception-notes', 'lint']) {
+      expect(reached(`packages/content-schema/src/romanization/${file}.ts`), file).toBeUndefined();
+    }
+    for (const file of ['rr', 'reviewed', 'exceptions']) {
+      expect(graph.files.has(`packages/content-schema/src/romanization/${file}.ts`), file).toBe(true);
+    }
+    // Metro does not read `exports`, so the subpath would not resolve on the web build: no app source imports it.
+    const readers = webSources().filter((file) => /romanization-lint/.test(codeOf(file))).map((file) => relative(APP, file));
+    expect(readers).toEqual([]);
+  });
 });
 
 /** `console.log` and its siblings: the global, not the dictionary namespace. */
@@ -159,6 +171,24 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     expect(graph.files.has('apps/mobile/src/screens/minigames/ListenPickGame.tsx')).toBe(true);
   });
 
+  it("[SB] SB-4b: Listen & Pick's contrast branches ride in the contrast kit; the board keeps its calls", () => {
+    const board = codeOf(join(REPO, 'apps/mobile/src/screens/minigames/ListenPickGame.tsx'));
+    // What the board wrote inline is gone: the mixed-scope draw, the compare player's gap loop, the kind line and its Hear it button.
+    for (const gone of ['function mixedRounds', 'compareGapMs', 'contrast-kind-', 'contrast-hear-', 'compareItems(', 'contrastKindLine', 'memberGloss', 'contrastNote', 'contrastRoundPlayable', 'seededRandom']) {
+      expect(board, gone).not.toContain(gone);
+    }
+    // The kit holds them, and the modules they live in are reached from the chunk only.
+    const kit = codeOf(join(REPO, 'apps/mobile/src/screens/minigames/contrast-chunk.tsx'));
+    for (const name of ['mixedRounds', 'playCompare', 'missLine', 'compareRow', 'optionNaming', 'laterUnplayable', 'laterContrast', 'OptionExtras']) {
+      expect(kit, name).toContain(name);
+    }
+    expect(reached('apps/mobile/src/screens/minigames/ContrastOptionExtras.tsx')).toBeUndefined();
+    expect(reached('apps/mobile/src/logic/listen-pick-contrast.ts')).toBeUndefined();
+    // The start bundle keeps the flow's own contrast branches and the door; the compare chain's refs are the board's.
+    expect(graph.files.has('apps/mobile/src/logic/listen-pick-flow.ts')).toBe(true);
+    expect(board).toContain('compareRun');
+  });
+
   it('[SB] SB-4c: the grown-up home reads the Starting spot row without the report page', () => {
     expect(reached('apps/mobile/src/logic/placement/report-page.ts')).toBeUndefined();
     expect(graph.files.has('apps/mobile/src/logic/placement/starting-spot.ts')).toBe(true);
@@ -166,6 +196,58 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     for (const file of ['apps/mobile/src/screens/parent/ParentDashboardScreen.tsx', 'apps/mobile/src/screens/parent/LearningRouteRow.tsx']) {
       expect(graph.files.has(file), file).toBe(true);
       expect(codeOf(join(REPO, file)), file).not.toContain('placement/report-page');
+    }
+  });
+
+  it('[SB] SB-4e: the lecture sources both grown-up roots share are a root chunk of their own, behind a start door', () => {
+    const sources = [
+      'apps/mobile/src/logic/lecture/content.ts',
+      'apps/mobile/src/logic/lecture/sources/story.ts',
+      'apps/mobile/src/logic/lecture/sources/vocab.ts',
+      'apps/mobile/src/logic/lecture/lecture-sources-chunk.ts',
+    ];
+    for (const file of sources) expect(reached(file), file).toBeUndefined();
+    expect(graph.chunks.has('apps/mobile/src/logic/lecture/lecture-sources-chunk.ts')).toBe(true);
+    for (const file of sources) expect(graph.shared.has(file), file).toBe(false);
+    // The door is the start bundle's, and `screens/app-roots.tsx` (the roots' loader) is what reaches it.
+    expect(graph.files.has('apps/mobile/src/screens/lecture-sources-entry.ts')).toBe(true);
+    expect(codeOf(join(APP, 'src', 'screens', 'app-roots.tsx'))).toContain('lectureSourcesDoor.load()');
+    // D7: the grown-up Lecture card stays in the start bundle, with the next-lesson link it computes inside the tap that
+    // opens the presenter tab (an await before it would let a pop-up blocker stop the tab). None of it waits on the door.
+    for (const file of ['apps/mobile/src/screens/parent/LectureCard.tsx', 'apps/mobile/src/logic/lecture/shell.ts']) expect(graph.files.has(file), file).toBe(true);
+    expect(codeOf(join(APP, 'src', 'screens', 'parent', 'LectureCard.tsx'))).not.toMatch(/lecture-sources|lectureSources/);
+  });
+
+  it('[SB] SB-4e: only the chunk imports the lecture sources; the roots read them through the door, at call time', () => {
+    const rel = (file: string): string => relative(APP, file).split(sep).join('/');
+    const modules = ['src/logic/lecture/content.ts', 'src/logic/lecture/sources/story.ts', 'src/logic/lecture/sources/vocab.ts'].map((f) => join(APP, f));
+    const owners = new Set([...modules, join(APP, 'src/logic/lecture/lecture-sources-chunk.ts')]);
+    // A static, non-type import of one of the three modules (resolved from the importing file) would pull it back in.
+    const offenders = webSources()
+      .filter((file) => !owners.has(file))
+      .filter((file) => staticSpecifiers(readFileSync(file, 'utf8')).some((spec) => spec.startsWith('.') && modules.includes(`${resolve(dirname(file), spec)}.ts`)))
+      .map(rel);
+    expect(offenders).toEqual([]);
+    // The readers of the door are the loader and the grown-up roots' own modules, never a start-bundle screen.
+    const readers = webSources()
+      .filter((file) => /lecture-sources-entry/.test(codeOf(file)))
+      .map(rel)
+      .sort();
+    expect(readers).toEqual([
+      'PresenterApp.tsx',
+      'src/logic/lecture/quick-source.ts',
+      'src/screens/app-roots.tsx',
+      'src/screens/browse/BrowseItemScreen.tsx',
+      'src/screens/presenter/overlays/BlankOverlay.tsx',
+    ]);
+    const inRoots = readers.filter((f) => f !== 'src/screens/app-roots.tsx');
+    for (const file of inRoots) expect(reached(`apps/mobile/${file}`), file).toBeUndefined();
+    // Nothing reads a lecture value at a module's top level: the chunk is not in when a root's module first runs.
+    for (const file of inRoots) {
+      const top = codeOf(join(APP, file))
+        .split('\n')
+        .filter((line) => /^(const|let|var)\b.*(useLectureSources|lectureSourcesNow|lectureSourcesDoor)/.test(line));
+      expect(top, file).toEqual([]);
     }
   });
 

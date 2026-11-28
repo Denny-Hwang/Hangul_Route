@@ -6,6 +6,7 @@
  * lists below are data: a content PR that adds a word the lists miss adds it here in the same PR.
  */
 import { decomposeSyllable, isSyllable, type SyllableParts } from './hangul';
+import { HADA_BLOCKS } from './rr';
 
 /** The converter gaps a detector names (AMENDMENTS-ROMANIZER-GAPS §3.4). */
 export type RomanizationGap = 'n-insertion' | 'saisiot' | 'juncture' | 'predicate-h';
@@ -21,8 +22,8 @@ export const GAP_ARTICLES: Readonly<Record<RomanizationGap, string>> = {
   'predicate-h': '로마자 표기법 제3장 제1항 4, 표준 발음법 제12항 붙임 2',
 };
 
-/** The 하다 forms: the block after which a stop + ㅎ in the same token is read as a predicate. */
-export const HADA_BLOCKS: readonly string[] = ['하', '한', '할', '함', '합', '해', '했'];
+/** The 하다 forms live in `rr.ts` (the converter reads them); re-exported so the lint imports do not change. */
+export { HADA_BLOCKS };
 
 /** Second parts that take ㄴ / ㄹ insertion after a consonant final (SP 제29항 and its 붙임). */
 export const N_INSERTION_HEADS: readonly string[] = [

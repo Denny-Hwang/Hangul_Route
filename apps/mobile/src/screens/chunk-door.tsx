@@ -16,16 +16,32 @@ export interface ChunkDoor<C> {
   attempt(): Promise<C>;
   /** The chunk when it is in, else null. */
   now(): C | null;
+  /**
+   * Forgets a load still pending (a hung request its caller gave up on: `screens/lesson-content.tsx`'s root timeout),
+   * so the next `load()` asks again; the given-up load makes no further attempt. A chunk already in stays.
+   */
+  drop(): void;
+}
+
+/** What a dropped door's pending load fails with at its next attempt: never asked again (`logic/lessons/chunk-retry.ts`). */
+export class ChunkDoorDropped extends Error {
+  constructor() {
+    super('the chunk door dropped this load');
+    this.name = 'ChunkDoorDropped';
+  }
 }
 
 export function chunkDoor<C>(importChunk: () => Promise<C>): ChunkDoor<C> {
   let loading: Promise<C> | null = null;
   let loaded: C | null = null;
+  let generation = 0;
   return {
     load() {
       if (loaded !== null) return Promise.resolve(loaded);
       if (loading === null) {
-        const pending = retryLoad(importChunk).then((chunk) => (loaded = chunk));
+        const mine = generation;
+        const attempt = (): Promise<C> => (mine === generation ? importChunk() : Promise.reject(new ChunkDoorDropped()));
+        const pending = retryLoad(attempt).then((chunk) => (loaded = chunk));
         pending.catch(() => {
           if (loading === pending) loading = null;
         });
@@ -35,6 +51,10 @@ export function chunkDoor<C>(importChunk: () => Promise<C>): ChunkDoor<C> {
     },
     attempt: () => (loaded !== null ? Promise.resolve(loaded) : importChunk().then((chunk) => (loaded = chunk))),
     now: () => loaded,
+    drop() {
+      generation += 1;
+      loading = null;
+    },
   };
 }
 

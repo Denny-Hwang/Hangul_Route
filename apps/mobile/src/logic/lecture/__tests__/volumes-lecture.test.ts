@@ -7,11 +7,17 @@ import {
   type Catalog,
   type LectureDeck,
 } from './volumes-fixture';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { lectureBundle } from '../content';
 import { expandDeck, type LectureBundle } from '../deck-builder';
 import { CHOOSER_KEY_RE, parseHomeSnapshot, HOME_DEFAULT } from '../home-state';
 import { presenterChooserGroups } from '../quick-source';
+import { lectureSourcesDoor } from '../../../screens/lecture-sources-entry';
+
+/** The grown-up roots' loader puts the lecture sources in before a root draws (SB-4e); a test that draws a root's parts does the same. */
+beforeAll(async () => {
+  await lectureSourcesDoor.load();
+});
 
 /**
  * The lecture side of a cell's Volume 2 (F-CURR-002 §8 and row CM-40): the presenter's chooser keeps a `-v2` episode key,

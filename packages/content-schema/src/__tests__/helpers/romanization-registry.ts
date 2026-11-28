@@ -9,7 +9,7 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { extractKoreanPairs } from '../../romanization/extract';
+import { extractKoreanPairs } from '../../romanization/lint';
 import { koTokens } from '../../romanization/rr';
 
 export type SourceClass = 'A' | 'B1' | 'B2' | 'B3' | 'C';

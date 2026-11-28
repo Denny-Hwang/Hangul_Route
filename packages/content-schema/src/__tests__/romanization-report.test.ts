@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatRomanizationFinding, lineOfText, type RomanizationIssue } from '../index';
+import { formatRomanizationFinding, lineOfText, type RomanizationIssue } from '../romanization/lint';
 
 const issue: RomanizationIssue = {
   rule: 'romanization-mismatch',

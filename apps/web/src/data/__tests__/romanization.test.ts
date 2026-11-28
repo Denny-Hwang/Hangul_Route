@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
+import { ROMANIZATION_EXCEPTIONS } from '@hangul-route/content-schema';
 import {
-  ROMANIZATION_EXCEPTIONS,
   checkConsistency,
   checkProse,
   checkRomanization,
   formatRomanizationFinding,
   lineOfText,
   type RomanizationEntry,
-} from '@hangul-route/content-schema';
+} from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../../mobile/src/content/heritage-cards';
 import { stage1Cards } from '../stage1-cards';

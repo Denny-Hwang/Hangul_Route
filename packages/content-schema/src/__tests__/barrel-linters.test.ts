@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import * as barrel from '../index';
 import * as lint from '../lesson-lint';
+import * as romanizationLint from '../romanization/lint';
 import * as storyLint from '../story-lint';
 
 /**
@@ -54,5 +55,66 @@ describe('the content linters stay out of the package barrel (FN-7)', () => {
     expect(typeof storyLint.lintStory).toBe('function');
     expect(typeof storyLint.lintStoryCorpus).toBe('function');
     expect(typeof lint.lintLessonCell).toBe('function');
+  });
+});
+
+/**
+ * AMENDMENTS-START-BUNDLE-2026-11 SB-4a: the romanization lint (the checker, the detectors, the extractors, the finding formatter
+ * and the reviewed entries' notes) is the `./romanization-lint` subpath. The converter, the reviewed values and the jamo sound
+ * values stay on the barrel, which the learner app's start bundle carries whole.
+ */
+describe('the romanization lint stays out of the package barrel (SB-4a)', () => {
+  const LINT_FILES = ['compare.ts', 'extract.ts', 'gaps.ts', 'report.ts', 'exception-notes.ts'].map((f) => join(SRC, 'romanization', f));
+  /** Every runtime name the barrel exported before SB-4a from those files and from `exceptions.ts` (JAMO_NAME_VALUES). */
+  const MOVED = [
+    'normalizeRomanization',
+    'checkRomanization',
+    'checkFrameRomanization',
+    'checkExceptions',
+    'checkConsistency',
+    'checkProse',
+    'checkJamoRomanization',
+    'extractProsePairs',
+    'extractKoreanPairs',
+    'ROMANIZATION_GAPS',
+    'GAP_ARTICLES',
+    'N_INSERTION_HEADS',
+    'N_INSERTION_WORDS',
+    'JUNCTURE_HEADS',
+    'JUNCTURE_PREFIXES',
+    'GRAMMATICAL_TAILS',
+    'COPULA_STEMS',
+    'COPULA_FORMS',
+    'detectGaps',
+    'formatRomanizationFinding',
+    'lineOfText',
+    'JAMO_NAME_VALUES',
+    'ROMANIZATION_EXCEPTION_NOTES',
+    'entryWithNote',
+  ];
+  /** What `romanizeReviewed` and the app read: on the barrel, and (`HADA_BLOCKS`) on the subpath too. */
+  const STAYING = ['ROMANIZATION_EXCEPTIONS', 'JAMO_SOUND_VALUES', 'romanizeReviewed', 'wholeEntryKey', 'romanize', 'romanizeWord', 'koTokens', 'syllableSplit', 'HADA_BLOCKS'];
+
+  it('every moved name is on the subpath and none on the barrel; the names that stay are on the barrel', () => {
+    for (const name of MOVED) {
+      expect(name in romanizationLint, `${name} on the subpath`).toBe(true);
+      expect(name in barrel, `${name} off the barrel`).toBe(false);
+    }
+    for (const name of STAYING) expect(name in barrel, `${name} on the barrel`).toBe(true);
+    expect(romanizationLint.HADA_BLOCKS).toBe(barrel.HADA_BLOCKS);
+  });
+
+  it('no module the barrel reaches imports a lint module, and rr.ts does not reach gaps.ts', () => {
+    const reached = reach(join(SRC, 'index.ts'));
+    for (const file of LINT_FILES) expect(reached.has(file), file).toBe(false);
+    expect(reach(join(SRC, 'romanization', 'rr.ts')).has(join(SRC, 'romanization', 'gaps.ts'))).toBe(false);
+    expect(reach(join(SRC, 'romanization', 'reviewed.ts')).has(join(SRC, 'romanization', 'exception-notes.ts'))).toBe(false);
+  });
+
+  it('the subpath is in package.json and reaches the five lint modules', () => {
+    const pkg = JSON.parse(readFileSync(join(SRC, '..', 'package.json'), 'utf8')) as { exports: Record<string, string> };
+    expect(pkg.exports['./romanization-lint']).toBe('./src/romanization/lint.ts');
+    const reached = reach(join(SRC, 'romanization', 'lint.ts'));
+    for (const file of LINT_FILES) expect(reached.has(file), file).toBe(true);
   });
 });

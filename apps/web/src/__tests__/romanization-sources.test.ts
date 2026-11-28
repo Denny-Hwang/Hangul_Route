@@ -1,10 +1,6 @@
 import { readFileSync } from 'node:fs';
-import {
-  ROMANIZATION_EXCEPTIONS,
-  checkRomanization,
-  extractKoreanPairs,
-  formatRomanizationFinding,
-} from '@hangul-route/content-schema';
+import { ROMANIZATION_EXCEPTIONS } from '@hangul-route/content-schema';
+import { checkRomanization, extractKoreanPairs, formatRomanizationFinding } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 
 // F-CNT-002 PR 3, source class C: Korean written inline in pages. The scanner finds

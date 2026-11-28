@@ -9,7 +9,6 @@ import {
   SLOT_MARKER,
   allomorph,
   allomorphOrBoth,
-  checkJamoRomanization,
   composeTyped,
   endsWithFinal,
   fillFrame,
@@ -17,6 +16,7 @@ import {
   keysFor,
   slotEndingIssues,
 } from '../index';
+import { checkJamoRomanization } from '../romanization/lint';
 
 const keys = (s: string) => [...s];
 

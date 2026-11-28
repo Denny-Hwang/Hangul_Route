@@ -521,11 +521,15 @@ export const LOCALE_CHUNKS = Object.freeze([
 /**
  * The grown-up roots of the learner web build (F-CURR-002 §10): the presenter (`/present`) and All lessons
  * (`/browse`) are bundles of their own, reached only through the literal `import()`s of `index.ts`, so a
- * learner's start bundle carries neither. Each root module exports its marker (`ROOT_CHUNK`).
+ * learner's start bundle carries neither. Each root module exports its marker (`ROOT_CHUNK`). The lecture sources both
+ * roots read (`lecture-sources-chunk`, row SB-4e) ride in the list: a chunk only the grown-up roots load.
  */
 export const ROOT_CHUNKS = Object.freeze([
   Object.freeze({ name: 'PresenterApp', marker: 'root-chunk:presenter' }),
   Object.freeze({ name: 'BrowseApp', marker: 'root-chunk:browse' }),
+  // [SB] AMENDMENTS-START-BUNDLE-2026-11 row SB-4e: the lecture sources both roots share (grown-up only, so held to
+  // `rootChunkRaw`); reached only through the literal `import()` of `src/screens/lecture-sources-entry.ts`.
+  Object.freeze({ name: 'lecture-sources-chunk', marker: 'root-chunk:lecture-sources' }),
 ]);
 
 /**

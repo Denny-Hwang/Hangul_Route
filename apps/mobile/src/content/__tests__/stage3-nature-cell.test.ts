@@ -2,13 +2,12 @@ import { readFileSync } from 'node:fs';
 import {
   LessonCellSchema,
   ROMANIZATION_EXCEPTIONS,
-  checkFrameRomanization,
-  checkRomanization,
   discoverItemTexts,
   fillClozeGap,
   type LessonQuest,
   type LessonScope,
 } from '@hangul-route/content-schema';
+import { checkFrameRomanization, checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { describe, expect, it } from 'vitest';

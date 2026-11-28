@@ -7,12 +7,9 @@ import {
   VOCAB_TOPIC_KEYS,
   VocabSensesFileSchema,
   VocabTopicFileSchema,
-  checkConsistency,
-  checkRomanization,
   findVocabBannedWord,
-  type RomanizationEntry,
-  type RomanizationException,
 } from '../../index';
+import { checkConsistency, checkRomanization, entryWithNote, type ExceptionEntry, type RomanizationEntry } from '../../romanization/lint';
 import { checkOverlayTree } from '../../../../../scripts/overlay-rules.mjs';
 
 /**
@@ -59,7 +56,7 @@ export interface VocabCheckOptions {
   /** Locales whose overlays must carry a gloss for every item (`HANGUL_ROUTE_STRICT_LOCALES`). */
   strictLocales?: readonly string[];
   /** Defaults to the shared `ROMANIZATION_EXCEPTIONS`. */
-  exceptions?: readonly RomanizationException[];
+  exceptions?: readonly ExceptionEntry[];
 }
 
 const HANGUL_RE = /\p{Script=Hangul}/u;
@@ -187,7 +184,7 @@ export function checkVocabTree(tree: VocabTree, options: VocabCheckOptions = {})
         for (const issue of checkRomanization(ko, rom, { exceptions })) {
           if (issue.severity === 'error') add('vocab-romanization', file, issue.message, id);
         }
-        for (const e of exceptions) {
+        for (const e of exceptions.map(entryWithNote)) {
           if (e.ko === ko && e.reason.trim() === '') {
             add('vocab-romanization', file, `${ko}: the exception needs a reason naming the converter limit`, id);
           }

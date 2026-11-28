@@ -1,4 +1,5 @@
-import { WriteFrameRoundSchema, checkRomanization, fillFrame, romanize, type WriteFrameRound } from '@hangul-route/content-schema';
+import { WriteFrameRoundSchema, fillFrame, romanize, type WriteFrameRound } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { FIXTURE_ROUNDS } from '../e2e-rounds';
 

@@ -7,6 +7,7 @@ import { lectureBundle } from '../content';
 import { expandDeck } from '../deck-builder';
 import { buildQuickDeck, pressLesson, pressRow, rowCheck } from '../quick-lesson';
 import { blockMinutesOn, presenterChooserGroups } from '../quick-source';
+import { lectureSourcesDoor } from '../../../screens/lecture-sources-entry';
 
 /**
  * The bundle behind the presenter's Customize (AMENDMENTS-LECTURE-V2 section 18.3, row LV-3): the
@@ -14,6 +15,9 @@ import { blockMinutesOn, presenterChooserGroups } from '../quick-source';
  * presenter can show (PR 11 and PR 12 adapters), the letter sets, and every title in the presenter
  * language through the content overlays.
  */
+
+/** The grown-up roots' loader puts the lecture sources in before a root draws (SB-4e); this file calls the chooser at its top level. */
+await lectureSourcesDoor.load();
 
 const labels = { consonants: 'Consonants', vowels: 'Vowels' };
 const groups = presenterChooserGroups('en', labels);
@@ -101,6 +105,8 @@ describe('the chooser before any body is in (row FN-4)', () => {
     const { lessonContent } = await import('../../../content/lessons');
     const { storyContent } = await import('../../../content/stories');
     const cold = await import('../quick-source');
+    // The reset gave the chooser a fresh door too: the roots' loader puts the sources in before it draws.
+    await (await import('../../../screens/lecture-sources-entry')).lectureSourcesDoor.load();
     const { presenterListsEpisode } = await import('../manifest-listing');
     expect(lessonContent.isAllReady()).toBe(false);
     expect(storyContent.isAllReady()).toBe(false);
