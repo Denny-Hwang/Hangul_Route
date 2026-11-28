@@ -48,7 +48,6 @@ async function onboardAndOpenProfile(page: Page): Promise<string> {
   return profiles?.[0]?.id ?? '';
 }
 
-const switchName = 'Hide romanization until I tap';
 
 test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15b / 16b)', () => {
   test.describe('on a Spanish-speaking device', () => {
@@ -65,28 +64,60 @@ test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15
     });
   });
 
-  test('Profile: the reading-practice switch is saved per profile, in its own card', async ({ page }) => {
+  test('Profile: Show romanization is a three-choice radio group saved per profile, in its own card', async ({ page }) => {
     await page.goto('/');
     const id = await onboardAndOpenProfile(page);
+    const reading = getMessages('en').learner.profile.reading;
 
     await expect(page.getByRole('heading', { name: 'Reading practice' })).toBeVisible();
-    const toggle = page.getByRole('switch', { name: switchName });
-    await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    const group = page.getByRole('radiogroup', { name: reading.groupLabel });
+    await expect(group.getByRole('radio')).toHaveCount(3);
+    const asILearn = group.getByRole('radio', { name: reading.auto.label });
+    const always = group.getByRole('radio', { name: reading.always.label });
+    const tap = group.getByRole('radio', { name: reading.tap.label });
+    // A new profile is on the default, As I learn, with nothing stored.
+    await expect(asILearn).toHaveAttribute('aria-checked', 'true');
+    await expect(always).toHaveAttribute('aria-checked', 'false');
+    await expect(tap).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByText(reading.auto.hint)).toBeVisible();
+    // Each row is one target of at least 64.
+    for (const radio of [asILearn, always, tap]) expect((await radio.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
 
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    // A choice is stored at once, with the legacy field as its mirror for an older cached build.
+    await tap.click();
+    await expect(tap).toHaveAttribute('aria-checked', 'true');
     await waitForSaved(page, [`settings:${id}`]);
-    expect(await readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'tap' });
+    expect(await readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap' });
 
-    // It survives a reload, and switching back stores the default again.
+    // It survives a reload; Always stores its own choice (the old default is no longer "Off").
     await page.goto('/');
     await page.getByRole('button', { name: 'Profile and settings' }).click();
-    await expect(page.getByRole('switch', { name: switchName })).toHaveAttribute('aria-checked', 'true');
-    await page.getByRole('switch', { name: switchName }).click();
-    await expect(page.getByRole('switch', { name: switchName })).toHaveAttribute('aria-checked', 'false');
-    await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always' });
+    await expect(page.getByRole('radio', { name: reading.tap.label })).toHaveAttribute('aria-checked', 'true');
+    await page.getByRole('radio', { name: reading.always.label }).click();
+    await expect(page.getByRole('radio', { name: reading.always.label })).toHaveAttribute('aria-checked', 'true');
+    await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always', romanizationChoice: 'always' });
+
+    // The keys move the choice on the web: one Tab stop, the arrows choose.
+    await page.getByRole('radio', { name: reading.always.label }).focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(page.getByRole('radio', { name: reading.auto.label })).toHaveAttribute('aria-checked', 'true');
+    await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always', romanizationChoice: 'auto' });
     // No locale was ever chosen on this device.
     expect(await readStored(page, 'device:settings')).toBeNull();
+  });
+
+  test('Profile: an old stored tap (the old switch On) is still Only when I tap; an old stored always is As I learn', async ({ page }) => {
+    await page.goto('/');
+    const id = await onboardAndOpenProfile(page);
+    const reading = getMessages('en').learner.profile.reading;
+    await seedStored(page, `settings:${id}`, { romanizationMode: 'tap' });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    await expect(page.getByRole('radio', { name: reading.tap.label })).toHaveAttribute('aria-checked', 'true');
+    await seedStored(page, `settings:${id}`, { romanizationMode: 'always', readToMe: true });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    await expect(page.getByRole('radio', { name: reading.auto.label })).toHaveAttribute('aria-checked', 'true');
   });
 
   test('Welcome: three endonym chips, English marked; a tap stores the device choice with its time and sets <html lang>', async ({ page }) => {

@@ -674,10 +674,10 @@ describe('item-level folding with `modeOf` (AMENDMENTS-ROMANIZATION-FADE section
     ]);
   });
 
-  it('with the shipped default choice nothing renders differently: modeOf from a default resolver equals no modeOf, in every phase', () => {
+  it('with an explicit Always choice nothing renders differently: modeOf from an Always resolver equals no modeOf, in every phase', () => {
     const model = buildDiscover([mixed, pageOne, pageTwo, wordsPage]);
     for (const phase of ['letters', 'reading', 'all'] as const) {
-      const resolver = romanizationResolver(null, undefined, { phase, met: everyStage1Letter, screenReader: false });
+      const resolver = romanizationResolver(null, { romanizationChoice: 'always' }, { phase, met: everyStage1Letter, screenReader: false });
       for (let page = 0; page < model.pages.length; page += 1) {
         const state = { ...startDiscover(model), page };
         expect(pageRender(model, state, 'always', resolver.forText)).toEqual(pageRender(model, state, 'always'));

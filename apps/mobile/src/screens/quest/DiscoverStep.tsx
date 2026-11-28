@@ -32,7 +32,7 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot, type PromptSlot } from '../../components/use-prompt-slot';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { useRomanizationMode, useRomanizationResolver } from '../../i18n/use-romanization-mode';
+import { useRomanizationMode, useMountResolver } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
   DISCOVER_AUDIO_SOURCE,
@@ -175,9 +175,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   const romanizationMode = useRomanizationMode();
   // [RF] The item-level mode (AMENDMENTS-ROMANIZATION-FADE sections 3.3, 3.6): the resolver of the first draw, kept for the
   // whole step, so a change of phase under an open step applies from the next screen. Discover is a quest step.
-  const liveResolver = useRomanizationResolver();
-  const resolverRef = useRef(liveResolver);
-  const romanizationModeOf = resolverRef.current.forText;
+  const resolver = useMountResolver();
+  const romanizationModeOf = resolver.forText;
 
   const [state, setState] = useState<DiscoverState>(() => startDiscover(model, start));
   const stateRef = useRef(state);

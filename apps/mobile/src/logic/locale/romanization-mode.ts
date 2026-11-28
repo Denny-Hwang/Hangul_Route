@@ -8,10 +8,11 @@ import { isDecodable, type FadePhase } from './decodable';
  */
 
 /**
- * The choice a profile with no stored choice, no `tap` and no record reads as (section 3.2). `always` until row RF-2,
- * which turns the fade on by setting this to `auto`: under `always` every profile shows exactly what it showed before.
+ * The choice a profile with no stored choice, no `tap` and no record reads as (section 3.2): **As I learn**, which shows
+ * every romanization while the learner is learning the letters and folds the words they can read after that (row RF-2
+ * turned the fade on; before it this was `always`). A stored `always` with no stored choice reads as this (OD-RF-1).
  */
-export const ROMANIZATION_DEFAULT_CHOICE: RomanizationChoice = 'always';
+export const ROMANIZATION_DEFAULT_CHOICE: RomanizationChoice = 'auto';
 
 /** The stored fields the choice is read from; the legacy mode is the mirror an older build wrote. */
 export type RomanizationSettings = {

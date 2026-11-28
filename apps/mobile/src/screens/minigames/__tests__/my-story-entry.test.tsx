@@ -13,7 +13,7 @@ import type { MinigameHost } from '../host';
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn() }));
+vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn(), isScreenReaderEnabled: async () => false, subscribeScreenReader: () => () => undefined }));
 vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(() => Promise.resolve('played')) }));
 vi.mock('../../../platform/telemetry', () => ({ track: vi.fn(() => Promise.resolve()) }));
 vi.mock('../my-story-chunk', () => {

@@ -1,4 +1,4 @@
-import { requiredQuestIds, type Episode, type ProgressSnapshot, type Quest } from '@hangul-route/content-schema';
+import { requiredQuestIds, type Episode, type ProgressSnapshot, type Quest, type RomanizationChoice } from '@hangul-route/content-schema';
 import { episodesAll, questsAll } from '../../content';
 import { placedOutSkipSet } from '../placement/route-skip';
 import { completedQuestIdsOf } from '../route/self-route';
@@ -84,4 +84,31 @@ export function fadeOfSnapshot(snapshot: ProgressSnapshot): { phase: FadePhase; 
   const result = { phase: fadePhase(input, met), met };
   fades.set(snapshot, result);
   return result;
+}
+
+/** Whether the quest is one of `STAGE1_QUESTS`, where the reading words fold in phase `reading` (section 3.9). */
+export function isStage1Quest(questId: string, stage1Quests: readonly Quest[] = STAGE1_QUESTS): boolean {
+  return stage1Quests.some((q) => q.id === questId);
+}
+
+export interface ReadingNoticeInput {
+  /** The profile's stored choice (`romanizationChoiceOf`). */
+  choice: RomanizationChoice;
+  phase: FadePhase;
+  /** A screen reader is in use (section 3.13): `auto` resolves as `always` for it, so nothing folds and there is nothing to say. */
+  screenReader: boolean;
+  /** `romanizationNoticeAt` of the profile: absent until Hoya's line was shown. */
+  noticeAt: string | undefined;
+  /** The quest is one of `STAGE1_QUESTS`, where the reading words fold. */
+  stage1Quest: boolean;
+}
+
+/**
+ * Whether Hoya's reading line is due on this quest run (AMENDMENTS-ROMANIZATION-FADE section 3.9, OD-RF-2): once per
+ * profile; only for a profile on **As I learn**, with no screen reader; in phase `all` on any quest, in phase `reading`
+ * only on a Stage 1 quest (a Word Builder quest folds nothing there). Never in phase `letters`.
+ */
+export function readingNoticeDue(input: ReadingNoticeInput): boolean {
+  if (input.choice !== 'auto' || input.screenReader || input.noticeAt !== undefined) return false;
+  return input.phase === 'all' || (input.phase === 'reading' && input.stage1Quest);
 }

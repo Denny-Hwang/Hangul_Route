@@ -389,7 +389,8 @@ function CardsPhase({
 
   // Reading practice (T5): the profile's own setting, the same switch as the Profile screen.
   const mode = useRomanizationMode();
-  const setMode = useLocaleStore((s) => s.setRomanizationMode);
+  // Two states, each an explicit choice (OD-RF-5): On stores Only when I tap, Off stores Always. Back to As I learn is in Profile.
+  const setChoice = useLocaleStore((s) => s.setRomanizationChoice);
   const [revealed, setRevealed] = useState(false);
   const shown = showRomanization(mode, revealed);
   const labels = cardLabels({ ko: item.ko, romanization: item.romanization, gloss }, shown, { koreanItem: messages.a11y.koreanItem, cards: messages.a11y.vocab.cards });
@@ -482,7 +483,7 @@ function CardsPhase({
         {profile ? (
           <Pressable
             testID="vocab-cards-reading-practice"
-            onPress={() => setMode(profile.id, mode === 'tap' ? 'always' : 'tap')}
+            onPress={() => setChoice(profile.id, mode === 'tap' ? 'always' : 'tap')}
             accessibilityRole="switch"
             accessibilityState={{ checked: mode === 'tap' }}
             // RN-web drops `aria-checked` when it is false; a switch must always say its state.

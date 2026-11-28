@@ -367,7 +367,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // `discover-trace-chunk`, a screen chunk of 13.7 KB raw, asked for as a Discover step with letters opens): on top of main with RF-1b
   // (line 4,585,300 B) the release `build:web` (CI=1) measures 4,589,675 B raw / 1,263,245 B gzip, 4,375 B over the line. The line is that
   // measurement plus a 6,025 B margin (one measured raise), as TC-1a did, until the start bundle shrink row SB-4, planned after phase 2.
-  startBundleRaw: 4_595_700,
+  // [RF] AMENDMENTS-ROMANIZATION-FADE RF-2 (the Reading practice card with its three radios and `readingChoiceForKey`, the Words
+  // switch on `setRomanizationChoice`, `useReadingNotice` and its native-reader "known" flag in `use-romanization-mode.tsx`,
+  // `readingNoticeDue`, `markRomanizationNotice`, `HoyaBubble`'s `figure` prop, the line's bubble in `QuestPlayerView`, and the
+  // six en strings; the es and ko values are in the locale chunks, which stay far under their ceilings): on top of main (line
+  // 4,595,700 B) the release `build:web` (CI=1) measures 4,599,310 B raw / 1,266,376 B gzip, 3,610 B over the line. The line is that
+  // measurement plus a 6,000 B margin (one measured raise, as TC-1a and TC-1b did), until the start bundle shrink row SB-4.
+  startBundleRaw: 4_605_310,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

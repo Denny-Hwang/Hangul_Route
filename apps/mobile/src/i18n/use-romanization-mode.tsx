@@ -1,9 +1,9 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { createContext, useContext, useMemo, useSyncExternalStore } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { ReactNode, ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { readerPath } from '../logic/answer-feedback';
-import { fadeOfSnapshot } from '../logic/locale/romanization-fade';
+import { fadeOfSnapshot, isStage1Quest, readingNoticeDue } from '../logic/locale/romanization-fade';
 import {
   romanizationChoiceOf,
   romanizationResolver,
@@ -61,12 +61,15 @@ export function RomanizationCheckScope({ active = true, children }: { active?: b
  * cannot tell (its `platform/screen-reader` reads as off), so there the device flag "I use a screen reader" is the signal.
  */
 let nativeReader = false;
+/** The platform has answered at least once since the holder started (the first read is a promise): the reading line waits for it. */
+let nativeReaderKnown = false;
 let stopNativeReader: (() => void) | null = null;
 const nativeReaderListeners = new Set<() => void>();
 
 function setNativeReader(on: boolean): void {
-  if (nativeReader === on) return;
+  if (nativeReader === on && nativeReaderKnown) return;
   nativeReader = on;
+  nativeReaderKnown = true;
   for (const listener of [...nativeReaderListeners]) listener();
 }
 
@@ -89,6 +92,7 @@ function subscribeNativeReader(listener: () => void): () => void {
       stopNativeReader();
       stopNativeReader = null;
       nativeReader = false;
+      nativeReaderKnown = false;
     }
   };
 }
@@ -123,7 +127,10 @@ export function useRomanizationResolver(profileId?: string | null): Romanization
   const webFlag = useLocaleStore((s) => s.screenReader);
   // Only a profile on As I learn reads the screen reader (row S5): any other choice makes no platform call.
   const native = useNativeScreenReader(choice === 'auto');
-  const screenReader = readerPath({ platform: Platform.OS, nativeReader: native, webFlag }) === 'reader';
+  // Until the platform has answered (a moment after the holder starts) a profile on As I learn is treated as a reader in
+  // use: everything shows, which can only show more, never hide (section 3.13, OD-RF-3). The web needs no wait.
+  const known = useNativeReaderKnown(choice === 'auto');
+  const screenReader = readerPath({ platform: Platform.OS, nativeReader: native, webFlag }) === 'reader' || !known;
   const phase = useProgressStore((s) => {
     if (choice !== 'auto' || id === null) return null;
     const snapshot = s.byProfile[id];
@@ -138,6 +145,71 @@ export function useRomanizationResolver(profileId?: string | null): Romanization
     }
     return romanizationResolver(override, { romanizationChoice: storedChoice, romanizationMode: storedMode }, fade);
   }, [override, choice, storedChoice, storedMode, phase, screenReader, id]);
+}
+
+/**
+ * The resolver for an item-level surface (section 3.6), held for its mount: the first value it gets, except that while the
+ * native screen-reader answer is still pending (`useReaderPending`) the surface keeps taking the live resolver, and holds
+ * the first one once it is known. So the surface never folds for a reader that has not been heard from yet, and a learner
+ * with no reader gets the fade for the whole step once the answer is in, a moment after it opened.
+ */
+export function useMountResolver(): RomanizationResolver {
+  const live = useRomanizationResolver();
+  const pending = useReaderPending();
+  const held = useRef(live);
+  const settled = useRef(!pending);
+  if (!settled.current && !pending) {
+    held.current = live;
+    settled.current = true;
+  }
+  return held.current;
+}
+
+/** True while a profile on As I learn waits for the platform's screen-reader answer (native only; never on the web). */
+function useReaderPending(): boolean {
+  const activeId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
+  const choice = useLocaleStore((s) => romanizationChoiceOf(activeId === null ? undefined : s.byProfile[activeId]));
+  return !useNativeReaderKnown(choice === 'auto') && choice === 'auto';
+}
+
+/** Whether the platform has told the holder yet whether a screen reader is on (always true on the web: the device flag is the signal). */
+function useNativeReaderKnown(needed: boolean): boolean {
+  const known = useSyncExternalStore(needed ? subscribeNativeReader : subscribeNothing, needed ? () => nativeReaderKnown : never, never);
+  return Platform.OS === 'web' || known;
+}
+
+/**
+ * Whether Hoya's one-time reading line is on for this quest run, and the call that marks it shown (AMENDMENTS-ROMANIZATION-FADE section 3.9, OD-RF-2): the
+ * pure rule `readingNoticeDue` over the profile's choice, the fade phase, the screen reader and `romanizationNoticeAt`. It
+ * is **decided once for the run**: it latches when it is due while the run is on its first step, and then holds for the
+ * run, so marking the line shown (which makes it no longer due) never takes it off the screen, and Previous back to the
+ * Hello step shows it again. A run that is not due on its first step never gets it. `profileId` is the learner's, or null
+ * (a guest, the All lessons preview): no line. On the native app the platform's screen-reader answer is a promise, so the
+ * decision waits for it (a few milliseconds); the web reads the device flag at once.
+ */
+export function useReadingNotice(profileId: string | null, questId: string, onFirstStep: boolean): { show: boolean; markShown: () => void } {
+  const settings = useLocaleStore((s) => (profileId === null ? undefined : s.byProfile[profileId]));
+  const choice = romanizationChoiceOf(settings);
+  const noticeAt = settings?.romanizationNoticeAt;
+  // Only a profile on As I learn that has not seen the line reads the phase and the screen reader.
+  const candidate = profileId !== null && choice === 'auto' && noticeAt === undefined;
+  const webFlag = useLocaleStore((s) => s.screenReader);
+  const native = useNativeScreenReader(candidate);
+  const known = useNativeReaderKnown(candidate);
+  const phase = useProgressStore((s) => {
+    if (!candidate) return null;
+    const snapshot = s.byProfile[profileId];
+    return snapshot === undefined ? null : fadeOfSnapshot(snapshot).phase;
+  });
+  const screenReader = readerPath({ platform: Platform.OS, nativeReader: native, webFlag }) === 'reader';
+  const due =
+    candidate && phase !== null && known && readingNoticeDue({ choice, phase, screenReader, noticeAt, stage1Quest: isStage1Quest(questId) });
+  const held = useRef(false);
+  if (due && onFirstStep) held.current = true;
+  const markShown = useCallback((): void => {
+    if (profileId !== null) useLocaleStore.getState().markRomanizationNotice(profileId, new Date().toISOString());
+  }, [profileId]);
+  return { show: held.current, markShown };
 }
 
 /**

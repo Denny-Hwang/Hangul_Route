@@ -26,7 +26,7 @@ await writingDoor.load();
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn() }));
+vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn(), isScreenReaderEnabled: async () => false, subscribeScreenReader: () => () => undefined }));
 const audio = vi.hoisted(() => ({ playPrompt: vi.fn((_spec: { text: string; kind: string; source: string }) => Promise.resolve('played' as const)) }));
 vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), ...audio }));
 const telemetry = vi.hoisted(() => ({ track: vi.fn(() => Promise.resolve()) }));

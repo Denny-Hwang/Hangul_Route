@@ -173,7 +173,7 @@ describe('the flashcard screen keeps to its ports', () => {
     // The one profile write sits inside the switch, which draws only with an offered profile.
     expect(phase).toMatch(/readingPractice: profile,/);
     expect(phase.indexOf('{profile ? (')).toBeGreaterThan(-1);
-    expect(phase.indexOf('setMode(profile.id')).toBeGreaterThan(phase.indexOf('{profile ? ('));
+    expect(phase.indexOf('setChoice(profile.id')).toBeGreaterThan(phase.indexOf('{profile ? ('));
     expect(phase).not.toMatch(/useProfileStore/);
   });
 });

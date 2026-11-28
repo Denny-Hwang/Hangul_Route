@@ -18,7 +18,7 @@ import { WriteFrameGame } from '../WriteFrameGame';
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
-vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn() }));
+vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn(), isScreenReaderEnabled: async () => false, subscribeScreenReader: () => () => undefined }));
 
 const cell = LessonCellSchema.parse(
   JSON.parse(readFileSync(new URL('../../../../../../content/episodes/stage-7/letters.json', import.meta.url), 'utf8')),

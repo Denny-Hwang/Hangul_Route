@@ -120,15 +120,24 @@ describe('Discover word cards (quest step)', () => {
 
   it.each([
     ['auto in letters', 'auto', 'letters'],
-    ['the shipped default in letters', undefined, 'letters'],
-    ['the shipped default in reading', undefined, 'reading'],
-    ['the shipped default in all', undefined, 'all'],
+    ['the default (no stored choice) in letters', undefined, 'letters'],
     ['an explicit always in reading', 'always', 'reading'],
+    ['an explicit always in all', 'always', 'all'],
   ] as const)('%s: nothing folds', async (_, choice, phase) => {
     seed(choice, phase);
     const r = await open();
     expect(drawn(r.root, ['namu', 'kkachi'])).toEqual(['kkachi', 'namu']);
     expect(byTestId(r.root, 'discover-reveal-word:나무')).toHaveLength(0);
+  });
+
+  it('the default (no stored choice, RF-2) is As I learn: in reading the readable word folds, in all every card folds', async () => {
+    seed(undefined, 'reading');
+    const reading = await open();
+    expect(drawn(reading.root, ['namu', 'kkachi'])).toEqual(['kkachi']);
+    await cleanup();
+    seed(undefined, 'all');
+    const all = await open();
+    expect(drawn(all.root, ['namu', 'kkachi'])).toEqual([]);
   });
 
   it('auto, all (Word Builder done): every word card folds, a tap shows it', async () => {
@@ -205,10 +214,10 @@ describe('Listen & Pick (quest host only)', () => {
   });
 
   it.each([
-    ['the shipped default', undefined],
     ['an explicit always', 'always'],
-  ] as const)('%s: every option is shown from the start, in every phase and host', async (_, choice) => {
-    for (const phase of ['letters', 'reading', 'all'] as const) {
+    ['the default (no stored choice) in phase letters', undefined],
+  ] as const)('%s: every option is shown from the start, in every host', async (_, choice) => {
+    for (const phase of choice === undefined ? (['letters'] as const) : (['letters', 'reading', 'all'] as const)) {
       for (const mode of ['quest', 'vocab', 'preview'] as const) {
         seed(choice, phase);
         expect(drawn(board(await game(mode)), WORDS)).toEqual([...WORDS].sort());
@@ -247,11 +256,13 @@ describe('Pic-Word Match (quest host only)', () => {
     expect(shown).toEqual(mode === 'check' ? [] : [...romans].sort());
   });
 
-  it('the shipped default shows every word from the start, in every phase', async () => {
+  it('an explicit always shows every word from the start, in every phase; the default does in phase letters', async () => {
     for (const phase of ['letters', 'reading', 'all'] as const) {
-      seed(undefined, phase);
+      seed('always', phase);
       expect(drawn(words(await game('quest')), romans)).toEqual([...romans].sort());
       await cleanup();
     }
+    seed(undefined, 'letters');
+    expect(drawn(words(await game('quest')), romans)).toEqual([...romans].sort());
   });
 });

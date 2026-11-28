@@ -22,6 +22,9 @@ import { WriteFrameGame } from '../WriteFrameGame';
 const screenReader = vi.hoisted(() => ({
   announceForScreenReader: vi.fn<(text: string) => void>(),
   focusForScreenReader: vi.fn<(node: object | null) => void>(),
+  // The romanization hook's screen-reader holder (a profile on As I learn reads it).
+  isScreenReaderEnabled: async () => false,
+  subscribeScreenReader: () => () => undefined,
 }));
 vi.mock('../../../platform/screen-reader', () => screenReader);
 

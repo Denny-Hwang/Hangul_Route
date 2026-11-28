@@ -645,42 +645,6 @@ describe('locale-store: other tabs (BroadcastChannel hr-prefs, visibilitychange,
 describe('locale-store: per-profile settings that stay per profile', () => {
   beforeEach(reset);
 
-  it('setRomanizationMode persists per profile, keeps the other settings, and fires its event on change only', () => {
-    useLocaleStore.getState().setReadToMe('profile:a', true);
-    track.mockClear();
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
-    expect(track).toHaveBeenCalledTimes(1);
-    expect(track).toHaveBeenCalledWith({
-      name: 'romanization.mode_changed',
-      profileId: 'profile:a',
-      payload: { mode: 'tap' },
-    });
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    expect(track).toHaveBeenCalledTimes(1);
-  });
-
-  it('setRomanizationMode drops a stored choice, so an RF-1 build and an older tab never disagree (RF section 3.2, mixed builds)', () => {
-    useLocaleStore.getState().setRomanizationChoice('profile:a', 'auto');
-    useLocaleStore.getState().setReadToMe('profile:a', true);
-    track.mockClear();
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
-    // a stored `tap` read by the legacy rows is still the learner's tap
-    expect(romanizationChoiceOf(useLocaleStore.getState().byProfile['profile:a'])).toBe('tap');
-    expect(track).toHaveBeenCalledWith({ name: 'romanization.mode_changed', profileId: 'profile:a', payload: { mode: 'tap' } });
-  });
-
-  it('setRomanizationMode off a stored choice reports the change of the choice read, not of the legacy field', () => {
-    useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
-    track.mockClear();
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    expect(track).not.toHaveBeenCalled();
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap' });
-  });
-
   it('setRomanizationChoice writes the choice and its mirror for an older cached build (auto -> always, tap -> tap)', () => {
     useLocaleStore.getState().setReadToMe('profile:a', true);
     for (const [choice, mirrored] of [
@@ -697,26 +661,71 @@ describe('locale-store: per-profile settings that stay per profile', () => {
 
   it('setRomanizationChoice reports romanization.mode_changed once with the choice, and not for a repeat', () => {
     track.mockClear();
-    useLocaleStore.getState().setRomanizationChoice('profile:a', 'auto');
-    // `auto` against the shipped default (`always`) is a change
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'always');
+    // `always` against the shipped default (As I learn) is a change
     expect(track).toHaveBeenCalledTimes(1);
-    expect(track).toHaveBeenCalledWith({ name: 'romanization.mode_changed', profileId: 'profile:a', payload: { mode: 'auto' } });
-    useLocaleStore.getState().setRomanizationChoice('profile:a', 'auto');
+    expect(track).toHaveBeenCalledWith({ name: 'romanization.mode_changed', profileId: 'profile:a', payload: { mode: 'always' } });
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'always');
     expect(track).toHaveBeenCalledTimes(1);
     useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
     expect(track).toHaveBeenCalledTimes(2);
     expect(track).toHaveBeenLastCalledWith({ name: 'romanization.mode_changed', profileId: 'profile:a', payload: { mode: 'tap' } });
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'auto');
+    expect(track).toHaveBeenLastCalledWith({ name: 'romanization.mode_changed', profileId: 'profile:a', payload: { mode: 'auto' } });
+  });
+
+  it('setRomanizationChoice keeps the other settings and writes per profile', () => {
+    useLocaleStore.getState().setReadToMe('profile:a', true);
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap', readToMe: true });
+    expect(useLocaleStore.getState().byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('markRomanizationNotice stores the time once and keeps the choice, Read to me and Challenge', () => {
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'auto');
+    useLocaleStore.getState().setReadToMe('profile:a', true);
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile');
+    track.mockClear();
+    useLocaleStore.getState().markRomanizationNotice('profile:a', '2026-11-26T08:00:00.000Z');
+    const expected = {
+      romanizationMode: 'always',
+      romanizationChoice: 'auto',
+      romanizationNoticeAt: '2026-11-26T08:00:00.000Z',
+      readToMe: true,
+      challengeMode: true,
+    };
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual(expected);
+    expect(mem.get('settings:profile:a')).toEqual(expected);
+    // shown once: a second mark (Previous back to the Hello step) changes nothing
+    useLocaleStore.getState().markRomanizationNotice('profile:a', '2026-11-27T08:00:00.000Z');
+    expect(useLocaleStore.getState().byProfile['profile:a']?.romanizationNoticeAt).toBe('2026-11-26T08:00:00.000Z');
+    // no telemetry for showing the line
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('markRomanizationNotice on a profile with no record starts from the default and stores no choice', () => {
+    useLocaleStore.getState().markRomanizationNotice('profile:new', '2026-11-26T08:00:00.000Z');
+    expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', romanizationNoticeAt: '2026-11-26T08:00:00.000Z' });
+    expect(romanizationChoiceOf(useLocaleStore.getState().byProfile['profile:new'])).toBe('auto');
+  });
+
+  it('a stored notice time survives a reload (hydrate keeps it)', async () => {
+    mem.set('settings:profile:a', { romanizationMode: 'always', romanizationChoice: 'auto', romanizationNoticeAt: '2026-11-26T08:00:00.000Z' });
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    expect(useLocaleStore.getState().byProfile['profile:a']?.romanizationNoticeAt).toBe('2026-11-26T08:00:00.000Z');
   });
 
   it('setRomanizationChoice to the choice already read (a legacy tap, or the default) reports nothing but still stores the choice', () => {
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
+    // a record the old switch wrote: a stored `tap` and no choice (read as Only when I tap)
+    useLocaleStore.setState({ byProfile: { 'profile:a': { romanizationMode: 'tap' } } });
     track.mockClear();
     useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
     expect(track).not.toHaveBeenCalled();
     expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap' });
-    useLocaleStore.getState().setRomanizationChoice('profile:new', 'always');
+    useLocaleStore.getState().setRomanizationChoice('profile:new', 'auto');
     expect(track).not.toHaveBeenCalled();
-    expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', romanizationChoice: 'always' });
+    expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', romanizationChoice: 'auto' });
   });
 
   it('setReadToMe, setChallengeMode and setClockScale keep the choice and the notice time', () => {
@@ -739,18 +748,18 @@ describe('locale-store: per-profile settings that stay per profile', () => {
 
   it('setReadToMe on a record with no mode still fills the legacy `always`, which reads as the default, not a choice', () => {
     useLocaleStore.getState().setReadToMe('profile:a', true);
-    expect(romanizationChoiceOf(useLocaleStore.getState().byProfile['profile:a'], 'auto')).toBe('auto');
+    expect(romanizationChoiceOf(useLocaleStore.getState().byProfile['profile:a'])).toBe('auto');
     expect(useLocaleStore.getState().byProfile['profile:a']?.romanizationChoice).toBeUndefined();
   });
 
   it('setReadToMe (F-STORY-002 §3.4) persists per profile and keeps every other setting', () => {
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
     track.mockClear();
     useLocaleStore.getState().setReadToMe('profile:a', true);
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap', readToMe: true });
     useLocaleStore.getState().setReadToMe('profile:a', false);
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: false });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', romanizationChoice: 'tap', readToMe: false });
     // No telemetry for the switch (§3.12 defines none) and other profiles are untouched.
     expect(track).not.toHaveBeenCalled();
     expect(useLocaleStore.getState().byProfile['profile:b']).toBeUndefined();
@@ -845,14 +854,14 @@ describe('locale-store: per-profile settings that stay per profile', () => {
 
   it('a failing write never throws or loses the in-memory setting', async () => {
     storage.failWrites = true;
-    expect(() => useLocaleStore.getState().setRomanizationMode('profile:a', 'tap')).not.toThrow();
+    expect(() => useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap')).not.toThrow();
     await settle();
     expect(useLocaleStore.getState().byProfile['profile:a']?.romanizationMode).toBe('tap');
   });
 
   it('forgetProfile drops the profile settings and their key, leaving others alone', () => {
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    useLocaleStore.getState().setRomanizationMode('profile:b', 'tap');
+    useLocaleStore.getState().setRomanizationChoice('profile:a', 'tap');
+    useLocaleStore.getState().setRomanizationChoice('profile:b', 'tap');
     useLocaleStore.getState().forgetProfile('profile:a');
     expect(useLocaleStore.getState().byProfile['profile:a']).toBeUndefined();
     expect(mem.has('settings:profile:a')).toBe(false);
@@ -869,8 +878,8 @@ describe('locale-store: profile removal', () => {
     const input = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const };
     const a = useProfileStore.getState().createProfile(input);
     const b = useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
-    useLocaleStore.getState().setRomanizationMode(a.id, 'tap');
-    useLocaleStore.getState().setRomanizationMode(b.id, 'tap');
+    useLocaleStore.getState().setRomanizationChoice(a.id, 'tap');
+    useLocaleStore.getState().setRomanizationChoice(b.id, 'tap');
 
     useProfileStore.getState().remove(a.id);
 

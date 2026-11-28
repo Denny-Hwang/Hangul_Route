@@ -102,19 +102,19 @@ afterEach(async () => {
   resetPlatform();
 });
 
-describe('useRomanizationMode: with the shipped default nothing changes (RF-1a)', () => {
+describe('useRomanizationMode: the default choice is As I learn (RF-2)', () => {
   it('no profile: always, with and without the Check scope', async () => {
     expect((await read(<Probe />)).mode).toBe('always');
     expect((await read(<RomanizationCheckScope><Probe /></RomanizationCheckScope>)).mode).toBe('always');
   });
 
   it.each([
-    ['letters', letters],
-    ['reading', reading],
-    ['all', allPhase],
-  ])('a profile with no stored choice in phase %s reads always, inside a Check too', async (_, snapshot) => {
+    ['letters', letters, { mode: 'always', word: 'always', theme: 'always' }],
+    ['reading', reading, { mode: 'always', word: 'tap', theme: 'always' }],
+    ['all', allPhase, { mode: 'tap', word: 'tap', theme: 'tap' }],
+  ])('a profile with no stored choice in phase %s follows the fade, and reads always inside a Check', async (_, snapshot, expected) => {
     seed(undefined, snapshot());
-    expect(await read(<Probe />)).toEqual({ mode: 'always', word: 'always', theme: 'always' });
+    expect(await read(<Probe />)).toEqual(expected);
     expect((await read(<RomanizationCheckScope><Probe /></RomanizationCheckScope>)).mode).toBe('always');
   });
 
@@ -124,10 +124,15 @@ describe('useRomanizationMode: with the shipped default nothing changes (RF-1a)'
     expect((await read(<RomanizationCheckScope><Probe /></RomanizationCheckScope>)).mode).toBe('tap');
   });
 
-  it('a stored always with a Read to me fill reads always (the default), not a choice', async () => {
+  it('a stored always with a Read to me fill reads as the default (As I learn), not as an Always choice (OD-RF-1)', async () => {
     seed(undefined, allPhase());
     useLocaleStore.setState({ byProfile: { [ID]: { romanizationMode: 'always', readToMe: true } } });
-    expect((await read(<Probe />)).mode).toBe('always');
+    expect((await read(<Probe />)).mode).toBe('tap');
+  });
+
+  it('an explicit Always choice reads always in every phase, the Check included', async () => {
+    seed('always', allPhase());
+    expect(await read(<Probe />)).toEqual({ mode: 'always', word: 'always', theme: 'always' });
   });
 });
 
@@ -313,7 +318,7 @@ describe('the native screen reader: one holder, one platform subscription (secti
     seed('always', allPhase());
     await render(<Probe />);
     await cleanup();
-    seed(undefined, allPhase());
+    seed('tap', allPhase());
     await render(<Probe />);
     expect(sr.subscriptions).toBe(before);
   });
