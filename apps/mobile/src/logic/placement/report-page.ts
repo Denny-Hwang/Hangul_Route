@@ -16,6 +16,11 @@ import {
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { decodingNotTested, reportView, type AssessmentFormat, type ReportView } from './result-view';
+import { byCompletedAt, type StoredResult } from './starting-spot';
+
+// The dashboard's row lives in `starting-spot.ts` (AMENDMENTS-START-BUNDLE-2026-11 SB-4c): the start bundle reads it
+// without this page. Re-exported so this module's callers do not change.
+export { startingSpotRow, type StartingSpotRow } from './starting-spot';
 
 /**
  * The grown-up report page and the dashboard's Starting spot row (F-PLC-001
@@ -25,8 +30,6 @@ import { decodingNotTested, reportView, type AssessmentFormat, type ReportView }
  * force (`effectiveRoute`: the union of every result, the highest level, a
  * parent override), so a lower retake never moves the start back.
  */
-
-type StoredResult = Omit<PlacementResult, 'mode'> & { mode?: PlacementResult['mode'] };
 
 /** One bank template as the report needs it (`placement.generated.ts`). */
 export interface BankEntry {
@@ -142,31 +145,6 @@ export function startChoices(
               ? 'placedOut'
               : 'ahead',
     }));
-}
-
-const byCompletedAt = (a: StoredResult, b: StoredResult): number =>
-  a.completedAt < b.completedAt ? -1 : a.completedAt > b.completedAt ? 1 : 0;
-const rank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
-
-export interface StartingSpotRow {
-  /** The highest level reached (results combine by the maximum, section 3.7). */
-  level: PlacementLevel;
-  /** When the newest check was taken. */
-  takenAt: string;
-  /** A parent override is in force ("Changed by a grown-up"). */
-  overridden: boolean;
-}
-
-/** The dashboard's Starting spot row; null without a result. */
-export function startingSpotRow(placements: readonly StoredResult[] | undefined): StartingSpotRow | null {
-  if (placements === undefined || placements.length === 0) return null;
-  const sorted = [...placements].sort(byCompletedAt);
-  const level = sorted.map((r) => r.level).reduce((a, b) => (rank(b) > rank(a) ? b : a));
-  return {
-    level,
-    takenAt: (sorted[sorted.length - 1] as StoredResult).completedAt,
-    overridden: placements.some((r) => r.override !== undefined),
-  };
 }
 
 /**

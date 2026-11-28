@@ -16,7 +16,7 @@ import { useLessonContentVersion } from '../lesson-content';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { bandLabel } from '../../logic/placement/copy';
-import { startingSpotRow } from '../../logic/placement/report-page';
+import { startingSpotRow } from '../../logic/placement/starting-spot';
 import { routeNextInputOf } from '../../logic/route-next';
 import type { RootStackParamList } from '../../navigation/types';
 import { usePlanStore } from '../../store/plan-store';
