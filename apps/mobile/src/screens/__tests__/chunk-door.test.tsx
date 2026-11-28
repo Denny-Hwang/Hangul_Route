@@ -29,6 +29,8 @@ vi.mock('../sync/join-space-chunk', standIn('join-space', 'JoinSpaceScreen'));
 vi.mock('../route/route-proposal-chunk', standIn('route-proposal', 'RouteProposalScreen'));
 vi.mock('../vocab/speed-round-chunk', standIn('speed-round', 'VocabSpeedRoundScreen'));
 vi.mock('../placement/placement-chunk', standIn('placement', 'PlacementScreen'));
+// The plan parts the level check's door waits for with its chunk (SB-4d); `placement/__tests__/plan-parts-doors.test.tsx` covers the wait.
+vi.mock('../placement/plan-parts-chunk', () => ({}));
 // The chunk retry's backoff, at once.
 vi.mock('../../logic/lessons/chunk-retry', () => ({ retryLoad: <T,>(load: () => Promise<T>) => load() }));
 

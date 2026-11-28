@@ -20,7 +20,6 @@ import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesWithVolumes, questsAll } from '../../content';
 import { useLocale, useLocalePacks } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
-import { placementRouteCatalog } from '../../logic/placement/catalog';
 import { PLACEMENT_BANK_VERSION } from '../../logic/placement/entry';
 import { completeEvent, itemAnsweredEvent, startEvent } from '../../logic/placement/events';
 import {
@@ -57,7 +56,6 @@ import { CONTENT_VERSION } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
-import { acceptPlanOffer, applyPlanUpdate, planOfferNow } from '../../store/plan-offer-store';
 import { useRouteStore } from '../../store/route-store';
 import { useGuestStore } from '../../store/guest-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -77,7 +75,7 @@ import { SoundNeededScreen } from './SoundNeededScreen';
 import { PICTURE_CONTEXT } from '../minigames/PictureArt';
 import { WarmupScreen } from './WarmupScreen';
 import { OopsScreen } from '../system/OopsScreen';
-import { usePlacementBank } from './use-placement-bank';
+import { usePlanParts } from './plan-parts-entry';
 import {
   PlacementProvider,
   flowRoute,
@@ -173,7 +171,9 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
   const saved = usePlacementRunStore((s) => (profileId === null ? undefined : s.active[profileId]));
   const run = saved?.run ?? null;
   // The bank is a chunk of its own (AMENDMENTS-FINISH-2026-11 FN-7): the check boots once it is in, on the boot screen.
-  const { bank: loadedBank, failed: bankFailed, retry: retryBank } = usePlacementBank();
+  // The plan parts (the bank hook, the route catalog, the plan offer and its store) are their own chunk, in before this screen draws.
+  const parts = usePlanParts();
+  const { bank: loadedBank, failed: bankFailed, retry: retryBank } = parts.usePlacementBank();
   const bankClips = useRef(false);
   bankClips.current = useMemo(() => loadedBank !== null && bankHasClips(loadedBank.bank, loadedBank.warmup), [loadedBank]);
 
@@ -336,7 +336,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
       const tier = accessTier(profile.id, new Date());
       const opts = { isEntitled: (stage: string) => isStageEntitled(stage, tier), completedQuestIds: completed };
       // A cell's Volume 2 is placed out like its Volume 1 by a level above its stage (F-CURR-002 row CM-40).
-      const catalog = placementRouteCatalog(questsAll, episodesWithVolumes);
+      const catalog = parts.placementRouteCatalog(questsAll, episodesWithVolumes);
       const result: PlacementResult = finishRun(savedRun.run, {
         catalog,
         ...opts,
@@ -362,7 +362,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
       // the strip (OD-16: "until the next result").
       // The plan follows the UI locale's review (P2-8b): `routeEnabledFor`, never the raw flag.
       const planOn = routeEnabledFor(uiLocale);
-      const offer = stored ? planOfferNow(profile.id, planOn, new Date()) : null;
+      const offer = stored ? parts.planOfferNow(profile.id, planOn, new Date()) : null;
       const view = resultView({
         result,
         before,
@@ -572,19 +572,19 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
       const offer = finished?.offer ?? null;
       const proposal = offer?.kind === 'new' ? offer.byPace[pace] : undefined;
       if (profileId === null || offer?.kind !== 'new' || proposal === undefined) return false;
-      const route = await acceptPlanOffer(profileId, proposal, { changed: pace !== offer.pace }, new Date());
+      const route = await parts.acceptPlanOffer(profileId, proposal, { changed: pace !== offer.pace }, new Date());
       if (route === null) return false;
       onResultAction('start');
       return true;
     },
-    [finished, profileId, onResultAction],
+    [finished, profileId, onResultAction, parts],
   );
 
   const updatePlan = useCallback(async (): Promise<boolean> => {
-    if (profileId === null || !(await applyPlanUpdate(profileId, new Date()))) return false;
+    if (profileId === null || !(await parts.applyPlanUpdate(profileId, new Date()))) return false;
     onResultAction('start');
     return true;
-  }, [profileId, onResultAction]);
+  }, [profileId, onResultAction, parts]);
 
   const continueRun = useCallback((): void => {
     const base = baseFlow.current;

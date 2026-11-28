@@ -12,6 +12,8 @@ import { retryLoad } from '../logic/lessons/chunk-retry';
 export interface ChunkDoor<C> {
   /** Loads the chunk once; a failed load is not kept. */
   load(): Promise<C>;
+  /** One import with no retry of its own (SB-4d: a door that loads two chunks under one retry level); the chunk is kept once it is in. */
+  attempt(): Promise<C>;
   /** The chunk when it is in, else null. */
   now(): C | null;
   /**
@@ -47,6 +49,7 @@ export function chunkDoor<C>(importChunk: () => Promise<C>): ChunkDoor<C> {
       }
       return loading;
     },
+    attempt: () => (loaded !== null ? Promise.resolve(loaded) : importChunk().then((chunk) => (loaded = chunk))),
     now: () => loaded,
     drop() {
       generation += 1;

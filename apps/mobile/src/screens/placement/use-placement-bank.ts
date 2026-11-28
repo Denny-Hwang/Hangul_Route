@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { loadPlacementBank, placementBankNow, type LoadedPlacementBank } from '../../content/placement-bank';
+import type { LoadedPlacementBank } from '../../content/placement-bank';
+import { loadPlacementBank, placementBankNow } from './plan-parts-entry';
 
 /**
  * The level check's bank for a screen (AMENDMENTS-FINISH-2026-11 FN-7): null while its chunk loads (the screen keeps its

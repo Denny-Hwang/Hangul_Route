@@ -1,6 +1,6 @@
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { createElement, type ReactElement } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../../content/placement.generated';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 
@@ -34,6 +34,11 @@ vi.mock('../../../content/placement-bank', () => ({
 }));
 const { usePlacementBank } = await import('../use-placement-bank');
 const { PlacementReportScreen } = await import('../../parent/PlacementReportScreen');
+const { planPartsDoor } = await import('../plan-parts-entry');
+// The report's door waits for the plan parts before the screen draws (SB-4d); this file's mock of the bank is what they use.
+beforeAll(async () => {
+  await planPartsDoor.load();
+});
 
 const seen: { bank: unknown; failed: boolean }[] = [];
 let retryNow: () => void = () => undefined;

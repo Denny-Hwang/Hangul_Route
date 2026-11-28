@@ -251,6 +251,48 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     }
   });
 
+  it('[SB] SB-4d: the level check\'s plan parts are a chunk both doors wait for, and none of them is in the start bundle', () => {
+    const chunk = 'apps/mobile/src/screens/placement/plan-parts-chunk.tsx';
+    expect(graph.chunks.has(chunk)).toBe(true);
+    expect(reached(chunk)).toBeUndefined();
+    // The modules the level check and the reports shared (Expo hoisted them into the start bundle until now).
+    for (const file of [
+      'apps/mobile/src/logic/placement/plan-offer.ts',
+      'apps/mobile/src/screens/placement/PlanParts.tsx',
+      'apps/mobile/src/store/plan-offer-store.ts',
+      'apps/mobile/src/screens/placement/use-placement-bank.ts',
+      'apps/mobile/src/logic/placement/catalog.ts',
+    ]) {
+      expect(reached(file), file).toBeUndefined();
+    }
+    // The bank's loader keeps the literal `import()` of the bank chunk, so it stays in the start bundle (a chunk that holds
+    // another chunk's literal is named by a hash that does not cover its content: the post-build rejects it).
+    expect(graph.files.has('apps/mobile/src/content/placement-bank.ts')).toBe(true);
+    expect(graph.chunks.has('apps/mobile/src/content/placement-bank-chunk.ts')).toBe(true);
+    // No placement or report module is shared between two chunks any more (Expo would move it into the start bundle).
+    expect([...graph.shared].filter((file) => /\/screens\/(placement|parent)\/|\/logic\/placement\/|plan-offer/.test(file))).toEqual([]);
+    // The door is the start bundle's: it holds the literal import() and nothing else of the chunk.
+    expect(graph.files.has('apps/mobile/src/screens/placement/plan-parts-entry.ts')).toBe(true);
+    // Both doors wait for the parts with their own chunk, under one retry level (`withPlanParts`).
+    for (const file of ['apps/mobile/src/screens/placement/placement-entry.tsx', 'apps/mobile/src/screens/parent/reports-entry.tsx']) {
+      expect(graph.files.has(file), file).toBe(true);
+      expect(codeOf(join(REPO, file)), file).toContain('withPlanParts(() => import(');
+    }
+    // Every importer of `usePlanParts` is inside `placement-chunk` or `reports-chunk`, never in the start bundle.
+    const insideChunks = new Set([
+      ...startGraph(join(APP, 'src', 'screens', 'placement', 'placement-chunk.tsx')).files.keys(),
+      ...startGraph(join(APP, 'src', 'screens', 'parent', 'reports-chunk.tsx')).files.keys(),
+    ]);
+    const importers = webSources()
+      .filter((file) => /\busePlanParts\b/.test(codeOf(file)) && !file.endsWith('plan-parts-entry.ts'))
+      .map((file) => relative(REPO, file));
+    expect(importers.length).toBeGreaterThan(0);
+    for (const file of importers) {
+      expect(insideChunks.has(file), file).toBe(true);
+      expect(graph.files.has(file), file).toBe(false);
+    }
+  });
+
   it('console.ts is not in the start bundle; the twin\'s console-app.ts is', () => {
     expect(reached('packages/i18n/src/messages/en/console.ts')).toBeUndefined();
     expect(graph.files.has('packages/i18n/src/messages/en/console-app.ts')).toBe(true);
