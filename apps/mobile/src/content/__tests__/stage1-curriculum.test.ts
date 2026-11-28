@@ -4,12 +4,12 @@ import {
   romanizeWord,
   checkKindsFor,
   discoverItemTexts,
-  checkRomanization,
   type DiscoverPage,
   type KoText,
   type Quest,
   type QuestStepKind,
 } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { CONTRAST_SETS } from '../__generated__/contrast-sets';

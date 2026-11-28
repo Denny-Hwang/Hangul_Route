@@ -1,4 +1,4 @@
-import { checkJamoRomanization, formatRomanizationFinding } from '@hangul-route/content-schema';
+import { checkJamoRomanization, formatRomanizationFinding } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import app from '../index';
 

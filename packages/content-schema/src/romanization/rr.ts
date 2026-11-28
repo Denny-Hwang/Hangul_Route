@@ -23,7 +23,6 @@
  * predicate), word-internal compound boundaries and Sino-Korean exceptions; see
  * AMENDMENTS-ROMANIZER-GAPS. Cross-word sandhi is not applied either (RR does not mark it).
  */
-import { HADA_BLOCKS } from './gaps';
 import {
   INITIAL_JAMO,
   INITIAL_RR,
@@ -32,6 +31,9 @@ import {
   decomposeSyllable,
   type SyllableParts,
 } from './hangul';
+
+/** The 하다 forms: the block after which a stop + ㅎ in the same token is read as a predicate (here, not in `gaps.ts`, so the converter does not reach the lint; `gaps.ts` re-exports it). */
+export const HADA_BLOCKS: readonly string[] = ['하', '한', '할', '함', '합', '해', '했'];
 
 /** Compound finals as [kept as final, moved to the next syllable]; ㄲ and ㅆ move whole. */
 const SPLIT: Readonly<Record<string, readonly [string, string]>> = {

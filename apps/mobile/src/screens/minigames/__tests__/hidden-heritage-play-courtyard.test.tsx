@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { HiddenHeritageRoundSchema, checkRomanization, translatableFields } from '@hangul-route/content-schema';
+import { HiddenHeritageRoundSchema, translatableFields } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';

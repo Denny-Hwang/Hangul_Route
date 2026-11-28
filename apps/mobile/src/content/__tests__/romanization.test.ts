@@ -4,17 +4,19 @@ import {
   JamoSchema,
   QuestSchema,
   ROMANIZATION_EXCEPTIONS,
+  discoverItemTexts,
+} from '@hangul-route/content-schema';
+import {
   checkConsistency,
   checkJamoRomanization,
   checkProse,
   checkFrameRomanization,
   checkRomanization,
-  discoverItemTexts,
   formatRomanizationFinding,
   lineOfText,
   type RomanizationEntry,
   type RomanizationIssue,
-} from '@hangul-route/content-schema';
+} from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
 import { HANGUL_CHECK_WORDS, buildHangulCheck } from '../../logic/stage1/hangul-check';

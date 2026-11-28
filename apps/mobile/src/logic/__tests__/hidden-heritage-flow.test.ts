@@ -1,4 +1,5 @@
-import { HiddenHeritageRoundSchema, checkRomanization, type HiddenHeritageRound } from '@hangul-route/content-schema';
+import { HiddenHeritageRoundSchema, type HiddenHeritageRound } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
 import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
 import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';

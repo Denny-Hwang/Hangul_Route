@@ -1,4 +1,5 @@
-import { checkRomanization, romanizeWord } from '@hangul-route/content-schema';
+import { romanizeWord } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import {
   AVATAR_PRESETS,

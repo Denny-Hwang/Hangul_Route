@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { HeritageCardListSchema, STORY_CARD_FACT_MAX_CHARS, checkRomanization, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
+import { HeritageCardListSchema, STORY_CARD_FACT_MAX_CHARS, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { albumLegendArtIds, upperCellCardArtIds } from '@hangul-route/design-system/upper-card-ids';
 import { describe, expect, it } from 'vitest';

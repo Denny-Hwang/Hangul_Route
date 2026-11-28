@@ -6,7 +6,6 @@ import {
   STORY_CARD_FACT_MAX_CHARS,
   STORY_CARD_MIN_SOURCES,
   WEB_ADDRESS,
-  checkRomanization,
   parseStory,
   storyCardId,
   type Episode,
@@ -17,6 +16,7 @@ import {
   type Story,
   type ThemeKey,
 } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { lintStory, lintStoryCorpus } from '@hangul-route/content-schema/story-lint';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { getMessages } from '@hangul-route/i18n';

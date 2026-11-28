@@ -12,12 +12,8 @@
  * could not run (reported instead of a false mismatch).
  */
 import { extractProsePairs } from './extract';
-import {
-  JAMO_NAME_VALUES,
-  JAMO_SOUND_VALUES,
-  ROMANIZATION_EXCEPTIONS,
-  type RomanizationException,
-} from './exceptions';
+import { JAMO_SOUND_VALUES, ROMANIZATION_EXCEPTIONS, type ReviewedEntry } from './exceptions';
+import { JAMO_NAME_VALUES, entryWithNote, type ExceptionEntry } from './exception-notes';
 import { GAP_ARTICLES, ROMANIZATION_GAPS, detectGaps, type RomanizationGap } from './gaps';
 import { romanizeReviewed, wholeEntryKey } from './reviewed';
 import { koTokens, romanize, syllableSplit } from './rr';
@@ -45,8 +41,11 @@ export interface RomanizationIssue {
 }
 
 export interface CheckContext {
-  /** The reviewed list; `ROMANIZATION_EXCEPTIONS` when omitted, `[]` for none. */
-  exceptions?: readonly RomanizationException[];
+  /**
+   * The reviewed list; `ROMANIZATION_EXCEPTIONS` when omitted, `[]` for none. Slim entries (`{ ko, allowed }`) read their
+   * note from `exception-notes.ts`; an entry that brings its own `reason` or `gap` keeps it.
+   */
+  exceptions?: readonly ExceptionEntry[];
 }
 
 /** One stored pair with a human-readable origin such as 'heritage-cards.ts:94'. */
@@ -150,7 +149,7 @@ export function checkRomanization(ko: string, given: string, ctx?: CheckContext)
       issues.push(
         issue(
           'romanization-gap',
-          `${token}: ${gap} (${GAP_ARTICLES[gap]}); the converter cannot tell. Check 표준국어대사전 and add { ko: '${token}', allowed: ['…'], gap: '${gap}', reason: '…' } to ROMANIZATION_EXCEPTIONS`,
+          `${token}: ${gap} (${GAP_ARTICLES[gap]}); the converter cannot tell. Check 표준국어대사전 and add { ko: '${token}', allowed: ['…'] } to ROMANIZATION_EXCEPTIONS (exceptions.ts) and { gap: '${gap}', reason: '…' } under '${token}' to ROMANIZATION_EXCEPTION_NOTES (exception-notes.ts)`,
           ko,
           given,
         ),
@@ -161,7 +160,7 @@ export function checkRomanization(ko: string, given: string, ctx?: CheckContext)
 }
 
 /** The gaps the detectors name in the tokens of `ko` that no entry covers (a word entry, or a whole-string entry). */
-function uncoveredGaps(ko: string, exceptions: readonly RomanizationException[]): Array<{ token: string; gap: RomanizationGap }> {
+function uncoveredGaps(ko: string, exceptions: readonly ReviewedEntry[]): Array<{ token: string; gap: RomanizationGap }> {
   const whole = wholeEntryKey(ko);
   if (exceptions.some((e) => wholeEntryKey(e.ko) === whole)) return [];
   return koTokens(ko).flatMap((token) =>
@@ -190,7 +189,7 @@ export function checkFrameRomanization(ko: string, given: string, ctx?: CheckCon
   return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(afterSlot(part, i), (romParts[i] as string).trim(), ctx) : []));
 }
 
-function isAllowed(ko: string, given: string, exceptions: readonly RomanizationException[]): boolean {
+function isAllowed(ko: string, given: string, exceptions: readonly ReviewedEntry[]): boolean {
   return exceptions.some((e) => e.ko === ko.trim() && e.allowed.some((a) => compact(a) === compact(given)));
 }
 
@@ -207,14 +206,14 @@ const NOUN_REASON = /체언|noun/;
  * noun that keeps the ㅎ, as 북한산).
  */
 export function checkExceptions(
-  exceptions: readonly RomanizationException[],
+  exceptions: readonly ExceptionEntry[],
   seenKo: readonly string[],
 ): RomanizationIssue[] {
   const issues: RomanizationIssue[] = [];
   const stale = (message: string, ko: string): void => {
     issues.push(issue('romanization-exception-stale', message, ko));
   };
-  for (const e of exceptions) {
+  for (const e of exceptions.map(entryWithNote)) {
     if (e.reason.trim() === '') stale(`exception ${e.ko} has no reason`, e.ko);
     if (seenKo.indexOf(e.ko) < 0) stale(`exception ${e.ko} matched no source`, e.ko);
     if (!/\s/.test(e.ko.trim()) && e.allowed.length !== 1) {

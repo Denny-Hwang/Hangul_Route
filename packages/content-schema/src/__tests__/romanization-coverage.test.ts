@@ -2,7 +2,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { ROMANIZATION_EXCEPTIONS, checkExceptions } from '../index';
+import { ROMANIZATION_EXCEPTIONS } from '../index';
+import { checkExceptions } from '../romanization/lint';
 import {
   REGISTERED_SOURCES,
   REPO_ROOT,

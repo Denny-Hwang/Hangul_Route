@@ -1,4 +1,4 @@
-import { checkRomanization } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { describe, expect, it } from 'vitest';
 import { TAP_BOARD_E2E_CARDS } from '../tap-board-e2e-cards';
 

@@ -1,4 +1,5 @@
-import { HiddenHeritageRoundSchema, checkRomanization } from '@hangul-route/content-schema';
+import { HiddenHeritageRoundSchema } from '@hangul-route/content-schema';
+import { checkRomanization } from '@hangul-route/content-schema/romanization-lint';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { allowlistedInstitution } from '@hangul-route/content-schema/lint';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
