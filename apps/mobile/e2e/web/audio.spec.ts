@@ -92,6 +92,10 @@ function savedAudioPrefs(page: Page): Promise<string | null> {
  * opens on a word or an exchange says nothing. Each page is held until its own sound was said and half a second more
  * passed with no second one, so the count is exact. `before` is how many utterances were logged when Discover opened
  * (none, in a fresh learner's first quest). Returns how many sounds Discover played by itself.
+ *
+ * [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE row TC-1b (section 3.3): in quests 1-10 Discover also has a trace page, "Trace
+ * the new letters", which has no item and says nothing by itself (`autoHearId` is undefined for it), and on which the
+ * step pill is hidden. It is counted as a page that opens on no letter.
  */
 async function passDiscoverHearingItsLetters(page: Page, before = 0): Promise<number> {
   const pill = page.getByText('Look and learn', { exact: true });
@@ -101,7 +105,7 @@ async function passDiscoverHearingItsLetters(page: Page, before = 0): Promise<nu
   let own = 0;
   for (let i = 1; i <= pages; i += 1) {
     await expect(page.getByText(`Page ${i} of ${pages}`, { exact: true })).toBeVisible();
-    const first = await page.locator('[data-testid^="discover-item-"]').first().getAttribute('data-testid');
+    const first = await page.locator('[data-testid^="discover-item-"], [data-testid="discover-write"]').first().getAttribute('data-testid');
     if (first?.startsWith('discover-item-jamo:')) own += 1;
     await expect.poll(async () => (await utterances(page)).length, { message: `Discover page ${i}: its own sound` }).toBe(before + own);
     await page.waitForTimeout(500);
@@ -130,8 +134,8 @@ test('an idle game speaks once when the round starts, and not again on a timer o
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
-  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: each of quest 1's two Look and learn pages opens on a letter and says it
-  // once; the game's own count starts after those two.
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: each of quest 1's two Look and learn letter pages opens on a letter and says
+  // it once (its trace page says nothing, TC-1b); the game's own count starts after those two.
   const discover = await passDiscoverHearingItsLetters(page);
   expect(discover).toBe(2);
   await page.getByRole('button', { name: 'Play minigame' }).click();

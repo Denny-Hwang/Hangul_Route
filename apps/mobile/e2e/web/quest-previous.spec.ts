@@ -66,6 +66,8 @@ const button = (page: Page, name: string): Locator => page.getByRole('button', {
 const previous = (page: Page): Locator => page.getByTestId('quest-previous').filter({ visible: true });
 const stepDots = (page: Page): Locator => page.getByTestId('quest-step-dots').filter({ visible: true });
 const pageDots = (page: Page): Locator => page.getByTestId('discover-page-dots').filter({ visible: true });
+/** Discover's trace page, "Trace the new letters" ([TC] TC-1b): its first letter's heading, after the lazy pad is in. */
+const tracePage = (page: Page): Locator => page.getByTestId('discover-write-heading').filter({ visible: true });
 
 /** Onboard a child and pass the intro: quest 1 is on Look and learn, page 1. */
 async function openDiscover(page: Page): Promise<void> {
@@ -287,10 +289,12 @@ test.describe('[QB] a quest step can be taken back', () => {
     await expect(page.getByText(en.learner.quest.step.apply.pill, { exact: true }).filter({ visible: true })).toBeVisible();
     await waitForSavedRunStep(page, QUEST, 3);
 
-    // Two steps back: Look and learn. What is stored is still the furthest step, with its skipped game.
+    // Two steps back: Look and learn, open on its last page, which in quest 1 is the trace page (its step pill hidden;
+    // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b section 3.3, "Coming back"). What is stored is still the furthest step,
+    // with its skipped game.
     await previous(page).click();
     await previous(page).click();
-    await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+    await expect(tracePage(page)).toBeVisible();
     await expect.poll(async () => (await savedRun(page))?.stepIndex).toBe(3);
     expect((await savedRun(page))?.skippedSteps).toEqual([2]);
 
@@ -300,7 +304,7 @@ test.describe('[QB] a quest step can be taken back', () => {
     await expect(sheet).toContainText(en.learner.quest.leave.title);
     await sheet.getByRole('button').first().click();
     await expect(sheet).toHaveCount(0);
-    await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+    await expect(tracePage(page)).toBeVisible();
 
     // A reload, then Start again: the quest goes on from the furthest step, not from the step shown before it.
     await page.goto('/');
