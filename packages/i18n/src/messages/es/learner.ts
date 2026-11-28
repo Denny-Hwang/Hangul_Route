@@ -170,7 +170,12 @@ export const learner = {
     },
     reading: {
       title: 'Práctica de lectura',
-      hideUntilTap: 'Ocultar la romanización hasta que toque',
+      /** The visible label and the accessible name of the three-choice group on the Reading practice card (AMENDMENTS-ROMANIZATION-FADE section 3.10). */
+      groupLabel: 'Mostrar la romanización',
+      auto: { label: 'Según aprendo', hint: 'Muestra menos a medida que lees más.' },
+      always: { label: 'Siempre' },
+      tap: { label: 'Solo al tocar' },
+      /** The Words cards switch (two states: Only when I tap on or off). */
       on: 'Sí',
       off: 'No',
     },
@@ -513,6 +518,8 @@ export const learner = {
   quest: {
     notFound: 'Misión no encontrada.',
     goBack: { cta: 'Volver' },
+    /** Hoya's one-time line on the Hello step of the first quest where words fold (AMENDMENTS-ROMANIZATION-FADE section 3.9). The button name is the reveal's own (`discover.showHowToSay.cta`). */
+    readingNotice: '¡Ya puedes leer hangul! ¿Necesitas ayuda con una palabra? Toca Ver cómo se dice.',
     leave: {
       title: '¿Dejar esta misión?',
       message: 'Las estrellas de este intento no se guardarán.',

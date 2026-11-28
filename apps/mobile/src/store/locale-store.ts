@@ -114,17 +114,17 @@ interface Actions {
   /** Re-reads the device record (a page back in front); a failed read keeps what is in memory. */
   rereadDevice: () => Promise<void>;
   /**
-   * The old two-state Reading practice switches (until row RF-2 moves them to `setRomanizationChoice`). Writes the legacy
-   * field and **drops** a stored `romanizationChoice`, so a build that stored a choice and one that did not never
-   * disagree: the record is then read by the legacy rows (AMENDMENTS-ROMANIZATION-FADE section 3.2, mixed builds).
-   */
-  setRomanizationMode: (profileId: string, mode: RomanizationMode) => void;
-  /**
    * The learner's reading choice (section 3.2): stored with the legacy `romanizationMode` as its mirror (an older cached
    * build then shows `tap` for `tap` and its own default for the rest), and reported as `romanization.mode_changed`
    * when the choice read for the profile changes.
    */
   setRomanizationChoice: (profileId: string, choice: RomanizationChoice) => void;
+  /**
+   * Hoya's one-time reading line was shown (section 3.9): stores when, once. A second call leaves the first time in place
+   * (Previous back to the Hello step shows the line again within its run). Spreads the previous record, so the choice,
+   * Read to me and Challenge are kept. No telemetry.
+   */
+  markRomanizationNotice: (profileId: string, at: string) => void;
   /** The story reader's Read to me switch (F-STORY-002 §3.4); no telemetry. */
   setReadToMe: (profileId: string, readToMe: boolean) => void;
   /**
@@ -364,18 +364,6 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     mirrorRecord(record);
   },
 
-  setRomanizationMode: (profileId, mode) => {
-    const { byProfile } = get();
-    const previous = byProfile[profileId];
-    const { romanizationChoice: _dropped, ...kept } = previous ?? {};
-    const next: ProfileSettings = { ...kept, romanizationMode: mode };
-    set({ byProfile: { ...byProfile, [profileId]: next } });
-    persist(writeJson(profileKey(profileId), next));
-    if (romanizationChoiceOf(previous) !== romanizationChoiceOf(next)) {
-      void track({ name: 'romanization.mode_changed', profileId, payload: { mode: romanizationChoiceOf(next) } });
-    }
-  },
-
   setRomanizationChoice: (profileId, choice) => {
     const { byProfile } = get();
     const previous = byProfile[profileId];
@@ -385,6 +373,15 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     if (romanizationChoiceOf(previous) !== choice) {
       void track({ name: 'romanization.mode_changed', profileId, payload: { mode: choice } });
     }
+  },
+
+  markRomanizationNotice: (profileId, at) => {
+    const { byProfile } = get();
+    const previous = byProfile[profileId];
+    if (previous?.romanizationNoticeAt !== undefined) return;
+    const next: ProfileSettings = { romanizationMode: 'always', ...previous, romanizationNoticeAt: at };
+    set({ byProfile: { ...byProfile, [profileId]: next } });
+    persist(writeJson(profileKey(profileId), next));
   },
 
   setReadToMe: (profileId, readToMe) => {

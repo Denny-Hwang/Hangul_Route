@@ -777,10 +777,10 @@ describe('item-level folding and the answer showing every option (AMENDMENTS-ROM
     }
   });
 
-  it('with the shipped default choice every option is exactly what it was, in every phase, host and state', () => {
+  it('with an explicit Always choice (what the default was before RF-2) every option is exactly what it was, in every phase, host and state', () => {
     const states = [asking, run(asking, [tap('b', 100)]).state, resolved, { ...resolved, status: 'done' as const }];
     for (const phase of ['letters', 'reading', 'all'] as const) {
-      const resolver = romanizationResolver(null, undefined, { phase, met, screenReader: false });
+      const resolver = romanizationResolver(null, { romanizationChoice: 'always' }, { phase, met, screenReader: false });
       for (const mode of ['quest', 'check', 'review', 'vocab', 'preview'] as const) {
         const hold = checkHoldsRomanization(mode);
         for (const state of states) {

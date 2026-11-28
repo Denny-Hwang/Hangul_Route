@@ -40,7 +40,7 @@ const DIRECT_READS: RegExp[] = [
 
 /**
  * The one editor: `ReadingPracticeCard` changes a profile's stored setting, so it shows
- * the stored value (`resolveRomanizationMode(null, settings)`), never an override.
+ * the stored choice (`romanizationChoiceOf(settings)`, AMENDMENTS-ROMANIZATION-FADE row RF-2), never an override.
  */
 const EDITOR = 'components/ReadingPracticeCard.tsx';
 
@@ -151,7 +151,8 @@ describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
   it('the editor shows the stored setting, never the override', () => {
     const file = files.find((f) => f.rel === EDITOR);
     expect(file, EDITOR).toBeDefined();
-    expect(file!.source).toContain('resolveRomanizationMode(null, settings)');
+    expect(file!.source).toContain('romanizationChoiceOf(settings)');
+    expect(file!.source).not.toContain('resolveRomanizationMode(');
     expect(file!.source).not.toContain('useRomanizationMode(');
   });
 

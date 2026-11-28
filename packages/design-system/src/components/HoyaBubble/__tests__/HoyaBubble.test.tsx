@@ -69,3 +69,32 @@ describe('HoyaBubble live (F-A11Y-001 AF-1)', () => {
     expect(JSON.stringify(quiet.props)).not.toContain('assertive');
   });
 });
+
+/**
+ * [RF] AMENDMENTS-ROMANIZATION-FADE row RF-2 (RF-0b Q4): `figure={false}` draws the bubble without Hoya's 72 figure, for a
+ * second line spoken by the Hoya of the bubble just above it. Everything else (tone, border, padding, the message) is as
+ * the default draws it.
+ */
+describe('HoyaBubble figure (RF-0b Q4)', () => {
+  const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
+
+  it('draws the figure by default', () => {
+    const root = HoyaBubble({ message: 'Hi' }) as El;
+    expect(JSON.stringify(root.props.children)).toContain('"Hoya"');
+  });
+
+  it('figure={false}: no Hoya and no figure column; the bubble is styled as before', () => {
+    const withFigure = HoyaBubble({ message: 'Hi', tone: 'idle' }) as El;
+    const bare = HoyaBubble({ message: 'Hi', tone: 'idle', figure: false, live: false }) as El;
+    expect(JSON.stringify(bare.props.children)).not.toContain('"Hoya"');
+    expect(kids(bare)).toHaveLength(kids(withFigure).length - 1);
+    expect(bare.props.style).toEqual(withFigure.props.style);
+    expect(bare.props.accessibilityLiveRegion).toBe('none');
+  });
+
+  it('figure={false} keeps the dismiss and the message', () => {
+    const bare = HoyaBubble({ message: 'Hi', figure: false, onDismiss: vi.fn() }) as El;
+    expect(kids(bare).some((c) => c.type === 'GuardedPressable')).toBe(true);
+    expect(JSON.stringify(bare.props.children)).toContain('Hi');
+  });
+});

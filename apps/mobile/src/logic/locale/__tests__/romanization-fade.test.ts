@@ -10,7 +10,10 @@ import {
   fadePhase,
   isDecodable,
   metSymbols,
+  isStage1Quest,
+  readingNoticeDue,
   type FadeInput,
+  type ReadingNoticeInput,
 } from '../romanization-fade';
 
 /** The first ten Stage 1 quests teach all 30 symbols; quest 11 (nature-q2) teaches none (F-QUEST-002 section 3.6, R5). */
@@ -197,5 +200,40 @@ describe('isDecodable (section 3.4)', () => {
     expect(isDecodable('산', new Set())).toBe(false);
     expect(isDecodable('산', new Set(symbolsMetThrough(FIRST_TEN[0]!)))).toBe(false);
     expect(isDecodable('산', met)).toBe(true);
+  });
+});
+
+/**
+ * AMENDMENTS-ROMANIZATION-FADE section 3.9 (row RF-2): Hoya's reading line is due once per profile: the choice is `auto`, no
+ * screen reader is in use, it has not been shown, and either every fold is on (`all`) or the learner is in `reading` on a
+ * Stage 1 quest, where the reading words fold.
+ */
+describe('isStage1Quest (section 3.9)', () => {
+  it('is true for every Stage 1 quest and false for a Word Builder quest or an unknown id', () => {
+    for (const q of STAGE1_QUESTS) expect(isStage1Quest(q.id)).toBe(true);
+    expect(isStage1Quest(WORD_BUILDER_QUESTS[0]!)).toBe(false);
+    expect(isStage1Quest('quest:nope')).toBe(false);
+  });
+});
+
+describe('readingNoticeDue (section 3.9)', () => {
+  const due: ReadingNoticeInput = { choice: 'auto', phase: 'reading', screenReader: false, noticeAt: undefined, stage1Quest: true };
+
+  it('is due in phase reading on a Stage 1 quest, and in phase all on any quest', () => {
+    expect(readingNoticeDue(due)).toBe(true);
+    expect(readingNoticeDue({ ...due, phase: 'all', stage1Quest: true })).toBe(true);
+    expect(readingNoticeDue({ ...due, phase: 'all', stage1Quest: false })).toBe(true);
+  });
+
+  it.each([
+    ['the choice is Always', { choice: 'always' as const }],
+    ['the choice is Only when I tap', { choice: 'tap' as const }],
+    ['a screen reader is in use', { screenReader: true }],
+    ['it was shown already', { noticeAt: '2026-11-26T08:00:00.000Z' }],
+    ['the phase is letters', { phase: 'letters' as const }],
+    ['the phase is reading on a quest that is not Stage 1 (nothing folds there)', { stage1Quest: false }],
+    ['the phase is letters on a quest that is not Stage 1', { phase: 'letters' as const, stage1Quest: false }],
+  ])('is not due when %s', (_, over) => {
+    expect(readingNoticeDue({ ...due, ...over })).toBe(false);
   });
 });

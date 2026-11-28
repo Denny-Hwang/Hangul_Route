@@ -227,7 +227,12 @@ export const learner = {
     /** Always shown: it does not depend on a second language (F-I18N-001 D2). */
     reading: {
       title: 'Reading practice',
-      hideUntilTap: 'Hide romanization until I tap',
+      /** The visible label and the accessible name of the three-choice group on the Reading practice card (AMENDMENTS-ROMANIZATION-FADE section 3.10). */
+      groupLabel: 'Show romanization',
+      auto: { label: 'As I learn', hint: 'Shows less as you read more.' },
+      always: { label: 'Always' },
+      tap: { label: 'Only when I tap' },
+      /** The Words cards switch (two states: Only when I tap on or off). */
       on: 'On',
       off: 'Off',
     },
@@ -734,6 +739,8 @@ export const learner = {
   quest: {
     notFound: 'Quest not found.',
     goBack: { cta: 'Go back' },
+    /** Hoya's one-time line on the Hello step of the first quest where words fold (AMENDMENTS-ROMANIZATION-FADE section 3.9). The button name is the reveal's own (`discover.showHowToSay.cta`). */
+    readingNotice: 'You can read Hangul now! Need help with a word? Tap Show how to say it.',
     /** The confirm shown by the close control; stars already saved are untouched. */
     leave: {
       title: 'Leave this quest?',

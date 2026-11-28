@@ -686,10 +686,10 @@ describe('item-level folding on the quest host (AMENDMENTS-ROMANIZATION-FADE sec
     expect(wordTileView(bap, fresh(), { ...quest, mode: 'check', hold: true })).toMatchObject({ romanization: '', heldRomanization: 'bap' });
   });
 
-  it('with the shipped default choice, or no resolver, every tile is exactly what it was, in every phase and every state', () => {
+  it('with an explicit Always choice, or no resolver, every tile is exactly what it was, in every phase and every state', () => {
     const states = [fresh(), run(fresh(), [word('bap')]).state, run(fresh(), [pic('bap'), word('bap')]).state, run(fresh(), [pic('bap'), word('san')]).state];
     for (const phase of ['letters', 'reading', 'all'] as const) {
-      const resolver = romanizationResolver(null, undefined, { phase, met, screenReader: false });
+      const resolver = romanizationResolver(null, { romanizationChoice: 'always' }, { phase, met, screenReader: false });
       for (const state of states) {
         for (const pair of [...board.pairs, magpie]) {
           expect(wordTileView(pair, state, { romanizationMode: 'always', mode: 'quest', romanizationModeOf: resolver.forText })).toEqual(

@@ -24,7 +24,7 @@ const flag = vi.hoisted(() => ({ on: false }));
 const track = vi.hoisted(() => vi.fn<(event: unknown) => Promise<void>>(() => Promise.resolve()));
 
 vi.mock('../../../platform/telemetry', () => ({ track }));
-vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn() }));
+vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn(), isScreenReaderEnabled: async () => false, subscribeScreenReader: () => () => undefined }));
 vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(() => Promise.resolve('played')) }));
 vi.mock('../../../store/remote-config-store', async (importOriginal) => ({
   ...(await importOriginal<object>()),

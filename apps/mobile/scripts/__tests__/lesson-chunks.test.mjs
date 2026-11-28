@@ -773,7 +773,8 @@ describe('precacheReport and its budget lines', () => {
     // [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1a (the trace page's logic and view model in `discover-flow.ts` and `discover-write.ts`, in the start bundle) on top of main with MP-2a (line 4,577,600 B) measures 4,579,228 B (release build, CI=1): 4,585,300 B.
     // [PV] AMENDMENTS-PLC-VALIDITY PV-6 on main with MP-2b and PV-4 measures 4,585,548 B (release build, CI=1): 4,591,600 B.
     // [TC] TC-1b (the trace page's door, chooser and chrome; the pad is `discover-trace-chunk`) on top of main with RF-1b (line 4,585,300 B) measures 4,589,675 B (release build, CI=1): 4,595,700 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_595_700);
+    // [RF] AMENDMENTS-ROMANIZATION-FADE RF-2 (the Reading practice card, the line, `useReadingNotice`, `HoyaBubble`'s `figure`, the en strings) on top of main (line 4,595,700 B) measures 4,599,310 B (release build, CI=1): 4,605,310 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_605_310);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown
     // about 30 KB since FN-7 (4,574,000 to 4,604,100 B), so it now stays at least 140 KB (was 150 KB) under each of them.
@@ -792,7 +793,8 @@ describe('precacheReport and its budget lines', () => {
     // [MP] Row MP-2a: 4,577,600 B; the closest old size, 4,751,444 B, is 173,844 B above it (the gap holds).
     // [TC] Row TC-1a: 4,585,300 B; the closest old size, 4,751,444 B, is 166,144 B above it (the gap holds).
     // [TC] Row TC-1b: 4,595,700 B; the closest old size, 4,751,444 B, is 155,744 B above it (the gap holds).
-    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(150_000);
+    // [RF] Row RF-2: 4,605,310 B; the closest old size, 4,751,444 B, is 146,134 B above it, so the gap is 140 KB (was 150 KB).
+    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(140_000);
     // SB took about 100 KB out: the line is under every measurement from FN-7 to SB, the closest (FN-7's own, 4,570,041 B)
     // 32,041 B above it. [LR] Row LR-3a: 4,544,600 B, so the closest is 25,441 B above it and the gap is 25 KB (was 30 KB). [SF] Row SF-1:
     // 4,550,200 B, so the closest is 19,841 B above it and the gap is 15 KB (was 25 KB). [RF] Row RF-1a: 4,557,800 B, the gap 10 KB.
@@ -802,11 +804,12 @@ describe('precacheReport and its budget lines', () => {
     // [MP] Row MP-2a: 4,577,600 B, so the line is now above FN-7's own size (4,570,041 B) and the closer measurements after it: the start bundle is
     // above FN-7's own size, so "the line is under every measurement from FN-7 to SB" no longer holds and is not asserted. The start bundle shrink
     // row (SB-4, planned after phase 2) brings it back; the 150 KB gap under every measurement before FN-7 (above) still holds.
-    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_573_615, 4_579_228, 4_585_548, 4_589_675]) {
+    for (const measured of [4_533_869, 4_533_364, 4_540_705, 4_546_233, 4_547_724, 4_553_753, 4_557_092, 4_561_759, 4_565_884, 4_573_615, 4_579_228, 4_585_548, 4_589_675, 4_599_310]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_589_675).toBeLessThan(10_000);
+    // [RF] Row RF-2: the latest is 4,599,310 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_599_310).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

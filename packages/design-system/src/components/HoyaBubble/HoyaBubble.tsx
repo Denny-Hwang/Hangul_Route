@@ -40,6 +40,7 @@ export function HoyaBubble({
   dismissLabel,
   autoDismissMs,
   live = true,
+  figure = true,
   testID,
 }: HoyaBubbleProps): ReactElement {
   const textScale = useTypeScale();
@@ -67,9 +68,11 @@ export function HoyaBubble({
         ...shadows.card,
       }}
     >
-      <View style={{ alignItems: 'center' }}>
-        <Hoya pose={poseFor[tone]} size={72} />
-      </View>
+      {figure ? (
+        <View style={{ alignItems: 'center' }}>
+          <Hoya pose={poseFor[tone]} size={72} />
+        </View>
+      ) : null}
       <View style={{ flex: 1 }}>
         <Body weight="semibold" size="lg">
           {message}

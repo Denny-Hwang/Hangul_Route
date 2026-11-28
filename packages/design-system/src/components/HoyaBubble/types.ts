@@ -17,5 +17,11 @@ export interface HoyaBubbleProps {
    * for a game's result bubble when the answer announcer already says the result. Never `assertive`.
    */
   live?: boolean;
+  /**
+   * Default `true`: Hoya's 72 figure sits beside the message. `false` ([RF] AMENDMENTS-ROMANIZATION-FADE RF-0b Q4): the bubble
+   * is drawn the same without the figure and its gap, for a second line spoken by the Hoya of the bubble just above it
+   * (the one-time reading line on the Hello step).
+   */
+  figure?: boolean;
   testID?: string;
 }

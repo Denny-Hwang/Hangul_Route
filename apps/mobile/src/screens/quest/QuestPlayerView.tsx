@@ -20,6 +20,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
+import { useReadingNotice } from '../../i18n/use-romanization-mode';
 import { localizeQuest } from '../../logic/content-locale';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
@@ -239,6 +240,13 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   );
 
   const step = quest?.steps[stepIndex];
+
+  // [RF] Hoya's one-time reading line (AMENDMENTS-ROMANIZATION-FADE section 3.9): decided once for the run, on its first
+  // step, and held (so marking it shown never takes it off the screen, and Previous back to Hello shows it again). Only the
+  // learner's player passes `reviewsFor`; a guest and the All lessons preview never get it.
+  // The run has begun once the store holds this quest (before that the first render shows step 0 whatever step the run opens on).
+  const runBegun = useQuestRunStore((s) => s.questId === questId);
+  const readingNotice = useReadingNotice(reviewsFor, questId, runBegun && stepIndex === 0);
 
   // [MP] AMENDMENTS-MINIMAL-PAIRS section 3.6 (row MP-2b): a contrast step decides, each time it is entered, whether it has rounds
   // to play. With none of its sets approved (`CONTRAST_APPROVED_SET_IDS`, a few bytes of the start bundle; empty until the owner
@@ -570,6 +578,8 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
             ) : undefined
           }
           note={stepIndex === 0 ? introNote : undefined}
+          // [RF] On the Hello step only (the first, `intro` step): the line, and no Hoya 120 on the card then (RF-0b Q5).
+          readingNotice={runBegun && stepIndex === 0 && step.kind === 'intro' && readingNotice.show ? { message: q.readingNotice, onShown: readingNotice.markShown } : undefined}
           // The Did you know? tip (F-CURR-002 row CM-3C): the quest's note of its cell, behind `upperCards`.
           tip={onReward ? <CultureTip questId={questId} /> : undefined}
         />
@@ -587,6 +597,7 @@ function NarrativeStepBody({
   actions,
   note,
   tip,
+  readingNotice,
 }: {
   copy: QuestMessages;
   line: NarrativeLine;
@@ -600,14 +611,24 @@ function NarrativeStepBody({
   note?: string;
   /** Under Hoya's card on the reward step: the Did you know? tip (F-CURR-002 row CM-3C), which draws nothing while off. */
   tip?: ReactNode;
+  /**
+   * [RF] Hoya's one-time reading line (AMENDMENTS-ROMANIZATION-FADE section 3.9): a second bubble with no figure under the
+   * quest's own line, inside the same card; `onShown` marks it shown when it mounts. On the run that shows it the card draws
+   * no Hoya 120, so Continue stays on screen where it is today (RF-0b Q5): the quest bubble's Hoya speaks both lines.
+   */
+  readingNotice?: { message: string; onShown: () => void };
 }): ReactElement {
   return (
     <View style={{ flex: 1 }}>
       <Card padding="lg" tone={isReward ? 'success' : 'brand'}>
-        <View style={{ alignItems: 'center' }}>
-          <Hoya pose={isReward ? 'cheering' : 'waving'} size={120} />
-        </View>
-        <Spacer size="md" />
+        {readingNotice ? null : (
+          <>
+            <View style={{ alignItems: 'center' }}>
+              <Hoya pose={isReward ? 'cheering' : 'waving'} size={120} />
+            </View>
+            <Spacer size="md" />
+          </>
+        )}
         <HoyaBubble
           tone={isReward ? 'cheering' : 'idle'}
           message={line.message}
@@ -620,6 +641,7 @@ function NarrativeStepBody({
             <Body tone="secondary">{line.glossEn}</Body>
           </>
         ) : null}
+        {readingNotice ? <ReadingNoticeLine message={readingNotice.message} onShown={readingNotice.onShown} /> : null}
       </Card>
       {tip}
       {note !== undefined ? (
@@ -636,6 +658,22 @@ function NarrativeStepBody({
       )}
       <Spacer size="lg" />
     </View>
+  );
+}
+
+/**
+ * [RF] Hoya's reading line (section 3.9): a `HoyaBubble` tone `idle`, no figure and not a live region (it is read in order,
+ * never announced over the quest's own line). It marks itself shown when it mounts, once per profile on this device.
+ */
+function ReadingNoticeLine({ message, onShown }: { message: string; onShown: () => void }): ReactElement {
+  useEffect(() => {
+    onShown();
+  }, [onShown]);
+  return (
+    <>
+      <Spacer size="sm" />
+      <HoyaBubble tone="idle" message={message} figure={false} live={false} testID="quest-reading-notice" />
+    </>
   );
 }
 

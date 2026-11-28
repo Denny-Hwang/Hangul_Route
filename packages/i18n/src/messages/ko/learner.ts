@@ -161,7 +161,12 @@ export const learner = {
     },
     reading: {
       title: '읽기 연습',
-      hideUntilTap: '누를 때까지 로마자 표기 숨기기',
+      /** The visible label and the accessible name of the three-choice group on the Reading practice card (AMENDMENTS-ROMANIZATION-FADE section 3.10). */
+      groupLabel: '로마자 표기 보기',
+      auto: { label: '배운 만큼', hint: '읽을수록 조금씩 덜 보여요.' },
+      always: { label: '항상' },
+      tap: { label: '누를 때만' },
+      /** The Words cards switch (two states: Only when I tap on or off). */
       on: '켜짐',
       off: '꺼짐',
     },
@@ -488,6 +493,8 @@ export const learner = {
   quest: {
     notFound: '퀘스트를 찾을 수 없어요.',
     goBack: { cta: '뒤로 가기' },
+    /** Hoya's one-time line on the Hello step of the first quest where words fold (AMENDMENTS-ROMANIZATION-FADE section 3.9). The button name is the reveal's own (`discover.showHowToSay.cta`). */
+    readingNotice: '이제 한글을 읽을 수 있어요! 낱말이 어려우면 ‘읽는 법 보기’를 눌러요.',
     leave: {
       title: '이 퀘스트를 나갈까요?',
       message: '이번에 받은 별은 저장되지 않아요.',

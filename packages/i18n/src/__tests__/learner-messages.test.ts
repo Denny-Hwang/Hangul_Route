@@ -175,10 +175,30 @@ describe('learner.profile (English wording as shipped)', () => {
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);
   });
 
-  it('has the reading-practice switch; the language lives on the Display sheet', () => {
+  it('has the reading-practice card with its three choices; the language lives on the Display sheet', () => {
     expect('language' in p).toBe(false);
     expect(p.reading.title).toBe('Reading practice');
-    expect(p.reading.hideUntilTap).toBe('Hide romanization until I tap');
+    expect(p.reading.groupLabel).toBe('Show romanization');
+    expect([p.reading.auto.label, p.reading.always.label, p.reading.tap.label]).toEqual(['As I learn', 'Always', 'Only when I tap']);
+    expect(p.reading.auto.hint).toBe('Shows less as you read more.');
+    // The old two-state switch's label is gone; the Words cards switch keeps On / Off.
+    expect('hideUntilTap' in p.reading).toBe(false);
+    expect([p.reading.on, p.reading.off]).toEqual(['On', 'Off']);
+  });
+
+  it("has Hoya's one-time reading line, which names the reveal button by its own words (AMENDMENTS-ROMANIZATION-FADE section 3.9)", () => {
+    const q = en.learner.quest;
+    expect(q.readingNotice).toBe('You can read Hangul now! Need help with a word? Tap Show how to say it.');
+    expect(q.readingNotice).toContain(en.learner.quest.discover.showHowToSay.cta);
+    // Progress, never help taken away (section 3.14).
+    expect(q.readingNotice).not.toMatch(/\b(hide|hidden|remove|removed|lose|lost|less help|without help)\b/i);
+  });
+
+  it('the three choices and the line carry no age framing and no word of loss', () => {
+    const r = en.learner.profile.reading;
+    for (const text of [r.groupLabel, r.auto.label, r.auto.hint, r.always.label, r.tap.label]) {
+      expect(text).not.toMatch(/\b(hide|hidden|lose|remove|less help|kids?|children|ages?)\b/i);
+    }
   });
 });
 

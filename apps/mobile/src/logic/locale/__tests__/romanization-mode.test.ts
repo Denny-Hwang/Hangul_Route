@@ -51,8 +51,29 @@ describe('resolveRomanizationMode', () => {
 
 /** AMENDMENTS-ROMANIZATION-FADE section 3.2: the migration. */
 describe('romanizationChoiceOf', () => {
-  it('ships switched off: the default constant is always (RF-1a)', () => {
-    expect(ROMANIZATION_DEFAULT_CHOICE).toBe('always');
+  it('the default choice is As I learn (RF-2 turned the fade on)', () => {
+    expect(ROMANIZATION_DEFAULT_CHOICE).toBe('auto');
+  });
+
+  it('migration, built-in default (OD-RF-1): a stored always reads as the default, a stored tap stays tap, a stored choice stays', () => {
+    // no record, an empty record, the old switch's Off, and a value another writer filled in (Read to me, Challenge, clock)
+    expect(romanizationChoiceOf(undefined)).toBe('auto');
+    expect(romanizationChoiceOf({})).toBe('auto');
+    expect(romanizationChoiceOf({ romanizationMode: 'always' })).toBe('auto');
+    // the old switch's On: the one value that recorded a choice
+    expect(romanizationChoiceOf({ romanizationMode: 'tap' })).toBe('tap');
+    // a choice this build wrote, with its mirror
+    expect(romanizationChoiceOf({ romanizationChoice: 'always', romanizationMode: 'always' })).toBe('always');
+    expect(romanizationChoiceOf({ romanizationChoice: 'tap', romanizationMode: 'tap' })).toBe('tap');
+    expect(romanizationChoiceOf({ romanizationChoice: 'auto', romanizationMode: 'always' })).toBe('auto');
+  });
+
+  it('an older cached build reads the mirror alone: it shows tap for a tap choice and always for the rest, as before', () => {
+    // The older build's own rule (`override ?? settings.romanizationMode ?? 'always'`) applied to what this build writes.
+    const olderBuildShows = (s: { romanizationMode?: 'always' | 'tap' }): 'always' | 'tap' => s.romanizationMode ?? 'always';
+    for (const choice of ['auto', 'always', 'tap'] as const) {
+      expect(olderBuildShows({ romanizationMode: romanizationMirrorOf(choice) })).toBe(choice === 'tap' ? 'tap' : 'always');
+    }
   });
 
   it.each<RomanizationChoice>(['auto', 'always'])('with the default choice %s (what RF-2 flips)', (defaultChoice) => {
@@ -126,12 +147,19 @@ describe('romanizationResolver: surface (section 3.5, rows S1 to S7)', () => {
     expect(romanizationResolver(null, auto, fade('all')).surface).toBe('tap');
   });
 
-  it('a profile with no choice reads the default: today, always, whatever the phase; a stored tap stays tap', () => {
+  it('a profile with no choice reads the default (As I learn): it follows the phase; a stored tap stays tap (OD-RF-1)', () => {
+    const followsPhase: Record<FadePhase, 'always' | 'tap'> = { letters: 'always', reading: 'always', all: 'tap' };
     for (const phase of PHASES) {
-      expect(romanizationResolver(null, undefined, fade(phase)).surface).toBe('always');
-      expect(romanizationResolver(null, { romanizationMode: 'always' }, fade(phase)).surface).toBe('always');
+      expect(romanizationResolver(null, undefined, fade(phase)).surface).toBe(followsPhase[phase]);
+      // the old switch's Off, or a value another writer filled in: the default, not an explicit Always
+      expect(romanizationResolver(null, { romanizationMode: 'always' }, fade(phase)).surface).toBe(followsPhase[phase]);
       expect(romanizationResolver(null, { romanizationMode: 'tap' }, fade(phase)).surface).toBe('tap');
     }
+  });
+
+  it('with no progress read yet (or no profile) the default shows everything, as S4 says', () => {
+    expect(romanizationResolver(null, undefined, null).surface).toBe('always');
+    expect(romanizationResolver(null, { romanizationMode: 'always' }, null).surface).toBe('always');
   });
 });
 
@@ -158,8 +186,8 @@ describe('romanizationResolver: check (sections 3.5 and 3.7)', () => {
     expect(romanizationResolver('always', { romanizationChoice: 'tap' }, fade('all')).check).toBe('always');
   });
 
-  it('equals the surface mode for a profile that never chose auto', () => {
-    for (const settings of [undefined, { romanizationMode: 'tap' as const }, { romanizationChoice: 'always' as const }]) {
+  it('equals the surface mode for a profile that chose Always or Only when I tap', () => {
+    for (const settings of [{ romanizationMode: 'tap' as const }, { romanizationChoice: 'tap' as const }, { romanizationChoice: 'always' as const }]) {
       const r = romanizationResolver(null, settings, fade('all'));
       expect(r.check).toBe(r.surface);
     }
