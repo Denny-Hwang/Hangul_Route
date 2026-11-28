@@ -228,7 +228,10 @@ answer can shrink to its text (Tile) or a mark inside would read as part of the 
     board; look-here stays the dashed ring inside the spot with no mark.
   - **Look-here ring**: `LookHereRing` (`choiceCardRingStyle`) on Syllable Build's and Match Shape's tiles and Sentence
     Builder's tile; Role Play's reply keeps its negative-margin wrapper, now dashed and `spacing.xs` outside, so the replies'
-    scroller keeps `RING_OUT` (7) of room on every side (the replies are 14 narrower).
+    scroller keeps `RING_OUT` (7) of room on every side. *Fixed 2026-11-28 (offline e2e on main):* the scroller reaches
+    the same 7 into the screen's side margin (`marginHorizontal: -RING_OUT`), so the replies keep the instruction row's
+    width; taken from the replies (14 narrower, as first built) they rewrapped at 320 with the Largest text in a font with
+    wider glyphs, the pinned area grew and the newest Korean line no longer fit the log (CM-35).
   - **Seen in the shots, not changed**: Match Shape's pair grid has an 8 gap, so the look-here rings of two neighbouring
     copies (14 each) run into each other and touch the next tile's border (`shots/af-4c/match-shape-pair-360-look-here.png`).
     They still read as dashed rings; a wider grid gap is follow-up F7. At 320 wide with the Largest text, Role Play's pinned

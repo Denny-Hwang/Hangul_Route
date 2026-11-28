@@ -640,8 +640,11 @@ function Replies(props: RepliesProps): ReactElement {
             drive.props.ref(node);
           }}
           key={props.turn}
-          style={{ flexShrink: 1 }}
-          // The look-here ring reaches `RING_OUT` outside a reply, so the replies keep that room on every side.
+          // The look-here ring reaches `RING_OUT` outside a reply, so the replies keep that room on every side. The scroller
+          // reaches the same `RING_OUT` into the screen's side margin, so the room is not taken from the replies: they keep
+          // the instruction row's width and do not rewrap, and at 320 with the Largest text the newest line still fits the
+          // log above them (CM-35).
+          style={{ flexShrink: 1, marginHorizontal: -RING_OUT }}
           contentContainerStyle={{ gap: spacing.sm, paddingTop: RING_OUT, paddingBottom: RING_OUT, paddingHorizontal: RING_OUT }}
           onLayout={(e: LayoutChangeEvent) => {
             drive.measure.onLayout(e);

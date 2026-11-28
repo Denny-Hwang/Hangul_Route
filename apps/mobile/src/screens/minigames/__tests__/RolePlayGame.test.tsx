@@ -157,6 +157,26 @@ describe('Role Play (row CM-35)', () => {
     expect(why).toContain('annyeonghi gyeseyo');
   });
 
+  it('the replies keep the width of the row above them: the look-here ring’s room comes out of the screen’s side margin', async () => {
+    // F-A11Y-001 AF-4c gave the replies' scroller `RING_OUT` (7) of room on every side for the ring. Taken from the reply
+    // width, it rewrapped the replies at 320 with the Largest text, the pinned area grew and the newest Korean line no
+    // longer fit the log (CM-35: the newest line and a reply always in view). The scroller reaches the same 7 into the
+    // screen's side margin, so the room is kept and the replies are as wide as the instruction row.
+    const { r } = await open();
+    const scroller = byTestId(root(r), 'role-play-replies')[0]!;
+    const flat = (style: unknown): Record<string, unknown> =>
+      Object.assign({}, ...[style].flat(Infinity).filter((s): s is Record<string, unknown> => typeof s === 'object' && s !== null));
+    const outer = flat(scroller.props.style);
+    const content = flat(scroller.findAll((n) => typeof n.type === 'string')[1]?.props.style);
+    // react-native-web writes lengths as "7px".
+    const px = (v: unknown): number => Number.parseFloat(String(v));
+    const pad = px(content.paddingLeft);
+    expect(pad).toBeGreaterThan(0);
+    expect(px(content.paddingRight)).toBe(pad);
+    expect(px(outer.marginLeft)).toBe(-pad);
+    expect(px(outer.marginRight)).toBe(-pad);
+  });
+
   it('an empty scope shows a way back, never a dead end', async () => {
     let r!: ReactTestRenderer;
     const back = vi.fn();
