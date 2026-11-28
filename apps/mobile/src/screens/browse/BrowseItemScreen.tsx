@@ -13,7 +13,7 @@ import { presentDeck, presentHref, presentItemShown, presentPlacement, type Pres
 import { storyPreviewParams } from '../../logic/browse/preview';
 import { topicHearShown } from '../../logic/browse/topic-view';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
-import { lectureBundle } from '../../logic/lecture/content';
+import { useLectureSources } from '../lecture-sources-entry';
 import { leaveTo } from '../../platform/browse-env';
 import { openPresenter, presenterRootExists } from '../../platform/present-handoff';
 import { CardRow, KoChip, LessonDisplayButton, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
@@ -42,6 +42,7 @@ const PRIMARY_MAX = BROWSE_ACTION_MAX_WIDTH;
 const LABEL_COLUMN = BROWSE_LABEL_COLUMN;
 
 export function BrowseItemScreen({ route, navigation }: Props): ReactElement {
+  const { lectureBundle } = useLectureSources();
   const messages = useMessages();
   const m = messages.caregiver.browse;
   const locale = useLocale();
@@ -75,7 +76,7 @@ export function BrowseItemScreen({ route, navigation }: Props): ReactElement {
         uiLocale: locale,
         bundle: lectureBundle(locale),
       }),
-    [hasFacts, scope, access, kind, id, presentTitleText, locale],
+    [hasFacts, scope, access, kind, id, presentTitleText, locale, lectureBundle],
   );
   useItemViewed(facts && pass ? itemViewedEvent(kind, id, access) : null);
 

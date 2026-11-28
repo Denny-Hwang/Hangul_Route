@@ -2,7 +2,7 @@ import { Hoya, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_L
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import { PAUSE_WORD } from '../../../logic/lecture/content';
+import { useLectureSources } from '../../lecture-sources-entry';
 import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -36,6 +36,7 @@ export function BlankOverlay({ onPause }: { onPause: () => void }): ReactElement
 
 export function PauseOverlay(): ReactElement {
   const { unit, messages } = usePresenterView();
+  const { PAUSE_WORD } = useLectureSources();
   const size = useStageText();
   const promptSize = size(presenter.size.display);
   const bodySize = size(presenter.size.prompt);

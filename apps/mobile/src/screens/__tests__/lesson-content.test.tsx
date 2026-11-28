@@ -406,6 +406,93 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     await settle();
     expect(byTestId(r.root, 'root')).toHaveLength(0);
   });
+
+  /**
+   * [SB] AMENDMENTS-START-BUNDLE-2026-11 row SB-4e: a root that waits for a chunk beside its code (the lecture sources
+   * both grown-up roots read). The root's one load is the pair, inside the root's timeout.
+   */
+  describe('a root that waits for another chunk beside its code (row SB-4e)', () => {
+    function pair() {
+      const code: Deferred<{ default: ComponentType<object> }>[] = [];
+      const sources: Deferred<string>[] = [];
+      const drop = vi.fn();
+      const root = {
+        name: 'PresenterApp',
+        load: () => {
+          const c = deferred<{ default: ComponentType<object> }>();
+          const s = deferred<string>();
+          code.push(c);
+          sources.push(s);
+          return Promise.all([c.promise, s.promise]).then(([loaded]) => loaded);
+        },
+        alongside: { bundles: ['lecture-sources-chunk'], drop },
+      };
+      return { code, sources, drop, root };
+    }
+
+    it('mounts only once the code and the other chunk are both in', async () => {
+      const t = bindings();
+      await loadCells(t);
+      const p = pair();
+      const r = await render(<>{createElement(t.withLessonContent(p.root))}</>);
+      await act(async () => p.code[0]?.resolve({ default: Root }));
+      await settle();
+      expect(byTestId(r.root, 'root')).toHaveLength(0);
+      expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+      await act(async () => p.sources[0]?.resolve('in'));
+      await settle();
+      expect(byTestId(r.root, 'root')).toHaveLength(1);
+      expect(p.drop).not.toHaveBeenCalled();
+      expect(t.abandon).not.toHaveBeenCalled();
+    });
+
+    it('the other chunk failing shows the root\'s Try again, which asks for both again', async () => {
+      const t = bindings();
+      await loadCells(t);
+      const p = pair();
+      const r = await render(<>{createElement(t.withLessonContent(p.root))}</>);
+      await act(async () => p.code[0]?.resolve({ default: Root }));
+      await act(async () => p.sources[0]?.reject(new Error('offline')));
+      await settle();
+      const retry = buttonsNamed(r.root, TRY_AGAIN);
+      expect(retry).toHaveLength(1);
+      await press(retry[0]!);
+      expect(p.code).toHaveLength(2);
+      expect(p.sources).toHaveLength(2);
+      await act(async () => p.code[1]?.resolve({ default: Root }));
+      await act(async () => p.sources[1]?.resolve('in'));
+      await settle();
+      expect(byTestId(r.root, 'root')).toHaveLength(1);
+    });
+
+    it('a hung load times out: both bundles are given up, the other chunk\'s request is dropped, and Try again sends a fresh request for each', async () => {
+      const t = bindings({ rootTimeoutMs: 20 });
+      await loadCells(t);
+      const p = pair();
+      const r = await render(<>{createElement(t.withLessonContent(p.root))}</>);
+      // The code is in; the other chunk hangs.
+      await act(async () => p.code[0]?.resolve({ default: Root }));
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 40));
+      });
+      await settle();
+      expect(t.abandon.mock.calls.map((c) => c[0])).toEqual(['PresenterApp', 'lecture-sources-chunk']);
+      expect(p.drop).toHaveBeenCalledTimes(1);
+      const retry = buttonsNamed(r.root, TRY_AGAIN);
+      expect(retry).toHaveLength(1);
+      await press(retry[0]!);
+      expect(p.code).toHaveLength(2);
+      expect(p.sources).toHaveLength(2);
+      await act(async () => p.code[1]?.resolve({ default: Root }));
+      await act(async () => p.sources[1]?.resolve('in'));
+      await settle();
+      expect(byTestId(r.root, 'root')).toHaveLength(1);
+      // The given-up request answering late changes nothing.
+      await act(async () => p.sources[0]?.resolve('late'));
+      await settle();
+      expect(byTestId(r.root, 'root')).toHaveLength(1);
+    });
+  });
 });
 
 /**
