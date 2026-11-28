@@ -84,6 +84,11 @@ async function learnerWithPlan(page: Page, now: number, lectureDate = '2026-11-0
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await closeInstallGuide(page);
+  // The guide can come up again later (once the app is cached) and cover Home: it is closed whenever it is in the way,
+  // never after a fixed wait. Registered after the direct close, so the two never race.
+  await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
+    await guide.getByRole('button', { name: en.caregiver.install.notNow.cta, exact: true }).click();
+  });
 }
 
 const noSideScroll = (page: Page): Promise<boolean> => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);

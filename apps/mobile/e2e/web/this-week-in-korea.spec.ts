@@ -34,6 +34,11 @@ async function onboard(page: Page, on: boolean | null): Promise<string> {
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  // The guide can come up again later (once the app is cached, or on a reload from the cache) and cover the card: it is
+  // closed whenever it is in the way, never after a fixed wait. Registered after the direct close, so the two never race.
+  await page.addLocatorHandler(guide, async (shown) => {
+    await shown.getByRole('button', { name: 'Not now' }).click();
+  });
   return profileId;
 }
 
