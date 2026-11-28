@@ -671,6 +671,63 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
     ...(spellingKit === null ? {} : { labelOf: (text: { ko: string; romanization: string }) => spellingKit.spellingOptionLabel(text, m.a11y.romanizationOr) }),
   };
 
+  /** The round's speaker: below 640 tall in the spelling round, its one sound control. */
+  const speaker = (
+    <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
+      <GuardedPressable
+        setsLock={false}
+        ref={(node) => {
+          speakerRef.current = node as unknown as Focusable | null;
+          speakerNodeRef.current = node as unknown as View | null;
+        }}
+        testID="listen-pick-speaker"
+        onPress={hear}
+        accessibilityRole="button"
+        accessibilityLabel={speakerLabel}
+        hitSlop={spacing.md}
+        style={{
+          width: speakerSize,
+          height: speakerSize,
+          borderRadius: radii.pill,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.brand.secondaryLight,
+          borderColor: colors.brand.secondary,
+          borderWidth: borderWidth.base,
+        }}
+      >
+        <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
+      </GuardedPressable>
+    </Animated.View>
+  );
+  /** Can't hear it? (AMENDMENTS-AUDIO-CANT-HEAR CH-1b): the last child of the speaker row; after Hear again when it shows. */
+  const cantHearLink = slot.cantHear ? (
+    // Centred under Hear again, as the speaker above it (or beside the speaker, in the speaker row).
+    <View style={{ alignSelf: 'center' }}>
+      {contrastRound ? (
+        // A contrast round's Korean is its answer (AMENDMENTS-MINIMAL-PAIRS section 3.9): guidance only, and the
+        // step's later contrast rounds are dropped once the learner opens it.
+        <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} onOpen={trimLater} />
+      ) : spellingKit !== null ? (
+        // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
+        <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
+      ) : (
+        <CantHear
+          round={roundIdx}
+          active={slot.cantHearActive}
+          onHear={hear}
+          onShowLetters={slot.showLetters}
+          focusAfter={speakerNodeRef}
+          lettersText={
+            askedRomanizationOnly
+              ? a11yRomanization(round.prompt.romanization, m.a11y.romanizationOr)
+              : m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })
+          }
+        />
+      )}
+    </View>
+  ) : null;
+
   return (
     <Screen tone="canvas">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -702,69 +759,32 @@ function ListenPickBoard({ scope, host, onBack, hint, textPrompt: textPromptProp
 
             {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
               {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
-              <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
-                <GuardedPressable
-                  setsLock={false}
-                  ref={(node) => {
-                    speakerRef.current = node as unknown as Focusable | null;
-                    speakerNodeRef.current = node as unknown as View | null;
-                  }}
-                  testID="listen-pick-speaker"
-                  onPress={hear}
-                  accessibilityRole="button"
-                  accessibilityLabel={speakerLabel}
-                  hitSlop={spacing.md}
-                  style={{
-                    width: speakerSize,
-                    height: speakerSize,
-                    borderRadius: radii.pill,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: colors.brand.secondaryLight,
-                    borderColor: colors.brand.secondary,
-                    borderWidth: borderWidth.base,
-                  }}
-                >
-                  <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-                </GuardedPressable>
-              </Animated.View>
               {hearAgainShown ? (
-                <View style={{ alignSelf: 'center' }}>
-                  <Button
-                    label={copy.listenPick.hearAgain.cta}
-                    tone="secondary"
-                    size="md"
-                    onPress={hear}
-                    testID="listen-pick-hear-again"
-                  />
-                </View>
-              ) : null}
-              {slot.cantHear ? (
-                // Centred under Hear again, as the speaker above it.
-                <View style={{ alignSelf: 'center' }}>
-                  {contrastRound ? (
-                    // A contrast round's Korean is its answer (AMENDMENTS-MINIMAL-PAIRS section 3.9): guidance only, and the
-                    // step's later contrast rounds are dropped once the learner opens it.
-                    <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} onOpen={trimLater} />
-                  ) : spellingKit !== null ? (
-                    // The spelling round's picture and meaning settle it, so the sheet only helps with the sound (the cue rule).
-                    <CantHear guidanceOnly round={roundIdx} active={slot.cantHearActive} onHear={hear} />
-                  ) : (
-                    <CantHear
-                      round={roundIdx}
-                      active={slot.cantHearActive}
-                      onHear={hear}
-                      onShowLetters={slot.showLetters}
-                      focusAfter={speakerNodeRef}
-                      lettersText={
-                        askedRomanizationOnly
-                          ? a11yRomanization(round.prompt.romanization, m.a11y.romanizationOr)
-                          : m.a11y.koreanItem({ ko: round.prompt.ko, romanization: round.prompt.romanization })
-                      }
+                <>
+                  {speaker}
+                  <View style={{ alignSelf: 'center' }}>
+                    <Button
+                      label={copy.listenPick.hearAgain.cta}
+                      tone="secondary"
+                      size="md"
+                      onPress={hear}
+                      testID="listen-pick-hear-again"
                     />
-                  )}
+                  </View>
+                  {cantHearLink}
+                </>
+              ) : (
+                // Below 640 tall the spelling round's speaker is its one sound control, so Can't hear it? is the last child of
+                // the speaker row beside it, which wraps (design/components/CantHear/spec.md; AMENDMENTS-AUDIO-CANT-HEAR
+                // section 3.11): the meaning, the speaker and both spellings keep the first screen (row CM-31).
+                <View
+                  testID="listen-pick-speaker-row"
+                  style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: spacing.md }}
+                >
+                  {speaker}
+                  {cantHearLink}
                 </View>
-              ) : null}
+              )}
 
               {/* Not live: the answer's word is said once by the announcer (§3.3). */}
               <View style={{ alignItems: 'center', gap: spacing.sm }}>

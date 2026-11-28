@@ -15,7 +15,11 @@ const en = getMessages('en');
 
 /** The round counter pill ("1 / 6"): which round the game shows. */
 const pill = (page: Page) => page.getByText(/^\d+ \/ \d+$/).filter({ visible: true }).last();
-const heading = (page: Page) => page.getByRole('heading', { name: 'Tap the letter for this sound' });
+/**
+ * The round's prompt heading. Exact: the round's header node around it (F-A11Y-001 AF-4a, section 3.4) is a heading too,
+ * named "Question 1 of 6. Tap the letter for this sound".
+ */
+const heading = (page: Page) => page.getByRole('heading', { name: 'Tap the letter for this sound', exact: true });
 const sheet = (page: Page) => page.getByRole('alertdialog');
 const playGame = (page: Page) => page.getByRole('button', { name: 'Play minigame' });
 
@@ -33,13 +37,17 @@ async function openQuestOne(page: Page): Promise<void> {
   await page.getByRole('button', { name: en.learner.quest.continue.cta, exact: true }).click();
 }
 
-/** Answers round 1 without knowing which letter it asks: taps the options in order until the round moves on (a wrong tap is an answer too). */
+/**
+ * Answers round 1 without knowing which letter it asks: taps the options in order until the round moves on (a wrong tap
+ * is an answer too). A missed tile is renamed "Not this one: ..." and takes no tap (F-A11Y-001 AF-4a), so the first
+ * option still open is the next one in order.
+ */
 async function answerRoundOne(page: Page): Promise<void> {
   const options = page.getByRole('button', { name: /^Korean letter .*tap to select$/ });
   const count = await options.count();
   for (let i = 0; i < count; i += 1) {
     await pastTapLock(page);
-    await options.nth(i).click();
+    await options.first().click();
     const moved = await expect(pill(page))
       .toHaveText(/^2 \/ \d+$/, { timeout: 2500 })
       .then(

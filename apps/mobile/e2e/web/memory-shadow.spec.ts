@@ -46,7 +46,10 @@ async function homeText(page: Page): Promise<string> {
   return (await page.locator('body').innerText()).replace(/\s+/g, ' ').trim();
 }
 
-/** Food & Daily Life quest 5 (Family at the Table): Discover's three pages, skip Match Sound, build 바 보 사 수, then the Check and Results. */
+/**
+ * Food & Daily Life quest 5 (Family at the Table): Discover's four pages (ㅂ ㅅ, the trace page, the two word pages;
+ * [TC] AMENDMENTS-STAGE1-TRACE-COVERAGE TC-1b section 3.2), skip Match Sound, build 바 보 사 수, then the Check and Results.
+ */
 async function playFamilyQuest(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
@@ -58,8 +61,8 @@ async function playFamilyQuest(page: Page): Promise<void> {
   if (await anyway.isVisible()) await anyway.click();
   await expect(headerClose(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  for (const pageNo of [1, 2, 3]) {
-    await expect(page.getByText(`Page ${pageNo} of 3`, { exact: true })).toBeVisible();
+  for (const pageNo of [1, 2, 3, 4]) {
+    await expect(page.getByText(`Page ${pageNo} of 4`, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue' }).click();
   }
   await page.getByRole('button', { name: 'Skip for now' }).click();

@@ -226,6 +226,9 @@ test.describe('a plan as an older app keeps it (assumption b)', () => {
 
     // The weekly goal: 4 days from the plan's sessionsPerWeek (the goals sheet says where it comes from).
     await page.goto('/');
+    // A later open of the cached app may bring the install guide up over Home: closed first, as on the first open.
+    await expect(page.getByText(en.learner.home.greeting('Mina'))).toBeVisible();
+    await closeInstallGuide(page);
     await page.getByRole('button', { name: /^This week: / }).click();
     await expect(page.getByText(en.learner.goals.sheet.fromPlan(4))).toBeVisible();
     await shot(page, 'route-blend-old-app-goal-320');
@@ -313,6 +316,9 @@ for (const size of [
       const stored = await readStored<ProgressSnapshot>(page, `progress:${profileId}`);
       expect(stored?.selfRoute?.archivedAt).toBeNull();
       await page.goto('/');
+      // A later open of the cached app may bring the install guide up over Home: closed first, as on the first open.
+      await expect(page.getByText(en.learner.home.greeting('Mina'))).toBeVisible();
+      await closeInstallGuide(page);
       await page.getByRole('button', { name: en.a11y.openHomework }).click();
       await expect(page.getByText(en.learner.homework.from.route, { exact: true })).toHaveCount(0);
     });

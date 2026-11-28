@@ -1,4 +1,5 @@
 import type { ListenPickRound } from '@hangul-route/content-schema';
+import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -92,13 +93,14 @@ const tick = async (ms: number): Promise<void> => {
 
 async function game(
   mode: HostMode,
-  extra: { rounds?: ListenPickRound[]; textPrompt?: boolean; spelling?: boolean; romanization?: 'always' | 'tap' } = {},
+  extra: { rounds?: ListenPickRound[]; textPrompt?: boolean; spelling?: boolean; romanization?: 'always' | 'tap'; window?: { width: number; height: number } } = {},
 ): Promise<ReactTestRenderer> {
   const host: MinigameHost = { mode, answer: (round, correct, meta) => void (answers.push([round, correct]), metas.push(meta)), complete: () => undefined };
   const rounds = extra.rounds ?? ROUNDS;
   const kit = extra.spelling === true ? await import('../dictation-chunk') : null;
   const textPrompt = extra.textPrompt === true ? { heading: 'Read it', missLine: 'Look again', prompt: () => null } : undefined;
-  const element = <ListenPickGame scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} spelling={kit} {...(textPrompt ? { textPrompt } : {})} />;
+  const board = <ListenPickGame scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} spelling={kit} {...(textPrompt ? { textPrompt } : {})} />;
+  const element = extra.window === undefined ? board : <LayoutProvider value={layoutClassFor(extra.window)}>{board}</LayoutProvider>;
   const r = await render(extra.romanization === undefined ? element : <RomanizationModeOverride mode={extra.romanization}>{element}</RomanizationModeOverride>, {
     createNodeMock: focusNodes(['listen-pick-speaker']) as never,
   });
@@ -167,6 +169,28 @@ describe('Listen & Pick, "Can\'t hear it?" (test 18)', () => {
     expect(hasId(r.root, 'cant-hear-hear')).toBe(true);
     // The prompt's Korean is the answer: nothing prints it.
     expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+  });
+
+  it('the spelling round below 640 tall: the link is the last child of the speaker row, which wraps, so both spellings keep the first screen (CM-31)', async () => {
+    const r = await game('quest', { rounds: [SPELLING], spelling: true, window: { width: 320, height: 568 } });
+    // The speaker is the one sound control here (no Hear again), so the link sits beside it, not under it
+    // (design/components/CantHear/spec.md, the speaker row: centred, `flexWrap: 'wrap'`; section 3.11).
+    expect(hasId(r.root, 'listen-pick-hear-again')).toBe(false);
+    const [row] = byTestId(r.root, 'listen-pick-speaker-row');
+    expect(row).toBeDefined();
+    const style = JSON.stringify(row!.props.style);
+    expect(style).toContain('"flexDirection":"row"');
+    expect(style).toContain('"flexWrap":"wrap"');
+    const inRow = row!.findAll((n) => typeof n.type === 'string' && ['listen-pick-speaker', 'cant-hear'].includes(String(n.props['data-testid'])));
+    expect(inRow.map((n) => n.props['data-testid'])).toEqual(['listen-pick-speaker', 'cant-hear']);
+  });
+
+  it('a tall window keeps the link under Hear again, centred, with no speaker row', async () => {
+    const r = await game('quest', { rounds: [SPELLING], spelling: true, window: { width: 390, height: 844 } });
+    expect(hasId(r.root, 'listen-pick-hear-again')).toBe(true);
+    expect(byTestId(r.root, 'listen-pick-speaker-row')).toHaveLength(0);
+    const order = r.root.findAll((n) => typeof n.type === 'string' && ['listen-pick-speaker', 'listen-pick-hear-again', 'cant-hear'].includes(String(n.props['data-testid'])));
+    expect(order.map((n) => n.props['data-testid'])).toEqual(['listen-pick-speaker', 'listen-pick-hear-again', 'cant-hear']);
   });
 });
 

@@ -551,15 +551,8 @@ for (const profile of PROFILES) {
           expect(await orderAnswers(page), '72 px drag').toBe(answers);
         });
 
-        // The matrix on park: each graze is one miss.
-        for (const g of MATRIX) {
-          await touch.graze(centre(await inView(page, park)), g.dx, g.dy, { steps: 4, holdMs: g.holdMs ?? 0 });
-          answers += 1;
-          await expect.poll(() => orderAnswers(page), { message: `graze ${g.dx},${g.dy}` }).toBe(answers);
-          await page.waitForTimeout(AFTER_LOCK);
-        }
-
-        // A release 40 px outside a card and a slide into its neighbour commit nothing.
+        // A release 40 px outside a card and a slide into its neighbour commit nothing (park is still unmarked, so a
+        // commit would count).
         const left = await ids();
         await inView(page, park);
         const out = await outsideRelease(page, park, left);
@@ -570,6 +563,18 @@ for (const profile of PROFILES) {
         await page.waitForTimeout(AFTER_LOCK);
         expect(await orderAnswers(page), 'outside or slide').toBe(answers);
 
+        // The matrix, each graze one commit. A missed card keeps its mark and takes no tap until the next tap that
+        // changes the board (F-A11Y-001 AF-4b, OD-AF7), so the grazes go on a fresh morning and alternate between two
+        // cards that are never right first (wash and eat): each one a miss, each one moving the mark.
+        await openMorning(page, b.on, profile.largest);
+        answers = await orderAnswers(page);
+        for (const [i, g] of MATRIX.entries()) {
+          const card = `${b.prefix}${MORNING_IDS[1 + (i % 2)]!}`;
+          await touch.graze(centre(await inView(page, card)), g.dx, g.dy, { steps: 4, holdMs: g.holdMs ?? 0 });
+          answers += 1;
+          await expect.poll(() => orderAnswers(page), { message: `graze ${g.dx},${g.dy}` }).toBe(answers);
+          await page.waitForTimeout(AFTER_LOCK);
+        }
       });
     }
 
