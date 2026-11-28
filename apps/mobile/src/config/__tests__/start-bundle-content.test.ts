@@ -171,6 +171,24 @@ describe('the console strings of the web English twin (AMENDMENTS-START-BUNDLE-2
     expect(graph.files.has('apps/mobile/src/screens/minigames/ListenPickGame.tsx')).toBe(true);
   });
 
+  it("[SB] SB-4b: Listen & Pick's contrast branches ride in the contrast kit; the board keeps its calls", () => {
+    const board = codeOf(join(REPO, 'apps/mobile/src/screens/minigames/ListenPickGame.tsx'));
+    // What the board wrote inline is gone: the mixed-scope draw, the compare player's gap loop, the kind line and its Hear it button.
+    for (const gone of ['function mixedRounds', 'compareGapMs', 'contrast-kind-', 'contrast-hear-', 'compareItems(', 'contrastKindLine', 'memberGloss', 'contrastNote', 'contrastRoundPlayable', 'seededRandom']) {
+      expect(board, gone).not.toContain(gone);
+    }
+    // The kit holds them, and the modules they live in are reached from the chunk only.
+    const kit = codeOf(join(REPO, 'apps/mobile/src/screens/minigames/contrast-chunk.tsx'));
+    for (const name of ['mixedRounds', 'playCompare', 'missLine', 'compareRow', 'optionNaming', 'laterUnplayable', 'laterContrast', 'OptionExtras']) {
+      expect(kit, name).toContain(name);
+    }
+    expect(reached('apps/mobile/src/screens/minigames/ContrastOptionExtras.tsx')).toBeUndefined();
+    expect(reached('apps/mobile/src/logic/listen-pick-contrast.ts')).toBeUndefined();
+    // The start bundle keeps the flow's own contrast branches and the door; the compare chain's refs are the board's.
+    expect(graph.files.has('apps/mobile/src/logic/listen-pick-flow.ts')).toBe(true);
+    expect(board).toContain('compareRun');
+  });
+
   it('[SB] SB-4c: the grown-up home reads the Starting spot row without the report page', () => {
     expect(reached('apps/mobile/src/logic/placement/report-page.ts')).toBeUndefined();
     expect(graph.files.has('apps/mobile/src/logic/placement/starting-spot.ts')).toBe(true);
